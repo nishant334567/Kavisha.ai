@@ -13,8 +13,8 @@ export default function Home() {
     const welcomeMessage = {
       role: "assistant",
       text: isJobSeeker
-        ? "Hi! I'm here to help you find your dream job. Tell me about your experience, skills, and what you're looking for in your next role."
-        : "Hi! I'm here to help you find the perfect candidate. Tell me about the position you're hiring for and your requirements.",
+        ? "Hi I am Kavisha — a smart, emotionally intelligent AI recruiter. "
+        : "Hi I am Kavisha — a helpful recruiter assisting a company or hiring manager.",
     };
     setMessages([welcomeMessage]);
   }, [isJobSeeker]);
@@ -84,6 +84,7 @@ export default function Home() {
               setIsJobSeeker((prev) => !prev);
               setMessages([]);
               setInput("");
+              setProfile({});
             }}
           >
             Switch Mode
@@ -134,8 +135,9 @@ export default function Home() {
               profile?.expected_ctc ||
               profile?.location_preference ||
               profile?.company_type ||
+              profile?.education ||
               profile?.work_mode ||
-              profile?.experience) && (
+              profile?.experience != null) && (
               <div className="p-2">
                 <p className="font-bold">Profile Info: </p>
                 {profile?.current_role && (
@@ -144,6 +146,7 @@ export default function Home() {
                 {profile?.desired_role && (
                   <p>Desired Role: {profile.desired_role}</p>
                 )}
+                {profile?.education && <p>Education: {profile.education}</p>}
                 {profile?.current_ctc && (
                   <p>Current Salary: {profile.current_ctc}</p>
                 )}
@@ -163,7 +166,9 @@ export default function Home() {
                   <p>Notice Period: {profile.notice_period}</p>
                 )}
                 {profile?.work_mode && <p>Mode: {profile.work_mode}</p>}
-                {profile?.experience && <p>Experience: {profile.experience}</p>}
+                {profile?.experience != null && (
+                  <p>Experience: {profile.experience}</p>
+                )}
                 {profile?.tech_stack?.length > 0 && (
                   <div className="flex gap-2">
                     <p>Tech Stack: </p>
@@ -186,35 +191,35 @@ export default function Home() {
               profile?.urgency ||
               profile?.attrition_reason ||
               profile?.temperament ||
-              profile?.jd_summary) && (
-              <div className="space-y-1 text-sm">
+              profile?.jd_summary ||
+              profile?.no_of_openings) && (
+              <div className="space-y-1 text-sm mt-2">
                 <p className="font-bold">Recruiter Requirements: </p>
-                {profile?.role_title && <p>role_title: {profile.role_title}</p>}
+                {profile?.role_title && <p>Role Title: {profile.role_title}</p>}
                 {profile?.experience_required && (
-                  <p>experience_required: {profile.experience_required}</p>
+                  <p>Experience Required: {profile.experience_required}</p>
+                )}
+                {profile?.no_of_openings && (
+                  <p>Open Positions: {profile.no_of_openings}</p>
                 )}
                 {profile?.salary_range && (
-                  <p>salary_range: {profile.salary_range}</p>
+                  <p>Salary Range: {profile.salary_range}</p>
                 )}
-                {profile?.location && <p>location: {profile.location}</p>}
+                {profile?.location && <p>Location: {profile.location}</p>}
                 {profile?.location_flexibility && (
-                  <p>location_flexibility: {profile.location_flexibility}</p>
+                  <p>Location Flexibility: {profile.location_flexibility}</p>
                 )}
-                {profile?.work_mode && <p>work_mode: {profile.work_mode}</p>}
-                {profile?.urgency && <p>urgency: {profile.urgency}</p>}
+                {profile?.work_mode && <p>Work Mode: {profile.work_mode}</p>}
+                {profile?.urgency && <p>Urgency: {profile.urgency}</p>}
                 {profile?.attrition_reason && (
-                  <p>attrition_reason: {profile.attrition_reason}</p>
+                  <p>Attrition Reason: {profile.attrition_reason}</p>
                 )}
                 {profile?.temperament && (
-                  <p>temperament: {profile.temperament}</p>
+                  <p>Temperament: {profile.temperament}</p>
                 )}
-                {/* <p>
-              freelance_ok:{" "}
-              {profile?.freelance_ok !== null
-                ? profile.freelance_ok.toString()
-                : ""}
-            </p> */}
-                {profile?.jd_summary && <p>jd_summary: {profile.jd_summary}</p>}
+                {profile?.jd_summary && (
+                  <p>Job Summary: {profile.jd_summary}</p>
+                )}
               </div>
             )}
       </div>
