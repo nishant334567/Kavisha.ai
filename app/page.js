@@ -1,103 +1,223 @@
-import Image from "next/image";
+"use client";
+
+import { useState, useEffect } from "react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              app/page.js
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [input, setInput] = useState("");
+  const [messages, setMessages] = useState([]);
+  const [isJobSeeker, setIsJobSeeker] = useState(true);
+  const [profile, setProfile] = useState({});
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  // Add initial welcome message based on mode
+  useEffect(() => {
+    const welcomeMessage = {
+      role: "assistant",
+      text: isJobSeeker
+        ? "Hi! I'm here to help you find your dream job. Tell me about your experience, skills, and what you're looking for in your next role."
+        : "Hi! I'm here to help you find the perfect candidate. Tell me about the position you're hiring for and your requirements.",
+    };
+    setMessages([welcomeMessage]);
+  }, [isJobSeeker]);
+
+  const handleSubmit = async () => {
+    if (!input.trim()) return;
+    const newUserMessage = { role: "user", text: input };
+    const userText = input;
+    const updatedMessages = [...messages, newUserMessage];
+    setMessages(updatedMessages);
+    setInput("");
+
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      body: JSON.stringify({
+        history: messages,
+        userMessage: userText,
+        jobseeker: isJobSeeker,
+      }),
+    });
+
+    if (!response.ok) {
+      setMessages([
+        ...updatedMessages,
+        {
+          role: "assistant",
+          text: "Error: Could not get response from Open AI",
+        },
+      ]);
+      return;
+    }
+
+    const data = await response.json();
+    console.log("data", data);
+    setMessages([...updatedMessages, { role: "assistant", text: data.reply }]);
+    setProfile((prev) => ({
+      ...prev,
+      ...Object.fromEntries(
+        Object.entries(data.parsedData || {}).filter(([_, v]) => v !== null)
+      ),
+    }));
+  };
+  return (
+    <>
+      <div className="bg-gradient-to-r from-blue-50 to-indigo-100 py-6 px-4 shadow-sm">
+        <div className="max-w-xl mx-auto flex items-center justify-between">
+          <div className="flex items-center space-x-3">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
+              <span className="text-white font-bold text-lg">
+                {isJobSeeker ? "👤" : "🏢"}
+              </span>
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-gray-800">
+                Hi {isJobSeeker ? "Job Seeker" : "Recruiter"}
+              </h1>
+              <p className="text-sm text-gray-600">
+                {isJobSeeker
+                  ? "Let's find your dream job!"
+                  : "Let's find the perfect candidate!"}
+              </p>
+            </div>
+          </div>
+          <button
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+            onClick={() => {
+              setIsJobSeeker((prev) => !prev);
+              setMessages([]);
+              setInput("");
+            }}
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+            Switch Mode
+          </button>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
+      </div>
+
+      <div className="mx-auto max-w-xl rounded-lg shadow-2xl p-4 mt-4">
+        <div className="h-96 overflow-y-scroll">
+          {messages.map((m, i) => {
+            return (
+              <div
+                key={i}
+                className={`my-2 ${
+                  m.role === "user" ? "text-right" : "text-left"
+                }`}
+              >
+                <div
+                  className={`px-4 py-2 rounded ${
+                    m.role === "user" ? "bg-blue-100" : "bg-gray-200"
+                  }`}
+                >
+                  {m.text}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+        <div className="mt-4 flex gap-2">
+          <input
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder="Type your message here..."
+            className="flex-1 px-4 py-3 border-2 border-gray-200 rounded-lg focus:outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-200 transition-all duration-200 bg-white shadow-sm hover:shadow-md"
           />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          <button
+            onClick={handleSubmit}
+            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+            disabled={!input.trim()}
+          >
+            Send
+          </button>
+        </div>
+        {isJobSeeker
+          ? (profile?.current_role ||
+              profile?.desired_role ||
+              profile?.current_ctc ||
+              profile?.expected_ctc ||
+              profile?.location_preference ||
+              profile?.company_type ||
+              profile?.work_mode ||
+              profile?.experience) && (
+              <div className="p-2">
+                <p className="font-bold">Profile Info: </p>
+                {profile?.current_role && (
+                  <p>Current Role: {profile.current_role}</p>
+                )}
+                {profile?.desired_role && (
+                  <p>Desired Role: {profile.desired_role}</p>
+                )}
+                {profile?.current_ctc && (
+                  <p>Current Salary: {profile.current_ctc}</p>
+                )}
+                {profile?.expected_ctc && (
+                  <p>Expected Salary: {profile.expected_ctc}</p>
+                )}
+                {profile?.location_preference && (
+                  <p>Location Preference: {profile.location_preference}</p>
+                )}
+                {profile?.current_location && (
+                  <p>Company Type: {profile.current_location}</p>
+                )}
+                {profile?.company_type && (
+                  <p>Company Type: {profile.company_type}</p>
+                )}
+                {profile?.notice_period && (
+                  <p>Notice Period: {profile.notice_period}</p>
+                )}
+                {profile?.work_mode && <p>Mode: {profile.work_mode}</p>}
+                {profile?.experience && <p>Experience: {profile.experience}</p>}
+                {profile?.tech_stack?.length > 0 && (
+                  <div className="flex gap-2">
+                    <p>Tech Stack: </p>
+                    {profile.tech_stack.map((item, index) => {
+                      return <p key={index}>{item}</p>;
+                    })}
+                  </div>
+                )}
+                {profile?.growth_preference && (
+                  <p>Company Type: {profile.growth_preference}</p>
+                )}
+              </div>
+            )
+          : (profile?.role_title ||
+              profile?.experience_required ||
+              profile?.salary_range ||
+              profile?.location ||
+              profile?.location_flexibility ||
+              profile?.work_mode ||
+              profile?.urgency ||
+              profile?.attrition_reason ||
+              profile?.temperament ||
+              profile?.jd_summary) && (
+              <div className="space-y-1 text-sm">
+                <p className="font-bold">Recruiter Requirements: </p>
+                {profile?.role_title && <p>role_title: {profile.role_title}</p>}
+                {profile?.experience_required && (
+                  <p>experience_required: {profile.experience_required}</p>
+                )}
+                {profile?.salary_range && (
+                  <p>salary_range: {profile.salary_range}</p>
+                )}
+                {profile?.location && <p>location: {profile.location}</p>}
+                {profile?.location_flexibility && (
+                  <p>location_flexibility: {profile.location_flexibility}</p>
+                )}
+                {profile?.work_mode && <p>work_mode: {profile.work_mode}</p>}
+                {profile?.urgency && <p>urgency: {profile.urgency}</p>}
+                {profile?.attrition_reason && (
+                  <p>attrition_reason: {profile.attrition_reason}</p>
+                )}
+                {profile?.temperament && (
+                  <p>temperament: {profile.temperament}</p>
+                )}
+                {/* <p>
+              freelance_ok:{" "}
+              {profile?.freelance_ok !== null
+                ? profile.freelance_ok.toString()
+                : ""}
+            </p> */}
+                {profile?.jd_summary && <p>jd_summary: {profile.jd_summary}</p>}
+              </div>
+            )}
+      </div>
+    </>
   );
 }
