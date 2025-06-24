@@ -1,5 +1,6 @@
 "use client";
 
+import { signOut, useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
 
 export default function Home() {
@@ -7,6 +8,8 @@ export default function Home() {
   const [messages, setMessages] = useState([]);
   const [isJobSeeker, setIsJobSeeker] = useState(true);
   const [profile, setProfile] = useState({});
+  const { data: session, status } = useSession();
+  console.log(session);
 
   // Add initial welcome message based on mode
   useEffect(() => {
@@ -62,14 +65,16 @@ export default function Home() {
       <div className="bg-gradient-to-r from-blue-50 to-indigo-100 py-6 px-4 shadow-sm">
         <div className="max-w-xl mx-auto flex items-center justify-between">
           <div className="flex items-center space-x-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full flex items-center justify-center">
-              <span className="text-white font-bold text-lg">
-                {isJobSeeker ? "👤" : "🏢"}
-              </span>
-            </div>
+            {session?.user?.image && (
+              <img
+                src={session.user.image}
+                alt="User Avatar"
+                className="w-14 h-14 rounded-full border"
+              />
+            )}
             <div>
               <h1 className="text-2xl font-bold text-gray-800">
-                Hi {isJobSeeker ? "Job Seeker" : "Recruiter"}
+                Hi {session?.user?.name}
               </h1>
               <p className="text-sm text-gray-600">
                 {isJobSeeker
@@ -78,17 +83,22 @@ export default function Home() {
               </p>
             </div>
           </div>
-          <button
-            className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
-            onClick={() => {
-              setIsJobSeeker((prev) => !prev);
-              setMessages([]);
-              setInput("");
-              setProfile({});
-            }}
-          >
-            Switch Mode
-          </button>
+          <div className="flex gap-2">
+            <button
+              className="bg-gradient-to-r from-blue-500 to-indigo-600 hover:from-blue-600 hover:to-indigo-700 text-white px-6 py-3 rounded-lg font-medium transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
+              onClick={() => {
+                setIsJobSeeker((prev) => !prev);
+                setMessages([]);
+                setInput("");
+                setProfile({});
+              }}
+            >
+              Switch Mode
+            </button>
+            <button onClick={() => signOut({ callbackUrl: "/login" })}>
+              Sign Out
+            </button>
+          </div>
         </div>
       </div>
 
