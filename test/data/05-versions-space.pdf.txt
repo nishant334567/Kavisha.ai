@@ -1,0 +1,40 @@
+
+
+NISHANT KUMAR
+SUMMARY
+Frontend Developer with 3+ years of experience building fast, scalable applications using Next.js
+and React.js. An NIT Allahabad graduate, passionate about performance, clean UI, and delivering
+real-world solutions that make an impact
+WORK EXPERIENCE
+EDUCATION
+Bachelors of Technology , ECE
+National Institute of Technology, Allahabad
+Specialization in Electronics and Communication Engineering
+2018 - 2022
+AI-Powered Job Matchmaking Platform (Freelance Project)Feb 2025- Present
+ADDITIONAL INFORMATION
+Frontend Development, Full-Stack Development, REST API
+Languages: JavaScript, C/C++
+Frameworks/Libraries: React.js, Next.js, Tailwind CSS
+AI Powered Vigilance System (Freelance Project)
+Built an frontend for AI-powered chatbot using Next.js and Gemini API to analyze live CCTV
+footage and assist users via chat.
+Developed secure authentication flows with Google/GitHub login and user role management.
+Designed and implemented responsive chat UI
+July 2024 - December 2024
+Tata Digital Private Limited - Frontend Developer
+NextJS, ReactJS, Sanity CMS
+Developed responsive web features for the Credit Card platform using Next.js.
+Integrated Sanity CMS for content management across teams.
+Improved web performance via lazy loading, image optimization & Lighthouse audits.
+June 2022 - June 2024
+Intermediate School
+St Joseph International School, Jhalawar
+2016 - 2018
+Ranchi Jharkhand  9905391978  nishantkumar334567@gmail.com
+Built a full-stack AI-powered chatbot platform using Next.js, Tailwind CSS, OpenAI GPT-4o,
+and MongoDB.
+Designed conversational flows collect structured data in JSON format via natural chat.
+Implemented secure authentication using NextAuth.js with Google and GitHub OAuth.
+Developed data-driven recommendation logic to match profiles with given requirements.
+Deployed the platform on Vercel with custom domain integration .
