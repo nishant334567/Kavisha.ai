@@ -335,6 +335,7 @@ export default function Home() {
                 </p>
               </div>
 
+              {/* fix upload section
               <div className="flex items-center gap-3">
                 {resume && (
                   <span className="bg-emerald-100 text-emerald-800 px-2 py-4 rounded text-xs max-w-[120px] truncate">
@@ -385,7 +386,18 @@ export default function Home() {
                     >
                       Delete
                     </button>
-                  )}
+                  ) }
+                <button
+                  className="ml-2 px-3 py-2 bg-emerald-500 text-white rounded hover:bg-emerald-600 transition"
+                  onClick={() => {
+                    findMatches();
+                    setShowMatches(true);
+                  }}
+                >
+                  Find Matches
+                </button>
+              </div> */}
+              <div>
                 <button
                   className="ml-2 px-3 py-2 bg-emerald-500 text-white rounded hover:bg-emerald-600 transition"
                   onClick={() => {
