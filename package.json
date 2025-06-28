@@ -6,7 +6,8 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postinstall": "rmdir /s /q .\\node_modules\\pdf-parse\\test"
   },
   "dependencies": {
     "@google/genai": "^1.5.1",
