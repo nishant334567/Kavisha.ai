@@ -11,7 +11,6 @@ export async function POST(req) {
   const formData = await req.formData();
   const file = formData.get("file");
   const sessionId = formData.get("sessionId");
-  console.log(file);
   if (!file)
     return NextResponse.json({ error: "No file uploaded" }, { status: 400 });
 
@@ -24,7 +23,6 @@ export async function POST(req) {
       { _id: sessionId },
       { $set: { resumeSummary: data.text, resumeFilename: file.name } }
     );
-    console.log(result, "result");
     if (result.matchedCount === 0) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }

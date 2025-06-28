@@ -13,17 +13,13 @@ const options = {
 let isConnected = false;
 
 export async function connectDB() {
-  // If already connected, return
   if (isConnected) {
-    console.log("Using existing connection");
     return;
   }
 
   try {
-    console.log("Connecting to MongoDB...");
     await mongoose.connect(uri, options);
     isConnected = true;
-    console.log("MongoDB connected successfully");
   } catch (error) {
     console.error("MongoDB connection error:", error.message);
     isConnected = false;

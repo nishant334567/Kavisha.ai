@@ -32,11 +32,8 @@ export async function POST(request) {
     });
     const body = await request.json();
     const { history, userMessage, jobseeker, sessionId, resume } = body;
-    console.log(jobseeker, "role:");
     const resumeText = resume || "";
     const systemPrompt = `You are a job-matching assistant. If resume information is provided, consider it in every response before asking question. Also in subsequent convrsation user can update/tweak it, consider that.`;
-    // console.log(jobseeker, sessionId, userMessage);
-    // Validate userMessage
     if (
       !userMessage ||
       typeof userMessage !== "string" ||
@@ -55,7 +52,6 @@ export async function POST(request) {
       role: "user",
     });
 
-    // console.log("history: ", history);
     const messages = [
       {
         role: "system",
@@ -66,7 +62,6 @@ export async function POST(request) {
         content: m.message,
       })),
       { role: "user", content: userMessage },
-      // adding resume section
       { role: "system", content: systemPrompt },
       ...(resumeText
         ? [{ role: "system", content: `Resume: ${resumeText}` }]
@@ -82,13 +77,14 @@ export async function POST(request) {
     let replyAi = chatCompletion.choices[0].message.content;
     let reply = "";
     let summary = "";
+    let title = "";
 
     const parts = replyAi.split("////").map((item) => item.trim());
     if (parts.length >= 2) {
       reply = parts[0];
       summary = parts[1];
+      title = parts.length >= 3 ? parts[2] : "";
     } else {
-      // Re-prompt the model to follow the format
       const rePromptMessages = [
         ...messages,
         {
@@ -107,6 +103,7 @@ export async function POST(request) {
       if (reParts.length >= 2) {
         reply = reParts[0];
         summary = reParts[1];
+        title = reParts.length >= 3 ? reParts[2] : "";
       } else {
         reply = reReplyAi.trim();
         summary = "";
@@ -119,14 +116,12 @@ export async function POST(request) {
       role: "assistant",
     });
 
-    // Update or create chat summary for this session
     await Session.updateOne(
       { _id: sessionId },
-      { $set: { chatSummary: summary } },
+      { $set: { chatSummary: summary, title: title } },
       { upsert: true }
     );
-
-    return NextResponse.json({ reply, summary });
+    return NextResponse.json({ reply, summary, title });
   } catch (error) {
     console.error(error);
     return NextResponse.json(

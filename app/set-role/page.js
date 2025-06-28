@@ -23,7 +23,6 @@ export default function SetRole() {
       body: JSON.stringify({ role }),
     });
     const data = await response.json();
-    console.log(data);
     if (data?.success) {
       window.location.href = "/";
     } else {

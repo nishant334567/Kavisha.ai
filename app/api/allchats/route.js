@@ -10,7 +10,6 @@ export async function GET(req) {
   }
   await connectDB();
   const sessions = await Session.find({ userId: token.id });
-  // console.log("session all", sessions);
   const sessionIds = sessions.map((session) => session._id);
 
   return NextResponse.json({
@@ -19,6 +18,7 @@ export async function GET(req) {
       id: s._id,
       resumeFilename: s.resumeFilename,
       resumeSummary: s.resumeSummary,
+      title: s.title,
     })),
   });
 }

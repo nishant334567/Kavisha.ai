@@ -4,7 +4,6 @@ import Logs from "@/app/models/ChatLogs";
 
 export async function GET(req, { params }) {
   const { chatSessionId } = await params;
-  console.log("called for logs");
   try {
     await connectDB();
     const logs = await Logs.find({ sessionId: chatSessionId });

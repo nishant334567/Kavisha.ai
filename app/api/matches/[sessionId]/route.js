@@ -12,21 +12,15 @@ export async function GET(req, { params }) {
   await connectDB();
   const { sessionId } = await params;
 
-  //fetch the chatsummary for the session id
   const session = await Session.findById({ _id: sessionId });
-  // console.log(session?.chatSummary);
 
-  //find all the person with opposite role
   const oppositeRole =
     session?.role === "job_seeker" ? "recruiter" : "job_seeker";
-  //fetch all the chat summary for the ablove role
   const allProviders = await Session.find({
     role: oppositeRole,
     chatSummary: { $exists: true, $ne: "" },
   });
-  // console.log(allProviders);
 
-  //crreate a prompt
   const prompt = `
 You are a job matching assistant.
 
@@ -69,7 +63,6 @@ Return your answer as a JSON array, with each object using double quotes for key
 ]
 Return only the JSON array, nothing else.
 `;
-  // call chat gpt
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -79,11 +72,8 @@ Return only the JSON array, nothing else.
     ],
     temperature: 0.2,
   });
-  console.log(completion.choices[0].message.content);
-  // The response from OpenAI will be in completion.choices[0].message.content
   const responseText = completion.choices[0].message.content;
 
-  // Use regex to extract the first JSON array in the response
   const match = responseText.match(/\[\s*{[\s\S]*?}\s*\]/);
 
   let matches = [];
@@ -119,5 +109,4 @@ Return only the JSON array, nothing else.
   }));
 
   return NextResponse.json({ matches: matchesWithNames });
-  // return NextResponse.json({ success: true });
 }

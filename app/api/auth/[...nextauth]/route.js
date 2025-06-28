@@ -23,11 +23,9 @@ export const authOptions = {
       return baseUrl;
     },
     async jwt({ token, user }) {
-      console.log(token, user, "inside jwt");
       if (user) {
         await connectDB();
         let dbuser = await User.findOne({ email: user.email });
-        console.log(token, user, "inside jwt user");
         if (!dbuser) {
           dbuser = await User.create({
             name: user.name,
@@ -36,10 +34,8 @@ export const authOptions = {
             profileType: null,
           });
         }
-        console.log(token, dbuser, "new created profile data");
         token.id = dbuser._id.toString();
         token.profileType = dbuser.profileType;
-        console.log(token, user, "updated token");
       }
       return token;
     },
@@ -52,7 +48,7 @@ export const authOptions = {
           token.id = dbuser._id.toString();
         }
         session.user.id = token.id;
-        session.user.profileType = dbuser?.profileType || null; // Use fresh data from DB
+        session.user.profileType = dbuser?.profileType || null;
         session.user.name = token.name;
         session.user.image = token.image;
 
@@ -64,7 +60,6 @@ export const authOptions = {
         }
       } catch (err) {
         console.error("Session callback error:", error);
-        // Fallback to token data if DB is down
         session.user.id = token.id;
         session.user.profileType = token.profileType;
         session.user.name = token.name;

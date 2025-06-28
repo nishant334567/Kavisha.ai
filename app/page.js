@@ -13,13 +13,12 @@ export default function Home() {
   const [allChats, setAllchats] = useState([]);
   const router = useRouter();
   const [resume, setResume] = useState(null);
-  const [resumeText, setResumeText] = useState(""); // This will be session-specific
-  // const { chatid } = useParams();
+  const [resumeText, setResumeText] = useState("");
   const [messages, setmessages] = useState([]);
   const [input, setInput] = useState("");
   const [currenChatId, setCurrentChatId] = useState("");
-  const [sidebarOpen, setSidebarOpen] = useState(false); // for mobile sidebar toggle
-  const [sessionResumes, setSessionResumes] = useState({}); // Store resumes per session
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [sessionResumes, setSessionResumes] = useState({});
   const [fileInputKey, setFileInputKey] = useState(0);
   const [summary, setSummary] = useState("");
   const [showMatches, setShowMatches] = useState(false);
@@ -35,33 +34,26 @@ export default function Home() {
       router.push("/set-role");
     }
 
-    //fetch all chat session //loop and show as button //when clicked open the chat box
-
     fetchChats();
   }, [status, session]);
 
-  useEffect(() => {
-    console.log(sessionResumes);
-  }, [currenChatId, sessionResumes]);
+  useEffect(() => {}, [currenChatId, sessionResumes]);
 
   const findMatches = async () => {
     setMatchesLoading(true);
     try {
       const response = await fetch(`/api/matches/${currenChatId}`);
       const data = await response.json();
-      console.log(data?.matches);
       if (data?.matches.length > 0) setMatches(data?.matches);
     } catch (err) {
       setMatchesError(err);
-      console.error("Error finding matches");
     }
     setMatchesLoading(false);
   };
   const fetchChats = async () => {
     const response = await fetch("/api/allchats");
     const data = await response.json();
-    setAllchats(data?.sessionIds || []);
-    console.log(data, "data for all fetch");
+    setAllchats(data?.sessions || []);
     if (data.sessions) {
       const resumes = {};
       data.sessions.forEach((s) => {
@@ -73,29 +65,26 @@ export default function Home() {
       setSessionResumes(resumes);
     }
 
-    if (data?.sessionIds?.length > 0) {
-      setCurrentChatId(data.sessionIds[0]);
-      openChat(data.sessionIds[0]);
+    if (data?.sessions?.length > 0) {
+      setCurrentChatId(data.sessions[0].id);
+      openChat(data.sessions[0].id);
     }
   };
 
   const handleUpload = async (e) => {
     e.preventDefault();
 
-    console.log("selected resume", resume);
     const formData = new FormData();
     if (resume) {
       alert(`Selected file: ${resume.name}`);
 
       formData.append("file", resume);
       formData.append("sessionId", currenChatId);
-      console.log("Form Data", formData);
       const response = await fetch("/api/upload-resume", {
         method: "POST",
         body: formData,
       });
       const data = await response.json();
-      console.log(data);
       let extractedText;
       if (data.text) {
         extractedText = data.text;
@@ -106,7 +95,6 @@ export default function Home() {
       }
       setResumeText(extractedText);
 
-      // Store resume for current session
       setSessionResumes((prev) => ({
         ...prev,
         [currenChatId]: {
@@ -115,7 +103,6 @@ export default function Home() {
         },
       }));
 
-      // Clear the file input
       fetchChats();
       setResume(null);
       setFileInputKey((prev) => prev + 1);
@@ -125,7 +112,6 @@ export default function Home() {
   };
   const handleDelete = async (e) => {
     e.preventDefault();
-    console.log(sessionResumes[currenChatId], "before");
     try {
       const response = await fetch("/api/upload-resume", {
         method: "DELETE",
@@ -147,9 +133,7 @@ export default function Home() {
       } else {
         alert(data.error || "Failed to delete resume");
       }
-    } catch (err) {
-      console.log("couldnt delete", err);
-    }
+    } catch (err) {}
   };
 
   const handleSubmit = async () => {
@@ -159,8 +143,6 @@ export default function Home() {
     const updatedMessages = [...messages, newUserMessage];
     setmessages(updatedMessages);
     setInput("");
-    console.log(session);
-    console.log("resume text", resumeText);
     const response = await fetch("/api/ai", {
       method: "POST",
       body: JSON.stringify({
@@ -184,15 +166,12 @@ export default function Home() {
     }
 
     const data = await response.json();
-    console.log("data", data);
     setmessages([
       ...updatedMessages,
       { role: "assistant", message: data.reply },
     ]);
     setSummary(data?.summary || "");
   };
-
-  // Add initial welcome message based on mode
 
   if (status === "loading" || !session?.user?.profileType) {
     return <Loader />;
@@ -208,11 +187,10 @@ export default function Home() {
       }),
     });
     const data = await res.json();
-    console.log(data, "new session creation");
     if (data.success) {
       fetchChats();
       setCurrentChatId(data.sid);
-      setResumeText(""); // Clear resume for new session
+      setResumeText("");
     } else {
       alert("Failed to create new chat room");
     }
@@ -222,17 +200,14 @@ export default function Home() {
     if (chatId === "" || !chatId) return;
     const response = await fetch(`/api/logs/${chatId}`);
     const data = await response.json();
-    console.log(`fetching logs for ${chatId}`, data);
     setmessages(data);
 
-    // Load resume for this session
     const sessionResume = sessionResumes[chatId];
     setResumeText(sessionResume?.summary || "");
   };
   return (
     <>
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-green-50 via-amber-50 to-rose-50">
-        {/* Mobile sidebar toggle button */}
         <div className="mb-4 text-center">
           <h1 className="text-5xl font-bold text-emerald-700 ">
             Hi {session?.user?.name?.split(" ")[0] || "there"}! 👋
@@ -281,7 +256,6 @@ export default function Home() {
           )}
         </button>
         <div className="w-full max-w-5xl flex flex-col md:flex-row gap-6 bg-emerald-50/80 backdrop-blur-md rounded-2xl shadow-xl p-6 relative">
-          {/* Sidebar */}
           <div
             className={`w-full md:w-1/4 flex flex-col gap-4 border-r border-amber-100 pr-4 bg-emerald-50 md:static fixed top-0 left-0 h-full z-20 transition-transform duration-300 md:translate-x-0 ${
               sidebarOpen ? "translate-x-0" : "-translate-x-full"
@@ -302,25 +276,24 @@ export default function Home() {
               style={{ flex: 1, minHeight: 0 }}
             >
               {allChats.length > 0 &&
-                allChats.map((chatId, index) => (
+                allChats.map((session, index) => (
                   <div key={index} className="flex items-center gap-2 mb-1">
                     <button
                       className={`w-full px-3 py-2 rounded-lg text-left border border-emerald-100 hover:bg-emerald-100 transition ${
-                        currenChatId === chatId
+                        currenChatId === session.id
                           ? "bg-emerald-200 font-bold"
                           : ""
                       }`}
                       type="button"
                       onClick={() => {
-                        setCurrentChatId(chatId);
-                        openChat(chatId);
-                        setSidebarOpen(false); // close sidebar on mobile after selecting chat
+                        setCurrentChatId(session.id);
+                        openChat(session.id);
+                        setSidebarOpen(false);
                       }}
                     >
-                      Chat {index + 1}
+                      {session.title || `Chat ${index + 1}`}
                     </button>
-                    {/* Disabled Delete Button with Tooltip */}
-                    <div className="relative group">
+                    {/* <div className="relative group">
                       <button
                         disabled
                         className="text-rose-400 hover:text-rose-500 cursor-not-allowed px-2 py-1 rounded"
@@ -331,10 +304,11 @@ export default function Home() {
                       <span className="absolute left-1/2 -translate-x-1/2 right-0 min-w-[8rem] mt-1 px-2 py-1 text-xs bg-gray-700 text-white rounded opacity-0 group-hover:opacity-100 transition pointer-events-none z-10 whitespace-nowrap">
                         Next release 🚀
                       </span>
-                    </div>
+                    </div> */}
                   </div>
                 ))}
             </div>
+            {/* upcoming release: 
             <button
               onClick={addNewChat}
               className="w-full py-2 bg-emerald-400 text-white rounded-lg font-semibold transition relative group"
@@ -343,23 +317,17 @@ export default function Home() {
               <span className="absolute left-1/2 -translate-x-1/2 mt-10 w-max px-2 py-1 text-xs bg-gray-700 text-white rounded opacity-0 group-hover:opacity-100 transition pointer-events-none z-10 whitespace-nowrap">
                 Next release 🚀
               </span>
-            </button>
+            </button> */}
           </div>
-          {/* Chat Area */}
           <div className="flex-1 flex flex-col justify-between">
             <div className="mb-4 flex items-center justify-between px-2">
               <div>
-                {/* <h1 className="text-2xl font-bold text-emerald-700">
-                  Hi {session?.user?.name?.split(" ")[0] || "there"}! 👋
-                </h1> */}
                 <p className="text-emerald-600 mt-1 text-sm">
                   Welcome to your chat dashboard
                 </p>
               </div>
 
-              {/* Upload JD/Resume Button */}
               <div className="flex items-center gap-3">
-                {/* File name badge */}
                 {resume && (
                   <span className="bg-emerald-100 text-emerald-800 px-2 py-4 rounded text-xs max-w-[120px] truncate">
                     {shortenFileName(resume.name)}
@@ -393,7 +361,6 @@ export default function Home() {
                   </span>
                 </label>
 
-                {/* Action buttons */}
                 {resume && (
                   <button
                     onClick={(e) => handleUpload(e, "clean")}
@@ -498,12 +465,9 @@ export default function Home() {
               {matchesLoading && (
                 <Loader loadingMessage={"Finding matches for you !!!"} />
               )}
-              {/* {matchesLoading && } */}
-              {/* Add more dummy cards as needed */}
             </div>
           </div>
         )}
-        {/* Nudge button to open matches drawer */}
         {!showMatches && (
           <button
             className="fixed top-1/2 right-2 z-40 bg-emerald-400 text-white rounded-full p-3 shadow-lg hover:bg-emerald-500 transition"

@@ -3,12 +3,12 @@ import Requirement from "@/app/models/Requirement";
 import { NextResponse } from "next/server";
 
 export async function GET() {
-  await connectDB(); // Connect to MongoDB
+  await connectDB();
 
   try {
     const dummy = await Requirement.create({
-      userId: "566123abc123def456789012", // replace with real ObjectId from User
-      sessionId: "606123abc123def456789013", // replace with real ObjectId from Session
+      userId: "566123abc123def456789012",
+      sessionId: "606123abc123def456789013",
       profile_type: "job_seeker",
 
       current_role: "Frontend Developer",

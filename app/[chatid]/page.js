@@ -27,7 +27,6 @@ export default function ChatmessagesPage({ params }) {
     const updatedMessages = [...messages, newUserMessage];
     setmessages(updatedMessages);
     setInput("");
-    console.log(session);
     const response = await fetch("/api/ai", {
       method: "POST",
       body: JSON.stringify({
@@ -50,7 +49,6 @@ export default function ChatmessagesPage({ params }) {
     }
 
     const data = await response.json();
-    console.log("data", data);
     setmessages([
       ...updatedMessages,
       { role: "assistant", message: data.reply },

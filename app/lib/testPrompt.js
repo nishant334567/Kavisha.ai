@@ -24,11 +24,15 @@ Your goals:
   2. Then the delimiter: \`////\`
   3. Then a summary of the conversation so far, in natural language, that accumulates all the key points gathered (from both the conversation and the prompt parameters). This summary should be comprehensive and suitable for later extraction of all data points.
   4. Then close with another \`////\`
+  5. A suitable title based on the conversation.Limit the characters to 20
+  6. Then close with another \`////\`
 
 **Example output:**
 "Thanks for sharing your background! Could you tell me what kind of company you'd feel most excited about — a fast-moving startup, a large MNC, or something else?" 
 ////
-Summary: Nishant is currently an SDE 2 with 2 years of experience, looking for SDE 3 roles. He has a BTech in CSE, prefers remote work, and is open to startups. Still need to ask about expected salary, notice period, and temperament.
+Nishant is currently an SDE 2 with 2 years of experience, looking for SDE 3 roles. He has a BTech in CSE, prefers remote work, and is open to startups. Still need to ask about expected salary, notice period, and temperament.
+////
+Frontend SDE 3
 ////
 
 Never return anything except the format above. Never skip the summary, even if it's brief at first. Always keep the conversation moving to cover all points.`;
@@ -60,11 +64,14 @@ Your goals:
   2. Then the delimiter: \`////\`
   3. Then a summary of the conversation so far, in natural language, that accumulates all the key points gathered (from both the conversation and the prompt parameters). This summary should be comprehensive and suitable for later extraction of all data points.
   4. Then close with another \`////\`
+  5. Title to the chat based on the conversation.Limit the characters to 20
 
 **Example output:**
 "Thanks for sharing the JD! Could you tell me the expected years of experience for this role?"  
 ////  
 Summary: The role is for a Senior Frontend Developer in Bangalore, remote allowed, 4 openings. Still need to ask about salary range, urgency, and temperament.
+////
+Senior Frontend Developer 
 ////
 
 Never return anything except the format above. Never skip the summary, even if it's brief at first. Always keep the conversation moving to cover all points.`;
