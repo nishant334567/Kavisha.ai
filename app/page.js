@@ -9,6 +9,7 @@ import MatchCard from "@/app/components/MatchCard";
 import Loader from "./components/Loader";
 
 export default function Home() {
+  // 1. State and refs
   const { data: session, status } = useSession();
   const [allChats, setAllchats] = useState([]);
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function Home() {
   const endOfMessagesRef = useRef(null);
   const [messageLoading, setMessageLoading] = useState(false);
 
+  // 2. useEffect hooks
   useEffect(() => {
     endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
@@ -39,23 +41,10 @@ export default function Home() {
     } else if (!session.user?.profileType) {
       router.push("/set-role");
     }
-
     fetchChats();
   }, [status, session]);
 
-  useEffect(() => {}, [currenChatId, sessionResumes]);
-
-  const findMatches = async () => {
-    setMatchesLoading(true);
-    try {
-      const response = await fetch(`/api/matches/${currenChatId}`);
-      const data = await response.json();
-      if (data?.matches.length > 0) setMatches(data?.matches);
-    } catch (err) {
-      setMatchesError(err);
-    }
-    setMatchesLoading(false);
-  };
+  // 3. Data fetching
   const fetchChats = async () => {
     const response = await fetch("/api/allchats");
     const data = await response.json();
@@ -70,20 +59,42 @@ export default function Home() {
       });
       setSessionResumes(resumes);
     }
-
     if (data?.sessions?.length > 0) {
       setCurrentChatId(data.sessions[0].id);
       openChat(data.sessions[0].id);
     }
   };
 
+  const openChat = async (chatId) => {
+    if (chatId === "" || !chatId) return;
+    const response = await fetch(`/api/logs/${chatId}`);
+    const data = await response.json();
+    setmessages(data);
+    const sessionResume = sessionResumes[chatId];
+    setResumeText(sessionResume?.summary || "");
+  };
+
+  const findMatches = async () => {
+    setMatchesError("");
+    setMatches([]);
+    setMatchesLoading(true);
+    try {
+      const response = await fetch(`/api/matches/${currenChatId}`);
+      const data = await response.json();
+      if (data?.matches.length > 0) setMatches(data?.matches);
+    } catch (err) {
+      console.log("Inside catch");
+      setMatchesError(err);
+    }
+    setMatchesLoading(false);
+  };
+
+  // 4. Resume handling
   const handleUpload = async (e) => {
     e.preventDefault();
-
     const formData = new FormData();
     if (resume) {
       alert(`Selected file: ${resume.name}`);
-
       formData.append("file", resume);
       formData.append("sessionId", currenChatId);
       const response = await fetch("/api/upload-resume", {
@@ -100,7 +111,6 @@ export default function Home() {
         alert("No text parsed from you resume, try uploading again");
       }
       setResumeText(extractedText);
-
       setSessionResumes((prev) => ({
         ...prev,
         [currenChatId]: {
@@ -108,7 +118,6 @@ export default function Home() {
           summary: extractedText,
         },
       }));
-
       fetchChats();
       setResume(null);
       setFileInputKey((prev) => prev + 1);
@@ -116,6 +125,7 @@ export default function Home() {
       alert(`No resume selected`);
     }
   };
+
   const handleDelete = async (e) => {
     e.preventDefault();
     try {
@@ -142,6 +152,7 @@ export default function Home() {
     } catch (err) {}
   };
 
+  // 5. Chat/message handling
   const handleSubmit = async () => {
     if (!input.trim()) return;
     const newUserMessage = { role: "user", message: input };
@@ -160,7 +171,6 @@ export default function Home() {
         resume: resumeText,
       }),
     });
-
     if (!response.ok) {
       setmessages([
         ...updatedMessages,
@@ -171,7 +181,6 @@ export default function Home() {
       ]);
       return;
     }
-
     const data = await response.json();
     setmessages([
       ...updatedMessages,
@@ -185,34 +194,25 @@ export default function Home() {
     return <Loader />;
   }
 
-  const addNewChat = async () => {
-    const res = await fetch("/api/newchatsession", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: session?.user?.id,
-        role: session?.user?.profileType,
-      }),
-    });
-    const data = await res.json();
-    if (data.success) {
-      fetchChats();
-      setCurrentChatId(data.sid);
-      setResumeText("");
-    } else {
-      alert("Failed to create new chat room");
-    }
-  };
+  // const addNewChat = async () => {
+  //   const res = await fetch("/api/newchatsession", {
+  //     method: "POST",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({
+  //       userId: session?.user?.id,
+  //       role: session?.user?.profileType,
+  //     }),
+  //   });
+  //   const data = await res.json();
+  //   if (data.success) {
+  //     fetchChats();
+  //     setCurrentChatId(data.sid);
+  //     setResumeText("");
+  //   } else {
+  //     alert("Failed to create new chat room");
+  //   }
+  // };
 
-  const openChat = async (chatId) => {
-    if (chatId === "" || !chatId) return;
-    const response = await fetch(`/api/logs/${chatId}`);
-    const data = await response.json();
-    setmessages(data);
-
-    const sessionResume = sessionResumes[chatId];
-    setResumeText(sessionResume?.summary || "");
-  };
   return (
     <>
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-green-50 via-amber-50 to-rose-50">
@@ -480,6 +480,9 @@ export default function Home() {
                 })}
               {matchesLoading && (
                 <Loader loadingMessage={"Finding matches for you !!!"} />
+              )}
+              {!matchesLoading && matchesError != "" && (
+                <p className="text-center">Sorry no matches found 😿</p>
               )}
             </div>
           </div>

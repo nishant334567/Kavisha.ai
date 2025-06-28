@@ -1,7 +1,7 @@
 import {
   SYSTEM_PROMPT_JOB_SEEKER,
   SYSTEM_PROMPT_RECRUITER,
-} from "@/app/lib/testPrompt";
+} from "@/app/lib/systemPrompt";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
 import { connectDB } from "@/app/lib/db";
