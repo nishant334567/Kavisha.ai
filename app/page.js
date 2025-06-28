@@ -1,7 +1,7 @@
 "use client";
 
 import { useSession } from "next-auth/react";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signOut } from "next-auth/react";
 import shortenFileName from "@/app/utils/shortenfilename";
@@ -25,6 +25,12 @@ export default function Home() {
   const [matches, setMatches] = useState([]);
   const [matchesLoading, setMatchesLoading] = useState(false);
   const [matchesError, setMatchesError] = useState("");
+  const endOfMessagesRef = useRef(null);
+  const [messageLoading, setMessageLoading] = useState(false);
+
+  useEffect(() => {
+    endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages]);
 
   useEffect(() => {
     if (status === "loading") return;
@@ -143,6 +149,7 @@ export default function Home() {
     const updatedMessages = [...messages, newUserMessage];
     setmessages(updatedMessages);
     setInput("");
+    setMessageLoading(true);
     const response = await fetch("/api/ai", {
       method: "POST",
       body: JSON.stringify({
@@ -171,6 +178,7 @@ export default function Home() {
       { role: "assistant", message: data.reply },
     ]);
     setSummary(data?.summary || "");
+    setMessageLoading(false);
   };
 
   if (status === "loading" || !session?.user?.profileType) {
@@ -413,6 +421,14 @@ export default function Home() {
                   </div>
                 </div>
               ))}
+              {messageLoading && (
+                <div
+                  className={`px-4 py-2 rounded-lg max-w-xs break-words shadow bg-white border border-amber-100 text-gray-800`}
+                >
+                  {"AI is typing......"}
+                </div>
+              )}
+              <div ref={endOfMessagesRef}></div>
             </div>
             <form
               className="flex gap-2 mt-auto"
@@ -442,11 +458,11 @@ export default function Home() {
             <div className="flex justify-between items-center p-4 border-b border-emerald-100">
               <h2 className="text-xl font-bold text-emerald-700">Matches</h2>
               <button
-                className="text-rose-500 text-2xl font-bold"
+                className="text-rose-500 text-2xl font-bold p-2 bg-white rounded-lg"
                 onClick={() => setShowMatches(false)}
                 aria-label="Close matches"
               >
-                ×
+                Close
               </button>
             </div>
             <div className="p-4 overflow-y-auto flex-1">
