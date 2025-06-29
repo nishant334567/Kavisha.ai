@@ -36,6 +36,10 @@ const ChatSessionsSchema = new mongoose.Schema({
     enum: ["active", "completed"],
     default: "active",
   },
+  allDataCollected: {
+    type: Boolean,
+    default: false,
+  },
 });
 const Session =
   mongoose.models.ChatSessions ||

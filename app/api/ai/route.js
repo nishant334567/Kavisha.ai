@@ -8,6 +8,7 @@ import { connectDB } from "@/app/lib/db";
 import Logs from "@/app/models/ChatLogs";
 import { getToken } from "next-auth/jwt";
 import Session from "@/app/models/ChatSessions";
+import { getMatches } from "../matches/[sessionId]/route";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -59,7 +60,10 @@ export async function POST(request) {
     const messages = [
       {
         role: "system",
-        content: jobseeker ? SYSTEM_PROMPT_JOB_SEEKER : SYSTEM_PROMPT_RECRUITER,
+        content:
+          jobseeker === "recruiter"
+            ? SYSTEM_PROMPT_RECRUITER
+            : SYSTEM_PROMPT_JOB_SEEKER,
       },
       ...history.map((m) => ({
         role: m.role,
@@ -82,12 +86,14 @@ export async function POST(request) {
     let reply = "";
     let summary = "";
     let title = "";
+    let allDataCollected = false;
 
     const parts = replyAi.split("////").map((item) => item.trim());
-    if (parts.length >= 2) {
+    if (parts.length >= 4) {
       reply = parts[0];
       summary = parts[1];
       title = parts.length >= 3 ? parts[2] : "";
+      allDataCollected = parts.length >= 4 ? parts[3] : false;
     } else {
       const rePromptMessages = [
         ...messages,
@@ -104,10 +110,11 @@ export async function POST(request) {
       });
       const reReplyAi = reChatCompletion.choices[0].message.content;
       const reParts = reReplyAi.split("////").map((item) => item.trim());
-      if (reParts.length >= 2) {
+      if (reParts.length >= 4) {
         reply = reParts[0];
         summary = reParts[1];
         title = reParts.length >= 3 ? reParts[2] : "";
+        allDataCollected = reParts.length >= 4 ? reParts[3] : false;
       } else {
         reply = reReplyAi.trim();
         summary = "";
@@ -122,10 +129,30 @@ export async function POST(request) {
 
     await Session.updateOne(
       { _id: sessionId },
-      { $set: { chatSummary: summary, title: title } },
+      {
+        $set: {
+          chatSummary: summary,
+          title: title,
+          allDataCollected: allDataCollected === "true",
+        },
+      },
       { upsert: true }
     );
-    return NextResponse.json({ reply, summary, title });
+    let matches = [];
+    if (allDataCollected === "true") {
+      matches = await getMatches(sessionId);
+      if (matches.length > 0) {
+        reply +=
+          "Based on you search, I have found some matches. Click on find matches to see the matches";
+      }
+    }
+    return NextResponse.json({
+      reply,
+      summary,
+      title,
+      allDataCollected,
+      matches,
+    });
   } catch (error) {
     console.error(error);
     return NextResponse.json(
