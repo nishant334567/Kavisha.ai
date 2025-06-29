@@ -28,6 +28,8 @@ export default function Home() {
   const [matchesError, setMatchesError] = useState("");
   const endOfMessagesRef = useRef(null);
   const [messageLoading, setMessageLoading] = useState(false);
+  const [uploadloading, setUploadloading] = useState(false);
+  const [isDeleting, setIsdeleting] = useState(false);
 
   // 2. useEffect hooks
   useEffect(() => {
@@ -48,6 +50,7 @@ export default function Home() {
   const fetchChats = async () => {
     const response = await fetch("/api/allchats");
     const data = await response.json();
+    setResumeText(data?.sessions?.[0].resumeSummary);
     setAllchats(data?.sessions || []);
     if (data.sessions) {
       const resumes = {};
@@ -61,17 +64,19 @@ export default function Home() {
     }
     if (data?.sessions?.length > 0) {
       setCurrentChatId(data.sessions[0].id);
-      openChat(data.sessions[0].id);
+      openChat(data.sessions[0].id, true);
     }
   };
 
-  const openChat = async (chatId) => {
+  const openChat = async (chatId, firstcall = false) => {
     if (chatId === "" || !chatId) return;
     const response = await fetch(`/api/logs/${chatId}`);
     const data = await response.json();
     setmessages(data);
-    const sessionResume = sessionResumes[chatId];
-    setResumeText(sessionResume?.summary || "");
+    if (!firstcall) {
+      const sessionResume = sessionResumes[chatId];
+      setResumeText(sessionResume?.summary || "");
+    }
   };
 
   const findMatches = async () => {
@@ -83,7 +88,6 @@ export default function Home() {
       const data = await response.json();
       if (data?.matches.length > 0) setMatches(data?.matches);
     } catch (err) {
-      console.log("Inside catch");
       setMatchesError(err);
     }
     setMatchesLoading(false);
@@ -91,13 +95,15 @@ export default function Home() {
 
   // 4. Resume handling
   const handleUpload = async (e) => {
+    setUploadloading(true);
     e.preventDefault();
     const formData = new FormData();
     if (resume) {
       alert(`Selected file: ${resume.name}`);
       formData.append("file", resume);
       formData.append("sessionId", currenChatId);
-      const response = await fetch("/api/upload-resume", {
+      // formData.append("sessionId", currenChatId);
+      const response = await fetch("/api/doc-to-text", {
         method: "POST",
         body: formData,
       });
@@ -118,18 +124,20 @@ export default function Home() {
           summary: extractedText,
         },
       }));
-      fetchChats();
+      // fetchChats();
       setResume(null);
       setFileInputKey((prev) => prev + 1);
     } else {
       alert(`No resume selected`);
     }
+    setUploadloading(false);
   };
 
   const handleDelete = async (e) => {
     e.preventDefault();
+    setIsdeleting(true);
     try {
-      const response = await fetch("/api/upload-resume", {
+      const response = await fetch("/api/doc-to-text", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: currenChatId }),
@@ -150,6 +158,7 @@ export default function Home() {
         alert(data.error || "Failed to delete resume");
       }
     } catch (err) {}
+    setIsdeleting(false);
   };
 
   // 5. Chat/message handling
@@ -335,7 +344,6 @@ export default function Home() {
                 </p>
               </div>
 
-              {/* fix upload section
               <div className="flex items-center gap-3">
                 {resume && (
                   <span className="bg-emerald-100 text-emerald-800 px-2 py-4 rounded text-xs max-w-[120px] truncate">
@@ -354,11 +362,18 @@ export default function Home() {
                   <input
                     type="file"
                     className="hidden"
+                    accept=".pdf,.docx"
+                    onChange={(e) => setResume(e.target.files[0])}
+                    key={fileInputKey + currenChatId}
+                  />
+                  {/* <input
+                    type="file"
+                    className="hidden"
                     onChange={(e) => {
                       setResume(e.target.files[0]);
                     }}
                     key={fileInputKey + currenChatId}
-                  />
+                  /> */}
                   <span>
                     {resume ||
                     (sessionResumes[currenChatId] &&
@@ -372,32 +387,23 @@ export default function Home() {
 
                 {resume && (
                   <button
+                    disabled={uploadloading}
                     onClick={(e) => handleUpload(e, "clean")}
                     className="px-3 py-2 bg-emerald-400 text-white rounded hover:bg-emerald-500 transition"
                   >
-                    Submit
+                    {uploadloading ? "Processing..." : "Submit"}
                   </button>
                 )}
                 {sessionResumes[currenChatId] &&
                   sessionResumes[currenChatId].summary.length > 0 && (
                     <button
                       onClick={(e) => handleDelete(e)}
+                      disabled={isDeleting}
                       className="px-3 py-2 bg-rose-100 text-rose-700 rounded hover:bg-rose-200 transition"
                     >
-                      Delete
+                      {isDeleting ? "Deleting..." : "Delete"}
                     </button>
-                  ) }
-                <button
-                  className="ml-2 px-3 py-2 bg-emerald-500 text-white rounded hover:bg-emerald-600 transition"
-                  onClick={() => {
-                    findMatches();
-                    setShowMatches(true);
-                  }}
-                >
-                  Find Matches
-                </button>
-              </div> */}
-              <div>
+                  )}
                 <button
                   className="ml-2 px-3 py-2 bg-emerald-500 text-white rounded hover:bg-emerald-600 transition"
                   onClick={() => {
@@ -437,7 +443,7 @@ export default function Home() {
                 <div
                   className={`px-4 py-2 rounded-lg max-w-xs break-words shadow bg-white border border-amber-100 text-gray-800`}
                 >
-                  {"AI is typing......"}
+                  {"Kavisha is typing…. "}
                 </div>
               )}
               <div ref={endOfMessagesRef}></div>
