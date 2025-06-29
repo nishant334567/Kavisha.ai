@@ -50,7 +50,9 @@ export default function Home() {
   const fetchChats = async () => {
     const response = await fetch("/api/allchats");
     const data = await response.json();
-    setResumeText(data?.sessions?.[0].resumeSummary);
+    setResumeText(
+      data?.sessions?.length > 0 ? data.sessions[0].resumeSummary : ""
+    );
     setAllchats(data?.sessions || []);
     if (data.sessions) {
       const resumes = {};
@@ -197,6 +199,10 @@ export default function Home() {
     ]);
     setSummary(data?.summary || "");
     setMessageLoading(false);
+    if (data?.matches?.length > 0) {
+      setMatches(data?.matches);
+      setShowMatches(true);
+    }
   };
 
   if (status === "loading" || !session?.user?.profileType) {

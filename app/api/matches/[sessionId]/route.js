@@ -8,10 +8,8 @@ const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
 
-export async function GET(req, { params }) {
+export async function getMatches(sessionId) {
   await connectDB();
-  const { sessionId } = await params;
-
   const session = await Session.findById({ _id: sessionId });
 
   const oppositeRole =
@@ -107,6 +105,11 @@ Return only the JSON array, nothing else.
     ...m,
     name: userMap[m.userId]?.name || "",
   }));
+  return matchesWithNames;
+}
+export async function GET(req, { params }) {
+  const { sessionId } = await params;
+  const response = await getMatches(sessionId);
 
-  return NextResponse.json({ matches: matchesWithNames });
+  return NextResponse.json({ matches: response });
 }
