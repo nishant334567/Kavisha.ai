@@ -33,7 +33,11 @@ export async function POST(request) {
     const body = await request.json();
     const { history, userMessage, jobseeker, sessionId, resume } = body;
     const resumeText = resume || "";
-    const systemPrompt = `You are a job-matching assistant. If resume information is provided, consider it in every response before asking question. Also in subsequent convrsation user can update/tweak it, consider that.`;
+
+    const systemPrompt = `You are a job-matching assistant. 
+    If resume/job desdcription document is provided, consider 
+    it in every response before asking question. 
+    Also in subsequent conversation user can update/tweak it, consider that.`;
     if (
       !userMessage ||
       typeof userMessage !== "string" ||
