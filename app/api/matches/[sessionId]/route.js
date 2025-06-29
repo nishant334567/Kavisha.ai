@@ -20,47 +20,61 @@ export async function getMatches(sessionId) {
   });
 
   const prompt = `
-You are a job matching assistant.
+  You are a smart job-matching assistant.
+  
+  Your task is to compare one user [A] with multiple potential matches [B1, B2, ..., Bn] based on their chat summaries.
+  
+  [A] is a "${session?.role}" with the following requirements (chat summary):
+  ---
+  ${session?.chatSummary}
+  ---
+  
+  Each [B] is a "${oppositeRole}" session with their own offering (chat summary):
+  ${allProviders
+    .map(
+      (s, i) => `
+  [B${i + 1}]
+  "userId": "${s.userId}"
+  "sessionId": "${s._id}"
+  "chatSummary": "${s.chatSummary}"`
+    )
+    .join("\n")}
+  ---
+  
+  Instructions:
+  - Treat [A] as the *consumer* and each [B] as a *provider*.
+  - Compare [A]'s requirements with each [B]'s chatSummary.
+  - Select and recommend up to 10 of the most relevant matches.
+  - For each selected match, return:
+  
+    {
+      "userId": "...",             // from B
+      "sessionId": "...",          // from B
+      "matchingReason": "Explain briefly why this match is relevant",
+      "chatSummary": "Summarize B's offering clearly"
+    }
+  
+  Format:
+  - Return ONLY a JSON array of matched objects (maximum 10).
+  - Use double quotes for all keys.
+  - DO NOT include any explanation, intro, or text outside the JSON.
+  
+  Strictly follow the format below:
+  [
+    {
+      "userId": "...",
+      "sessionId": "...",
+      "matchingReason": "This is what Kavisha found for you because ...",
+      "chatSummary": "chatSummary": "${
+        oppositeRole === "recruiter"
+          ? "Recruiter is looking for"
+          : "Job Seeker is looking for"
+      } ..."
 
-[A] is a ${session?.role} with the following requirements (chat summary):
----
-${session?.chatSummary}
----
-
-[B] is an array of ${oppositeRole} sessions, each with a chat summary describing their offering:
-${allProviders
-  .map(
-    (s, i) => `
-[${i + 1}]
-userId: ${s.userId}
-sessionId: ${s._id}
-chatSummary: ${s.chatSummary}
-`
-  )
-  .join("\n")}
----
-
-Your task:
-- Treat A as the consumer and each B as a provider.
-- Compare A's requirements with each B's offering (from their chatSummary).
-- Recommend up to 10 best matches (most relevant providers for A).
-- For each match, provide:
-  - "userId": userId of the matched provider,
-  - "sessionId": sessionId of the matched provider,
-  - "matchingReason": a concise reason for the match,
-  - "chatSummary": chat summary of the matched provider
-
-Return your answer as a JSON array, with each object using double quotes for keys, like:
-[
-  {
-    "userId": "...",
-    "sessionId": "...",
-    "matchingReason": "...",
-    "chatSummary": "..."
-  }
-]
-Return only the JSON array, nothing else.
-`;
+    },
+    ...
+  ]
+  `;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
