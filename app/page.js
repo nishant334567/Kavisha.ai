@@ -233,12 +233,12 @@ export default function Home() {
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-green-50 via-amber-50 to-rose-50">
         <div className="mb-4 text-center">
           <h1 className="text-5xl font-bold text-emerald-700 ">
-            Hi {session?.user?.name?.split(" ")[0] || "there"}! 👋
+            Hi {session?.user?.name?.split(" ")[0]}! 👋
           </h1>
           <p className="text-emerald-400 mt-1 text-lg">
             {session?.user?.profileType === "recruiter"
-              ? "Lets find right set of candidates for you!"
-              : "Lets find your dream job!!"}
+              ? `I’m here to help you find the candidates you want. Let’s talk! 🙂`
+              : `I’m here to help you find the job you want. Let’s talk! 🙂`}
           </p>
         </div>
         <button
@@ -411,7 +411,6 @@ export default function Home() {
                     </button>
                   )}
                 <button
-                  
                   className="ml-2 px-3 py-2 bg-emerald-500 text-white rounded hover:bg-emerald-600 transition"
                   onClick={() => {
                     findMatches();
