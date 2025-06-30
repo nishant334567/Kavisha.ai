@@ -113,10 +113,10 @@ export default function Home() {
       let extractedText;
       if (data.text) {
         extractedText = data.text;
-        alert("Resume proceses, will consider that in you job search journey");
+        alert("Resume processed. Will consider it in your job search journey!");
       } else {
         extractedText = "No text extracted";
-        alert("No text parsed from you resume, try uploading again");
+        alert("No text extracted from you resume, try uploading again.");
       }
       setResumeText(extractedText);
       setSessionResumes((prev) => ({
@@ -233,7 +233,7 @@ export default function Home() {
       <div className="min-h-screen flex flex-col items-center justify-center p-4 bg-gradient-to-br from-green-50 via-amber-50 to-rose-50">
         <div className="mb-4 text-center">
           <h1 className="text-5xl font-bold text-emerald-700 ">
-            Hi {session?.user?.name?.split(" ")[0]}! 👋
+            Hi, {session?.user?.name?.split(" ")[0]}! 👋
           </h1>
           <p className="text-emerald-400 mt-1 text-lg">
             {session?.user?.profileType === "recruiter"
@@ -331,8 +331,8 @@ export default function Home() {
                   </div>
                 ))}
             </div>
-            {/* upcoming release: 
-            <button
+
+            {/* <button
               onClick={addNewChat}
               className="w-full py-2 bg-emerald-400 text-white rounded-lg font-semibold transition relative group"
             >

@@ -142,8 +142,10 @@ export async function POST(request) {
     if (allDataCollected === "true") {
       matches = await getMatches(sessionId);
       if (matches.length > 0) {
-        reply +=
-          "Based on you search, I have found some matches. Click on find matches to see the matches";
+        reply += `Based on your search, I have found some matches. 
+          Click on the “find matches” button to see if they’re 
+          relevant. Let me know if they’re good, I’ll keep 
+          looking out for more in the meantime. Cheers! `;
       }
     }
     return NextResponse.json({
