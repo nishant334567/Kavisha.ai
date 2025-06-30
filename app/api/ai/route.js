@@ -120,6 +120,30 @@ export async function POST(request) {
         summary = "";
       }
     }
+    let matches = [];
+    if (allDataCollected === "true") {
+      matches = await getMatches(sessionId);
+
+      if (matches.length > 0) {
+        const matchesCount = matches.length;
+
+        const verb = matchesCount === 1 ? "" : "have";
+
+        const message = `Based on your search, I ${verb} found ${
+          matchesCount === 1 ? "a match" : `${matchesCount} matches`
+        }.
+Click on the “find matches” button to see if ${
+          matchesCount === 1 ? "it's" : "they’re"
+        } relevant. Let me know if ${
+          matchesCount === 1 ? "it's" : "they’re"
+        } good, I’ll keep looking out for more in the meantime. Cheers!`;
+        reply = message;
+      } else {
+        reply = `I’ve got all the info I need and will keep a lookout.
+         Ping me if you want to update anything.`;
+      }
+    }
+
     await Logs.create({
       message: reply,
       sessionId: sessionId,
@@ -138,16 +162,7 @@ export async function POST(request) {
       },
       { upsert: true }
     );
-    let matches = [];
-    if (allDataCollected === "true") {
-      matches = await getMatches(sessionId);
-      if (matches.length > 0) {
-        reply += `Based on your search, I have found some matches. 
-          Click on the “find matches” button to see if they’re 
-          relevant. Let me know if they’re good, I’ll keep 
-          looking out for more in the meantime. Cheers! `;
-      }
-    }
+
     return NextResponse.json({
       reply,
       summary,
