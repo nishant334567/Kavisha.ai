@@ -1,14 +1,10 @@
 "use client";
-import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { signIn, useSession } from "next-auth/react";
-import { getSession } from "next-auth/react";
+
+import { useState } from "react";
 
 export default function SetRole() {
   const [role, setRole] = useState("");
   const [isUpdating, setIsUpdating] = useState(false);
-  const router = useRouter();
-  const { data: session, status } = useSession();
 
   const handleChange = (e) => {
     setRole(e.target.value);

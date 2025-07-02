@@ -3,6 +3,7 @@ import Session from "@/app/models/ChatSessions";
 import User from "@/app/models/Users";
 import OpenAI from "openai";
 import { connectDB } from "@/app/lib/db";
+import mongoose from "mongoose";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -19,62 +20,58 @@ export async function getMatches(sessionId) {
     chatSummary: { $exists: true, $ne: "" },
   });
 
-  const prompt = `
-  You are a smart job-matching assistant.
-  
-  Your task is to compare one user [A] with multiple potential matches [B1, B2, ..., Bn] based on their chat summaries.
-  
-  [A] is a "${session?.role}" with the following requirements (chat summary):
-  ---
-  ${session?.chatSummary}
-  ---
-  
-  Each [B] is a "${oppositeRole}" session with their own offering (chat summary):
-  ${allProviders
+  const allProvidersList = allProviders
     .map(
       (s, i) => `
-  [B${i + 1}]
-  "userId": "${s.userId}"
-  "sessionId": "${s._id}"
-  "chatSummary": "${s.chatSummary}"`
+[B${i + 1}]
+"userId": "${s.userId}"
+"sessionId": "${s._id}"
+"chatSummary": "${s.chatSummary}"`
     )
-    .join("\n")}
-  ---
-  
-  Instructions:
-  - Treat [A] as the *consumer* and each [B] as a *provider*.
-  - Compare [A]'s requirements with each [B]'s chatSummary.
-  - Select and recommend up to 10 of the most relevant matches.
-  - For each selected match, return:
-  
-    {
-      "userId": "...",             // from B
-      "sessionId": "...",          // from B
-      "matchingReason": "Explain briefly why this match is relevant",
-      "chatSummary": "Summarize B's offering clearly"
-    }
-  
-  Format:
-  - Return ONLY a JSON array of matched objects (maximum 10).
-  - Use double quotes for all keys.
-  - DO NOT include any explanation, intro, or text outside the JSON.
-  
-  Strictly follow the format below:
-  [
-    {
-      "userId": "...",
-      "sessionId": "...",
-      "matchingReason": "This is what Kavisha found for you because ...",
-      "chatSummary": "chatSummary": "${
-        oppositeRole === "recruiter"
-          ? "Recruiter is looking for"
-          : "Job Seeker is looking for"
-      } ..."
+    .join("\n");
 
-    },
-    ...
-  ]
-  `;
+  const prompt = `
+You are a smart job-matching assistant.
+
+Your task is to compare one user [A] with multiple potential matches [B] based on their chat summaries.
+
+[A] is a "${session?.role}" with the following requirements (chat summary):
+---
+${session?.chatSummary}
+---
+
+Each [B] is a "${oppositeRole}" session with their own offering (chat summary):
+${allProvidersList}
+---
+
+Instructions:
+- Compare [A]'s requirements with each [B]'s chatSummary.
+- Select and recommend up to 10 of the most relevant matches.
+- For each selected match, return:
+
+  {
+    "userId": "...",             // Use the exact userId from the [B] above
+    "sessionId": "...",          // Use the exact sessionId from the [B] above
+    "matchingReason": "Explain briefly why this match is relevant",
+    "chatSummary": "Summarize B's offering clearly"
+  }
+
+Format:
+- Return ONLY a JSON array of matched objects (maximum 10).
+- Use double quotes for all keys.
+- **For each match, use the exact userId and sessionId as provided above for each [B]. Do not invent or change these values.**
+- DO NOT include any explanation, intro, or text outside the JSON.
+
+Strictly follow the format below (using the real userId/sessionId from above):
+[
+  {
+    "userId": "use from above",
+    "sessionId": "use from above",
+    "matchingReason": "This is what Kavisha found for you because ...",
+    "chatSummary": "Recruiter is looking for ..."
+  }
+]
+`;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -109,8 +106,11 @@ export async function getMatches(sessionId) {
   }
 
   const userIds = matches.map((m) => m.userId);
+  const validUserIds = userIds.filter((id) =>
+    mongoose.Types.ObjectId.isValid(id)
+  );
   const users = await User.find(
-    { _id: { $in: userIds } },
+    { _id: { $in: validUserIds } },
     { _id: 1, name: 1, email: 1 }
   );
   const userMap = {};
@@ -123,7 +123,11 @@ export async function getMatches(sessionId) {
     name: userMap[m.userId]?.name || "",
     email: userMap[m.userId]?.email || "",
   }));
-  return matchesWithNames;
+  // Filter out matches where both name and email are empty
+  const filteredMatches = matchesWithNames.filter(
+    (m) => m.name !== "" || m.email !== ""
+  );
+  return filteredMatches;
 }
 export async function GET(req, { params }) {
   const { sessionId } = await params;

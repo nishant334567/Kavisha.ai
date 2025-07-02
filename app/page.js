@@ -88,6 +88,9 @@ export default function Home() {
     try {
       const response = await fetch(`/api/matches/${currenChatId}`);
       const data = await response.json();
+      if (data.matches.length <= 0) {
+        setMatchesError("Sorry no matches found 🥱");
+      }
       if (data?.matches.length > 0) setMatches(data?.matches);
     } catch (err) {
       setMatchesError(err);
@@ -187,9 +190,11 @@ export default function Home() {
         ...updatedMessages,
         {
           role: "assistant",
-          message: "Error: Could not get response from Open AI",
+          message:
+            "Kavisha failed to respond to that. Can you please try again?",
         },
       ]);
+      setMessageLoading(false);
       return;
     }
     const data = await response.json();
@@ -207,6 +212,16 @@ export default function Home() {
 
   if (status === "loading" || !session?.user?.profileType) {
     return <Loader />;
+  }
+
+  if (!session) {
+    redirect("/login");
+    return null;
+  }
+
+  if (!session.user?.profileType) {
+    router.push("/set-role");
+    return null;
   }
 
   // const addNewChat = async () => {
@@ -386,8 +401,8 @@ export default function Home() {
                       sessionResumes[currenChatId].summary.length > 0)
                       ? "Reselect"
                       : session?.user?.profileType === "recruiter"
-                      ? "Share JD"
-                      : "Upload Resume"}
+                        ? "Share JD"
+                        : "Upload Resume"}
                   </span>
                 </label>
 
@@ -411,7 +426,7 @@ export default function Home() {
                     </button>
                   )}
                 <button
-                  className="ml-2 px-3 py-2 bg-emerald-500 text-white rounded hover:bg-emerald-600 transition"
+                  className="ml-2 px-3 py-2 bg-emerald-400 text-white rounded hover:bg-emerald-600 transition"
                   onClick={() => {
                     findMatches();
                     setShowMatches(true);
@@ -437,7 +452,7 @@ export default function Home() {
                   <div
                     className={`px-4 py-2 rounded-lg max-w-xs break-words shadow ${
                       m.role === "user"
-                        ? "bg-emerald-300 text-white"
+                        ? "bg-emerald-600 text-white"
                         : "bg-white border border-amber-100 text-gray-800"
                     }`}
                   >
@@ -507,7 +522,7 @@ export default function Home() {
                 <Loader loadingMessage={"Finding matches for you !!!"} />
               )}
               {!matchesLoading && matchesError != "" && (
-                <p className="text-center">Sorry no matches found 😿</p>
+                <p className="text-center">{matchesError}</p>
               )}
             </div>
           </div>

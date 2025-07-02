@@ -132,14 +132,14 @@ export async function POST(request) {
         const message = `Based on your search, I ${verb} found ${
           matchesCount === 1 ? "a match" : `${matchesCount} matches`
         }.
-Click on the “find matches” button to see if ${
-          matchesCount === 1 ? "it's" : "they’re"
+Click on the "find matches" button to see if ${
+          matchesCount === 1 ? "it's" : "they're"
         } relevant. Let me know if ${
-          matchesCount === 1 ? "it's" : "they’re"
-        } good, I’ll keep looking out for more in the meantime. Cheers!`;
+          matchesCount === 1 ? "it's" : "they're"
+        } good, I'll keep looking out for more in the meantime. Cheers!`;
         reply = message;
       } else {
-        reply = `I’ve got all the info I need and will keep a lookout.
+        reply = `I've got all the info I need and will keep a lookout.
          Ping me if you want to update anything.`;
       }
     }
