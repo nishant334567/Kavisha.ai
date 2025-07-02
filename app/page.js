@@ -496,7 +496,8 @@ export default function Home() {
                   return (
                     <MatchCard
                       key={index}
-                      title={item.name}
+                      matchedName={item.name}
+                      matchedEmail={item.email}
                       subtitle={item.matchingReason}
                       details={item.chatSummary}
                     />

@@ -109,7 +109,10 @@ export async function getMatches(sessionId) {
   }
 
   const userIds = matches.map((m) => m.userId);
-  const users = await User.find({ _id: { $in: userIds } }, { _id: 1, name: 1 });
+  const users = await User.find(
+    { _id: { $in: userIds } },
+    { _id: 1, name: 1, email: 1 }
+  );
   const userMap = {};
   users.forEach((u) => {
     userMap[u._id.toString()] = u;
@@ -118,6 +121,7 @@ export async function getMatches(sessionId) {
   const matchesWithNames = matches.map((m) => ({
     ...m,
     name: userMap[m.userId]?.name || "",
+    email: userMap[m.userId]?.email || "",
   }));
   return matchesWithNames;
 }
