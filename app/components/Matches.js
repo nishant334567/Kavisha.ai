@@ -50,7 +50,10 @@ export default function Matches({
               className="w-full max-w-full min-h-[180px] overflow-x-auto flex gap-3 scroll-smooth scrollbar-none"
             >
               {matches.map((item, index) => (
-                <div key={index} className="flex-shrink-0 w-[32%] h-full ">
+                <div
+                  key={index}
+                  className="w-full flex-shrink-0 md:w-[32%] h-full "
+                >
                   <MatchCard
                     matchPercentage={item.matchPercentage}
                     matchingReason={item.matchingReason}

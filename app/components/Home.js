@@ -5,6 +5,7 @@ import ChatSidebar from "./ChatSidebar";
 import ChatBox from "./ChatBox";
 import Resume from "./Resume";
 import Notification from "./Notification";
+import { useSession, signOut } from "next-auth/react";
 
 export default function Home({ initialChats, notifications }) {
   const [currentChatId, setCurrentchatid] = useState(
@@ -18,6 +19,8 @@ export default function Home({ initialChats, notifications }) {
   const [resumeData, setResumedata] = useState({});
   const [openNotifications, setOpenNotifications] = useState(false);
   const [connections, setConnections] = useState([]);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const { data: session } = useSession();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -41,8 +44,8 @@ export default function Home({ initialChats, notifications }) {
   }, [currentChatId]);
 
   const updateChatId = (chatId) => {
-    console.log("Triggered ");
     setCurrentchatid(chatId);
+    setShowSidebar(false); // Close sidebar on mobile after selecting chat
   };
 
   const updateResume = (filename, summary) => {
@@ -55,6 +58,62 @@ export default function Home({ initialChats, notifications }) {
 
   return (
     <div className="relative">
+      {/* Mobile sidebar toggle button */}
+      <button
+        className="md:hidden fixed top-4 left-4 z-50 bg-gray-200 p-2 rounded shadow"
+        onClick={() => setShowSidebar((prev) => !prev)}
+      >
+        ☰ {/* Hamburger icon */}
+      </button>
+      {/* Mobile sidebar overlay */}
+      {showSidebar && (
+        <div
+          className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden"
+          onClick={() => setShowSidebar(false)}
+        >
+          <div
+            className="absolute left-0 top-0 h-full w-3/4 bg-white shadow-lg p-4"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* <button
+              className="mb-4 text-gray-500"
+              onClick={() => setShowSidebar(false)}
+            >
+              Close
+            </button> */}
+            <ChatSidebar
+              allChats={allChats}
+              updateChatId={updateChatId}
+              currentChatId={currentChatId}
+            />
+            <div className="flex flex-col gap-2 mt-4">
+              <button
+                className="text-xs bg-gray-100 w-full p-2 shadow-lg mt-2 rounded-md hover:bg-white hover:text-gray-500"
+                onClick={async () => {
+                  const res = await fetch("/api/newchatsession", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      userId: session?.user?.id,
+                      role: session?.user?.profileType,
+                    }),
+                  });
+                  const data = await res.json();
+                  if (data.success) updateChatId(data.sessionId);
+                }}
+              >
+                + New Chat
+              </button>
+              <button
+                className="text-xs bg-gray-100 w-full p-2 shadow-lg rounded-md hover:bg-white hover:text-gray-500"
+                onClick={() => signOut({ callbackUrl: "/login" })}
+              >
+                Sign Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
       <div className="absolute -top-22 -right-5">
         <button
           onClick={() => setOpenNotifications((prev) => !prev)}
@@ -73,6 +132,7 @@ export default function Home({ initialChats, notifications }) {
         </div>
       </div>
       <div className="flex flex-col md:flex-row md:flex justify-evenly gap-4">
+        {/* Desktop sidebar */}
         <div className="w-[20%] md:w-[20%] hidden md:block">
           <ChatSidebar
             allChats={allChats}
@@ -81,11 +141,11 @@ export default function Home({ initialChats, notifications }) {
           />
         </div>
         <div className="w-full md:w-[70%]">
-          <Resume
+          {/* <Resume
             resumeData={resumeData}
             updateResume={updateResume}
             currentChatId={currentChatId}
-          />
+          /> */}
 
           <ChatBox
             connections={connections}
@@ -95,14 +155,6 @@ export default function Home({ initialChats, notifications }) {
             resumeText={resumeData.resumeSummary}
           />
         </div>
-        {/* <div>
-          <button className="w-full px-2 py-1 rounded-sm shadow-md text-xs">
-            Show Matches
-          </button>
-          <button className="w-full px-2 py-1 rounded-sm shadow-md text-xs">
-            Connection Requests
-          </button>
-        </div> */}
       </div>
     </div>
   );
