@@ -46,15 +46,18 @@ ${allProvidersList}
 
 Instructions:
 - Compare [A]'s requirements with each [B]'s chatSummary.
-- Select and recommend up to 10 of the most relevant matches.
+- Dont return a match if match precentage is less tha 30%
 - For each selected match, return:
 
   {
-    "userId": "...",             // Use the exact userId from the [B] above
-    "sessionId": "...",          // Use the exact sessionId from the [B] above
+    "sessionId": "${sessionId}"    // A's session 
+    "matchedUserId": "...",             // Use the exact userId from the [B] above
+    "matchedSessionId": "...",          // Use the exact sessionId from the [B] above
     "matchingReason": "Explain briefly why this match is relevant",
-    "chatSummary": "Summarize B's offering clearly"
+    "matchPercentage": "50%" // if all data points matches then 100% , if only half of it matches then 50% and so on. This is based on your calculation and matching, basically your intelligence
+    "mismatchReason": "Preferred location and salary expectaions differs"
   }
+
 
 Format:
 - Return ONLY a JSON array of matched objects (maximum 10).
@@ -65,10 +68,12 @@ Format:
 Strictly follow the format below (using the real userId/sessionId from above):
 [
   {
-    "userId": "use from above",
-    "sessionId": "use from above",
+    "sessionId": "${sessionId}",
+    "matchedUserId": "use from above",
+    "matchedSessionId": "use from above",
     "matchingReason": "This is what Kavisha found for you because ...",
-    "chatSummary": "Recruiter is looking for ..."
+    "matchPercentage": "40%", //dont hard code the value, this is just a example. based on matching algo , calculate the matching percentage yourself
+    "mismatchReason": "Recruiter is looking for onsite but you have remote as a preference. Also offered salary range os 100k-140k but you expectation is 200k."
   }
 ]
 `;
@@ -105,29 +110,37 @@ Strictly follow the format below (using the real userId/sessionId from above):
     );
   }
 
-  const userIds = matches.map((m) => m.userId);
-  const validUserIds = userIds.filter((id) =>
-    mongoose.Types.ObjectId.isValid(id)
-  );
-  const users = await User.find(
-    { _id: { $in: validUserIds } },
-    { _id: 1, name: 1, email: 1 }
-  );
-  const userMap = {};
-  users.forEach((u) => {
-    userMap[u._id.toString()] = u;
-  });
+  // const userIds = matches.map((m) => m.userId);
+  // const validUserIds = userIds.filter((id) =>
+  //   mongoose.Types.ObjectId.isValid(id)
+  // );
+  // const users = await User.find(
+  //   { _id: { $in: validUserIds } },
+  //   { _id: 1, name: 1, email: 1 }
+  // );
+  // const userMap = {};
+  // users.forEach((u) => {
+  //   userMap[u._id.toString()] = u;
+  // });
 
-  const matchesWithNames = matches.map((m) => ({
-    ...m,
-    name: userMap[m.userId]?.name || "",
-    email: userMap[m.userId]?.email || "",
-  }));
-  // Filter out matches where both name and email are empty
-  const filteredMatches = matchesWithNames.filter(
-    (m) => m.name !== "" || m.email !== ""
+  // const matchesWithNames = matches.map((m) => ({
+  //   ...m,
+  //   name: userMap[m.userId]?.name || "",
+  //   email: userMap[m.userId]?.email || "",
+  // }));
+  // // Filter out matches where both name and email are empty
+  // const filteredMatches = matchesWithNames.filter(
+  //   (m) => m.name !== "" || m.email !== ""
+  // );
+  // return filteredMatches;
+  const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+  const filteredmatches = matches.filter(
+    (item) =>
+      isValidObjectId(item.sessionId) &&
+      isValidObjectId(item.matchedUserId) &&
+      isValidObjectId(item.matchedSessionId)
   );
-  return filteredMatches;
+  return filteredmatches;
 }
 export async function GET(req, { params }) {
   const { sessionId } = await params;

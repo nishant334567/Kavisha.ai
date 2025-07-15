@@ -8,7 +8,7 @@ export default function RootLayout({ children }) {
       <head>
         <title>Kavisha.ai</title>
       </head>
-      <body>
+      <body className="bg-gray-400">
         <SessionProvider>{children}</SessionProvider>
       </body>
     </html>

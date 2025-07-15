@@ -1,12 +1,16 @@
 import * as React from "react";
 
-export function EmailTemplate({ receiverName, senderName }) {
+export function EmailTemplate({ profileType }) {
   return (
     <div>
-      <h1>Hey, {receiverName}!</h1>
-      <p>{senderName} viewed your profile !! Expect a call from him.</p>
-      <p>Thanks and regards,</p>
-      <p>Team Kavisha.ai</p>
+      <div>
+        <p>
+          {profileType === "recruiter"
+            ? "We have found some exciting oppurtunity for you"
+            : "We have found some great set of candidates for you job posting"}
+          . Login now at Kavisha.ai (www.kavisha.ai) to find the matches
+        </p>
+      </div>
     </div>
   );
 }

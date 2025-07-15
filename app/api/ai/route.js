@@ -9,6 +9,8 @@ import Logs from "@/app/models/ChatLogs";
 import { getToken } from "next-auth/jwt";
 import Session from "@/app/models/ChatSessions";
 import { getMatches } from "../matches/[sessionId]/route";
+import Matches from "@/app/models/Matches";
+import mongoose from "mongoose";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
@@ -120,12 +122,18 @@ export async function POST(request) {
         summary = "";
       }
     }
-    let matches = [];
+    let matchesLatest = [];
     if (allDataCollected === "true") {
-      matches = await getMatches(sessionId);
-
-      if (matches.length > 0) {
-        const matchesCount = matches.length;
+      //first delete all matches to refrsh acc to new chat
+      // await Matches.deleteMany({ sessionId: sessionId });
+      await Matches.deleteMany({ sessionId: sessionId });
+      matchesLatest = await getMatches(sessionId);
+      console.log("Latest matches", matchesLatest);
+      // if (matchesLatest.length > 0) {
+      //   await Matches.insertMany(matchesLatest);
+      // }
+      if (matchesLatest.length > 0) {
+        const matchesCount = matchesLatest.length;
 
         const verb = matchesCount === 1 ? "" : "have";
 
@@ -163,12 +171,32 @@ Click on the "find matches" button to see if ${
       { upsert: true }
     );
 
+    // maintain a matches ka table //check if its a valid mangoose id
+    const isValidObjectId = (id) =>
+      typeof id === "string" && id.length === 24 && /^[a-fA-F0-9]+$/.test(id);
+
+    const matchesWithObjectIds = matchesLatest
+      .filter(
+        (m) =>
+          isValidObjectId(m.sessionId) &&
+          isValidObjectId(m.matchedUserId) &&
+          isValidObjectId(m.matchedSessionId)
+      )
+      .map((m) => ({
+        ...m,
+        sessionId: new mongoose.Types.ObjectId(m.sessionId),
+        matchedUserId: new mongoose.Types.ObjectId(m.matchedUserId),
+        matchedSessionId: new mongoose.Types.ObjectId(m.matchedSessionId),
+      }));
+
+    await Matches.insertMany(matchesWithObjectIds);
+
     return NextResponse.json({
       reply,
       summary,
       title,
       allDataCollected,
-      matches,
+      matchesWithObjectIds,
     });
   } catch (error) {
     console.error(error);

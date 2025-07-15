@@ -1,76 +1,89 @@
+"use client";
 import { useSession } from "next-auth/react";
-import { useState, useRef } from "react";
-
-export default function MatchCard({ subtitle, matchedName, matchedEmail }) {
+import React, { useEffect } from "react";
+export default function MatchCard({
+  matchPercentage,
+  matchingReason,
+  mismatchReason,
+  contacted,
+  createdAt,
+  profileType,
+  matchedUserId,
+  matchedSessionId,
+  senderSession,
+  openDetailsPanel,
+}) {
   const { data: session } = useSession();
-  const [show, setShow] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
-  const btnRef = useRef(null);
-  const sendEmail = async () => {
-    if (emailSent) return;
-    try {
-      const res = await fetch("/api/resend", {
-        method: "POST",
-        body: JSON.stringify({
-          toEmail: matchedEmail,
-          toName: matchedName,
-          senderName: session?.user?.name || "",
-        }),
-      });
-      if (res.ok) {
-        setEmailSent(true);
-      } else {
-        setEmailSent(false);
-      }
-    } catch {
-      setEmailSent(false);
-    }
+
+  const createConnection = async () => {
+    console.log("Checking session value during api call", session);
+    const response = await fetch("/api/connections", {
+      method: "POST",
+
+      body: JSON.stringify({
+        receiverId: matchedUserId,
+        receiverSession: matchedSessionId,
+        senderId: session?.user?.id,
+        senderProfileType: session?.user?.profileType,
+        senderSession: senderSession,
+      }),
+    });
+    const data = await response.json();
+    console.log("Data from connection API", data);
   };
   return (
-    <div className="bg-white border border-emerald-100 rounded-xl shadow-lg p-6 mb-5 flex flex-col gap-3 relative transition hover:shadow-2xl">
-      <p className="text-emerald-600 text-base font-medium mb-2">{subtitle}</p>
-      <div className="relative">
-        <button
-          ref={btnRef}
-          onClick={() => {
-            setShow((prev) => !prev);
-            sendEmail(); // fire and forget, don't await
-          }}
-          className="px-5 py-2 bg-emerald-400 text-white rounded-lg font-semibold shadow hover:bg-emerald-500 transition-all focus:outline-none focus:ring-2 focus:ring-emerald-300"
-        >
-          View Profile
-        </button>
-        {emailSent && (
-          <p className="text-xs text-emerald-600 mt-2">
-            An email has been sent to the match about your interest.
-          </p>
-        )}
-        {show && (
-          <div className="absolute left-0 mt-2 w-64 bg-white border border-emerald-100 rounded-xl shadow-xl p-5 z-20">
-            <div className="flex justify-between items-center mb-2">
-              <h3 className="text-lg font-bold text-emerald-700">
-                Match Details
-              </h3>
-              <button
-                onClick={() => {
-                  setShow(false);
-                  setEmailSent(false);
-                }}
-                className="text-gray-400 hover:text-rose-500 text-xl font-bold focus:outline-none"
-                aria-label="Close profile details"
-              >
-                &times;
-              </button>
-            </div>
-            <div className="flex flex-col gap-1">
-              <p className="text-base font-semibold text-gray-800">
-                {matchedName}
-              </p>
-              <p className="text-sm text-emerald-500">{matchedEmail}</p>
-            </div>
-          </div>
+    <div className="bg-white border rounded-lg shadow p-4 flex flex-col gap-2 min-h-[120px] w-full">
+      <div className="flex items-center justify-between">
+        <span className="font-semibold text-gray-800 text-sm">
+          Match: {matchPercentage || "-"}
+        </span>
+        {contacted !== undefined && (
+          <span
+            className={`text-xs px-2 py-0.5 rounded ${contacted ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-400"}`}
+          >
+            {contacted ? "Contacted" : "Not Contacted"}
+          </span>
         )}
       </div>
+      {matchingReason && (
+        <div className="text-xs text-emerald-700 font-medium">
+          {matchingReason}
+        </div>
+      )}
+      {mismatchReason && (
+        <div className="text-xs text-red-500">Mismatch: {mismatchReason}</div>
+      )}
+      {createdAt && (
+        <div className="text-[10px] text-gray-400 mt-1">
+          Matched on: {new Date(createdAt).toLocaleDateString()}
+        </div>
+      )}
+      <div className="flex text-xs gap-2">
+        <button
+          className="w-full px-2 py-1 text-white bg-gray-600 rounded-md"
+          onClick={() => {
+            createConnection();
+          }}
+        >
+          {profileType === "recruiter" ? "Connect" : "Apply"}
+        </button>
+        <button
+          onClick={() =>
+            openDetailsPanel(3, {
+              matchPercentage,
+              matchingReason,
+              mismatchReason,
+            })
+          }
+          className="w-full px-2 py-1 border-2 bg-white text-gray-600 rounded-md"
+        >
+          View Details
+        </button>
+      </div>
+      {/* Optionally show IDs for debugging or admin */}
+      {/* <div className="text-[10px] text-gray-300">Session: {sessionId}</div>
+      <div className="text-[10px] text-gray-300">Matched User: {matchedUserId}</div>
+      <div className="text-[10px] text-gray-300">Matched Session: {matchedSessionId}</div> */}
     </div>
   );
 }

@@ -19,6 +19,7 @@ const userSchema = new mongoose.Schema(
       enum: ["job_seeker", "recruiter"],
       required: false,
     },
+    remainingCredits: { type: Number, default: 3 },
     createdAt: {
       type: Date,
       default: Date.now,

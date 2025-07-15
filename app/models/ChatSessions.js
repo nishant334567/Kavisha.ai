@@ -40,6 +40,8 @@ const ChatSessionsSchema = new mongoose.Schema({
     type: Boolean,
     default: false,
   },
+
+
 });
 const Session =
   mongoose.models.ChatSessions ||
