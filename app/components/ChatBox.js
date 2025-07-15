@@ -106,8 +106,8 @@ export default function ChatBox({
                 <div
                   className={`px-4 py-2  rounded-lg inline-block ${
                     m.role === "user"
-                      ? "text-xs shadow-md mb-2 break-words ml-auto bg-gray-500 text-gray-200 rounded px-3 py-2 max-w-[50%]"
-                      : "text-xs shadow-md mb-2 break-words bg-gray-100 text-gray-900 rounded px-3 py-2 max-w-[50%]"
+                      ? "text-sm shadow-md mb-2 break-words ml-auto bg-gray-500 text-gray-200 rounded px-3 py-2 max-w-[50%]"
+                      : "text-sm shadow-md mb-2 break-words bg-gray-100 text-gray-900 rounded px-3 py-2 max-w-[50%]"
                   }`}
                 >
                   {m.message}

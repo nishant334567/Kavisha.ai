@@ -141,11 +141,11 @@ export default function Home({ initialChats, notifications }) {
           />
         </div>
         <div className="w-full md:w-[70%]">
-          {/* <Resume
+          <Resume
             resumeData={resumeData}
             updateResume={updateResume}
             currentChatId={currentChatId}
-          /> */}
+          />
 
           <ChatBox
             connections={connections}
