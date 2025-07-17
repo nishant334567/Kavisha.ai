@@ -15,7 +15,7 @@ export default function RighPanel({
       const fetchMatches = async () => {
         const response = await fetch(`/api/fetch-matches/${currentChatId}`);
         const data = await response.json();
-        console.log(data);
+
         setDataArray(data.matches);
       };
       fetchMatches();
@@ -24,7 +24,7 @@ export default function RighPanel({
       const fetchConnections = async () => {
         const response = await fetch(`/api/connections/${currentChatId}`);
         const data = await response.json();
-        console.log(data);
+
         setDataArray(data.connections);
       };
       fetchConnections();
@@ -48,6 +48,7 @@ export default function RighPanel({
           dataArray.map((item, index) => (
             <div key={index} className="mb-4">
               <MatchCard
+                type={1}
                 matchPercentage={item.matchPercentage}
                 matchingReason={item.matchingReason}
                 mismatchReason={item.mismatchReason}

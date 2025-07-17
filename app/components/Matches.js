@@ -13,12 +13,10 @@ export default function Matches({
   const [matches, setMatches] = useState(matchesincoming || []);
   const scrollRef = useRef();
   useEffect(() => {
-    console.log("Matches Incoming", matchesincoming);
     const fetchMatches = async () => {
       const res = await fetch(`/api/fetch-matches/${currentChatId}`);
       const data = await res.json();
       setMatches(data.matches);
-      console.log("matches", data);
     };
     fetchMatches();
   }, [currentChatId]);
@@ -52,7 +50,7 @@ export default function Matches({
               {matches.map((item, index) => (
                 <div
                   key={index}
-                  className="w-full flex-shrink-0 md:w-[32%] h-full "
+                  className="w-full flex-shrink-0 sm:w-[50%] lg:w-[40%] xl:w-[35%] h-full "
                 >
                   <MatchCard
                     matchPercentage={item.matchPercentage}

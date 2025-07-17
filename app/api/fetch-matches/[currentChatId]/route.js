@@ -8,7 +8,7 @@ export async function GET(req, { params }) {
   try {
     const matches = await Matches.find({ sessionId: currentChatId }).lean();
     // Return all fields as per the Matches model
-    console.log("matches", matches);
+
     return NextResponse.json({ matches });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });

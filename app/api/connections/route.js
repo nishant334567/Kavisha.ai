@@ -1,6 +1,5 @@
 import { connectDB } from "@/app/lib/db";
 import { NextResponse } from "next/server";
-import officeParser from "officeparser";
 import Session from "@/app/models/ChatSessions";
 import User from "@/app/models/Users";
 import Connection from "@/app/models/Connection";
@@ -10,91 +9,130 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 const sendEmail = async (toEmail, profileType) => {
-  const { data, error } = await resend.emails.send({
-    from: "team@kavisha.ai",
-    to: toEmail,
-    subject: "Team Kavisha.ai",
-    react: EmailTemplate({
-      profileType: profileType,
-    }),
-  });
-  if (data) {
-    console.log("Email sent successfully");
-  }
-  if (error) {
-    console.log("Email sending failed", err);
+  try {
+    const { data, error } = await resend.emails.send({
+      from: "team@kavisha.ai",
+      to: toEmail,
+      subject: "Team Kavisha.ai",
+      react: EmailTemplate({
+        profileType: profileType,
+      }),
+    });
+    if (data) {
+      return true;
+    }
+    if (error) {
+      return false;
+    }
+  } catch (error) {
+    console.error("Email sending error:", error);
+    return false;
   }
 };
+
 export async function POST(req) {
-  const {
-    receiverId,
-    receiverSession,
-    senderId,
-    senderProfileType,
-    senderSession,
-  } = await req.json();
-  console.log(
-    receiverId,
-    receiverSession,
-    senderId,
-    senderProfileType,
-    senderSession,
-    "Debug"
-  );
   try {
+    const {
+      receiverId,
+      receiverSession,
+      senderId,
+      senderProfileType,
+      senderSession,
+    } = await req.json();
+    if (
+      !receiverId ||
+      !receiverSession ||
+      !senderId ||
+      !senderProfileType ||
+      !senderSession
+    ) {
+      return NextResponse.json(
+        { error: "Missing required fields" },
+        { status: 400 }
+      );
+    }
+
     await connectDB();
+
+    // Check if sender exists and get their credits
     const currentUser = await User.findOne({ _id: senderId });
-    if (currentUser) {
-      let remainingCredits;
-      remainingCredits = currentUser.credits;
-      if (remainingCredits < 1 && senderProfileType === "recruiter") {
+    if (!currentUser) {
+      return NextResponse.json(
+        { error: "Sender user not found" },
+        { status: 404 }
+      );
+    }
+
+    // Check credits for recruiters
+    if (senderProfileType === "recruiter") {
+      const remainingCredits = currentUser.remainingCredits || 0;
+      if (remainingCredits < 1) {
         return NextResponse.json(
           {
+            error: "Insufficient credits",
             message:
               "Free credits exhausted!! Add credits for adding new connections",
           },
-          { status: 200 }
+          { status: 402 }
         );
       }
     }
-    // prevent duplicate notify and email sent
-    const connection = await Connection.find({
+
+    // Check for existing connection to prevent duplicates
+    const existingConnection = await Connection.findOne({
       receiverSession: receiverSession,
       senderSession: senderSession,
     });
-    if (connection.length === 0) {
-      let message =
-        senderProfileType !== "recruiter"
-          ? "We found potential candidates for you"
-          : "We have found some amazing job oppurtunities for you";
-      await Connection.create({
-        senderSession: senderSession,
-        receiverSession: receiverSession,
-        senderId: senderId,
-        receiverId: receiverId,
-        message: message,
-        emailSent: true,
-      });
-      // Deduct 1 credit if recruiter
-      if (senderProfileType === "recruiter") {
-        await User.updateOne(
-          { _id: senderId },
-          { $inc: { remainingCredits: -1 } }
-        );
-      }
-      //fetch email of receiver from receiverId
-      const receiverUserObject = await User.findOne({ _id: receiverId });
-      if (receiverUserObject) {
-        sendEmail(receiverUserObject.email, senderProfileType);
-      }
-      return NextResponse.json({
-        message: "Connection request and email sent!!"
-      });
-    } else {
-      return NextResponse.json({ message: "Connection request sent already" });
+
+    if (existingConnection) {
+      return NextResponse.json(
+        { message: "Connection request already sent" },
+        { status: 409 }
+      );
     }
-    //check if email already sent
-  } catch (err) {
-    return NextResponse.json({ message: "Something didnt worked", err });
+
+    // Create new connection
+    const message =
+      senderProfileType !== "recruiter"
+        ? "We found potential candidates for you"
+        : "We have found some amazing job opportunities for you";
+
+    const newConnection = await Connection.create({
+      senderSession: senderSession,
+      receiverSession: receiverSession,
+      senderId: senderId,
+      receiverId: receiverId,
+      message: message,
+      emailSent: true,
+    });
+
+    // Deduct 1 credit if recruiter
+    if (senderProfileType === "recruiter") {
+      await User.updateOne(
+        { _id: senderId },
+        { $inc: { remainingCredits: -1 } }
+      );
+    }
+
+    // Send email to receiver,assumin gif connection is created then email has to be sent
+    const receiverUserObject = await User.findOne({ _id: receiverId });
+    if (receiverUserObject) {
+      await sendEmail(receiverUserObject.email, senderProfileType);
+    }
+
+    return NextResponse.json(
+      {
+        success: true,
+        message: "Connection request and email sent successfully!",
+        connectionId: newConnection._id,
+      },
+      { status: 200 }
+    );
+  } catch (error) {
+    console.error("Connection API error:", error);
+    return NextResponse.json(
+      { error: "Internal server error", message: "Something went wrong" },
+      { status: 500 }
+    );
   }
 }

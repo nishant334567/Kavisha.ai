@@ -3,7 +3,12 @@ import { useState } from "react";
 import shortenFileName from "../utils/shortenfilename";
 import { useSession } from "next-auth/react";
 
-export default function Resume({ resumeData, updateResume, currentChatId }) {
+export default function Resume({
+  resumeData,
+  updateResume,
+  currentChatId,
+  onResumeUpload,
+}) {
   const [resume, setResume] = useState(null);
   const [uploadloading, setUploadloading] = useState(false);
   const [isDeleting, setIsdeleting] = useState(false);
@@ -29,11 +34,12 @@ export default function Resume({ resumeData, updateResume, currentChatId }) {
       if (data.text) {
         extractedText = data.text;
         alert("Resume processed. Will consider it in your job search journey!");
+        updateResume(resume.name, extractedText);
+        onResumeUpload(extractedText);
       } else {
         extractedText = "No text extracted";
         alert("No text extracted from you resume, try uploading again.");
       }
-      updateResume(resume.name, extractedText);
 
       // fetchChats();
       setResume(null);
@@ -66,14 +72,18 @@ export default function Resume({ resumeData, updateResume, currentChatId }) {
   };
   return (
     <>
-      <div className="flex items-center justify-between gap-2 bg-white p-2 rounded shadow mb-2">
-        {resume && <span>{shortenFileName(resume.name)}</span>}
+      <div className="flex items-center gap-2 py-2">
+        {resume && (
+          <span className="px-2 py-1 shadow-md rounded-lg text-xs text-gray-600">
+            {shortenFileName(resume.name)}
+          </span>
+        )}
         {!resume && resumeSummary !== "" && filename !== "" && (
-          <span className="font-medium text-gray-700 truncate max-w-[120px]">
+          <span className="px-2 py-1 shadow-md rounded-lg text-xs truncate max-w-[120px]">
             {shortenFileName(filename)}
           </span>
         )}
-        <label className="cursor-pointer text-blue-600 hover:underline">
+        <label className="cursor-pointer text-xs px-2 py-1  shadow-md rounded-lg text-blue-600 hover:underline">
           <input
             type="file"
             accept=".pdf,.docx"
@@ -91,7 +101,7 @@ export default function Resume({ resumeData, updateResume, currentChatId }) {
         </label>
         {resume && (
           <button
-            className="ml-2 px-3 py-1 rounded bg-emerald-500 text-white hover:bg-emerald-600 transition disabled:opacity-50"
+            className="text-xs px-2 py-1 shadow-md rounded-lg  bg-gray-500 text-white hover:bg-gray-600 transition disabled:opacity-50"
             disabled={uploadloading}
             onClick={(e) => handleUpload(e)}
           >
@@ -100,22 +110,13 @@ export default function Resume({ resumeData, updateResume, currentChatId }) {
         )}
         {filename && resumeSummary !== "" && (
           <button
-            className="ml-2 px-3 py-1 rounded bg-red-500 text-white hover:bg-red-600 transition disabled:opacity-50"
+            className="text-xs px-2 py-1 shadow-md rounded-lg bg-red-500 text-white hover:bg-red-600 transition disabled:opacity-50"
             onClick={(e) => handleDelete(e)}
             disabled={isDeleting}
           >
             {isDeleting ? "Deleting..." : "Delete"}
           </button>
         )}
-        {/* <button
-          className="ml-2 px-3 py-2 bg-emerald-400 text-white rounded hover:bg-emerald-600 transition"
-          onClick={() => {
-            findMatches();
-            setShowMatches(true);
-          }}
-        >
-          Find Matches
-        </button> */}
       </div>
     </>
   );

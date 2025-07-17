@@ -36,11 +36,10 @@ export default async function HomePage() {
     `${baseUrl}/api/notifications/${session.user.id}`
   );
   const initialNotifications = await fetchNotis.json();
-  console.log(initialNotifications.messages);
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <div className="shadow-xl flex flex-col gap-4 w-full md:w-[80%] mx-auto h-screen  bg-gray-100 p-8 md:rounded-2xl">
+      <div className="shadow-xl flex flex-col gap-4 w-full xl:w-[80%] mx-auto h-screen  bg-gray-100 p-8 md:rounded-2xl">
         <Header />
         <Home
           initialChats={allChats}

@@ -110,29 +110,6 @@ Strictly follow the format below (using the real userId/sessionId from above):
     );
   }
 
-  // const userIds = matches.map((m) => m.userId);
-  // const validUserIds = userIds.filter((id) =>
-  //   mongoose.Types.ObjectId.isValid(id)
-  // );
-  // const users = await User.find(
-  //   { _id: { $in: validUserIds } },
-  //   { _id: 1, name: 1, email: 1 }
-  // );
-  // const userMap = {};
-  // users.forEach((u) => {
-  //   userMap[u._id.toString()] = u;
-  // });
-
-  // const matchesWithNames = matches.map((m) => ({
-  //   ...m,
-  //   name: userMap[m.userId]?.name || "",
-  //   email: userMap[m.userId]?.email || "",
-  // }));
-  // // Filter out matches where both name and email are empty
-  // const filteredMatches = matchesWithNames.filter(
-  //   (m) => m.name !== "" || m.email !== ""
-  // );
-  // return filteredMatches;
   const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
   const filteredmatches = matches.filter(
     (item) =>

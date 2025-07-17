@@ -3,11 +3,11 @@ import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Matches from "./Matches";
 import RighPanel from "./Rightpanel";
+import Resume from "./Resume";
 
 export default function ChatBox({
   currentChatId,
   initialMessages,
-  resumeText,
   initialMatches,
   connections,
 }) {
@@ -21,16 +21,25 @@ export default function ChatBox({
   const [type, setType] = useState(0);
   const [viewData, setViewdata] = useState({});
   const [show, setShow] = useState(false);
+  const [resumeData, setResumedata] = useState({});
 
   useEffect(() => {
     setmessages(initialMessages || []);
     setMatches(initialMatches);
-    if (initialMatches?.length > 0) {
-    }
-    console.log("initialMatches", initialMatches); // <-- Yeh check karo
-    console.log("connections", connections);
   }, [initialMessages, currentChatId]);
 
+  useEffect(() => {
+    //fetch resume data initially
+    const fetchResumeData = async () => {
+      const response = await fetch(`/api/resume-data/${currentChatId}`);
+      const data = await response.json();
+      setResumedata({
+        filename: data.resumeFilename,
+        resumeSummary: data.resumeSummary,
+      });
+    };
+    fetchResumeData();
+  }, [currentChatId]);
   useEffect(() => {
     const timeout = setTimeout(() => {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -38,11 +47,73 @@ export default function ChatBox({
     return () => clearTimeout(timeout);
   }, [messages]);
 
+  // useEffect(() => {
+  //   if (resumeData && resumeData.resumeSummary) {
+  //     onResumeUpload();
+  //   }
+  // }, [resumeData]);
+
   const openDetailsPanel = (type, dataObject) => {
-    console.log("Called with", type, dataObject);
     setType(type);
     setViewdata(dataObject);
     toggleRightPanel();
+  };
+  const updateResume = (filename, summary) => {
+    console.log(filename, summary);
+    setResumedata({ filename: filename, resumeSummary: summary });
+  };
+  const onResumeUpload = (newResumeData) => {
+    console.log(
+      "Resume text changes and i am called",
+      resumeData.resumeSummary
+    );
+    if (newResumeData) {
+      let resumeSubText = `I have sent my ${session?.user?.profileType === "recruiter" ? "JD" : "resume"}!! Please have a look at it`;
+      const resumeSent = async () => {
+        const newUserMessage = {
+          role: "user",
+          message: resumeSubText,
+        };
+        const userText = resumeSubText;
+        const updatedMessages = [...messages, newUserMessage];
+        setmessages(updatedMessages);
+        setInput("");
+        setMessageLoading(true);
+        const response = await fetch("/api/ai", {
+          method: "POST",
+          body: JSON.stringify({
+            history: messages,
+            userMessage: userText,
+            jobseeker: session?.user?.profileType,
+            sessionId: currentChatId,
+            resume: newResumeData,
+          }),
+        });
+        if (!response.ok) {
+          setmessages([
+            ...updatedMessages,
+            {
+              role: "assistant",
+              message:
+                "Kavisha failed to respond to that. Can you please try again?",
+            },
+          ]);
+          setMessageLoading(false);
+          return;
+        }
+        const data = await response.json();
+
+        setmessages([
+          ...updatedMessages,
+          { role: "assistant", message: data.reply },
+        ]);
+        setMessageLoading(false);
+        if (data?.matchesWithObjectIds?.length > 0) {
+          setMatches(data?.matchesWithObjectIds);
+        }
+      };
+      resumeSent();
+    }
   };
   const handleSubmit = async () => {
     if (!input.trim()) return;
@@ -59,7 +130,7 @@ export default function ChatBox({
         userMessage: userText,
         jobseeker: session?.user?.profileType,
         sessionId: currentChatId,
-        resume: resumeText,
+        resume: resumeData.resumeSummary,
       }),
     });
     if (!response.ok) {
@@ -75,7 +146,7 @@ export default function ChatBox({
       return;
     }
     const data = await response.json();
-    console.log(data, "ai resposne");
+
     setmessages([
       ...updatedMessages,
       { role: "assistant", message: data.reply },
@@ -106,8 +177,8 @@ export default function ChatBox({
                 <div
                   className={`px-4 py-2  rounded-lg inline-block ${
                     m.role === "user"
-                      ? "text-sm shadow-md mb-2 break-words ml-auto bg-gray-500 text-gray-200 rounded px-3 py-2 max-w-[50%]"
-                      : "text-sm shadow-md mb-2 break-words bg-gray-100 text-gray-900 rounded px-3 py-2 max-w-[50%]"
+                      ? "w-full text-sm shadow-md mb-2 break-words ml-auto bg-gray-500 text-gray-200 rounded px-3 py-2 sm:max-w-[50%]"
+                      : "w-full text-sm shadow-md mb-2 break-words bg-gray-100 text-gray-900 rounded px-3 py-2 sm:max-w-[50%]"
                   }`}
                 >
                   {m.message}
@@ -159,7 +230,14 @@ export default function ChatBox({
             <img src="/message.png" height={25} width={25} />
           </button>
         </form>
+        <Resume
+          resumeData={resumeData}
+          updateResume={updateResume}
+          currentChatId={currentChatId}
+          onResumeUpload={onResumeUpload}
+        />
       </div>
+
       <div>
         {show && type === 1 && (
           <RighPanel

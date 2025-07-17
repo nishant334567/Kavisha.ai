@@ -16,9 +16,7 @@ export default function ChatSidebar({ allChats, updateChatId, currentChatId }) {
     });
     setIsdeleting(false);
   };
-  useEffect(() => {
-    console.log("All chats", allChats);
-  }, [allChats]);
+
 
   return (
     <div className="flex flex-col h-full">
@@ -29,8 +27,8 @@ export default function ChatSidebar({ allChats, updateChatId, currentChatId }) {
             allChats.sessionIds.map((id, idx) => (
               <div className="flex w-full min-h-8 gap-2" key={id}>
                 <button
-                  className={`text-xs rounded-md px-2 py-2 shadow-lg w-full hover:text-gray-500
-                    ${currentChatId === id ? "bg-emerald-200 font-bold text-emerald-900" : "bg-gray-100"}
+                  className={`text-gray-600 text-xs rounded-md px-2 py-2 shadow-lg w-full hover:${currentChatId === id ? "text-white" : "text-black"}
+                    ${currentChatId === id ? "bg-black font-bold text-white" : "bg-gray-100"}
                   `}
                   type="button"
                   onClick={() => updateChatId(id)}
