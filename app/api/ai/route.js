@@ -79,7 +79,7 @@ export async function POST(request) {
     ];
 
     const chatCompletion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages,
       temperature: 0.1,
     });
@@ -106,7 +106,7 @@ export async function POST(request) {
         },
       ];
       const reChatCompletion = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         messages: rePromptMessages,
         temperature: 0.1,
       });
