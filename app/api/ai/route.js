@@ -128,10 +128,7 @@ export async function POST(request) {
       // await Matches.deleteMany({ sessionId: sessionId });
       await Matches.deleteMany({ sessionId: sessionId });
       matchesLatest = await getMatches(sessionId);
-      console.log("Latest matches", matchesLatest);
-      // if (matchesLatest.length > 0) {
-      //   await Matches.insertMany(matchesLatest);
-      // }
+
       if (matchesLatest.length > 0) {
         const matchesCount = matchesLatest.length;
 

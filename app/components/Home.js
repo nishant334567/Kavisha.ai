@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import ChatSidebar from "./ChatSidebar";
 import ChatBox from "./ChatBox";
-import Resume from "./Resume";
+
 import Notification from "./Notification";
 import { useSession, signOut } from "next-auth/react";
 
@@ -16,7 +16,6 @@ export default function Home({ initialChats, notifications }) {
   const [initialMatches, setInitialmatches] = useState(
     initialChats?.sessionIds?.[0]?.matchesLatest
   );
-  const [resumeData, setResumedata] = useState({});
   const [openNotifications, setOpenNotifications] = useState(false);
   const [connections, setConnections] = useState([]);
   const [showSidebar, setShowSidebar] = useState(false);
@@ -29,10 +28,6 @@ export default function Home({ initialChats, notifications }) {
       setMessages(data?.sessions[currentChatId]?.logs);
       setAllchats(data);
       setInitialmatches(data?.sessions[currentChatId]?.matchesLatest);
-      setResumedata({
-        filename: data?.sessions[currentChatId]?.resumeFilename,
-        resumeSummary: data?.sessions[currentChatId]?.resumeSummary,
-      });
     };
     const fetchConnections = async () => {
       const resposne = await fetch(`/api/connections/${currentChatId}`);
@@ -46,10 +41,6 @@ export default function Home({ initialChats, notifications }) {
   const updateChatId = (chatId) => {
     setCurrentchatid(chatId);
     setShowSidebar(false); // Close sidebar on mobile after selecting chat
-  };
-
-  const updateResume = (filename, summary) => {
-    setResumedata({ filename: filename, resumeSummary: summary });
   };
 
   const toggleNotifications = () => {
@@ -75,12 +66,6 @@ export default function Home({ initialChats, notifications }) {
             className="absolute left-0 top-0 h-full w-3/4 bg-white shadow-lg p-4"
             onClick={(e) => e.stopPropagation()}
           >
-            {/* <button
-              className="mb-4 text-gray-500"
-              onClick={() => setShowSidebar(false)}
-            >
-              Close
-            </button> */}
             <ChatSidebar
               allChats={allChats}
               updateChatId={updateChatId}
@@ -140,20 +125,18 @@ export default function Home({ initialChats, notifications }) {
             currentChatId={currentChatId}
           />
         </div>
-        <div className="w-full md:w-[70%]">
-          <Resume
-            resumeData={resumeData}
-            updateResume={updateResume}
-            currentChatId={currentChatId}
-          />
-
+        <div className="w-full xl:w-[70%]">
           <ChatBox
             connections={connections}
             initialMatches={initialMatches}
             currentChatId={currentChatId}
             initialMessages={messages}
-            resumeText={resumeData.resumeSummary}
           />
+          {/* <Resume
+            resumeData={resumeData}
+            updateResume={updateResume}
+            currentChatId={currentChatId}
+          /> */}
         </div>
       </div>
     </div>
