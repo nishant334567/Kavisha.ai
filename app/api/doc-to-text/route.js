@@ -19,7 +19,7 @@ export async function POST(req) {
     // officeParser.parseOfficeAsync can take a buffer directly
     const text = await officeParser.parseOfficeAsync(buffer, {
       newlineDelimiter: " ",
-      outputErrorToConsole: false,
+      outputErrorToConsole: true,
     });
 
     const result = await Session.updateOne(

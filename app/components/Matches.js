@@ -6,20 +6,12 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 
 export default function Matches({
   currentChatId,
-  matchesincoming,
+  matches,
   openDetailsPanel,
 }) {
   const { data: session } = useSession();
-  const [matches, setMatches] = useState(matchesincoming || []);
+
   const scrollRef = useRef();
-  useEffect(() => {
-    const fetchMatches = async () => {
-      const res = await fetch(`/api/fetch-matches/${currentChatId}`);
-      const data = await res.json();
-      setMatches(data.matches);
-    };
-    fetchMatches();
-  }, [currentChatId]);
 
   const scrollBy = (offset) => {
     if (scrollRef.current) {

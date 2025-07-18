@@ -8,28 +8,30 @@ export default function RighPanel({
   session,
   currentChatId,
   toggleRightPanel,
+  matches = [],
+  connections = [],
 }) {
-  const [dataArray, setDataArray] = useState([]);
-  useEffect(() => {
-    if (type === 1) {
-      const fetchMatches = async () => {
-        const response = await fetch(`/api/fetch-matches/${currentChatId}`);
-        const data = await response.json();
+  // const [dataArray, setDataArray] = useState([]);
+  // useEffect(() => {
+  //   if (type === 1) {
+  //     const fetchMatches = async () => {
+  //       const response = await fetch(`/api/fetch-matches/${currentChatId}`);
+  //       const data = await response.json();
 
-        setDataArray(data.matches);
-      };
-      fetchMatches();
-    }
-    if (type === 2) {
-      const fetchConnections = async () => {
-        const response = await fetch(`/api/connections/${currentChatId}`);
-        const data = await response.json();
+  //       setDataArray(data.matches);
+  //     };
+  //     fetchMatches();
+  //   }
+  //   if (type === 2) {
+  //     const fetchConnections = async () => {
+  //       const response = await fetch(`/api/connections/${currentChatId}`);
+  //       const data = await response.json();
 
-        setDataArray(data.connections);
-      };
-      fetchConnections();
-    }
-  }, []);
+  //       setDataArray(data.connections);
+  //     };
+  //     fetchConnections();
+  //   }
+  // }, []);
   return (
     <div className="fixed top-24 right-8 w-[350px] max-h-screen bg-white border border-gray-300 rounded-xl shadow-2xl p-6 z-50 flex flex-col">
       <button
@@ -39,13 +41,13 @@ export default function RighPanel({
         X
       </button>
       <div className="scrollbar-none flex-1 overflow-y-auto">
-        {dataArray.length === 0 && (type === 1 || type === 2) && (
-          <p>Nothing found..</p>
-        )}
+        {matches.length === 0 &&
+          connections.length === 0 &&
+          (type === 1 || type === 2) && <p>Nothing found..</p>}
         {/* Cards yahan render karo */}
         {type === 1 &&
-          dataArray.length > 0 &&
-          dataArray.map((item, index) => (
+          matches.length > 0 &&
+          matches.map((item, index) => (
             <div key={index} className="mb-4">
               <MatchCard
                 type={1}
@@ -60,8 +62,8 @@ export default function RighPanel({
             </div>
           ))}
         {type === 2 &&
-          dataArray.length > 0 &&
-          dataArray.map((item, index) => (
+          connections.length > 0 &&
+          connections.map((item, index) => (
             <div key={index} className="mb-4">
               <ConnectionCard
                 emailSent={item.emailSent}

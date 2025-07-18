@@ -8,7 +8,6 @@ import Resume from "./Resume";
 export default function ChatBox({
   currentChatId,
   initialMessages,
-  initialMatches,
   connections,
 }) {
   const endOfMessagesRef = useRef(null);
@@ -22,10 +21,10 @@ export default function ChatBox({
   const [viewData, setViewdata] = useState({});
   const [show, setShow] = useState(false);
   const [resumeData, setResumedata] = useState({});
+  const [hasDatacollected, setHasDatacollected] = useState();
 
   useEffect(() => {
     setmessages(initialMessages || []);
-    setMatches(initialMatches);
   }, [initialMessages, currentChatId]);
 
   useEffect(() => {
@@ -40,6 +39,28 @@ export default function ChatBox({
     };
     fetchResumeData();
   }, [currentChatId]);
+
+  useEffect(() => {
+    const fetchDataCollectionStatus = async () => {
+      const response = await fetch(`/api/all-data-fetched/${currentChatId}`);
+      const data = await response.json();
+      setHasDatacollected(data.allDataCollected);
+    };
+    fetchDataCollectionStatus();
+  }, [currentChatId]);
+
+  useEffect(() => {
+    const fetchMatches = async () => {
+      const response = await fetch(`/api/fetch-matches/${currentChatId}`);
+      const data = await response.json();
+
+      // setHasAllData(data.allDataCollected);
+      if (Array.isArray(data.matches) && data.matches.length > 0) {
+        setMatches(data.matches);
+      }
+    };
+    fetchMatches();
+  }, []);
   useEffect(() => {
     const timeout = setTimeout(() => {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -47,26 +68,15 @@ export default function ChatBox({
     return () => clearTimeout(timeout);
   }, [messages]);
 
-  // useEffect(() => {
-  //   if (resumeData && resumeData.resumeSummary) {
-  //     onResumeUpload();
-  //   }
-  // }, [resumeData]);
-
   const openDetailsPanel = (type, dataObject) => {
     setType(type);
     setViewdata(dataObject);
     toggleRightPanel();
   };
   const updateResume = (filename, summary) => {
-    console.log(filename, summary);
     setResumedata({ filename: filename, resumeSummary: summary });
   };
   const onResumeUpload = (newResumeData) => {
-    console.log(
-      "Resume text changes and i am called",
-      resumeData.resumeSummary
-    );
     if (newResumeData) {
       let resumeSubText = `I have sent my ${session?.user?.profileType === "recruiter" ? "JD" : "resume"}!! Please have a look at it`;
       const resumeSent = async () => {
@@ -108,8 +118,18 @@ export default function ChatBox({
           { role: "assistant", message: data.reply },
         ]);
         setMessageLoading(false);
-        if (data?.matchesWithObjectIds?.length > 0) {
+        if (
+          data?.matchesWithObjectIds?.length > 0 &&
+          data?.allDataCollected === "true"
+        ) {
           setMatches(data?.matchesWithObjectIds);
+          setHasDatacollected(true);
+        } else if (data?.allDataCollected === "true") {
+          setMatches([]);
+          setHasDatacollected(true);
+        } else {
+          setMatches([]);
+          setHasDatacollected(false);
         }
       };
       resumeSent();
@@ -152,8 +172,15 @@ export default function ChatBox({
       { role: "assistant", message: data.reply },
     ]);
     setMessageLoading(false);
-    if (data?.matchesWithObjectIds?.length > 0) {
+    if (
+      data?.matchesWithObjectIds?.length > 0 &&
+      data?.allDataCollected === "true"
+    ) {
       setMatches(data?.matchesWithObjectIds);
+      setHasDatacollected(true);
+    }
+    if (data?.allDataCollected === "false") {
+      setHasDatacollected(false);
     }
   };
 
@@ -177,7 +204,7 @@ export default function ChatBox({
                 <div
                   className={`px-4 py-2  rounded-lg inline-block ${
                     m.role === "user"
-                      ? "w-full text-sm shadow-md mb-2 break-words ml-auto bg-gray-500 text-gray-200 rounded px-3 py-2 sm:max-w-[50%]"
+                      ? "w-full text-sm shadow-md mb-2 break-words ml-auto bg-gray-800 text-gray-200 rounded px-3 py-2 sm:max-w-[50%]"
                       : "w-full text-sm shadow-md mb-2 break-words bg-gray-100 text-gray-900 rounded px-3 py-2 sm:max-w-[50%]"
                   }`}
                 >
@@ -188,15 +215,19 @@ export default function ChatBox({
           {messageLoading && (
             <div className="text-gray-700 text-xs">Kavisha is typing...</div>
           )}
-          <Matches
-            currentChatId={currentChatId}
-            matchesincoming={matches}
-            openDetailsPanel={openDetailsPanel}
-          />
+
+          {hasDatacollected && (
+            <Matches
+              currentChatId={currentChatId}
+              matches={matches}
+              openDetailsPanel={openDetailsPanel}
+            />
+          )}
           <div ref={endOfMessagesRef}></div>
         </div>
         <div className="flex mt-4">
           <button
+            // disabled={hasAllData}
             onClick={() => {
               (setType(1), toggleRightPanel());
             }}
@@ -242,7 +273,7 @@ export default function ChatBox({
         {show && type === 1 && (
           <RighPanel
             type={1}
-            dataArray={matches}
+            matches={matches}
             session={session}
             currentChatId={currentChatId}
             toggleRightPanel={toggleRightPanel}
@@ -251,7 +282,7 @@ export default function ChatBox({
         {show && type === 2 && (
           <RighPanel
             type={2}
-            dataArray={connections}
+            connections={connections}
             session={session}
             currentChatId={currentChatId}
             toggleRightPanel={toggleRightPanel}
@@ -260,7 +291,6 @@ export default function ChatBox({
         {show && type === 3 && (
           <RighPanel
             type={3}
-            dataArray={connections}
             session={session}
             currentChatId={currentChatId}
             detailsObject={viewData}

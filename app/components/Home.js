@@ -13,9 +13,6 @@ export default function Home({ initialChats, notifications }) {
   );
   const [allChats, setAllchats] = useState(initialChats);
   const [messages, setMessages] = useState(initialChats?.sessionIds?.[0]?.logs);
-  const [initialMatches, setInitialmatches] = useState(
-    initialChats?.sessionIds?.[0]?.matchesLatest
-  );
   const [openNotifications, setOpenNotifications] = useState(false);
   const [connections, setConnections] = useState([]);
   const [showSidebar, setShowSidebar] = useState(false);
@@ -27,7 +24,6 @@ export default function Home({ initialChats, notifications }) {
       const data = await res.json();
       setMessages(data?.sessions[currentChatId]?.logs);
       setAllchats(data);
-      setInitialmatches(data?.sessions[currentChatId]?.matchesLatest);
     };
     const fetchConnections = async () => {
       const resposne = await fetch(`/api/connections/${currentChatId}`);
@@ -128,7 +124,6 @@ export default function Home({ initialChats, notifications }) {
         <div className="w-full xl:w-[70%]">
           <ChatBox
             connections={connections}
-            initialMatches={initialMatches}
             currentChatId={currentChatId}
             initialMessages={messages}
           />

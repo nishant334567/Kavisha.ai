@@ -171,22 +171,24 @@ Click on the "find matches" button to see if ${
     // maintain a matches ka table //check if its a valid mangoose id
     const isValidObjectId = (id) =>
       typeof id === "string" && id.length === 24 && /^[a-fA-F0-9]+$/.test(id);
+    let matchesWithObjectIds = [];
+    if (Array.isArray(matchesLatest)) {
+      matchesWithObjectIds = matchesLatest
+        .filter(
+          (m) =>
+            isValidObjectId(m.sessionId) &&
+            isValidObjectId(m.matchedUserId) &&
+            isValidObjectId(m.matchedSessionId)
+        )
+        .map((m) => ({
+          ...m,
+          sessionId: new mongoose.Types.ObjectId(m.sessionId),
+          matchedUserId: new mongoose.Types.ObjectId(m.matchedUserId),
+          matchedSessionId: new mongoose.Types.ObjectId(m.matchedSessionId),
+        }));
 
-    const matchesWithObjectIds = matchesLatest
-      .filter(
-        (m) =>
-          isValidObjectId(m.sessionId) &&
-          isValidObjectId(m.matchedUserId) &&
-          isValidObjectId(m.matchedSessionId)
-      )
-      .map((m) => ({
-        ...m,
-        sessionId: new mongoose.Types.ObjectId(m.sessionId),
-        matchedUserId: new mongoose.Types.ObjectId(m.matchedUserId),
-        matchedSessionId: new mongoose.Types.ObjectId(m.matchedSessionId),
-      }));
-
-    await Matches.insertMany(matchesWithObjectIds);
+      await Matches.insertMany(matchesWithObjectIds);
+    }
 
     return NextResponse.json({
       reply,

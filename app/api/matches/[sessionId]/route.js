@@ -33,7 +33,7 @@ export async function getMatches(sessionId) {
   const prompt = `
 You are a smart job-matching assistant.
 
-Your task is to compare one user [A] with multiple potential matches [B] based on their chat summaries.
+Your task is to compare one user [A] (the user of this app) with multiple potential matches [B] based on their chat summaries.
 
 [A] is a "${session?.role}" with the following requirements (chat summary):
 ---
@@ -45,17 +45,20 @@ ${allProvidersList}
 ---
 
 Instructions:
+- When writing matchingReason and mismatchReason, ALWAYS address [A] as 'you' or 'your' (never as 'A' or 'A\'s').
+- For example, say: "You are looking for...", "Your requirements are...", "You have 5 years of experience...".
+- NEVER use phrases like "A is looking for..." or "A's expectations...".
 - Compare [A]'s requirements with each [B]'s chatSummary.
-- Dont return a match if match precentage is less tha 30%
+- Don't return a match if match percentage is less than 30%.
 - For each selected match, return:
 
   {
     "sessionId": "${sessionId}"    // A's session 
     "matchedUserId": "...",             // Use the exact userId from the [B] above
     "matchedSessionId": "...",          // Use the exact sessionId from the [B] above
-    "matchingReason": "Explain briefly why this match is relevant",
-    "matchPercentage": "50%" // if all data points matches then 100% , if only half of it matches then 50% and so on. This is based on your calculation and matching, basically your intelligence
-    "mismatchReason": "Preferred location and salary expectaions differs"
+    "matchingReason": "Explain briefly why this match is relevant, addressing the user as 'you' or 'your' only.",
+    "matchPercentage": "50%" // if all data points match then 100%, if only half match then 50% and so on. This is based on your calculation and matching, basically your intelligence
+    "mismatchReason": "Explain mismatches, again addressing the user as 'you' or 'your'."
   }
 
 
@@ -72,8 +75,8 @@ Strictly follow the format below (using the real userId/sessionId from above):
     "matchedUserId": "use from above",
     "matchedSessionId": "use from above",
     "matchingReason": "This is what Kavisha found for you because ...",
-    "matchPercentage": "40%", //dont hard code the value, this is just a example. based on matching algo , calculate the matching percentage yourself
-    "mismatchReason": "Recruiter is looking for onsite but you have remote as a preference. Also offered salary range os 100k-140k but you expectation is 200k."
+    "matchPercentage": "40%", //don't hard code the value, this is just an example. Based on matching algo, calculate the matching percentage yourself
+    "mismatchReason": "You are looking for onsite but the recruiter offers remote. Also, your expected salary is 200k but the offer is 100k-140k."
   }
 ]
 `;
@@ -111,12 +114,14 @@ Strictly follow the format below (using the real userId/sessionId from above):
   }
 
   const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
-  const filteredmatches = matches.filter(
-    (item) =>
-      isValidObjectId(item.sessionId) &&
-      isValidObjectId(item.matchedUserId) &&
-      isValidObjectId(item.matchedSessionId)
-  );
+  const filteredmatches = Array.isArray(matches)
+    ? matches.filter(
+        (item) =>
+          isValidObjectId(item.sessionId) &&
+          isValidObjectId(item.matchedUserId) &&
+          isValidObjectId(item.matchedSessionId)
+      )
+    : [];
   return filteredmatches;
 }
 export async function GET(req, { params }) {
