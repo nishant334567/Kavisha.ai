@@ -23,9 +23,9 @@ export default function Resume({
     const formData = new FormData();
     if (resume) {
       alert(`Selected file: ${resume.name}`);
-      formData.append("file", resume);
+      formData.append("pdf", resume);
       formData.append("sessionId", currentChatId);
-      const response = await fetch("/api/doc-to-text", {
+      const response = await fetch("/api/extract-pdf", {
         method: "POST",
         body: formData,
       });
@@ -54,7 +54,7 @@ export default function Resume({
     e.preventDefault();
     setIsdeleting(true);
     try {
-      const response = await fetch("/api/doc-to-text", {
+      const response = await fetch("/api/extract-pdf", {
         method: "DELETE",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ sessionId: currentChatId }),
