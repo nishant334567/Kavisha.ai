@@ -28,12 +28,12 @@ export default function SetRole() {
   };
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+    <div className="flex items-center justify-center min-h-screen bg-slate-50">
       <form
         onSubmit={handleSubmit}
         className="bg-white p-8 rounded-lg shadow-md w-full max-w-md"
       >
-        <h2 className="text-2xl font-semibold mb-6 text-center">
+        <h2 className="text-2xl font-semibold mb-6 text-center text-slate-800">
           Select Your Role
         </h2>
         <div className="flex flex-col gap-4 mb-6">
@@ -46,7 +46,7 @@ export default function SetRole() {
               onChange={handleChange}
               className="form-radio h-5 w-5 text-blue-600"
             />
-            <span className="ml-3 text-lg">Job Seeker</span>
+            <span className="ml-3 text-lg text-slate-700">Job Seeker</span>
           </label>
           <label className="flex items-center cursor-pointer">
             <input
@@ -57,7 +57,7 @@ export default function SetRole() {
               onChange={handleChange}
               className="form-radio h-5 w-5 text-blue-600"
             />
-            <span className="ml-3 text-lg">Recruiter</span>
+            <span className="ml-3 text-lg text-slate-700">Recruiter</span>
           </label>
         </div>
         <button

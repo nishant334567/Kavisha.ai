@@ -47,7 +47,7 @@ export default function Home({ initialChats, notifications }) {
     <div className="relative">
       {/* Mobile sidebar toggle button */}
       <button
-        className="md:hidden fixed top-4 left-4 z-50 bg-gray-200 p-2 rounded shadow"
+        className="md:hidden fixed top-4 left-4 z-50 bg-slate-200 p-2 rounded shadow hover:bg-slate-300 transition-colors"
         onClick={() => setShowSidebar((prev) => !prev)}
       >
         ☰ {/* Hamburger icon */}
@@ -69,7 +69,7 @@ export default function Home({ initialChats, notifications }) {
             />
             <div className="flex flex-col gap-2 mt-4">
               <button
-                className="text-xs bg-gray-100 w-full p-2 shadow-lg mt-2 rounded-md hover:bg-white hover:text-gray-500"
+                className="text-xs bg-slate-100 w-full p-2 shadow-lg mt-2 rounded-md hover:bg-slate-200 transition-colors text-slate-700"
                 onClick={async () => {
                   const res = await fetch("/api/newchatsession", {
                     method: "POST",
@@ -86,7 +86,7 @@ export default function Home({ initialChats, notifications }) {
                 + New Chat
               </button>
               <button
-                className="text-xs bg-gray-100 w-full p-2 shadow-lg rounded-md hover:bg-white hover:text-gray-500"
+                className="text-xs bg-slate-100 w-full p-2 shadow-lg rounded-md hover:bg-slate-200 transition-colors text-slate-700"
                 onClick={() => signOut({ callbackUrl: "/login" })}
               >
                 Sign Out
@@ -127,11 +127,6 @@ export default function Home({ initialChats, notifications }) {
             currentChatId={currentChatId}
             initialMessages={messages}
           />
-          {/* <Resume
-            resumeData={resumeData}
-            updateResume={updateResume}
-            currentChatId={currentChatId}
-          /> */}
         </div>
       </div>
     </div>

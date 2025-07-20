@@ -1,8 +1,8 @@
 "use client";
 
-import { useSession, signOut } from "next-auth/react";
-import { useState, useEffect } from "react";
-import { resolve } from "styled-jsx/css";
+import { useSession, signOut, signIn } from "next-auth/react";
+import { useState, } from "react";
+
 
 export default function ChatSidebar({ allChats, updateChatId, currentChatId }) {
   const { data: session } = useSession();
@@ -17,7 +17,6 @@ export default function ChatSidebar({ allChats, updateChatId, currentChatId }) {
     setIsdeleting(false);
   };
 
-
   return (
     <div className="flex flex-col h-full">
       <div className="flex-1 overflow-y-auto">
@@ -27,8 +26,8 @@ export default function ChatSidebar({ allChats, updateChatId, currentChatId }) {
             allChats.sessionIds.map((id, idx) => (
               <div className="flex w-full min-h-8 gap-2" key={id}>
                 <button
-                  className={`text-gray-600 text-xs rounded-md px-2 py-2 shadow-lg w-full hover:${currentChatId === id ? "text-white" : "text-black"}
-                    ${currentChatId === id ? "bg-black font-bold text-white" : "bg-gray-100"}
+                  className={`text-slate-700 text-xs rounded-md px-2 py-2 shadow-lg w-full hover:bg-slate-300 transition-colors
+                    ${currentChatId === id ? "bg-blue-600 font-bold text-white" : "bg-slate-100"}
                   `}
                   type="button"
                   onClick={() => updateChatId(id)}
@@ -65,10 +64,16 @@ export default function ChatSidebar({ allChats, updateChatId, currentChatId }) {
           + New Chat
         </button>
         <button
-          className="text-xs bg-gray-100 w-full p-2 shadow-lg rounded-md hover:bg-white hover:text-gray-500"
+          className="text-xs bg-slate-100 w-full p-2 shadow-lg rounded-md hover:bg-slate-200 transition-colors text-slate-700"
           onClick={() => signOut({ callbackUrl: "/login" })}
         >
           Sign Out
+        </button>
+        <button
+          onClick={() => signIn("linkedin", { callbackUrl: "/" })}
+          className="text-xs bg-blue-600 w-full p-2 shadow-lg rounded-md hover:bg-blue-700 transition-colors text-white"
+        >
+          Connect with Linkedin
         </button>
       </div>
     </div>

@@ -78,7 +78,7 @@ export default function ChatBox({
   };
   const onResumeUpload = (newResumeData) => {
     if (newResumeData) {
-      let resumeSubText = `I have sent my ${session?.user?.profileType === "recruiter" ? "JD" : "resume"}!! Please have a look at it`;
+      let resumeSubText = `I have sent my ${session?.user?.profileType === "recruiter" ? "JD" : "resume"}!! Please have a look at it.`;
       const resumeSent = async () => {
         const newUserMessage = {
           role: "user",
@@ -194,7 +194,7 @@ export default function ChatBox({
         {messages.length === 0 && (
           <div>Start a conversation or select a chat to view messages.</div>
         )}
-        <div className="px-4 shadow-md rounded-xl w-[100%] h-[60vh] overflow-y-auto scrollbar-none pb-1 text-white font-light">
+        <div className="px-4 shadow-md rounded-xl w-[100%] h-[60vh] overflow-y-auto scrollbar-none pb-1 bg-slate-50 font-light">
           {messages.length > 0 &&
             messages.map((m, i) => (
               <div
@@ -204,8 +204,8 @@ export default function ChatBox({
                 <div
                   className={`px-4 py-2  rounded-lg inline-block ${
                     m.role === "user"
-                      ? "w-full text-sm shadow-md mb-2 break-words ml-auto bg-gray-800 text-gray-200 rounded px-3 py-2 sm:max-w-[50%]"
-                      : "w-full text-sm shadow-md mb-2 break-words bg-gray-100 text-gray-900 rounded px-3 py-2 sm:max-w-[50%]"
+                      ? "w-full text-sm shadow-md mb-2 break-words ml-auto bg-blue-600 text-white rounded px-3 py-2 sm:max-w-[50%]"
+                      : "w-full text-sm shadow-md mb-2 break-words bg-white text-slate-800 rounded px-3 py-2 sm:max-w-[50%] border border-slate-200"
                   }`}
                 >
                   {m.message}
@@ -213,7 +213,7 @@ export default function ChatBox({
               </div>
             ))}
           {messageLoading && (
-            <div className="text-gray-700 text-xs">Kavisha is typing...</div>
+            <div className="text-slate-600 text-xs">Kavisha is typing...</div>
           )}
 
           {hasDatacollected && (
@@ -231,7 +231,7 @@ export default function ChatBox({
             onClick={() => {
               (setType(1), toggleRightPanel());
             }}
-            className="w-[25%] px-2 py-1 rounded-sm shadow-md text-xs"
+            className="w-[25%] px-2 py-1 rounded-sm shadow-md text-xs bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
           >
             Show Matches
           </button>
@@ -239,7 +239,7 @@ export default function ChatBox({
             onClick={() => {
               (setType(2), toggleRightPanel());
             }}
-            className="w-[25%] px-2 py-1 rounded-sm shadow-md text-xs"
+            className="w-[25%] px-2 py-1 rounded-sm shadow-md text-xs bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
           >
             Connection Requests
           </button>
@@ -252,7 +252,7 @@ export default function ChatBox({
           }}
         >
           <input
-            className="w-full border border-gray-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-400 transition"
+            className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white text-slate-800"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message here..."

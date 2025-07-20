@@ -39,7 +39,7 @@ export default async function HomePage() {
 
   return (
     <div className="flex items-center justify-center min-h-screen">
-      <div className="shadow-xl flex flex-col gap-4 w-full xl:w-[80%] mx-auto h-screen  bg-gray-100 p-8 md:rounded-2xl">
+      <div className="shadow-xl flex flex-col gap-4 w-full xl:w-[80%] mx-auto h-screen bg-white p-8 md:rounded-2xl">
         <Header />
         <Home
           initialChats={allChats}

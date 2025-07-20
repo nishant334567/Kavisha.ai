@@ -9,7 +9,7 @@ export default async function Header() {
       <div className="font-bold text-6xl items-center">
         Kavisha.<span>ai</span>
       </div>
-      <div className="text-sm text-gray-500">
+      <div className="text-sm text-slate-600">
         {session?.user?.profileType !== "recruiter"
           ? `I'm here to help you find the job you want. Let's talk!`
           : `I'm here to help you hire people! Let's talk!`}{" "}

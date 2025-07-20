@@ -89,28 +89,28 @@ export default function MatchCard({
   const isRecruiter = profileType === "recruiter";
 
   return (
-    <div className="bg-white border rounded-lg shadow p-4 flex flex-col gap-2 min-h-[120px] w-full relative">
+    <div className="bg-white border border-slate-200 rounded-lg shadow p-4 flex flex-col gap-2 min-h-[120px] w-full relative">
       <div className="flex items-center justify-between">
-        <span className="font-semibold text-gray-800 text-sm">
+        <span className="font-semibold text-slate-800 text-sm">
           Match: {matchPercentage || "-"}
         </span>
         {contacted !== undefined && (
           <span
-            className={`text-xs px-2 py-0.5 rounded ${contacted ? "bg-emerald-100 text-emerald-700" : "bg-gray-100 text-gray-400"}`}
+            className={`text-xs px-2 py-0.5 rounded ${contacted ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}
           >
             {contacted ? "Contacted" : "Not Contacted"}
           </span>
         )}
       </div>
       {matchingReason && (
-        <div className="text-xs text-emerald-700 font-medium">
+        <div className="text-xs text-green-700 font-medium">
           {matchingReason.length > 150 && type != 1
             ? matchingReason.slice(0, 150) + "..."
             : matchingReason}
         </div>
       )}
       {mismatchReason && (
-        <div className="text-xs text-red-500">
+        <div className="text-xs text-red-600">
           Mismatch:{" "}
           {mismatchReason.length > 150 && type != 1
             ? mismatchReason.slice(0, 150) + "..."
@@ -118,7 +118,7 @@ export default function MatchCard({
         </div>
       )}
       {createdAt && (
-        <div className="text-[10px] text-gray-400 mt-1">
+        <div className="text-[10px] text-slate-500 mt-1">
           Matched on: {new Date(createdAt).toLocaleDateString()}
         </div>
       )}
@@ -127,8 +127,8 @@ export default function MatchCard({
           <button
             className={`w-full px-2 py-1 rounded-md flex items-center justify-center ${
               (isRecruiter ? hasCredits : true) && !isLoading
-                ? "text-white bg-gray-600 hover:bg-gray-700"
-                : "text-gray-400 bg-gray-300 cursor-not-allowed"
+                ? "text-white bg-slate-600 hover:bg-slate-700 transition-colors"
+                : "text-slate-500 bg-slate-300 cursor-not-allowed"
             }`}
             onClick={createConnection}
             disabled={(isRecruiter && !hasCredits) || isLoading}
@@ -157,12 +157,12 @@ export default function MatchCard({
           </button>
 
           {showTooltip && isRecruiter && (
-            <div className="absolute -top-30 left-0 right-0 bg-gray-300 text-gray-600 text-xs p-2 rounded shadow-lg z-10">
+            <div className="absolute -top-30 left-0 right-0 bg-slate-200 text-slate-700 text-xs p-2 rounded shadow-lg z-10">
               <div className="text-left">
                 <div>1. 3 candidate profiles can be unlocked for free</div>
                 <div>2. After free credits: ₹51 per profile</div>
               </div>
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-gray-800"></div>
+              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-200"></div>
             </div>
           )}
         </div>

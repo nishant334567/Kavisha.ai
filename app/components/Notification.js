@@ -20,40 +20,42 @@ export default function Notification({ updateChatId, notifications, toggle }) {
   };
 
   return (
-    <div className="w-70 min-h-30 overflow-y-auto scrollbar-none bg-white rounded-lg shadow-lg p-4 border border-gray-100">
+    <div className="w-70 min-h-30 overflow-y-auto scrollbar-none bg-white rounded-lg shadow-lg p-4 border border-slate-200">
       <div className="flex items-center justify-between mb-4">
-        <h2 className="text-sm font-semibold">Notifications</h2>
+        <h2 className="text-sm font-semibold text-slate-800">Notifications</h2>
         <div className="flex justify-between gap-2">
           <span
             onClick={fetchNotis}
-            className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-md font-medium cursor-pointer"
+            className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-md font-medium cursor-pointer hover:bg-slate-200 transition-colors"
           >
             {refreshing ? "Refreshing..." : "Refresh 🔃"}
           </span>
           <span
             onClick={() => toggle()}
-            className="text-xs bg-gray-100 text-gray-800 px-2 py-1 rounded-md font-semibold cursor-pointer"
+            className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-md font-semibold cursor-pointer hover:bg-slate-200 transition-colors"
           >
             X
           </span>
         </div>
       </div>
-      <div className="space-y-3 max-h-80 overflow-y-auto">
+      <div className="space-y-2">
         {notis.length === 0 && (
-          <div className="text-gray-400 text-center py-8">No notifications</div>
+          <div className="text-slate-500 text-center py-8">
+            No notifications
+          </div>
         )}
         {notis.length > 0 &&
           notis.map((item, index) => (
             <div
               key={index}
-              className={`p-3 rounded-md shadow-sm border border-gray-100 bg-gray-50 transition-colors ${!item.isRead ? "bg-gray-50 border-gray-200" : ""}`}
+              className={`p-3 rounded-md shadow-sm border border-slate-200 bg-slate-50 transition-colors ${!item.isRead ? "bg-slate-100 border-slate-300" : ""}`}
             >
-              <div className="text-xs text-gray-400 mb-1">
+              <div className="text-xs text-slate-500 mb-1">
                 {formatDate(item.createdAt)}
               </div>
-              <div className="text-gray-800 text-xs">{item.message}</div>
+              <div className="text-slate-800 text-xs">{item.message}</div>
               <button
-                className="mt-2 border-1 text-black bg-gray-50 text-xs hover:text-gray-100 hover:bg-gray-500  px-1 py-0.5 rounded-sm "
+                className="mt-2 border border-slate-300 text-slate-700 bg-white text-xs hover:text-white hover:bg-slate-600 transition-colors px-2 py-1 rounded-sm"
                 onClick={() => {
                   updateChatId(item.relatedSession);
                 }}

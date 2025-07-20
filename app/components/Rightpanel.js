@@ -33,9 +33,9 @@ export default function RighPanel({
   //   }
   // }, []);
   return (
-    <div className="fixed top-24 right-8 w-[350px] max-h-screen bg-white border border-gray-300 rounded-xl shadow-2xl p-6 z-50 flex flex-col">
+    <div className="fixed top-24 right-8 w-[350px] max-h-screen bg-white border border-slate-300 rounded-xl shadow-2xl p-6 z-50 flex flex-col">
       <button
-        className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-gray-200 hover:bg-gray-300 text-gray-600 hover:text-black shadow transition"
+        className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 hover:text-slate-800 shadow transition-colors"
         onClick={() => toggleRightPanel()}
       >
         X

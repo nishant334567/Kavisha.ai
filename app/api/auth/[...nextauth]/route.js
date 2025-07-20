@@ -7,6 +7,10 @@ import Session from "@/app/models/ChatSessions";
 import { createSessionWithDefaultLog } from "@/app/lib/createSessionWithDefaultLog";
 
 export const authOptions = {
+  secret: process.env.NEXTAUTH_SECRET,
+  session: {
+    strategy: "jwt",
+  },
   providers: [
     GitHubProvider({
       clientId: process.env.GITHUB_CLIENT_ID,
@@ -59,7 +63,7 @@ export const authOptions = {
           }
         }
       } catch (err) {
-        console.error("Session callback error:", error);
+        console.error("Session callback error:", err);
         session.user.id = token.id;
         session.user.profileType = token.profileType;
         session.user.name = token.name;
