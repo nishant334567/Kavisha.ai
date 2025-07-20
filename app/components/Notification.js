@@ -26,13 +26,13 @@ export default function Notification({ updateChatId, notifications, toggle }) {
         <div className="flex justify-between gap-2">
           <span
             onClick={fetchNotis}
-            className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-md font-medium cursor-pointer hover:bg-slate-200 transition-colors"
+            className="text-xs bg-white text-slate-700 px-2 py-1 rounded-md font-medium cursor-pointer hover:bg-slate-50 transition-colors border border-slate-200"
           >
             {refreshing ? "Refreshing..." : "Refresh 🔃"}
           </span>
           <span
             onClick={() => toggle()}
-            className="text-xs bg-slate-100 text-slate-700 px-2 py-1 rounded-md font-semibold cursor-pointer hover:bg-slate-200 transition-colors"
+            className="text-xs bg-white text-slate-700 px-2 py-1 rounded-md font-semibold cursor-pointer hover:bg-slate-50 transition-colors border border-slate-200"
           >
             X
           </span>

@@ -47,7 +47,7 @@ export default function Home({ initialChats, notifications }) {
     <div className="relative">
       {/* Mobile sidebar toggle button */}
       <button
-        className="md:hidden fixed top-4 left-4 z-50 bg-slate-200 p-2 rounded shadow hover:bg-slate-300 transition-colors"
+        className="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-lg shadow-lg hover:bg-blue-700 transition-colors border border-blue-600"
         onClick={() => setShowSidebar((prev) => !prev)}
       >
         ☰ {/* Hamburger icon */}
@@ -69,7 +69,7 @@ export default function Home({ initialChats, notifications }) {
             />
             <div className="flex flex-col gap-2 mt-4">
               <button
-                className="text-xs bg-slate-100 w-full p-2 shadow-lg mt-2 rounded-md hover:bg-slate-200 transition-colors text-slate-700"
+                className="text-xs bg-blue-600 text-white w-full p-3 shadow-lg mt-2 rounded-md hover:bg-blue-700 transition-colors border border-blue-600 font-medium"
                 onClick={async () => {
                   const res = await fetch("/api/newchatsession", {
                     method: "POST",
@@ -86,7 +86,7 @@ export default function Home({ initialChats, notifications }) {
                 + New Chat
               </button>
               <button
-                className="text-xs bg-slate-100 w-full p-2 shadow-lg rounded-md hover:bg-slate-200 transition-colors text-slate-700"
+                className="text-xs bg-white w-full p-2 shadow-lg rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
                 onClick={() => signOut({ callbackUrl: "/login" })}
               >
                 Sign Out

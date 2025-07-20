@@ -1,8 +1,7 @@
 "use client";
 
 import { useSession, signOut, signIn } from "next-auth/react";
-import { useState, } from "react";
-
+import { useState } from "react";
 
 export default function ChatSidebar({ allChats, updateChatId, currentChatId }) {
   const { data: session } = useSession();
@@ -26,8 +25,8 @@ export default function ChatSidebar({ allChats, updateChatId, currentChatId }) {
             allChats.sessionIds.map((id, idx) => (
               <div className="flex w-full min-h-8 gap-2" key={id}>
                 <button
-                  className={`text-slate-700 text-xs rounded-md px-2 py-2 shadow-lg w-full hover:bg-slate-300 transition-colors
-                    ${currentChatId === id ? "bg-blue-600 font-bold text-white" : "bg-slate-100"}
+                  className={`text-slate-700 text-xs rounded-md px-2 py-2 shadow-lg w-full hover:bg-blue-100 transition-colors border
+                    ${currentChatId === id ? "bg-blue-600 font-bold text-white border-blue-600" : "bg-white border-slate-200"}
                   `}
                   type="button"
                   onClick={() => updateChatId(id)}
@@ -47,7 +46,7 @@ export default function ChatSidebar({ allChats, updateChatId, currentChatId }) {
       </div>
       <div className="flex flex-col gap-2">
         <button
-          className="text-xs bg-gray-100 w-full p-2 shadow-lg mt-2 rounded-md hover:bg-white hover:text-gray-500"
+          className="text-xs bg-blue-600 text-white w-full p-3 shadow-lg mt-2 rounded-md hover:bg-blue-700 transition-colors border border-blue-600 font-medium"
           onClick={async () => {
             const res = await fetch("/api/newchatsession", {
               method: "POST",
@@ -64,14 +63,14 @@ export default function ChatSidebar({ allChats, updateChatId, currentChatId }) {
           + New Chat
         </button>
         <button
-          className="text-xs bg-slate-100 w-full p-2 shadow-lg rounded-md hover:bg-slate-200 transition-colors text-slate-700"
+          className="text-xs bg-white w-full p-2 shadow-lg rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
           onClick={() => signOut({ callbackUrl: "/login" })}
         >
           Sign Out
         </button>
         <button
           onClick={() => signIn("linkedin", { callbackUrl: "/" })}
-          className="text-xs bg-blue-600 w-full p-2 shadow-lg rounded-md hover:bg-blue-700 transition-colors text-white"
+          className="text-xs bg-blue-600 w-full p-2 shadow-lg rounded-md hover:bg-blue-700 transition-colors text-white border border-blue-600"
         >
           Connect with Linkedin
         </button>
