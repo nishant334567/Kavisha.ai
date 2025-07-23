@@ -144,9 +144,6 @@ Click on the "find matches" button to see if ${
           matchesCount === 1 ? "it's" : "they're"
         } good, I'll keep looking out for more in the meantime. Cheers!`;
         reply = message;
-      } else {
-        reply += `I've got all the info I need and will keep a lookout.
-         Ping me if you want to update anything.`;
       }
     }
 
