@@ -41,14 +41,14 @@ export default function Home({ initialChats, notifications }) {
 
   return (
     <div className="relative">
-      <button
+      {/* <button
         className="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-lg  hover:bg-blue-700 transition-colors border border-blue-600"
         onClick={() => setShowSidebar((prev) => !prev)}
       >
         ☰
-      </button>
+      </button> */}
 
-      {showSidebar && (
+      {/* {showSidebar && (
         <div
           className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden"
           onClick={() => setShowSidebar(false)}
@@ -89,8 +89,8 @@ export default function Home({ initialChats, notifications }) {
             </div>
           </div>
         </div>
-      )}
-      <div className="flex gap-4 flex-col md:flex-row md:flex ">
+      )} */}
+      <div className="flex gap-4 w-screen">
         {/* Desktop sidebar */}
         <div className="left-0 h-[100vh] bg-orange-50 border-r border-r-gray-200">
           <ChatSidebar
@@ -100,7 +100,7 @@ export default function Home({ initialChats, notifications }) {
             notifications={notifications}
           />
         </div>
-        <div className="flex-col items-center justify-center mx-auto h-full w-[60%]">
+        <div className="flex-col items-center justify-center mx-auto h-full md:w-[60%]">
           <div className="py-2">
             <Header />
           </div>

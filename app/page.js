@@ -37,8 +37,8 @@ export default async function HomePage() {
   const initialNotifications = await fetchNotis.json();
 
   return (
-    <div className="flex items-center justify-center min-h-screen bg-orange-100">
-      <div className=" flex flex-col gap-4 w-full  mx-auto h-screen md:rounded-2xl">
+    <div className="flex items-center justify-center max-h-screen bg-orange-100">
+      <div className=" flex flex-col gap-4 w-full mx-auto h-screen md:rounded-2xl">
         <Home
           initialChats={allChats}
           notifications={initialNotifications.messages}

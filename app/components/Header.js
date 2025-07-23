@@ -7,7 +7,7 @@ export default function Header() {
   const { data: session } = useSession();
   return (
     <header className="mb-2">
-      <div className="font-bold text-6xl items-center">
+      <div className="font-bold text-5xl items-center">
         Kavisha.<span>ai</span>
       </div>
       <div className="text-sm text-slate-600">

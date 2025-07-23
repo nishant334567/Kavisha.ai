@@ -26,7 +26,7 @@ export default function ChatBox({
   const [retryIndex, setRetryIndex] = useState(undefined);
 
   useEffect(() => {
-    console.log(retry, retryIndex, messages[retryIndex], messages.length);
+    (retry, retryIndex, messages[retryIndex], messages.length);
   }, [retry, retryIndex]);
   useEffect(() => {
     setmessages(initialMessages || []);
@@ -250,11 +250,39 @@ export default function ChatBox({
   };
 
   return (
-    <div className="flex">
-      <div>
-        {messages.length === 0 && (
-          <div>Start a conversation or select a chat to view messages.</div>
-        )}
+    <div className="flex bg-orange-50 rounded-xl p-4">
+      <div className="relative">
+        {
+          <div className="absolute flex mt-2 right-0 top-0">
+            <div className="relative group">
+              <button
+                // disabled={hasAllData}
+                onClick={() => {
+                  (setType(1), toggleRightPanel());
+                }}
+                className="px-2 py-1 rounded-sm  text-xs bg-orange-50 text-slate-700 hover:bg-orange-200 transition-colors"
+              >
+                <img src="puzzle.png" width={30} alt="Show Matches" />
+                <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+                  Show Matches
+                </span>
+              </button>
+            </div>
+            <div className="relative group">
+              <button
+                onClick={() => {
+                  (setType(2), toggleRightPanel());
+                }}
+                className="px-2 py-1 rounded-sm  text-xs bg-orange-50 text-slate-700 hover:bg-orange-200 transition-colors"
+              >
+                <img src="arrow.png" width={30} alt="Connection Requests" />
+                <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+                  Connection Requests
+                </span>
+              </button>
+            </div>
+          </div>
+        }
         <div className="rounded-xl h-[60vh] overflow-y-auto scrollbar-none p-2 font-light">
           {messages.length > 0 &&
             messages.map((m, i) => (
@@ -296,40 +324,28 @@ export default function ChatBox({
           )}
           <div ref={endOfMessagesRef}></div>
         </div>
-        <div className="flex mt-4">
-          <button
-            // disabled={hasAllData}
-            onClick={() => {
-              (setType(1), toggleRightPanel());
-            }}
-            className="w-[25%] px-2 py-1 rounded-sm  text-xs bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
-          >
-            Show Matches
-          </button>
-          <button
-            onClick={() => {
-              (setType(2), toggleRightPanel());
-            }}
-            className="w-[25%] px-2 py-1 rounded-sm  text-xs bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
-          >
-            Connection Requests
-          </button>
-        </div>
+
         <form
-          className="flex gap-3 justify-between mt-4"
+          className="relative mt-4"
           onSubmit={(e) => {
             e.preventDefault();
             handleSubmit();
           }}
         >
           <input
-            className="w-full border border-slate-300 rounded px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white text-slate-800"
+            className="w-full border border-slate-300 rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white text-slate-800"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message here..."
           />
-          <button type="submit" disabled={!input.trim()}>
-            <img src="/message.png" height={25} width={25} />
+          <button
+            type="submit"
+            disabled={!input.trim()}
+            className="absolute right-2 top-1/2 -translate-y-1/2 p-0 bg-transparent border-none"
+            style={{ lineHeight: 0 }}
+            tabIndex={0}
+          >
+            <img src="/message.png" height={25} width={25} alt="Send" />
           </button>
         </form>
         <Resume

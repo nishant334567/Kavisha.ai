@@ -28,6 +28,18 @@ export default function ChatSidebar({
   const toggleNotifications = () => {
     setOpenNotifications((prev) => !prev);
   };
+  const newChat = async () => {
+    const res = await fetch("/api/newchatsession", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userId: session?.user?.id,
+        role: session?.user?.profileType,
+      }),
+    });
+    const data = await res.json();
+    if (data.success) updateChatId(data.sessionId);
+  };
   return (
     <>
       <div>
@@ -71,18 +83,7 @@ export default function ChatSidebar({
             <div className="flex flex-col gap-2">
               <button
                 className="flex gap-2 justify-center text-xs bg-white text-black w-full p-2  mt-2 rounded-md font-medium"
-                onClick={async () => {
-                  const res = await fetch("/api/newchatsession", {
-                    method: "POST",
-                    headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({
-                      userId: session?.user?.id,
-                      role: session?.user?.profileType,
-                    }),
-                  });
-                  const data = await res.json();
-                  if (data.success) updateChatId(data.sessionId);
-                }}
+                onClick={() => newChat()}
               >
                 <img src="new-chat.png" width={16} />
                 New Chat
@@ -105,7 +106,7 @@ export default function ChatSidebar({
               </button>
             </div>
             <div>
-              <button>
+              <button onClick={() => newChat()}>
                 <img src="new-chat.png" width={22} />
               </button>
             </div>
