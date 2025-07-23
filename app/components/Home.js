@@ -100,7 +100,7 @@ export default function Home({ initialChats, notifications }) {
             notifications={notifications}
           />
         </div>
-        <div className="flex-col items-center justify-center h-full w-[60%]">
+        <div className="flex-col items-center justify-center mx-auto h-full w-[60%]">
           <div className="py-2">
             <Header />
           </div>
