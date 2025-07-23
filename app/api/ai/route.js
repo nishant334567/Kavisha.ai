@@ -42,7 +42,6 @@ export async function POST(request) {
     If resume/job desdcription document is provided, consider 
     it in every response before asking question. 
     Also in subsequent conversation user can update/tweak it, consider that.`;
-    console.log(userMessage, typeof userMessage.message, userMessage.message);
     if (
       !userMessage ||
       typeof userMessage !== "string" ||
@@ -146,7 +145,7 @@ Click on the "find matches" button to see if ${
         } good, I'll keep looking out for more in the meantime. Cheers!`;
         reply = message;
       } else {
-        reply = `I've got all the info I need and will keep a lookout.
+        reply += `I've got all the info I need and will keep a lookout.
          Ping me if you want to update anything.`;
       }
     }
