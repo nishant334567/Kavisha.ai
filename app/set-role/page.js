@@ -34,7 +34,7 @@ export default function SetRole() {
         className="bg-white p-8 rounded-lg shadow-md w-full max-w-md"
       >
         <h2 className="text-2xl font-semibold mb-6 text-center text-slate-800">
-          Select Your Role
+          I am
         </h2>
         <div className="flex flex-col gap-4 mb-6">
           <label className="flex items-center cursor-pointer">

@@ -1,6 +1,7 @@
 import NextAuth from "next-auth";
 import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
+import LinkedInProvider from "next-auth/providers/linkedin";
 import { connectDB } from "@/app/lib/db";
 import User from "@/app/models/Users";
 import Session from "@/app/models/ChatSessions";
@@ -20,6 +21,72 @@ export const authOptions = {
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
+    LinkedInProvider({
+      clientId: process.env.LINKEDIN_CLIENT_ID,
+      clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
+      authorization: {
+        params: {
+          scope: "openid email profile",
+        },
+      },
+      idToken: true,
+      token: {
+        async request({ client, params, checks, provider }) {
+          const tokenEndpoint = "https://www.linkedin.com/oauth/v2/accessToken";
+
+          const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
+          const redirectUri = `${baseUrl}/api/auth/callback/linkedin`;
+
+          const body = new URLSearchParams({
+            grant_type: "authorization_code",
+            code: params.code,
+            redirect_uri: redirectUri,
+            client_id: provider.clientId,
+            client_secret: provider.clientSecret,
+          });
+
+          const response = await fetch(tokenEndpoint, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+              Accept: "application/json",
+            },
+            body: body.toString(),
+          });
+
+          if (!response.ok) {
+            const errorText = await response.text();
+            console.error(
+              "LinkedIn token exchange error:",
+              response.status,
+              errorText
+            );
+            throw new Error(
+              `Token exchange failed: ${response.status} - ${errorText}`
+            );
+          }
+
+          const tokens = await response.json();
+
+          // Log what we received
+          console.log("Received tokens:", tokens);
+
+          // LinkedIn might return id_token only with OpenID Connect scope
+          const userinfoRes = await fetch(
+            "https://api.linkedin.com/v2/userinfo",
+            {
+              headers: {
+                Authorization: `Bearer ${tokens.access_token}`,
+                "Content-Type": "application/json",
+              },
+            }
+          );
+          const userinfo = await userinfoRes.json();
+          console.log("Fetched user info", userinfo);
+          return tokens;
+        },
+      },
+    }),
   ],
 
   callbacks: {
@@ -27,6 +94,7 @@ export const authOptions = {
       return baseUrl;
     },
     async jwt({ token, user }) {
+      console.log("token, uswr inside jwt", token, user);
       if (user) {
         await connectDB();
         let dbuser = await User.findOne({ email: user.email });
@@ -44,6 +112,7 @@ export const authOptions = {
       return token;
     },
     async session({ session, token }) {
+      console.log("Token inside session", token);
       try {
         await connectDB();
 

@@ -34,6 +34,7 @@ export async function POST(request) {
       secret: process.env.NEXTAUTH_SECRET,
     });
     const body = await request.json();
+    console.log(body);
     const { history, userMessage, jobseeker, sessionId, resume } = body;
     const resumeText = resume || "";
 
@@ -41,6 +42,7 @@ export async function POST(request) {
     If resume/job desdcription document is provided, consider 
     it in every response before asking question. 
     Also in subsequent conversation user can update/tweak it, consider that.`;
+    console.log(userMessage, typeof userMessage.message, userMessage.message);
     if (
       !userMessage ||
       typeof userMessage !== "string" ||

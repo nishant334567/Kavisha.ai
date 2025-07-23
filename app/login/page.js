@@ -26,6 +26,12 @@ export default function LoginPage() {
             >
               Login with Google
             </button>
+            <button
+              onClick={() => signIn("linkedin", { callbackUrl: "/" })}
+              className="text-xs bg-blue-600 w-full p-2 shadow-lg rounded-md hover:bg-blue-700 transition-colors text-white border border-blue-600"
+            >
+              Connect with Linkedin
+            </button>
           </>
         ) : (
           <div className="flex flex-col items-center gap-4 w-full">

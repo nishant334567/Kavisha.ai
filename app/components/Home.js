@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react";
 import ChatSidebar from "./ChatSidebar";
 import ChatBox from "./ChatBox";
+import Header from "./Header";
 
-import Notification from "./Notification";
 import { useSession, signOut } from "next-auth/react";
 
 export default function Home({ initialChats, notifications }) {
@@ -13,7 +13,7 @@ export default function Home({ initialChats, notifications }) {
   );
   const [allChats, setAllchats] = useState(initialChats);
   const [messages, setMessages] = useState(initialChats?.sessionIds?.[0]?.logs);
-  const [openNotifications, setOpenNotifications] = useState(false);
+
   const [connections, setConnections] = useState([]);
   const [showSidebar, setShowSidebar] = useState(false);
   const { data: session } = useSession();
@@ -39,27 +39,22 @@ export default function Home({ initialChats, notifications }) {
     setShowSidebar(false); // Close sidebar on mobile after selecting chat
   };
 
-  const toggleNotifications = () => {
-    setOpenNotifications((prev) => !prev);
-  };
-
   return (
     <div className="relative">
-      {/* Mobile sidebar toggle button */}
       <button
-        className="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-lg shadow-lg hover:bg-blue-700 transition-colors border border-blue-600"
+        className="md:hidden fixed top-4 left-4 z-50 bg-blue-600 text-white p-3 rounded-lg  hover:bg-blue-700 transition-colors border border-blue-600"
         onClick={() => setShowSidebar((prev) => !prev)}
       >
-        ☰ {/* Hamburger icon */}
+        ☰
       </button>
-      {/* Mobile sidebar overlay */}
+
       {showSidebar && (
         <div
           className="fixed inset-0 bg-black bg-opacity-40 z-40 md:hidden"
           onClick={() => setShowSidebar(false)}
         >
           <div
-            className="absolute left-0 top-0 h-full w-3/4 bg-white shadow-lg p-4"
+            className="absolute left-0 top-0 h-full w-3/4 bg-white p-4 border-r border-r-gray-300"
             onClick={(e) => e.stopPropagation()}
           >
             <ChatSidebar
@@ -69,7 +64,7 @@ export default function Home({ initialChats, notifications }) {
             />
             <div className="flex flex-col gap-2 mt-4">
               <button
-                className="text-xs bg-blue-600 text-white w-full p-3 shadow-lg mt-2 rounded-md hover:bg-blue-700 transition-colors border border-blue-600 font-medium"
+                className="text-xs bg-blue-600 text-white w-full p-3  mt-2 rounded-md hover:bg-blue-700 transition-colors border border-blue-600 font-medium"
                 onClick={async () => {
                   const res = await fetch("/api/newchatsession", {
                     method: "POST",
@@ -86,7 +81,7 @@ export default function Home({ initialChats, notifications }) {
                 + New Chat
               </button>
               <button
-                className="text-xs bg-white w-full p-2 shadow-lg rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
+                className="text-xs bg-white w-full p-2  rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
                 onClick={() => signOut({ callbackUrl: "/login" })}
               >
                 Sign Out
@@ -95,33 +90,20 @@ export default function Home({ initialChats, notifications }) {
           </div>
         </div>
       )}
-      <div className="absolute -top-22 -right-5">
-        <button
-          onClick={() => setOpenNotifications((prev) => !prev)}
-          className="flex shadow-md text-sm bg-gray-200 text-gray-600 px-2 py-1 rounded-md font-medium cursor-pointer hover:bg-gray-600 hover:text-gray-200"
-        >
-          <span className="hidden md:inline">Notifications </span>🔔
-        </button>
-        <div className="absolute z-40 -top-13 -right-30">
-          {openNotifications && (
-            <Notification
-              toggle={toggleNotifications}
-              updateChatId={updateChatId}
-              notifications={notifications}
-            />
-          )}
-        </div>
-      </div>
-      <div className="flex flex-col md:flex-row md:flex justify-evenly gap-4">
+      <div className="flex gap-4 flex-col md:flex-row md:flex ">
         {/* Desktop sidebar */}
-        <div className="w-[20%] md:w-[20%] hidden md:block">
+        <div className="left-0 h-[100vh] bg-orange-50 border-r border-r-gray-200">
           <ChatSidebar
             allChats={allChats}
             updateChatId={updateChatId}
             currentChatId={currentChatId}
+            notifications={notifications}
           />
         </div>
-        <div className="w-full xl:w-[70%]">
+        <div className="flex-col items-center justify-center h-full w-[60%]">
+          <div className="py-2">
+            <Header />
+          </div>
           <ChatBox
             connections={connections}
             currentChatId={currentChatId}

@@ -22,7 +22,12 @@ export default function ChatBox({
   const [show, setShow] = useState(false);
   const [resumeData, setResumedata] = useState({});
   const [hasDatacollected, setHasDatacollected] = useState();
+  const [retry, setRetry] = useState(false);
+  const [retryIndex, setRetryIndex] = useState(undefined);
 
+  useEffect(() => {
+    console.log(retry, retryIndex, messages[retryIndex], messages.length);
+  }, [retry, retryIndex]);
   useEffect(() => {
     setmessages(initialMessages || []);
   }, [initialMessages, currentChatId]);
@@ -109,6 +114,8 @@ export default function ChatBox({
             },
           ]);
           setMessageLoading(false);
+          setRetry(true);
+          setRetryIndex(updatedMessages.length - 1);
           return;
         }
         const data = await response.json();
@@ -135,6 +142,58 @@ export default function ChatBox({
       resumeSent();
     }
   };
+
+  const retryMessage = async () => {
+    const lastErrorRemoved = messages.filter((item, index) => {
+      return index !== messages.length - 1;
+    });
+    const resendMessage = lastErrorRemoved[retryIndex];
+    setmessages(lastErrorRemoved);
+    setMessageLoading(true);
+    const response = await fetch("/api/ai", {
+      method: "POST",
+      body: JSON.stringify({
+        history: messages,
+        userMessage: resendMessage?.message,
+        jobseeker: session?.user?.profileType,
+        sessionId: currentChatId,
+        resume: resumeData.resumeSummary,
+      }),
+    });
+    if (!response.ok) {
+      setmessages([
+        ...lastErrorRemoved,
+        {
+          role: "assistant",
+          message:
+            "Kavisha failed to respond to that. Can you please try again?",
+        },
+      ]);
+      setRetry(true);
+      setRetryIndex(lastErrorRemoved.length - 1);
+      setMessageLoading(false);
+      return;
+    }
+    const data = await response.json();
+
+    setmessages([
+      ...lastErrorRemoved,
+      { role: "assistant", message: data.reply },
+    ]);
+    setMessageLoading(false);
+    setRetry(false);
+    setRetryIndex(undefined);
+    if (
+      data?.matchesWithObjectIds?.length > 0 &&
+      data?.allDataCollected === "true"
+    ) {
+      setMatches(data?.matchesWithObjectIds);
+      setHasDatacollected(true);
+    }
+    if (data?.allDataCollected === "false") {
+      setHasDatacollected(false);
+    }
+  };
   const handleSubmit = async () => {
     if (!input.trim()) return;
     const newUserMessage = { role: "user", message: input };
@@ -143,7 +202,7 @@ export default function ChatBox({
     setmessages(updatedMessages);
     setInput("");
     setMessageLoading(true);
-    const response = await fetch("/api/ai", {
+    const response = await fetch("/api/ais", {
       method: "POST",
       body: JSON.stringify({
         history: messages,
@@ -162,6 +221,8 @@ export default function ChatBox({
             "Kavisha failed to respond to that. Can you please try again?",
         },
       ]);
+      setRetry(true);
+      setRetryIndex(updatedMessages.length - 1);
       setMessageLoading(false);
       return;
     }
@@ -194,18 +255,28 @@ export default function ChatBox({
         {messages.length === 0 && (
           <div>Start a conversation or select a chat to view messages.</div>
         )}
-        <div className="px-4 shadow-md rounded-xl w-[100%] h-[60vh] overflow-y-auto scrollbar-none pb-1 bg-slate-50 font-light">
+        <div className="rounded-xl h-[60vh] overflow-y-auto scrollbar-none p-2 font-light">
           {messages.length > 0 &&
             messages.map((m, i) => (
               <div
                 key={i}
                 className={m.role === "user" ? "text-right" : "text-left "}
               >
+                {retryIndex === i && (
+                  <button
+                    onClick={() => {
+                      retryMessage();
+                    }}
+                    className="text-red-600 px-2 py-1 "
+                  >
+                    <img src="reload.png" width={20} height={20} />
+                  </button>
+                )}
                 <div
                   className={`px-4 py-2  rounded-lg inline-block ${
                     m.role === "user"
-                      ? "w-full text-sm shadow-md mb-2 break-words ml-auto bg-blue-600 text-white rounded px-3 py-2 sm:max-w-[50%]"
-                      : "w-full text-sm shadow-md mb-2 break-words bg-white text-slate-800 rounded px-3 py-2 sm:max-w-[50%] border border-slate-200"
+                      ? "w-full text-sm  mb-2 break-words ml-auto bg-white text-black rounded px-3 py-2 sm:max-w-[45%] border border-slate-200"
+                      : "w-full text-sm  mb-2 break-words bg-white text-slate-800 rounded px-3 py-2 sm:max-w-[45%] border border-slate-200"
                   }`}
                 >
                   {m.message}
@@ -231,7 +302,7 @@ export default function ChatBox({
             onClick={() => {
               (setType(1), toggleRightPanel());
             }}
-            className="w-[25%] px-2 py-1 rounded-sm shadow-md text-xs bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
+            className="w-[25%] px-2 py-1 rounded-sm  text-xs bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
           >
             Show Matches
           </button>
@@ -239,7 +310,7 @@ export default function ChatBox({
             onClick={() => {
               (setType(2), toggleRightPanel());
             }}
-            className="w-[25%] px-2 py-1 rounded-sm shadow-md text-xs bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
+            className="w-[25%] px-2 py-1 rounded-sm  text-xs bg-slate-200 text-slate-700 hover:bg-slate-300 transition-colors"
           >
             Connection Requests
           </button>

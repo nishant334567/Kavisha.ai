@@ -1,4 +1,3 @@
-import Header from "./components/Header";
 import Home from "./components/Home";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // adjust path as needed
@@ -38,9 +37,8 @@ export default async function HomePage() {
   const initialNotifications = await fetchNotis.json();
 
   return (
-    <div className="flex items-center justify-center min-h-screen">
-      <div className="shadow-xl flex flex-col gap-4 w-full xl:w-[80%] mx-auto h-screen bg-white p-8 md:rounded-2xl">
-        <Header />
+    <div className="flex items-center justify-center min-h-screen bg-orange-100">
+      <div className=" flex flex-col gap-4 w-full  mx-auto h-screen md:rounded-2xl">
         <Home
           initialChats={allChats}
           notifications={initialNotifications.messages}
