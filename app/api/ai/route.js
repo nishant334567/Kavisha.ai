@@ -96,14 +96,47 @@ export async function POST(request) {
       title = parts[2];
       allDataCollected = parts[3] === "true";
     } else {
+      console.log("Using original reply content, just fixing format");
+      // Use the original content (which is likely correct) and just add proper formatting
+      const originalReply = parts[0] || replyAi; // Use parts[0] if available, otherwise full response
+
       const rePromptMessages = [
-        ...messages,
         {
           role: "system",
           content:
-            "You did not follow the required format. Please reformat your last answer as per the instructions: reply, then ////, then a summary, then ////. Never skip the summary, even if it's brief.",
+            jobseeker === "recruiter"
+              ? SYSTEM_PROMPT_RECRUITER
+              : SYSTEM_PROMPT_JOB_SEEKER,
+        },
+        ...(resumeText
+          ? [{ role: "system", content: `Resume/JD Document: ${resumeText}` }]
+          : []),
+        ...history.map((m) => ({
+          role: m.role,
+          content: m.message,
+        })),
+        { role: "user", content: userMessage },
+        {
+          role: "assistant",
+          content: originalReply,
+        },
+        {
+          role: "system",
+          content: `FORMATTING TASK: The assistant's last response has the correct content but wrong format. 
+
+Please reformat it as:
+${originalReply}
+////
+[Create a summary of the conversation based on all the context above]
+////
+[Create a short title (max 20 chars)]
+////
+[true or false based on whether all required data points have been collected]
+
+Do NOT change the reply content ("${originalReply}") - keep it exactly as is. Only add the missing format parts based on the conversation context.`,
         },
       ];
+
       const reChatCompletion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: rePromptMessages,
