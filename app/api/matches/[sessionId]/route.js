@@ -49,13 +49,15 @@ Instructions:
 - For example, say: "You are looking for...", "Your requirements are...", "You have 5 years of experience...".
 - NEVER use phrases like "A is looking for..." or "A's expectations...".
 - Compare [A]'s requirements with each [B]'s chatSummary.
-- Don't return a match if match percentage is less than 30%.
+- Don't return a match if the Job role is completely different.
 - For each selected match, return:
 
   {
     "sessionId": "${sessionId}"    // A's session 
     "matchedUserId": "...",             // Use the exact userId from the [B] above
     "matchedSessionId": "...",          // Use the exact sessionId from the [B] above
+    "title":"...",                      // // Use the exact title from the [B] above
+    "chatSummary":"...."                   // Use the exact chatSummary from the [B] above
     "matchingReason": "Explain briefly why this match is relevant, addressing the user as 'you' or 'your' only.",
     "matchPercentage": "50%" // if all data points match then 100%, if only half match then 50% and so on. This is based on your calculation and matching, basically your intelligence
     "mismatchReason": "Explain mismatches, again addressing the user as 'you' or 'your'."

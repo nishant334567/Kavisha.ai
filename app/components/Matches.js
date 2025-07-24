@@ -45,6 +45,8 @@ export default function Matches({
                   className="w-full flex-shrink-0 sm:w-[50%] lg:w-[40%] xl:w-[35%] h-full "
                 >
                   <MatchCard
+                  matchTitle={item.title}
+                  description= {item.chatSummary}
                     matchPercentage={item.matchPercentage}
                     matchingReason={item.matchingReason}
                     mismatchReason={item.mismatchReason}

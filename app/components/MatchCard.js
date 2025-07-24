@@ -4,6 +4,8 @@ import React, { useEffect, useState } from "react";
 
 export default function MatchCard({
   type = 0,
+  matchTitle,
+  description,
   matchPercentage,
   matchingReason,
   mismatchReason,
@@ -94,14 +96,10 @@ export default function MatchCard({
         <span className="font-semibold text-slate-800 text-sm">
           Match: {matchPercentage || "-"}
         </span>
-        {contacted !== undefined && (
-          <span
-            className={`text-xs px-2 py-0.5 rounded ${contacted ? "bg-green-100 text-green-700" : "bg-slate-100 text-slate-500"}`}
-          >
-            {contacted ? "Contacted" : "Not Contacted"}
-          </span>
-        )}
       </div>
+      {matchTitle && (
+        <div className="text-xs text-green-700 font-medium">{matchTitle}</div>
+      )}
       {matchingReason && (
         <div className="text-xs text-green-700 font-medium">
           {matchingReason.length > 150 && type != 1

@@ -94,7 +94,7 @@ export async function POST(request) {
       reply = parts[0];
       summary = parts[1];
       title = parts[2];
-      allDataCollected = parts[3] === "true";
+      allDataCollected = parts[3]; // Keep as string
     } else {
       console.log("Using original reply content, just fixing format");
       // Use the original content (which is likely correct) and just add proper formatting
@@ -159,9 +159,6 @@ Do NOT change the reply content ("${originalReply}") - keep it exactly as is. On
     }
     let matchesLatest = [];
     if (allDataCollected === "true") {
-      console.log("I am here", allDataCollected);
-      //first delete all matches to refrsh acc to new chat
-      // await Matches.deleteMany({ sessionId: sessionId });
       await Matches.deleteMany({ sessionId: sessionId });
       matchesLatest = await getMatches(sessionId);
 
