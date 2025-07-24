@@ -35,7 +35,7 @@ export async function POST(request) {
       max: 0, // 0 means no page limit
       version: "v1.10.100", // Specify version to avoid auto-detection
     });
-    console.log("data pdf", data.text);
+    
     const result = await Session.updateOne(
       { _id: sessionId },
       {

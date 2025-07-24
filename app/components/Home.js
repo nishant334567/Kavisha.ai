@@ -16,7 +16,7 @@ export default function Home({ initialChats, notifications }) {
 
   const [connections, setConnections] = useState([]);
   const [showSidebar, setShowSidebar] = useState(false);
-  const { data: session } = useSession();
+  const [matches, setMatches] = useState([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -30,8 +30,15 @@ export default function Home({ initialChats, notifications }) {
       const data = await resposne.json();
       setConnections(data.connections);
     };
+
+    const fetchMatches = async () => {
+      const response = await fetch(`/api/fetch-matches/${currentChatId}`);
+      const data = await response.json();
+      setMatches(data?.matches);
+    };
     fetchData();
     fetchConnections();
+    fetchMatches();
   }, [currentChatId]);
 
   const updateChatId = (chatId) => {
@@ -90,9 +97,9 @@ export default function Home({ initialChats, notifications }) {
           </div>
         </div>
       )} */}
-      <div className="flex gap-4 w-screen">
+      <div className="relative flex gap-4 w-screen">
         {/* Desktop sidebar */}
-        <div className="left-0 h-[100vh] bg-orange-50 border-r border-r-gray-200">
+        <div className="absolute z-40 left-0 h-[100vh] bg-orange-50 border-r border-r-gray-200">
           <ChatSidebar
             allChats={allChats}
             updateChatId={updateChatId}
@@ -100,7 +107,7 @@ export default function Home({ initialChats, notifications }) {
             notifications={notifications}
           />
         </div>
-        <div className="flex-col items-center justify-center mx-auto h-full md:w-[60%]">
+        <div className="flex-col w-[80%] items-center justify-center mx-auto h-full md:w-[60%]">
           <div className="py-2">
             <Header />
           </div>
@@ -108,6 +115,7 @@ export default function Home({ initialChats, notifications }) {
             connections={connections}
             currentChatId={currentChatId}
             initialMessages={messages}
+            initialMatches = {matches}
           />
         </div>
       </div>

@@ -68,8 +68,7 @@ export const authOptions = {
 
           const tokens = await response.json();
 
-          // Log what we received
-          console.log("Received tokens:", tokens);
+        
 
           // LinkedIn might return id_token only with OpenID Connect scope
           const userinfoRes = await fetch(
@@ -82,7 +81,7 @@ export const authOptions = {
             }
           );
           const userinfo = await userinfoRes.json();
-          console.log("Fetched user info", userinfo);
+          ("Fetched user info", userinfo);
           return tokens;
         },
       },
@@ -94,7 +93,7 @@ export const authOptions = {
       return baseUrl;
     },
     async jwt({ token, user }) {
-      console.log("token, uswr inside jwt", token, user);
+      ("token, uswr inside jwt", token, user);
       if (user) {
         await connectDB();
         let dbuser = await User.findOne({ email: user.email });
@@ -112,7 +111,7 @@ export const authOptions = {
       return token;
     },
     async session({ session, token }) {
-      console.log("Token inside session", token);
+      ("Token inside session", token);
       try {
         await connectDB();
 

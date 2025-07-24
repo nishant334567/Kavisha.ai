@@ -34,14 +34,10 @@ export async function POST(request) {
       secret: process.env.NEXTAUTH_SECRET,
     });
     const body = await request.json();
-    console.log(body);
     const { history, userMessage, jobseeker, sessionId, resume } = body;
     const resumeText = resume || "";
 
-    const systemPrompt = `You are a job-matching assistant. 
-    If resume/job desdcription document is provided, consider 
-    it in every response before asking question. 
-    Also in subsequent conversation user can update/tweak it, consider that.`;
+    // Remove the duplicate systemPrompt - we'll only use the imported ones
     if (
       !userMessage ||
       typeof userMessage !== "string" ||
@@ -68,21 +64,21 @@ export async function POST(request) {
             ? SYSTEM_PROMPT_RECRUITER
             : SYSTEM_PROMPT_JOB_SEEKER,
       },
+      ...(resumeText
+        ? [{ role: "system", content: `Resume/JD Document: ${resumeText}` }]
+        : []),
       ...history.map((m) => ({
         role: m.role,
         content: m.message,
       })),
       { role: "user", content: userMessage },
-      { role: "system", content: systemPrompt },
-      ...(resumeText
-        ? [{ role: "system", content: `Resume: ${resumeText}` }]
-        : []),
     ];
 
     const chatCompletion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
       messages,
-      temperature: 0.1,
+      temperature: 0.7, // Reduced from 1 for more consistent responses
+      max_completion_tokens: 800, // Updated parameter name for OpenAI API
     });
 
     let replyAi = chatCompletion.choices[0].message.content;
@@ -91,12 +87,14 @@ export async function POST(request) {
     let title = "";
     let allDataCollected = false;
 
+    // Simplified format parsing - avoid re-prompting loops
     const parts = replyAi.split("////").map((item) => item.trim());
-    if (parts.length >= 4) {
+    console.log("Parts", parts);
+    if (parts.length === 4) {
       reply = parts[0];
       summary = parts[1];
-      title = parts.length >= 3 ? parts[2] : "";
-      allDataCollected = parts.length >= 4 ? parts[3] : false;
+      title = parts[2];
+      allDataCollected = parts[3] === "true";
     } else {
       const rePromptMessages = [
         ...messages,
@@ -113,18 +111,22 @@ export async function POST(request) {
       });
       const reReplyAi = reChatCompletion.choices[0].message.content;
       const reParts = reReplyAi.split("////").map((item) => item.trim());
-      if (reParts.length >= 4) {
+      console.log("Reparts", reParts);
+      if (reParts.length === 4) {
         reply = reParts[0];
         summary = reParts[1];
-        title = reParts.length >= 3 ? reParts[2] : "";
-        allDataCollected = reParts.length >= 4 ? reParts[3] : false;
+        title = reParts[2];
+        allDataCollected = reParts[3];
       } else {
-        reply = reReplyAi.trim();
-        summary = "";
+        return NextResponse.json(
+          { error: "something went wrong" },
+          { status: 500 }
+        );
       }
     }
     let matchesLatest = [];
     if (allDataCollected === "true") {
+      console.log("I am here", allDataCollected);
       //first delete all matches to refrsh acc to new chat
       // await Matches.deleteMany({ sessionId: sessionId });
       await Matches.deleteMany({ sessionId: sessionId });

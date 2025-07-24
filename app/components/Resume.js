@@ -8,8 +8,13 @@ export default function Resume({
   updateResume,
   currentChatId,
   onResumeUpload,
+  hideFileInput = false,
+  selectedFile = null,
+  setSelectedFile = () => {},
 }) {
-  const [resume, setResume] = useState(null);
+  // Use selectedFile from props if available, otherwise use local state
+  const resume = selectedFile;
+  const setResume = setSelectedFile;
   const [uploadloading, setUploadloading] = useState(false);
   const [isDeleting, setIsdeleting] = useState(false);
   const [fileInputKey, setFileInputKey] = useState(0);
@@ -83,22 +88,26 @@ export default function Resume({
             {shortenFileName(filename)}
           </span>
         )}
-        <label className="cursor-pointer text-xs px-2 py-1  shadow-md rounded-lg text-blue-600 hover:underline">
-          <input
-            type="file"
-            accept=".pdf,.docx"
-            onChange={(e) => setResume(e.target.files[0])}
-            key={fileInputKey + currentChatId}
-            className="hidden"
-          />
-          <span>
+
+        {/* Only show file input if not hidden */}
+        {!hideFileInput && (
+          <label className="cursor-pointer text-xs px-2 py-1 shadow-md rounded-lg text-blue-600 hover:underline">
+            <input
+              type="file"
+              accept=".pdf,.docx"
+              onChange={(e) => setResume(e.target.files[0])}
+              key={fileInputKey + currentChatId}
+              className="hidden"
+            />
+            <img src="attach.png" width={20} />
             {resume || (filename !== "" && resumeSummary !== "")
               ? "Reselect"
               : session?.user?.profileType === "recruiter"
                 ? "Share JD"
                 : "Upload Resume"}
-          </span>
-        </label>
+          </label>
+        )}
+
         {resume && (
           <button
             className="text-xs px-2 py-1 shadow-md rounded-lg  bg-gray-500 text-white hover:bg-gray-600 transition disabled:opacity-50"

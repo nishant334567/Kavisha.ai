@@ -42,17 +42,15 @@ export default function ChatSidebar({
   };
   return (
     <>
-      <div>
-        <div className="absolute">
-          <div className="absolute z-40 -top-13 -right-30">
-            {openNotifications && (
-              <Notification
-                toggle={toggleNotifications}
-                updateChatId={updateChatId}
-                notifications={notifications}
-              />
-            )}
-          </div>
+      <div className="relative">
+        <div className="absolute z-40 left-15 top-1/2">
+          {openNotifications && (
+            <Notification
+              toggle={toggleNotifications}
+              updateChatId={updateChatId}
+              notifications={notifications}
+            />
+          )}
         </div>
         {!isCollapsed && (
           <div className="flex flex-col h-full w-64 p-4">
@@ -112,8 +110,7 @@ export default function ChatSidebar({
             </div>
             <div>
               <button onClick={() => setOpenNotifications((prev) => !prev)}>
-                {/* <span className="hidden md:inline">Notifications </span>🔔 */}
-                <p className="text-lg">🔔</p>
+                <img src="notification.png" width={20} />
               </button>
             </div>
           </div>

@@ -87,7 +87,7 @@ Strictly follow the format below (using the real userId/sessionId from above):
       { role: "system", content: "You are a helpful assistant." },
       { role: "user", content: prompt },
     ],
-    temperature: 0.2,
+    temperature: 1,
   });
   const responseText = completion.choices[0].message.content;
 

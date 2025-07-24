@@ -6,11 +6,11 @@ import { useSession } from "next-auth/react";
 export default function Header() {
   const { data: session } = useSession();
   return (
-    <header className="mb-2">
-      <div className="font-bold text-5xl items-center">
+    <header className="m-4">
+      <div className="font-bold text-5xl items-center text-center text-slate-700">
         Kavisha.<span>ai</span>
       </div>
-      <div className="text-sm text-slate-600">
+      <div className=" text-slate-500 text-center text-xs">
         {session?.user?.profileType !== "recruiter"
           ? `I'm here to help you find the job you want. Let's talk!`
           : `I'm here to help you hire people! Let's talk!`}{" "}

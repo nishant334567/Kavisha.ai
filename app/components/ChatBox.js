@@ -9,6 +9,7 @@ export default function ChatBox({
   currentChatId,
   initialMessages,
   connections,
+  initialMatches,
 }) {
   const endOfMessagesRef = useRef(null);
   const [messages, setmessages] = useState([]);
@@ -24,14 +25,16 @@ export default function ChatBox({
   const [hasDatacollected, setHasDatacollected] = useState();
   const [retry, setRetry] = useState(false);
   const [retryIndex, setRetryIndex] = useState(undefined);
+  const [selectedFile, setSelectedFile] = useState(null);
 
-  useEffect(() => {
-    (retry, retryIndex, messages[retryIndex], messages.length);
-  }, [retry, retryIndex]);
   useEffect(() => {
     setmessages(initialMessages || []);
+    setMatches(initialMatches);
   }, [initialMessages, currentChatId]);
 
+  useEffect(() => {
+    console.log("initial matches", matches);
+  }, []);
   useEffect(() => {
     //fetch resume data initially
     const fetchResumeData = async () => {
@@ -54,18 +57,18 @@ export default function ChatBox({
     fetchDataCollectionStatus();
   }, [currentChatId]);
 
-  useEffect(() => {
-    const fetchMatches = async () => {
-      const response = await fetch(`/api/fetch-matches/${currentChatId}`);
-      const data = await response.json();
+  // useEffect(() => {
+  //   const fetchMatches = async () => {
+  //     const response = await fetch(`/api/fetch-matches/${currentChatId}`);
+  //     const data = await response.json();
 
-      // setHasAllData(data.allDataCollected);
-      if (Array.isArray(data.matches) && data.matches.length > 0) {
-        setMatches(data.matches);
-      }
-    };
-    fetchMatches();
-  }, []);
+  //     // setHasAllData(data.allDataCollected);
+  //     if (Array.isArray(data.matches) && data.matches.length > 0) {
+  //       setMatches(data.matches);
+  //     }
+  //   };
+  //   fetchMatches();
+  // }, []);
   useEffect(() => {
     const timeout = setTimeout(() => {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -150,10 +153,14 @@ export default function ChatBox({
     const resendMessage = lastErrorRemoved[retryIndex];
     setmessages(lastErrorRemoved);
     setMessageLoading(true);
+
+    // Use the conversation history up to the retry point, excluding the failed message
+    const historyUpToRetry = lastErrorRemoved.slice(0, retryIndex);
+
     const response = await fetch("/api/ai", {
       method: "POST",
       body: JSON.stringify({
-        history: messages,
+        history: historyUpToRetry,
         userMessage: resendMessage?.message,
         jobseeker: session?.user?.profileType,
         sessionId: currentChatId,
@@ -202,10 +209,12 @@ export default function ChatBox({
     setmessages(updatedMessages);
     setInput("");
     setMessageLoading(true);
+
+    // Use the current messages state as history (without the new message since it's passed separately)
     const response = await fetch("/api/ai", {
       method: "POST",
       body: JSON.stringify({
-        history: messages,
+        history: messages, // Don't include the new message here - it's passed as userMessage
         userMessage: userText,
         jobseeker: session?.user?.profileType,
         sessionId: currentChatId,
@@ -250,19 +259,19 @@ export default function ChatBox({
   };
 
   return (
-    <div className="flex bg-orange-50 rounded-xl p-4">
+    <div className="flex md:bg-orange-50 rounded-xl p-4">
       <div className="relative">
         {
-          <div className="absolute flex mt-2 right-0 top-0">
+          <div className="absolute flex gap-1 right-0 -top-6 md:top-0 bg-gray-200 rounded-md">
             <div className="relative group">
               <button
                 // disabled={hasAllData}
                 onClick={() => {
                   (setType(1), toggleRightPanel());
                 }}
-                className="px-2 py-1 rounded-sm  text-xs bg-orange-50 text-slate-700 hover:bg-orange-200 transition-colors"
+                className="p-1 rounded-sm  text-xs text-slate-700 hover:bg-orange-200 transition-colors"
               >
-                <img src="puzzle.png" width={30} alt="Show Matches" />
+                <img src="circle.png" width={25} alt="Show Matches" />
                 <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
                   Show Matches
                 </span>
@@ -273,9 +282,21 @@ export default function ChatBox({
                 onClick={() => {
                   (setType(2), toggleRightPanel());
                 }}
-                className="px-2 py-1 rounded-sm  text-xs bg-orange-50 text-slate-700 hover:bg-orange-200 transition-colors"
+                className="p-1 rounded-sm  text-xs  text-slate-700 hover:bg-orange-200 transition-colors"
               >
-                <img src="arrow.png" width={30} alt="Connection Requests" />
+                {/* <img src="arrow.png" width={20} alt="Connection Requests" /> */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 24 24"
+                  data-supported-dps="24x24"
+                  fill="currentColor"
+                  // class="mercado-match"
+                  width="24"
+                  height="24"
+                  focusable="false"
+                >
+                  <path d="M12 16v6H3v-6a3 3 0 013-3h3a3 3 0 013 3zm5.5-3A3.5 3.5 0 1014 9.5a3.5 3.5 0 003.5 3.5zm1 2h-2a2.5 2.5 0 00-2.5 2.5V22h7v-4.5a2.5 2.5 0 00-2.5-2.5zM7.5 2A4.5 4.5 0 1012 6.5 4.49 4.49 0 007.5 2z"></path>
+                </svg>
                 <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
                   Connection Requests
                 </span>
@@ -333,11 +354,34 @@ export default function ChatBox({
           }}
         >
           <input
-            className="w-full border border-slate-300 rounded px-3 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white text-slate-800"
+            className="w-full border border-slate-300 rounded px-10 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white text-slate-800"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message here..."
           />
+
+          {/* Attachment icon on the left */}
+          <label className="absolute left-2 top-1/2 -translate-y-1/2 cursor-pointer text-slate-600 hover:text-blue-600 transition-colors">
+            <input
+              type="file"
+              accept=".pdf,.docx"
+              onChange={(e) => setSelectedFile(e.target.files[0])}
+              className="hidden"
+            />
+            <span
+              className="text-lg hover:scale-110 transition-transform"
+              title={
+                resumeData?.filename
+                  ? "Reselect"
+                  : session?.user?.profileType === "recruiter"
+                    ? "Share JD"
+                    : "Upload Resume"
+              }
+            >
+              <img src="attach.png" width={20} />
+            </span>
+          </label>
+
           <button
             type="submit"
             disabled={!input.trim()}
@@ -348,11 +392,16 @@ export default function ChatBox({
             <img src="/message.png" height={25} width={25} alt="Send" />
           </button>
         </form>
+
+        {/* Keep Resume component for file display and processing, but hidden file input */}
         <Resume
           resumeData={resumeData}
           updateResume={updateResume}
           currentChatId={currentChatId}
           onResumeUpload={onResumeUpload}
+          hideFileInput={true}
+          selectedFile={selectedFile}
+          setSelectedFile={setSelectedFile}
         />
       </div>
 
