@@ -8,7 +8,7 @@ export async function GET(req, { params }) {
   await connectDB();
   try {
     const matches = await Matches.find({ sessionId: currentChatId }).lean();
-    const chatSession = await Session.findOne({ sessionId: currentChatId });
+    const chatSession = await Session.findOne({ _id: currentChatId });
     let allDataCollected = false;
     if (chatSession) {
       allDataCollected = chatSession.allDataCollected;

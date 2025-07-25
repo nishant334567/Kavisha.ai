@@ -96,7 +96,7 @@ export default function ChatSidebar({
                 <img src="logout.png" width={16} />
                 Sign Out
               </button>
-              <button
+              {/* <button
                 className="flex items-center gap-2 justify-center text-xs bg-white w-full p-2  rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
                 onClick={async () => {
                   try {
@@ -114,7 +114,7 @@ export default function ChatSidebar({
               >
                 <img src="logout.png" width={16} />
                 Connect with Linkedin
-              </button>
+              </button> */}
             </div>
           </div>
         )}

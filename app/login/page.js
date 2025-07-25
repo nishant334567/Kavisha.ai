@@ -14,12 +14,12 @@ export default function LoginPage() {
         </h1>
         {!session ? (
           <>
-            <button
+            {/* <button
               onClick={() => signIn("github")}
               className="w-full mb-3 py-2 px-4 bg-slate-800 text-white rounded hover:bg-slate-700 transition-colors"
             >
               Login with GitHub
-            </button>
+            </button> */}
             <button
               onClick={() => signIn("google")}
               className="w-full py-2 px-4 bg-red-500 text-white rounded hover:bg-red-600 transition-colors"

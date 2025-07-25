@@ -9,7 +9,9 @@ export default function ChatBox({
   currentChatId,
   initialMessages,
   connections,
-  initialMatches,
+  chatLoading,
+  openDetailsPanel,
+  // initialMatches,
 }) {
   const endOfMessagesRef = useRef(null);
   const [messages, setmessages] = useState([]);
@@ -18,23 +20,16 @@ export default function ChatBox({
 
   const { data: session } = useSession();
   const [matches, setMatches] = useState([]);
-  const [type, setType] = useState(0);
-  const [viewData, setViewdata] = useState({});
-  const [show, setShow] = useState(false);
   const [resumeData, setResumedata] = useState({});
   const [hasDatacollected, setHasDatacollected] = useState();
   const [retry, setRetry] = useState(false);
   const [retryIndex, setRetryIndex] = useState(undefined);
   const [selectedFile, setSelectedFile] = useState(null);
-
   useEffect(() => {
     setmessages(initialMessages || []);
-    setMatches(initialMatches);
+    // setMatches(initialMatches);
   }, [initialMessages, currentChatId]);
 
-  useEffect(() => {
-    console.log("initial matches", matches);
-  }, []);
   useEffect(() => {
     //fetch resume data initially
     const fetchResumeData = async () => {
@@ -57,18 +52,18 @@ export default function ChatBox({
     fetchDataCollectionStatus();
   }, [currentChatId]);
 
-  // useEffect(() => {
-  //   const fetchMatches = async () => {
-  //     const response = await fetch(`/api/fetch-matches/${currentChatId}`);
-  //     const data = await response.json();
+  useEffect(() => {
+    const fetchMatches = async () => {
+      const response = await fetch(`/api/fetch-matches/${currentChatId}`);
+      const data = await response.json();
 
-  //     // setHasAllData(data.allDataCollected);
-  //     if (Array.isArray(data.matches) && data.matches.length > 0) {
-  //       setMatches(data.matches);
-  //     }
-  //   };
-  //   fetchMatches();
-  // }, []);
+      // setHasAllData(data.allDataCollected);
+      if (Array.isArray(data.matches) && data.matches.length > 0) {
+        setMatches(data.matches);
+      }
+    };
+    fetchMatches();
+  }, [currentChatId]);
   useEffect(() => {
     const timeout = setTimeout(() => {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -76,11 +71,11 @@ export default function ChatBox({
     return () => clearTimeout(timeout);
   }, [messages]);
 
-  const openDetailsPanel = (type, dataObject) => {
-    setType(type);
-    setViewdata(dataObject);
-    toggleRightPanel();
-  };
+  // const openDetailsPanel = (type, dataObject) => {
+  //   setType(type);
+  //   setViewdata(dataObject);
+  //   toggleRightPanel();
+  // };
   const updateResume = (filename, summary) => {
     setResumedata({ filename: filename, resumeSummary: summary });
   };
@@ -254,10 +249,6 @@ export default function ChatBox({
     }
   };
 
-  const toggleRightPanel = () => {
-    setShow((prev) => !prev);
-  };
-
   return (
     <div className="flex md:bg-orange-50 rounded-xl p-4">
       <div className="relative">
@@ -267,7 +258,7 @@ export default function ChatBox({
               <button
                 // disabled={hasAllData}
                 onClick={() => {
-                  (setType(1), toggleRightPanel());
+                  openDetailsPanel(1);
                 }}
                 className="p-1 rounded-sm  text-xs text-slate-700 hover:bg-orange-200 transition-colors"
               >
@@ -280,7 +271,7 @@ export default function ChatBox({
             <div className="relative group">
               <button
                 onClick={() => {
-                  (setType(2), toggleRightPanel());
+                  openDetailsPanel(2);
                 }}
                 className="p-1 rounded-sm  text-xs  text-slate-700 hover:bg-orange-200 transition-colors"
               >
@@ -405,7 +396,7 @@ export default function ChatBox({
         />
       </div>
 
-      <div className="h-full bg-red-700 w-64">
+      {/* <div>
         {show && type === 1 && (
           <RighPanel
             type={1}
@@ -433,7 +424,7 @@ export default function ChatBox({
             toggleRightPanel={toggleRightPanel}
           />
         )}
-      </div>
+      </div> */}
     </div>
   );
 }

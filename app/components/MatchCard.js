@@ -44,7 +44,7 @@ export default function MatchCard({
 
     fetchCredits();
     setAlreadyContacted(contacted);
-    console.log(contacted, alreadyContacted, "logs for contacts");
+    (contacted, alreadyContacted, "logs for contacts");
   }, [session?.user?.id]);
 
   const createConnection = async () => {
@@ -70,7 +70,7 @@ export default function MatchCard({
       });
 
       const data = await response.json();
-      console.log("Data", data);
+      ("Data", data);
       if (response.ok) {
         alert(data.message || "Connection request sent successfully!");
         setAlreadyContacted(true);
@@ -123,7 +123,7 @@ export default function MatchCard({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg shadow p-4 flex flex-col gap-2 min-h-[120px] w-full relative">
+    <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col gap-2 min-h-[120px] w-full relative">
       <div className="flex items-center justify-between">
         <span className="font-semibold text-slate-800 text-sm">
           Match: {matchPercentage || "-"}

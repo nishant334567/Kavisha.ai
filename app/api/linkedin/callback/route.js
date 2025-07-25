@@ -120,7 +120,7 @@ export async function GET(request) {
       );
     }
 
-    console.log("LinkedIn connected successfully for user:", token.id);
+    ("LinkedIn connected successfully for user:", token.id);
 
     // Redirect to success page or dashboard
     return NextResponse.redirect(

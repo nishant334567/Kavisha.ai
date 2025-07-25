@@ -10,6 +10,7 @@ export default function RighPanel({
   toggleRightPanel,
   matches = [],
   connections = [],
+  openDetailsPanel,
 }) {
   // const [dataArray, setDataArray] = useState([]);
   // useEffect(() => {
@@ -33,14 +34,14 @@ export default function RighPanel({
   //   }
   // }, []);
   return (
-    <div className="fixed right-0 w-[350px] max-h-screen bg-white border border-slate-300 rounded-xl shadow-2xl p-6 flex flex-col">
+    <div className="w-full h-full bg-white border-l border-slate-300 p-6 flex flex-col">
       <button
-        className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 hover:text-slate-800 shadow transition-colors"
+        className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 hover:text-slate-800 transition-colors"
         onClick={() => toggleRightPanel()}
       >
         X
       </button>
-      <div className="scrollbar-none flex-1 overflow-y-auto">
+      <div className="flex-1 overflow-y-auto mt-8">
         {matches.length === 0 &&
           connections.length === 0 &&
           (type === 1 || type === 2) && <p>Nothing found..</p>}
@@ -58,6 +59,23 @@ export default function RighPanel({
                 senderSession={currentChatId}
                 matchedUserId={item.matchedUserId}
                 matchedSessionId={item.matchedSessionId}
+                contacted={item.contacted}
+                matchedUserName={item.matchedUserName}
+                matchedUserEmail={item.matchedUserEmail}
+                title={item.title}
+                description={item.chatSummary}
+                openDetailsPanel={(type, dataObject) => {
+                  // Pass the complete match data for details view
+                  const detailsData = {
+                    matchedUserName: item.matchedUserName,
+                    matchedUserEmail: item.matchedUserEmail,
+                    matchPercentage: item.matchPercentage,
+                    description: item.chatSummary,
+                    matchingReason: item.matchingReason,
+                    mismatchReason: item.mismatchReason,
+                  };
+                  openDetailsPanel(3, detailsData);
+                }}
               />
             </div>
           ))}
@@ -74,7 +92,7 @@ export default function RighPanel({
           ))}
       </div>
       {type === 3 && detailsObject && (
-        <div className="flex flex-col gap-3 mt-4 p-4 bg-gray-50 rounded-lg shadow-inner border">
+        <div className="flex flex-col gap-3 mt-4 p-4 bg-gray-50 rounded-lg shadow-inner border overflow-y-auto scrollbar-none">
           {/* 1. Name (hashed) and Match Percentage */}
           <div className="border-b border-gray-200 pb-2">
             {detailsObject.matchedUserName && (

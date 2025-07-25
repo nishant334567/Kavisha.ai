@@ -86,18 +86,18 @@ export async function POST(request) {
     let reply = "";
     let summary = "";
     let title = "";
-    let allDataCollected = false;
+    let allDataCollected = "false";
 
     // Simplified format parsing - avoid re-prompting loops
     const parts = replyAi.split("////").map((item) => item.trim());
-    console.log("Parts", parts);
+    ("Parts", parts);
     if (parts.length === 4) {
       reply = parts[0];
       summary = parts[1];
       title = parts[2];
       allDataCollected = parts[3]; // Keep as string
     } else {
-      console.log("Using original reply content, just fixing format");
+      ("Using original reply content, just fixing format");
       // Use the original content (which is likely correct) and just add proper formatting
       const originalReply = parts[0] || replyAi; // Use parts[0] if available, otherwise full response
 
@@ -145,7 +145,7 @@ Do NOT change the reply content ("${originalReply}") - keep it exactly as is. On
       });
       const reReplyAi = reChatCompletion.choices[0].message.content;
       const reParts = reReplyAi.split("////").map((item) => item.trim());
-      console.log("Reparts", reParts);
+      ("Reparts", reParts);
       if (reParts.length === 4) {
         reply = reParts[0];
         summary = reParts[1];

@@ -26,7 +26,7 @@ Your **core job** is to gather the following information conversationally (eithe
 6. Location (current, and relocation/travel flexibility)
 7. Notice period or availability
 8. Work temperament (e.g. structured, or independent)
-9. Work mode preferences: Remote/Hybrid
+9. Work mode preferences: Remote/Hybrid (if applicable)
 10. Urgency to switch jobs
 
 -----
