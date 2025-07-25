@@ -249,11 +249,24 @@ export default function ChatBox({
     }
   };
 
+  if (chatLoading) {
+    return (
+      <div className="flex items-center justify-center h-[60vh] bg-orange-50 rounded-xl">
+        <div className="text-center">
+          <div className="text-lg text-slate-600 mb-4">
+            Hang on, chats are loading, please wait...
+          </div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="flex md:bg-orange-50 rounded-xl p-4">
       <div className="relative">
         {
-          <div className="absolute flex gap-1 right-0 -top-6 md:top-0 bg-gray-200 rounded-md">
+          <div className="absolute flex gap-1 right-0 -top-8 md:top-0 bg-gray-200 rounded-md">
             <div className="relative group">
               <button
                 // disabled={hasAllData}
@@ -338,14 +351,14 @@ export default function ChatBox({
         </div>
 
         <form
-          className="relative mt-4"
+          className="bottom-0 relative mt-4"
           onSubmit={(e) => {
             e.preventDefault();
             handleSubmit();
           }}
         >
           <input
-            className="w-full border border-slate-300 rounded px-10 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition bg-white text-slate-800"
+            className="w-full border border-slate-300 px-8 py-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition bg-white text-slate-800"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message here..."

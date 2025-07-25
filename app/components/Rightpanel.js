@@ -42,54 +42,60 @@ export default function RighPanel({
         X
       </button>
       <div className="flex-1 overflow-y-auto mt-8">
-        {matches.length === 0 &&
-          connections.length === 0 &&
-          (type === 1 || type === 2) && <p>Nothing found..</p>}
-        {/* Cards yahan render karo */}
-        {type === 1 &&
-          matches.length > 0 &&
-          matches.map((item, index) => (
-            <div key={index} className="mb-4">
-              <MatchCard
-                type={1}
-                matchPercentage={item.matchPercentage}
-                matchingReason={item.matchingReason}
-                mismatchReason={item.mismatchReason}
-                profileType={session?.user?.profileType}
-                senderSession={currentChatId}
-                matchedUserId={item.matchedUserId}
-                matchedSessionId={item.matchedSessionId}
-                contacted={item.contacted}
-                matchedUserName={item.matchedUserName}
-                matchedUserEmail={item.matchedUserEmail}
-                title={item.title}
-                description={item.chatSummary}
-                openDetailsPanel={(type, dataObject) => {
-                  // Pass the complete match data for details view
-                  const detailsData = {
-                    matchedUserName: item.matchedUserName,
-                    matchedUserEmail: item.matchedUserEmail,
-                    matchPercentage: item.matchPercentage,
-                    description: item.chatSummary,
-                    matchingReason: item.matchingReason,
-                    mismatchReason: item.mismatchReason,
-                  };
-                  openDetailsPanel(3, detailsData);
-                }}
-              />
-            </div>
-          ))}
-        {type === 2 &&
-          connections.length > 0 &&
-          connections.map((item, index) => (
-            <div key={index} className="mb-4">
-              <ConnectionCard
-                emailSent={item.emailSent}
-                message={item.message}
-                createdAt={item.createdAt}
-              />
-            </div>
-          ))}
+        {type === 1 && (
+          <div>
+            <p className="font-bold text-2xl">Relavant Matches:</p>
+            {matches.length === 0 && <p>Nothing found..</p>}
+            {matches.length > 0 &&
+              matches.map((item, index) => (
+                <div key={index} className="mb-4">
+                  <MatchCard
+                    type={1}
+                    matchPercentage={item.matchPercentage}
+                    matchingReason={item.matchingReason}
+                    mismatchReason={item.mismatchReason}
+                    profileType={session?.user?.profileType}
+                    senderSession={currentChatId}
+                    matchedUserId={item.matchedUserId}
+                    matchedSessionId={item.matchedSessionId}
+                    contacted={item.contacted}
+                    matchedUserName={item.matchedUserName}
+                    matchedUserEmail={item.matchedUserEmail}
+                    title={item.title}
+                    description={item.chatSummary}
+                    openDetailsPanel={(type, dataObject) => {
+                      // Pass the complete match data for details view
+                      const detailsData = {
+                        matchedUserName: item.matchedUserName,
+                        matchedUserEmail: item.matchedUserEmail,
+                        matchPercentage: item.matchPercentage,
+                        description: item.chatSummary,
+                        matchingReason: item.matchingReason,
+                        mismatchReason: item.mismatchReason,
+                      };
+                      openDetailsPanel(3, detailsData);
+                    }}
+                  />
+                </div>
+              ))}
+          </div>
+        )}
+        {type === 2 && (
+          <div>
+            <p className="font-bold text-2xl">Connection Requests:</p>
+            {connections.length === 0 && <p>Nothing found..</p>}
+            {connections.length > 0 &&
+              connections.map((item, index) => (
+                <div key={index} className="mb-4">
+                  <ConnectionCard
+                    emailSent={item.emailSent}
+                    message={item.message}
+                    createdAt={item.createdAt}
+                  />
+                </div>
+              ))}
+          </div>
+        )}
       </div>
       {type === 3 && detailsObject && (
         <div className="flex flex-col gap-3 mt-4 p-4 bg-gray-50 rounded-lg shadow-inner border overflow-y-auto scrollbar-none">
