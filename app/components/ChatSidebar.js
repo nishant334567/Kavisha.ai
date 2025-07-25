@@ -13,6 +13,7 @@ export default function ChatSidebar({
   const [isDeleting, setIsdeleting] = useState(false);
   const [isCollapsed, setIscollapsed] = useState(true);
   const [openNotifications, setOpenNotifications] = useState(false);
+  const [newChatLoading, setNewChatLoading] = useState(false);
   const deleteSession = async (id) => {
     setIsdeleting(true);
     const response = await fetch("/api/allchats/", {
@@ -29,6 +30,7 @@ export default function ChatSidebar({
     setOpenNotifications((prev) => !prev);
   };
   const newChat = async () => {
+    setNewChatLoading(true);
     const res = await fetch("/api/newchatsession", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -39,6 +41,7 @@ export default function ChatSidebar({
     });
     const data = await res.json();
     if (data.success) updateChatId(data.sessionId);
+    setNewChatLoading(false);
   };
   return (
     <>
@@ -84,7 +87,7 @@ export default function ChatSidebar({
                 onClick={() => newChat()}
               >
                 <img src="new-chat.png" width={16} />
-                New Chat
+                {!newChatLoading ? "New Chat" : "Creating New Chat..."}
               </button>
               <button
                 className="flex items-center gap-2 justify-center text-xs bg-white w-full p-2  rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
@@ -92,6 +95,25 @@ export default function ChatSidebar({
               >
                 <img src="logout.png" width={16} />
                 Sign Out
+              </button>
+              <button
+                className="flex items-center gap-2 justify-center text-xs bg-white w-full p-2  rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
+                onClick={async () => {
+                  try {
+                    const response = await fetch("/api/linkedin-auth-url");
+                    const data = await response.json();
+                    if (data.authUrl) {
+                      window.location.href = data.authUrl;
+                    } else {
+                      console.error("Failed to get LinkedIn auth URL");
+                    }
+                  } catch (error) {
+                    console.error("Error getting LinkedIn auth URL:", error);
+                  }
+                }}
+              >
+                <img src="logout.png" width={16} />
+                Connect with Linkedin
               </button>
             </div>
           </div>
@@ -104,7 +126,11 @@ export default function ChatSidebar({
               </button>
             </div>
             <div>
-              <button onClick={() => newChat()}>
+              <button
+                onClick={() => {
+                  (newChat(), setIscollapsed((prev) => !prev));
+                }}
+              >
                 <img src="new-chat.png" width={22} />
               </button>
             </div>

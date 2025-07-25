@@ -33,7 +33,7 @@ export default function RighPanel({
   //   }
   // }, []);
   return (
-    <div className="fixed top-24 right-8 w-[350px] max-h-screen bg-white border border-slate-300 rounded-xl shadow-2xl p-6 z-50 flex flex-col">
+    <div className="fixed right-0 w-[350px] max-h-screen bg-white border border-slate-300 rounded-xl shadow-2xl p-6 flex flex-col">
       <button
         className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 hover:text-slate-800 shadow transition-colors"
         onClick={() => toggleRightPanel()}
@@ -75,22 +75,61 @@ export default function RighPanel({
       </div>
       {type === 3 && detailsObject && (
         <div className="flex flex-col gap-3 mt-4 p-4 bg-gray-50 rounded-lg shadow-inner border">
-          <div>
-            <span className="font-bold text-emerald-700 text-xl">
-              {detailsObject.matchPercentage || "-"}
-            </span>
-            <span className="ml-2 text-xs text-gray-500 align-middle">
-              Match Percentage
-            </span>
+          {/* 1. Name (hashed) and Match Percentage */}
+          <div className="border-b border-gray-200 pb-2">
+            {detailsObject.matchedUserName && (
+              <div className="text-sm font-medium text-blue-600 mb-1">
+                👤 {detailsObject.matchedUserName}
+              </div>
+            )}
+            {detailsObject.matchedUserEmail && (
+              <div className="text-xs text-gray-600 mb-2">
+                📧 {detailsObject.matchedUserEmail}
+              </div>
+            )}
+            <div>
+              <span className="font-bold text-emerald-700 text-xl">
+                {detailsObject.matchPercentage || "-"}
+              </span>
+              <span className="ml-2 text-xs text-gray-500 align-middle">
+                Match Percentage
+              </span>
+            </div>
           </div>
-          <div>
-            <span className="font-semibold text-gray-700">Reason:</span>
-            <div className="text-gray-700">{detailsObject.matchingReason}</div>
-          </div>
-          <div>
-            <span className="font-semibold text-gray-700">Mismatch:</span>
-            <div className="text-red-500">{detailsObject.mismatchReason}</div>
-          </div>
+
+          {/* 2. Description */}
+          {detailsObject.description && (
+            <div>
+              <span className="font-semibold text-gray-700">Description:</span>
+              <div className="text-gray-700 text-sm mt-1">
+                {detailsObject.description}
+              </div>
+            </div>
+          )}
+
+          {/* 3. Reason for Match */}
+          {detailsObject.matchingReason && (
+            <div>
+              <span className="font-semibold text-gray-700">
+                Reason for Match:
+              </span>
+              <div className="text-green-700 text-sm mt-1">
+                {detailsObject.matchingReason}
+              </div>
+            </div>
+          )}
+
+          {/* 4. Reason for Mismatch */}
+          {detailsObject.mismatchReason && (
+            <div>
+              <span className="font-semibold text-gray-700">
+                Reason for Mismatch:
+              </span>
+              <div className="text-red-500 text-sm mt-1">
+                {detailsObject.mismatchReason}
+              </div>
+            </div>
+          )}
         </div>
       )}
     </div>

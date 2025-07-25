@@ -26,12 +26,15 @@ export async function getMatches(sessionId) {
 [B${i + 1}]
 "userId": "${s.userId}"
 "sessionId": "${s._id}"
+"title": "${s.title || "Job Posting"}"
 "chatSummary": "${s.chatSummary}"`
     )
     .join("\n");
 
   const prompt = `
 You are a smart job-matching assistant.
+
+**CORE RULE: Only suggest matches where job roles/titles are compatible or closely related. Different job functions should NEVER be matched.**
 
 Your task is to compare one user [A] (the user of this app) with multiple potential matches [B] based on their chat summaries.
 
@@ -49,7 +52,10 @@ Instructions:
 - For example, say: "You are looking for...", "Your requirements are...", "You have 5 years of experience...".
 - NEVER use phrases like "A is looking for..." or "A's expectations...".
 - Compare [A]'s requirements with each [B]'s chatSummary.
-- Don't return a match if the Job role is completely different.
+- **CRITICAL RULE: Job role/title MUST match or be closely related. DO NOT return any match if the job roles are different or incompatible. This is non-negotiable.**
+- Examples of INCOMPATIBLE roles: Software Developer vs Sales Agent, Doctor vs Engineer, Teacher vs Marketing Manager.
+- Examples of COMPATIBLE roles: Frontend Developer vs Full-Stack Developer, Sales Executive vs Sales Manager, Data Analyst vs Data Scientist.
+- If job roles don't align, skip that candidate entirely - don't include them in results.
 - For each selected match, return:
 
   {
@@ -59,16 +65,18 @@ Instructions:
     "title":"...",                      // // Use the exact title from the [B] above
     "chatSummary":"...."                   // Use the exact chatSummary from the [B] above
     "matchingReason": "Explain briefly why this match is relevant, addressing the user as 'you' or 'your' only.",
-    "matchPercentage": "50%" // if all data points match then 100%, if only half match then 50% and so on. This is based on your calculation and matching, basically your intelligence
+    "matchPercentage": "50%" // if all data points match then 100%, if only half match then 50% and so on. NOTE: If job roles don't match, this should be 0% (but don't include 0% matches in results)
     "mismatchReason": "Explain mismatches, again addressing the user as 'you' or 'your'."
   }
 
 
 Format:
+- **BEFORE returning any match, verify that the job roles are compatible. If they're not, exclude that match completely.**
 - Return ONLY a JSON array of matched objects (maximum 10).
 - Use double quotes for all keys.
 - **For each match, use the exact userId and sessionId as provided above for each [B]. Do not invent or change these values.**
 - DO NOT include any explanation, intro, or text outside the JSON.
+- **REMINDER: Only return matches where job roles are related/compatible. Different job functions = NO MATCH.**
 
 Strictly follow the format below (using the real userId/sessionId from above):
 [
@@ -76,11 +84,15 @@ Strictly follow the format below (using the real userId/sessionId from above):
     "sessionId": "${sessionId}",
     "matchedUserId": "use from above",
     "matchedSessionId": "use from above",
-    "matchingReason": "This is what Kavisha found for you because ...",
+    "title": "use from above",
+    "chatSummary": "use from above", 
+    "matchingReason": "This is what Kavisha found for you because the job roles align perfectly...",
     "matchPercentage": "40%", //don't hard code the value, this is just an example. Based on matching algo, calculate the matching percentage yourself
     "mismatchReason": "You are looking for onsite but the recruiter offers remote. Also, your expected salary is 200k but the offer is 100k-140k."
   }
 ]
+
+**FINAL CHECK: Only include matches where the job titles/roles are compatible. If you can't find any compatible roles, return an empty array [].**
 `;
 
   const completion = await openai.chat.completions.create({

@@ -405,7 +405,7 @@ export default function ChatBox({
         />
       </div>
 
-      <div>
+      <div className="h-full bg-red-700 w-64">
         {show && type === 1 && (
           <RighPanel
             type={1}

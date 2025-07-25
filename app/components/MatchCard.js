@@ -14,6 +14,8 @@ export default function MatchCard({
   profileType,
   matchedUserId,
   matchedSessionId,
+  matchedUserName,
+  matchedUserEmail,
   senderSession,
   openDetailsPanel,
 }) {
@@ -21,6 +23,7 @@ export default function MatchCard({
   const [latestCredits, setLatestCredits] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
+  const [alreadyContacted, setAlreadyContacted] = useState(false);
 
   useEffect(() => {
     const fetchCredits = async () => {
@@ -40,6 +43,8 @@ export default function MatchCard({
     };
 
     fetchCredits();
+    setAlreadyContacted(contacted);
+    console.log(contacted, alreadyContacted, "logs for contacts");
   }, [session?.user?.id]);
 
   const createConnection = async () => {
@@ -65,9 +70,10 @@ export default function MatchCard({
       });
 
       const data = await response.json();
-
+      console.log("Data", data);
       if (response.ok) {
         alert(data.message || "Connection request sent successfully!");
+        setAlreadyContacted(true);
         // Refresh credits after successful connection
         const creditsResponse = await fetch(`/api/credits/${session.user.id}`);
         if (creditsResponse.ok) {
@@ -75,6 +81,9 @@ export default function MatchCard({
           setLatestCredits(creditsData.credits || 0);
         }
       } else {
+        if (data.message === "Connection request already sent") {
+          setAlreadyContacted(true);
+        }
         alert(
           data.message || data.error || "Failed to send connection request"
         );
@@ -90,6 +99,29 @@ export default function MatchCard({
   const hasCredits = latestCredits > 0;
   const isRecruiter = profileType === "recruiter";
 
+  // Function to hash/mask name
+  const hashName = (name) => {
+    if (!name || name === "Unknown") return "Unknown";
+    const parts = name.split(" ");
+    return parts
+      .map((part) =>
+        part.length > 1 ? part[0] + "*".repeat(part.length - 1) : part
+      )
+      .join(" ");
+  };
+
+  // Function to hash/mask email
+  const hashEmail = (email) => {
+    if (!email || email === "Unknown") return "Unknown";
+    const [username, domain] = email.split("@");
+    if (!domain) return email;
+    const hashedUsername =
+      username.length > 2
+        ? username.substring(0, 2) + "*".repeat(username.length - 2)
+        : username;
+    return `${hashedUsername}@${domain}`;
+  };
+
   return (
     <div className="bg-white border border-slate-200 rounded-lg shadow p-4 flex flex-col gap-2 min-h-[120px] w-full relative">
       <div className="flex items-center justify-between">
@@ -97,6 +129,16 @@ export default function MatchCard({
           Match: {matchPercentage || "-"}
         </span>
       </div>
+      {matchedUserName && (
+        <div className="text-xs text-blue-600 font-medium">
+          👤 {hashName(matchedUserName)}
+        </div>
+      )}
+      {matchedUserEmail && (
+        <div className="text-xs text-gray-600">
+          📧 {hashEmail(matchedUserEmail)}
+        </div>
+      )}
       {matchTitle && (
         <div className="text-xs text-green-700 font-medium">{matchTitle}</div>
       )}
@@ -129,13 +171,18 @@ export default function MatchCard({
                 : "text-slate-500 bg-slate-300 cursor-not-allowed"
             }`}
             onClick={createConnection}
-            disabled={(isRecruiter && !hasCredits) || isLoading}
+            disabled={
+              (isRecruiter && !hasCredits) || isLoading || alreadyContacted
+            }
           >
             {isLoading ? (
               "Connecting..."
             ) : isRecruiter ? (
               <>
-                <span>Connect ({latestCredits}/3)</span>
+                <span>
+                  {alreadyContacted ? "Connected" : "Connect"} ({latestCredits}
+                  /3)
+                </span>
                 <span
                   className="ml-2 bg-gray-200 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer"
                   onClick={(e) => {
@@ -149,6 +196,8 @@ export default function MatchCard({
                   <span className="text-gray-600 text-xs font-bold">?</span>
                 </span>
               </>
+            ) : alreadyContacted ? (
+              "Applied"
             ) : (
               "Apply"
             )}
@@ -168,7 +217,10 @@ export default function MatchCard({
           <button
             onClick={() =>
               openDetailsPanel(3, {
+                matchedUserName: hashName(matchedUserName),
+                matchedUserEmail: hashEmail(matchedUserEmail),
                 matchPercentage,
+                description,
                 matchingReason,
                 mismatchReason,
               })

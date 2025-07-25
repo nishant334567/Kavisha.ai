@@ -5,16 +5,25 @@ import { Resend } from "resend";
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function POST(res) {
-  const { toEmail, toName, senderName, emailCase } = await res.json();
+  const {
+    toEmail,
+    toName,
+    senderName,
+    profileType,
+    matchPercentage,
+    jobTitle,
+  } = await res.json();
   try {
     const { data, error } = await resend.emails.send({
       from: "team@kavisha.ai",
       to: toEmail,
       subject: "Team Kavisha.ai",
       react: EmailTemplate({
-        receiverName: toName,
+        profileType: profileType,
         senderName: senderName,
-        emailCase: emailCase,
+        jobTitle: jobTitle,
+        matchPercentage: matchPercentage,
+        receiverEmail: toEmail,
       }),
     });
 

@@ -8,6 +8,7 @@ import { connectDB } from "@/app/lib/db";
 import Logs from "@/app/models/ChatLogs";
 import { getToken } from "next-auth/jwt";
 import Session from "@/app/models/ChatSessions";
+import User from "@/app/models/Users";
 import { getMatches } from "../matches/[sessionId]/route";
 import Matches from "@/app/models/Matches";
 import mongoose from "mongoose";
@@ -198,24 +199,45 @@ Click on the "find matches" button to see if ${
       { upsert: true }
     );
 
-    // maintain a matches ka table //check if its a valid mangoose id
-    const isValidObjectId = (id) =>
-      typeof id === "string" && id.length === 24 && /^[a-fA-F0-9]+$/.test(id);
+    // maintain a matches ka table //check if its a valid mongoose id
+    const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
     let matchesWithObjectIds = [];
     if (Array.isArray(matchesLatest)) {
-      matchesWithObjectIds = matchesLatest
-        .filter(
-          (m) =>
-            isValidObjectId(m.sessionId) &&
-            isValidObjectId(m.matchedUserId) &&
-            isValidObjectId(m.matchedSessionId)
-        )
-        .map((m) => ({
-          ...m,
-          sessionId: new mongoose.Types.ObjectId(m.sessionId),
-          matchedUserId: new mongoose.Types.ObjectId(m.matchedUserId),
-          matchedSessionId: new mongoose.Types.ObjectId(m.matchedSessionId),
-        }));
+      const filteredMatches = matchesLatest.filter(
+        (m) =>
+          isValidObjectId(m.sessionId) &&
+          isValidObjectId(m.matchedUserId) &&
+          isValidObjectId(m.matchedSessionId)
+      );
+
+      // Fetch user details for each match
+      matchesWithObjectIds = await Promise.all(
+        filteredMatches.map(async (m) => {
+          try {
+            const matchedUser = await User.findById(m.matchedUserId).select(
+              "name email"
+            );
+            return {
+              ...m,
+              sessionId: new mongoose.Types.ObjectId(m.sessionId),
+              matchedUserId: new mongoose.Types.ObjectId(m.matchedUserId),
+              matchedSessionId: new mongoose.Types.ObjectId(m.matchedSessionId),
+              matchedUserName: matchedUser?.name || "Unknown",
+              matchedUserEmail: matchedUser?.email || "Unknown",
+            };
+          } catch (error) {
+            console.error("Error fetching matched user:", error);
+            return {
+              ...m,
+              sessionId: new mongoose.Types.ObjectId(m.sessionId),
+              matchedUserId: new mongoose.Types.ObjectId(m.matchedUserId),
+              matchedSessionId: new mongoose.Types.ObjectId(m.matchedSessionId),
+              matchedUserName: "Unknown",
+              matchedUserEmail: "Unknown",
+            };
+          }
+        })
+      );
 
       await Matches.insertMany(matchesWithObjectIds);
     }

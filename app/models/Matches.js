@@ -16,10 +16,14 @@ const MatchesSchema = new mongoose.Schema({
     ref: "ChatSessions",
     required: true,
   },
+  title: { type: String },
+  chatSummary: { type: String },
   matchingReason: { type: String },
   contacted: { type: Boolean, default: false },
   matchPercentage: { type: String, default: false },
   mismatchReason: { type: String },
+  matchedUserName: { type: String },
+  matchedUserEmail: { type: String },
   createdAt: { type: Date, default: Date.now },
 });
 

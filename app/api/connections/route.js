@@ -1,14 +1,21 @@
 import { connectDB } from "@/app/lib/db";
 import { NextResponse } from "next/server";
-import Session from "@/app/models/ChatSessions";
 import User from "@/app/models/Users";
 import Connection from "@/app/models/Connection";
 import { EmailTemplate } from "@/app/components/EmailTemplate";
 import { Resend } from "resend";
+import Matches from "@/app/models/Matches";
+import Session from "@/app/models/ChatSessions";
 
 const resend = new Resend(process.env.RESEND_API_KEY);
 
-const sendEmail = async (toEmail, profileType) => {
+const sendEmail = async (
+  toEmail,
+  profileType,
+  matchPercentage,
+  jobTitle,
+  senderName
+) => {
   try {
     const { data, error } = await resend.emails.send({
       from: "team@kavisha.ai",
@@ -16,6 +23,10 @@ const sendEmail = async (toEmail, profileType) => {
       subject: "Team Kavisha.ai",
       react: EmailTemplate({
         profileType: profileType,
+        senderName: senderName || "John Doe",
+        jobTitle: jobTitle || "Software Developer",
+        matchPercentage: matchPercentage || "80%",
+        receiverEmail: toEmail,
       }),
     });
     if (data) {
@@ -62,6 +73,11 @@ export async function POST(req) {
         { status: 404 }
       );
     }
+    const senderChatSession = await Session.findOne({ _id: senderSession });
+
+    let senderName = currentUser?.name;
+    let matchPercentage = senderChatSession.matchPercentage;
+    let jobTitle = senderChatSession.title;
 
     // Check credits for recruiters
     if (senderProfileType === "recruiter") {
@@ -85,6 +101,10 @@ export async function POST(req) {
     });
 
     if (existingConnection) {
+      await Matches.findOneAndUpdate(
+        { matchedSessionId: receiverSession },
+        { contacted: true }
+      );
       return NextResponse.json(
         { message: "Connection request already sent" },
         { status: 409 }
@@ -117,8 +137,18 @@ export async function POST(req) {
     // Send email to receiver,assumin gif connection is created then email has to be sent
     const receiverUserObject = await User.findOne({ _id: receiverId });
     if (receiverUserObject) {
-      await sendEmail(receiverUserObject.email, senderProfileType);
+      await sendEmail(
+        receiverUserObject.email,
+        receiverUserObject.profileType, // ✅ Use receiver's profile type
+        matchPercentage,
+        jobTitle,
+        senderName
+      );
     }
+    await Matches.findOneAndUpdate(
+      { matchedSessionId: receiverSession },
+      { contacted: true }
+    );
 
     return NextResponse.json(
       {

@@ -68,8 +68,6 @@ export const authOptions = {
 
           const tokens = await response.json();
 
-        
-
           // LinkedIn might return id_token only with OpenID Connect scope
           const userinfoRes = await fetch(
             "https://api.linkedin.com/v2/userinfo",
