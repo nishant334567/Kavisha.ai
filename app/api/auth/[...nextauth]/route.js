@@ -91,7 +91,6 @@ export const authOptions = {
       return baseUrl;
     },
     async jwt({ token, user }) {
-      ("token, uswr inside jwt", token, user);
       if (user) {
         await connectDB();
         let dbuser = await User.findOne({ email: user.email });
@@ -101,15 +100,16 @@ export const authOptions = {
             email: user.email,
             image: user.image,
             profileType: null,
+            isAdmin: false, // Explicitly set default value
           });
         }
         token.id = dbuser._id.toString();
         token.profileType = dbuser.profileType;
+        token.isAdmin = dbuser.isAdmin || false;
       }
       return token;
     },
     async session({ session, token }) {
-      ("Token inside session", token);
       try {
         await connectDB();
 
@@ -121,6 +121,7 @@ export const authOptions = {
         session.user.profileType = dbuser?.profileType || null;
         session.user.name = token.name;
         session.user.image = token.image;
+        session.user.isAdmin = dbuser?.isAdmin || false;
 
         if (dbuser) {
           const existing = await Session.findOne({ userId: token.id });
