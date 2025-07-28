@@ -8,6 +8,7 @@ export default function LoginPage() {
   const router = useRouter();
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [showCopySuccess, setShowCopySuccess] = useState(false);
+  const [debugInfo, setDebugInfo] = useState(null);
 
   // Detect in-app browser
   useEffect(() => {
@@ -18,7 +19,16 @@ export default function LoginPage() {
       const isIOS = /iPad|iPhone|iPod/.test(ua) && !window.MSStream;
       const isAndroid = /Android/.test(ua);
 
-      // Check for common in-app browsers
+      // Debug information
+      const debug = {
+        userAgent: ua,
+        isIOS,
+        isAndroid,
+        hasSafariObject: typeof window.safari !== "undefined",
+        isStandalone: navigator.standalone,
+      };
+
+      // Check for specific in-app browser patterns
       const inAppPatterns = [
         /FBAN|FBAV/i, // Facebook
         /Instagram/i, // Instagram
@@ -26,28 +36,87 @@ export default function LoginPage() {
         /LinkedInApp/i, // LinkedIn
         /KAKAOTALK/i, // KakaoTalk
         /Line/i, // Line
-        /wv|WebView/i, // Generic WebView
         /;fb|;iab/i, // Facebook in-app browser
-        /Version.*Chrome\/[.0-9]* Mobile.*Safari/i, // Some mobile apps
+        /Snapchat/i, // Snapchat
+        /WeChat/i, // WeChat
+        /TikTok/i, // TikTok
       ];
 
-      // Check for iOS in-app browsers
-      const isIOSInApp =
-        isIOS &&
-        (inAppPatterns.some((pattern) => pattern.test(ua)) ||
-          !window.safari || // Real Safari has window.safari
-          navigator.standalone === false); // PWA detection
+      // Check if any in-app pattern matches
+      const hasInAppPattern = inAppPatterns.some((pattern) => pattern.test(ua));
 
-      // Check for Android in-app browsers
-      const isAndroidInApp =
-        isAndroid &&
-        (inAppPatterns.some((pattern) => pattern.test(ua)) || /wv/i.test(ua)); // WebView indicator
+      if (hasInAppPattern) {
+        debug.detectionReason = "In-app pattern matched";
+        setDebugInfo(debug);
+        return true;
+      }
 
-      return (
-        isIOSInApp ||
-        isAndroidInApp ||
-        inAppPatterns.some((pattern) => pattern.test(ua))
-      );
+      // More specific WebView detection for Android
+      if (isAndroid) {
+        // Check for WebView specifically (but not Chrome)
+        const isWebView = /wv/i.test(ua) && !/Chrome\//.test(ua);
+        const isSamsungBrowser = /SamsungBrowser/i.test(ua);
+        const isChrome = /Chrome\//.test(ua) && !/wv/i.test(ua);
+
+        debug.isWebView = isWebView;
+        debug.isSamsungBrowser = isSamsungBrowser;
+        debug.isChrome = isChrome;
+
+        // If it's clearly Chrome or Samsung browser, it's not in-app
+        if (isChrome || isSamsungBrowser) {
+          debug.detectionReason = "Legitimate Android browser";
+          setDebugInfo(debug);
+          return false;
+        }
+
+        if (isWebView) {
+          debug.detectionReason = "Android WebView detected";
+          setDebugInfo(debug);
+          return true;
+        }
+      }
+
+      // iOS specific detection
+      if (isIOS) {
+        // Check for real Safari
+        const isSafari =
+          /Safari/i.test(ua) &&
+          /Version/i.test(ua) &&
+          !/CriOS|FxiOS|OPiOS/i.test(ua);
+        const isChrome = /CriOS/i.test(ua); // Chrome on iOS
+        const isFirefox = /FxiOS/i.test(ua); // Firefox on iOS
+        const isOpera = /OPiOS/i.test(ua); // Opera on iOS
+
+        debug.isSafari = isSafari;
+        debug.isChrome = isChrome;
+        debug.isFirefox = isFirefox;
+        debug.isOpera = isOpera;
+
+        // If it's a known real browser, it's not in-app
+        if (isSafari || isChrome || isFirefox || isOpera) {
+          debug.detectionReason = "Legitimate iOS browser";
+          setDebugInfo(debug);
+          return false;
+        }
+
+        // Check for iOS WebView indicators
+        const hasNoSafariObject = typeof window.safari === "undefined";
+        const isStandalone = navigator.standalone === true;
+
+        debug.hasNoSafariObject = hasNoSafariObject;
+        debug.isStandalone = isStandalone;
+
+        // If it has no Safari object and is not in standalone mode, might be WebView
+        if (hasNoSafariObject && !isStandalone) {
+          debug.detectionReason = "iOS WebView detected";
+          setDebugInfo(debug);
+          return true;
+        }
+      }
+
+      debug.detectionReason = "Legitimate browser";
+      setDebugInfo(debug);
+      return false;
     };
 
     setIsInAppBrowser(detectInAppBrowser());
@@ -223,6 +292,66 @@ export default function LoginPage() {
             <p>
               ✅ Secure browser detected. Google sign-in will work normally.
             </p>
+          </div>
+        )}
+
+        {/* Debug information - remove this in production */}
+        {debugInfo && (
+          <div className="mt-4 p-3 bg-gray-50 border border-gray-200 rounded-lg text-xs text-gray-600">
+            <p className="font-medium mb-2">
+              🔧 Debug Info (remove in production):
+            </p>
+            <div className="space-y-1 text-left">
+              <p>
+                <strong>Detection:</strong> {debugInfo.detectionReason}
+              </p>
+              <p>
+                <strong>Is In-App:</strong> {isInAppBrowser ? "Yes" : "No"}
+              </p>
+              <p>
+                <strong>Platform:</strong>{" "}
+                {debugInfo.isIOS
+                  ? "iOS"
+                  : debugInfo.isAndroid
+                    ? "Android"
+                    : "Other"}
+              </p>
+              {debugInfo.isIOS && (
+                <>
+                  <p>
+                    <strong>Safari Object:</strong>{" "}
+                    {debugInfo.hasSafariObject ? "Present" : "Missing"}
+                  </p>
+                  <p>
+                    <strong>Standalone:</strong>{" "}
+                    {debugInfo.isStandalone ? "Yes" : "No"}
+                  </p>
+                  <p>
+                    <strong>Is Safari:</strong>{" "}
+                    {debugInfo.isSafari ? "Yes" : "No"}
+                  </p>
+                  <p>
+                    <strong>Is Chrome:</strong>{" "}
+                    {debugInfo.isChrome ? "Yes" : "No"}
+                  </p>
+                </>
+              )}
+              {debugInfo.isAndroid && (
+                <>
+                  <p>
+                    <strong>Is Chrome:</strong>{" "}
+                    {debugInfo.isChrome ? "Yes" : "No"}
+                  </p>
+                  <p>
+                    <strong>Is WebView:</strong>{" "}
+                    {debugInfo.isWebView ? "Yes" : "No"}
+                  </p>
+                </>
+              )}
+              <p className="break-all">
+                <strong>User Agent:</strong> {debugInfo.userAgent}
+              </p>
+            </div>
           </div>
         )}
       </div>
