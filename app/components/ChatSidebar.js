@@ -1,8 +1,10 @@
 "use client";
 
 import { useSession, signOut, signIn } from "next-auth/react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Notification from "./Notification";
+import { useRouter } from "next/navigation";
+
 export default function ChatSidebar({
   allChats,
   updateChatId,
@@ -14,6 +16,8 @@ export default function ChatSidebar({
   const [isCollapsed, setIscollapsed] = useState(true);
   const [openNotifications, setOpenNotifications] = useState(false);
   const [newChatLoading, setNewChatLoading] = useState(false);
+  const router = useRouter();
+
   const deleteSession = async (id) => {
     setIsdeleting(true);
     const response = await fetch("/api/allchats/", {
@@ -96,6 +100,14 @@ export default function ChatSidebar({
                 <img src="logout.png" width={16} />
                 Sign Out
               </button>
+              {session?.user?.isAdmin && (
+                <button
+                  className="flex items-center gap-2 justify-center text-xs bg-white w-full p-2  rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
+                  onClick={() => router.push("/admin")}
+                >
+                  🛡️ Admin Dashboard
+                </button>
+              )}
               {/* <button
                 className="flex items-center gap-2 justify-center text-xs bg-white w-full p-2  rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
                 onClick={async () => {
