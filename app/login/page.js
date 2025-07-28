@@ -4,11 +4,6 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useMemo, useCallback } from "react";
 
 // Constants
-const BROWSER_TYPES = {
-  CHROME: "chrome",
-  SAFARI: "safari",
-};
-
 const IN_APP_BROWSER_PATTERNS = [
   /FBAN|FBAV/i, // Facebook
   /Instagram/i, // Instagram
@@ -92,40 +87,12 @@ const detectInAppBrowser = () => {
 };
 
 /**
- * Opens the current page in a specific browser
+ * Opens the current page in Chrome browser
  */
-const openInSpecificBrowser = async (browserType) => {
+const openInChrome = () => {
   const currentUrl = window.location.href;
-
-  switch (browserType) {
-    case BROWSER_TYPES.CHROME:
-      const chromeUrl = `googlechrome://${currentUrl.replace(/^https?:\/\//, "")}`;
-      window.location.href = chromeUrl;
-      break;
-
-    case BROWSER_TYPES.SAFARI:
-      // Try Web Share API first
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: "Kavisha.ai Login",
-            url: currentUrl,
-          });
-          return;
-        } catch (err) {
-          // Silently fall through to fallback
-        }
-      }
-
-      // Fallback: Force new navigation
-      const separator = currentUrl.includes("?") ? "&" : "?";
-      const urlWithParam = `${currentUrl}${separator}openInBrowser=${Date.now()}`;
-      window.location.href = urlWithParam;
-      break;
-
-    default:
-      console.warn(`Unknown browser type: ${browserType}`);
-  }
+  const chromeUrl = `googlechrome://${currentUrl.replace(/^https?:\/\//, "")}`;
+  window.location.href = chromeUrl;
 };
 
 export default function LoginPage() {
@@ -137,8 +104,8 @@ export default function LoginPage() {
   const isMobile = useMemo(() => isMobileDevice(), []);
 
   // Memoize browser opening handler
-  const handleBrowserOpen = useCallback((browserType) => {
-    openInSpecificBrowser(browserType);
+  const handleChromeOpen = useCallback(() => {
+    openInChrome();
   }, []);
 
   // Detect in-app browser on mount
@@ -159,26 +126,19 @@ export default function LoginPage() {
           Sign in to Kavisha.ai
         </h1>
 
-        {/* Browser options for mobile in-app browsers */}
+        {/* Chrome option for mobile in-app browsers */}
         {shouldShowBrowserOptions && (
           <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
             <p className="text-sm text-gray-700 mb-4 text-center">
-              Please open in a browser to continue
+              Please open in Chrome to continue
             </p>
 
             <div className="space-y-2">
               <button
-                onClick={() => handleBrowserOpen(BROWSER_TYPES.CHROME)}
+                onClick={handleChromeOpen}
                 className="w-full py-3 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
               >
                 Open in Chrome
-              </button>
-
-              <button
-                onClick={() => handleBrowserOpen(BROWSER_TYPES.SAFARI)}
-                className="w-full py-3 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
-              >
-                Open in Safari
               </button>
             </div>
           </div>
