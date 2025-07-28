@@ -239,15 +239,6 @@ export default function LoginPage() {
             </button>
           </div>
         )}
-
-        {/* Secure browser confirmation */}
-        {!isInAppBrowser && !session?.user && (
-          <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-lg text-xs text-green-700 text-center">
-            <p>
-              ✅ Secure browser detected. Google sign-in will work normally.
-            </p>
-          </div>
-        )}
       </div>
     </div>
   );
