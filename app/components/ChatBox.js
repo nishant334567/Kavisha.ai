@@ -263,52 +263,46 @@ export default function ChatBox({
   }
 
   return (
-    <div className="flex md:bg-orange-50 rounded-xl p-4">
+    <div className="flex sm:bg-orange-50 rounded-xl p-4">
       <div className="relative">
-        {
-          <div className="absolute flex gap-1 right-0 -top-8 md:top-0 bg-gray-200 rounded-md">
-            <div className="relative group">
-              <button
-                // disabled={hasAllData}
-                onClick={() => {
-                  openDetailsPanel(1);
-                }}
-                className="p-1 rounded-sm  text-xs text-slate-700 hover:bg-orange-200 transition-colors"
-              >
-                <img src="circle.png" width={25} alt="Show Matches" />
-                <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
-                  Show Matches
-                </span>
-              </button>
-            </div>
-            <div className="relative group">
-              <button
-                onClick={() => {
-                  openDetailsPanel(2);
-                }}
-                className="p-1 rounded-sm  text-xs  text-slate-700 hover:bg-orange-200 transition-colors"
-              >
-                {/* <img src="arrow.png" width={20} alt="Connection Requests" /> */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  data-supported-dps="24x24"
-                  fill="currentColor"
-                  // class="mercado-match"
-                  width="24"
-                  height="24"
-                  focusable="false"
-                >
-                  <path d="M12 16v6H3v-6a3 3 0 013-3h3a3 3 0 013 3zm5.5-3A3.5 3.5 0 1014 9.5a3.5 3.5 0 003.5 3.5zm1 2h-2a2.5 2.5 0 00-2.5 2.5V22h7v-4.5a2.5 2.5 0 00-2.5-2.5zM7.5 2A4.5 4.5 0 1012 6.5 4.49 4.49 0 007.5 2z"></path>
-                </svg>
-                <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
-                  Connection Requests
-                </span>
-              </button>
-            </div>
-          </div>
-        }
         <div className="rounded-xl h-[60vh] overflow-y-auto scrollbar-none p-2 font-light">
+          <div className="absolute right-2 px-2 flex rounded-lg -top-8 sm:top-0 bg-orange-50 sm:bg-orange-100">
+            <button
+              // disabled={hasAllData}
+              onClick={() => {
+                openDetailsPanel(1);
+              }}
+              className="p-1 rounded-sm  text-xs text-slate-700 hover:bg-orange-200 transition-colors"
+            >
+              <img src="circle.png" width={25} alt="Show Matches" />
+              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+                Show Matches
+              </span>
+            </button>
+            <button
+              onClick={() => {
+                openDetailsPanel(2);
+              }}
+              className="p-1 rounded-sm  text-xs  text-slate-700 hover:bg-orange-200 transition-colors"
+            >
+              {/* <img src="arrow.png" width={20} alt="Connection Requests" /> */}
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                viewBox="0 0 24 24"
+                data-supported-dps="24x24"
+                fill="currentColor"
+                // class="mercado-match"
+                width="24"
+                height="24"
+                focusable="false"
+              >
+                <path d="M12 16v6H3v-6a3 3 0 013-3h3a3 3 0 013 3zm5.5-3A3.5 3.5 0 1014 9.5a3.5 3.5 0 003.5 3.5zm1 2h-2a2.5 2.5 0 00-2.5 2.5V22h7v-4.5a2.5 2.5 0 00-2.5-2.5zM7.5 2A4.5 4.5 0 1012 6.5 4.49 4.49 0 007.5 2z"></path>
+              </svg>
+              <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
+                Connection Requests
+              </span>
+            </button>
+          </div>
           {messages.length > 0 &&
             messages.map((m, i) => (
               <div
