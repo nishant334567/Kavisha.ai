@@ -7,7 +7,6 @@ export default function LoginPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
-  const [showCopySuccess, setShowCopySuccess] = useState(false);
 
   // Detect in-app browser
   useEffect(() => {
@@ -76,63 +75,25 @@ export default function LoginPage() {
     setIsInAppBrowser(detectInAppBrowser());
   }, []);
 
-  // Copy current URL to clipboard
-  const copyCurrentLink = async () => {
-    try {
-      const currentUrl = window.location.href;
-      await navigator.clipboard.writeText(currentUrl);
-      setShowCopySuccess(true);
-      setTimeout(() => setShowCopySuccess(false), 3000);
-    } catch (err) {
-      // Fallback for browsers that don't support clipboard API
-      const textArea = document.createElement("textarea");
-      textArea.value = window.location.href;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand("copy");
-      document.body.removeChild(textArea);
-      setShowCopySuccess(true);
-      setTimeout(() => setShowCopySuccess(false), 3000);
+  // Try to open in specific browser
+  const openInBrowser = (browserType) => {
+    const currentUrl = window.location.href;
+
+    if (browserType === "chrome") {
+      // Chrome URL scheme for both iOS and Android
+      const chromeUrl = `googlechrome://${currentUrl.replace(/^https?:\/\//, "")}`;
+      window.location.href = chromeUrl;
+    } else if (browserType === "safari") {
+      // For iOS Safari - try to open in Safari
+      window.open(currentUrl, "_blank");
     }
   };
 
-  // Get browser-specific instructions
-  const getBrowserInstructions = () => {
+  // Check if it's mobile
+  const isMobile = () => {
     const ua = navigator.userAgent || "";
-
-    if (/LinkedInApp/i.test(ua)) {
-      return {
-        app: "LinkedIn",
-        instruction:
-          'Tap the three dots (•••) in the top right, then "Open in Browser"',
-      };
-    } else if (/FBAN|FBAV/i.test(ua)) {
-      return {
-        app: "Facebook",
-        instruction:
-          'Tap the three dots (•••) in the top right, then "Open in Browser"',
-      };
-    } else if (/Instagram/i.test(ua)) {
-      return {
-        app: "Instagram",
-        instruction:
-          'Tap the three dots (•••) in the top right, then "Open in Browser"',
-      };
-    } else if (/Twitter/i.test(ua)) {
-      return {
-        app: "Twitter/X",
-        instruction: 'Tap the share icon, then "Open in Browser"',
-      };
-    } else {
-      return {
-        app: "this app",
-        instruction:
-          'Look for "Open in Browser" or "Open in Safari/Chrome" option',
-      };
-    }
+    return /iPad|iPhone|iPod|Android/i.test(ua);
   };
-
-  const browserInfo = getBrowserInstructions();
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4">
@@ -141,77 +102,57 @@ export default function LoginPage() {
           Sign in to Kavisha.ai
         </h1>
 
-        {/* In-app browser warning */}
-        {isInAppBrowser && (
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg text-sm">
-            <div className="flex items-start gap-2">
-              <span className="text-amber-600 text-lg">⚠️</span>
-              <div>
-                <p className="font-semibold text-amber-800 mb-2">
-                  Browser Compatibility Issue
-                </p>
-                <p className="text-amber-700 mb-3">
-                  You're browsing from <strong>{browserInfo.app}</strong>.
-                  Google sign-in is blocked in in-app browsers for security
-                  reasons.
-                </p>
+        {/* Simple browser options for mobile in-app browsers */}
+        {isInAppBrowser && isMobile() && (
+          <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <p className="text-sm text-gray-700 mb-4 text-center">
+              Please open in a browser to continue
+            </p>
 
-                <div className="space-y-3">
-                  <div>
-                    <p className="font-medium text-amber-800 mb-1">
-                      Option 1: Open in Browser
-                    </p>
-                    <p className="text-amber-700 text-xs">
-                      {browserInfo.instruction}
-                    </p>
-                  </div>
+            <div className="space-y-2">
+              <button
+                onClick={() => openInBrowser("chrome")}
+                className="w-full py-3 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+              >
+                Open in Chrome
+              </button>
 
-                  <div>
-                    <p className="font-medium text-amber-800 mb-2">
-                      Option 2: Copy Link
-                    </p>
-                    <button
-                      onClick={copyCurrentLink}
-                      className="w-full py-2 px-3 bg-amber-600 text-white rounded text-sm hover:bg-amber-700 transition-colors relative"
-                    >
-                      {showCopySuccess
-                        ? "✓ Link Copied!"
-                        : "📋 Copy Link to Clipboard"}
-                    </button>
-                    {showCopySuccess && (
-                      <p className="text-xs text-amber-600 mt-1">
-                        Now paste it in Safari or Chrome
-                      </p>
-                    )}
-                  </div>
-                </div>
-              </div>
+              <button
+                onClick={() => openInBrowser("safari")}
+                className="w-full py-3 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+              >
+                Open in Safari
+              </button>
             </div>
           </div>
         )}
 
         {/* Regular login for secure browsers */}
-        {!session?.user ? (
+        {(!isInAppBrowser || !isMobile()) && !session?.user ? (
           <div className="w-full">
             <button
               onClick={() => signIn("google")}
-              disabled={isInAppBrowser}
-              className={`w-full py-3 px-4 rounded-lg font-medium transition-colors ${
-                isInAppBrowser
-                  ? "bg-gray-300 text-gray-500 cursor-not-allowed"
-                  : "bg-red-500 text-white hover:bg-red-600"
-              }`}
+              className="w-full py-3 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
             >
-              {isInAppBrowser ? "🔒 Sign-in Blocked" : "Login with Google"}
+              Login with Google
             </button>
-
-            {isInAppBrowser && (
-              <p className="text-xs text-gray-500 mt-2 text-center">
-                Please use the options above to continue
-              </p>
-            )}
           </div>
-        ) : (
+        ) : null}
+
+        {/* Blocked message for mobile in-app browsers */}
+        {isInAppBrowser && isMobile() && (
+          <div className="w-full">
+            <button
+              disabled
+              className="w-full py-3 px-4 bg-gray-300 text-gray-500 rounded-lg cursor-not-allowed font-medium"
+            >
+              🔒 Sign-in Blocked in App Browser
+            </button>
+          </div>
+        )}
+
+        {/* User session info */}
+        {session?.user && (
           <div className="flex flex-col items-center gap-4 w-full">
             {session.user?.image && (
               <img

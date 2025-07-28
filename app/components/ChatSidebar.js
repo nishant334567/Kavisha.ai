@@ -119,7 +119,7 @@ export default function ChatSidebar({
           </div>
         )}
         {isCollapsed && (
-          <div className="w-14 px-4 py-2 flex flex-col  min-h-full  space-y-4">
+          <div className="w-12 px-4 py-2 flex flex-col  min-h-full  space-y-4">
             <div>
               <button onClick={() => toggleLeftSideBar()}>
                 <img src="close-sidebar.png" width={20} />
