@@ -2,19 +2,22 @@
 
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function Admin() {
   const router = useRouter();
   const { data: session, status } = useSession();
+  const hasRedirected = useRef(false);
   const [users, setUsers] = useState([]);
   const [filter, setFilter] = useState("all");
   const [filteredUser, setFilteredUser] = useState([]);
-  const [jobSeekerCount, setJobseekercount] = useState(0);
-  const [recruiterCount, setRecruiterCount] = useState(0);
-  const [matches, setMatches] = useState(0);
-  const [connections, setConnections] = useState(0);
-  const [totalUsers, setTotalUsers] = useState(0);
+  const [stats, setStats] = useState({
+    jobSeekerCount: 0,
+    recruiterCount: 0,
+    matches: 0,
+    connections: 0,
+    totalUsers: 0,
+  });
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
   const [userChats, setUserChats] = useState([]);
@@ -32,10 +35,11 @@ export default function Admin() {
   useEffect(() => {
     if (status === "loading") return;
 
-    if (!session?.user?.isAdmin) {
-      router.push("/");
-    }
-  }, [session, status, router]);
+    // if (!session?.user?.isAdmin && !hasRedirected.current) {
+    //   hasRedirected.current = true;
+    //   router.replace("/");
+    // }
+  }, [status]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -45,25 +49,27 @@ export default function Admin() {
         const data = await res.json();
 
         if (data.success) {
-          setTotalUsers(data.counts.totalUsers);
-          setJobseekercount(data.counts.jobSeekerCount);
-          setRecruiterCount(data.counts.recruiterCount);
-          setMatches(data.counts.matchesCount);
-          setConnections(data.counts.connectionsCount);
+          setLoading(false);
+          setStats({
+            totalUsers: data.counts.totalUsers,
+            jobSeekerCount: data.counts.jobSeekerCount,
+            recruiterCount: data.counts.recruiterCount,
+            matches: data.counts.matchesCount,
+            connections: data.counts.connectionsCount,
+          });
           setUsers(data.users);
           setFilteredUser(data.users);
         }
       } catch (error) {
         console.error("Fetch error:", error);
-      } finally {
         setLoading(false);
       }
     };
 
-    if (session?.user?.isAdmin) {
+    if (session?.user?.isAdmin && status === "authenticated") {
       fetchData();
     }
-  }, [session]);
+  }, [session?.user?.isAdmin, status]);
 
   const filterUser = (userType) => {
     setFilter(userType);
@@ -178,18 +184,18 @@ export default function Admin() {
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
           <div className="bg-white p-4 rounded border">
             <p className="text-sm text-gray-600">Total Users</p>
-            <p className="text-2xl font-bold">{totalUsers}</p>
+            <p className="text-2xl font-bold">{stats.totalUsers}</p>
           </div>
           <div className="bg-white p-4 rounded border">
             <p className="text-sm text-gray-600">Job Seekers</p>
             <p className="text-2xl font-bold text-green-600">
-              {jobSeekerCount}
+              {stats.jobSeekerCount}
             </p>
           </div>
           <div className="bg-white p-4 rounded border">
             <p className="text-sm text-gray-600">Recruiters</p>
             <p className="text-2xl font-bold text-purple-600">
-              {recruiterCount}
+              {stats.recruiterCount}
             </p>
           </div>
           <div
@@ -197,14 +203,18 @@ export default function Admin() {
             onClick={fetchAllMatches}
           >
             <p className="text-sm text-gray-600">Matches</p>
-            <p className="text-2xl font-bold text-yellow-600">{matches}</p>
+            <p className="text-2xl font-bold text-yellow-600">
+              {stats.matches}
+            </p>
           </div>
           <div
             className="bg-white p-4 rounded border cursor-pointer hover:bg-gray-50 transition-colors"
             onClick={fetchAllConnections}
           >
             <p className="text-sm text-gray-600">Connections</p>
-            <p className="text-2xl font-bold text-blue-600">{connections}</p>
+            <p className="text-2xl font-bold text-blue-600">
+              {stats.connections}
+            </p>
           </div>
         </div>
 
