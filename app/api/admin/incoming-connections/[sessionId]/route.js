@@ -28,7 +28,7 @@ export async function GET(req, { params }) {
     );
 
     // Fetch all incoming connections for this session (where receiverSession = sessionId)
-    const connections = await Connection.find({ receiverSession: sessionId })
+    const connections = await Connection.find({ senderSession: sessionId })
       .select(
         "senderId receiverId senderSession receiverSession message emailSent createdAt"
       )

@@ -17,6 +17,7 @@ export default function Admin() {
     matches: 0,
     connections: 0,
     totalUsers: 0,
+    allDataCollectedCount: 0,
   });
   const [loading, setLoading] = useState(true);
   const [selectedUser, setSelectedUser] = useState(null);
@@ -31,14 +32,27 @@ export default function Admin() {
   const [showAllConnections, setShowAllConnections] = useState(false);
   const [incomingConnections, setIncomingConnections] = useState([]);
   const [showIncomingConnections, setShowIncomingConnections] = useState(false);
+  const [allDataCollectedSessions, setAllDataCollectedSessions] = useState([]);
+  const [showAllDataCollected, setShowAllDataCollected] = useState(false);
+  const [dataCollectedFilter, setDataCollectedFilter] = useState("all");
+  const [filteredDataCollectedSessions, setFilteredDataCollectedSessions] =
+    useState([]);
+  const [dataCollectedSessionMatches, setDataCollectedSessionMatches] =
+    useState([]);
+  const [dataCollectedSessionConnections, setDataCollectedSessionConnections] =
+    useState([]);
+  const [showDataCollectedSessionMatches, setShowDataCollectedSessionMatches] =
+    useState(false);
+  const [sessionCount, setTotalSessionCount] = useState(0);
+  const [
+    showDataCollectedSessionConnections,
+    setShowDataCollectedSessionConnections,
+  ] = useState(false);
+  const [selectedDataCollectedSession, setSelectedDataCollectedSession] =
+    useState(null);
 
   useEffect(() => {
     if (status === "loading") return;
-
-    // if (!session?.user?.isAdmin && !hasRedirected.current) {
-    //   hasRedirected.current = true;
-    //   router.replace("/");
-    // }
   }, [status]);
 
   useEffect(() => {
@@ -56,6 +70,8 @@ export default function Admin() {
             recruiterCount: data.counts.recruiterCount,
             matches: data.counts.matchesCount,
             connections: data.counts.connectionsCount,
+            allDataCollectedCount: data.counts.allDataCollectedCount,
+            allSessionCount: data.counts.allSessionCount,
           });
           setUsers(data.users);
           setFilteredUser(data.users);
@@ -80,7 +96,7 @@ export default function Admin() {
   };
 
   const fetchUserChats = async (userId) => {
-    console.log("User id ", userId);
+
     try {
       const res = await fetch(`/api/admin/fetch-chats/${userId}`);
       const data = await res.json();
@@ -152,6 +168,70 @@ export default function Admin() {
     }
   };
 
+  const fetchAllDataCollectedSessions = async () => {
+    try {
+      ("Fetching all data collected sessions...");
+      const res = await fetch("/api/admin/all-data-collected");
+      const data = await res.json();
+
+      ("API response:", data);
+
+      if (data.success) {
+        ("Sessions received:", data.sessions.length);
+        setAllDataCollectedSessions(data.sessions);
+        setTotalSessionCount(data.countTotal);
+        setFilteredDataCollectedSessions(data.sessions);
+        setShowAllDataCollected(true);
+      } else {
+        console.error("API returned error:", data.error);
+      }
+    } catch (error) {
+      console.error("Error fetching all data collected sessions:", error);
+    }
+  };
+
+  const filterDataCollectedSessions = (filterType) => {
+    setDataCollectedFilter(filterType);
+    if (filterType === "all") {
+      setFilteredDataCollectedSessions(allDataCollectedSessions);
+    } else {
+      const filtered = allDataCollectedSessions.filter(
+        (session) => session.role === filterType
+      );
+      setFilteredDataCollectedSessions(filtered);
+    }
+  };
+
+  const fetchDataCollectedSessionMatches = async (sessionId) => {
+    try {
+      const res = await fetch(`/api/admin/fetch-matches/${sessionId}`);
+      const data = await res.json();
+
+      if (data.success) {
+        setDataCollectedSessionMatches(data.matches);
+        setSelectedDataCollectedSession(sessionId);
+        setShowDataCollectedSessionMatches(true);
+      }
+    } catch (error) {
+      console.error("Error fetching session matches:", error);
+    }
+  };
+
+  const fetchDataCollectedSessionConnections = async (sessionId) => {
+    try {
+      const res = await fetch(`/api/admin/incoming-connections/${sessionId}`);
+      const data = await res.json();
+
+      if (data.success) {
+        setDataCollectedSessionConnections(data.connections);
+        setSelectedDataCollectedSession(sessionId);
+        setShowDataCollectedSessionConnections(true);
+      }
+    } catch (error) {
+      console.error("Error fetching session connections:", error);
+    }
+  };
+
   if (status === "loading" || loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
@@ -181,7 +261,7 @@ export default function Admin() {
 
       <div className="max-w-6xl mx-auto px-4 py-6">
         {/* Stats */}
-        <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
+        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mb-6">
           <div className="bg-white p-4 rounded border">
             <p className="text-sm text-gray-600">Total Users</p>
             <p className="text-2xl font-bold">{stats.totalUsers}</p>
@@ -214,6 +294,15 @@ export default function Admin() {
             <p className="text-sm text-gray-600">Connections</p>
             <p className="text-2xl font-bold text-blue-600">
               {stats.connections}
+            </p>
+          </div>
+          <div
+            className="bg-white p-4 rounded border cursor-pointer hover:bg-gray-50 transition-colors"
+            onClick={fetchAllDataCollectedSessions}
+          >
+            <p className="text-sm text-gray-600">Data Collected</p>
+            <p className="text-2xl font-bold text-indigo-600">
+              {stats.allDataCollectedCount}/{stats.allSessionCount}
             </p>
           </div>
         </div>
@@ -365,7 +454,7 @@ export default function Admin() {
                         <p className="text-xs text-gray-500 mb-2">
                           Recent Messages:
                         </p>
-                        <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-none">
+                        <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
                           {session.logs.map((log, logIndex) => (
                             <div
                               key={logIndex}
@@ -380,9 +469,7 @@ export default function Admin() {
                               >
                                 {log.role}:
                               </span>
-                              <span className="ml-1">
-                                {log.message.substring(0, 150)}...
-                              </span>
+                              <span className="ml-1">{log.message}</span>
                             </div>
                           ))}
                         </div>
@@ -760,6 +847,341 @@ export default function Admin() {
                       </div>
                     ))}
                   </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* All Data Collected Sessions Modal */}
+        {showAllDataCollected && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-hidden">
+              <div className="p-4 border-b flex justify-between items-center">
+                <h3 className="font-medium">
+                  All Data Collected Sessions (
+                  {filteredDataCollectedSessions.length})
+                </h3>
+                <button
+                  onClick={() => setShowAllDataCollected(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-4 border-b bg-gray-50">
+                <div className="flex flex-wrap gap-2">
+                  <button
+                    onClick={() => filterDataCollectedSessions("all")}
+                    className={`px-3 py-1 rounded text-sm ${
+                      dataCollectedFilter === "all"
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    All ({allDataCollectedSessions.length})
+                  </button>
+                  <button
+                    onClick={() => filterDataCollectedSessions("job_seeker")}
+                    className={`px-3 py-1 rounded text-sm ${
+                      dataCollectedFilter === "job_seeker"
+                        ? "bg-green-100 text-green-700"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    Job Seekers (
+                    {
+                      allDataCollectedSessions.filter(
+                        (s) => s.role === "job_seeker"
+                      ).length
+                    }
+                    )
+                  </button>
+                  <button
+                    onClick={() => filterDataCollectedSessions("recruiter")}
+                    className={`px-3 py-1 rounded text-sm ${
+                      dataCollectedFilter === "recruiter"
+                        ? "bg-purple-100 text-purple-700"
+                        : "bg-gray-100 text-gray-700"
+                    }`}
+                  >
+                    Recruiters (
+                    {
+                      allDataCollectedSessions.filter(
+                        (s) => s.role === "recruiter"
+                      ).length
+                    }
+                    )
+                  </button>
+                </div>
+              </div>
+              <div className="p-4 overflow-y-auto max-h-[70vh]">
+                {filteredDataCollectedSessions.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">
+                    {allDataCollectedSessions.length === 0
+                      ? "No data collected sessions found."
+                      : "No sessions match the selected filter."}
+                  </p>
+                ) : (
+                  <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                    {filteredDataCollectedSessions.map((session, index) => (
+                      <div key={index} className="border rounded p-4">
+                        <div className="flex justify-between items-start mb-2">
+                          <div>
+                            <h4 className="font-medium">
+                              Session #{index + 1}
+                            </h4>
+                            <p className="text-xs text-gray-500">
+                              User: {session.userName || "Unknown"}
+                            </p>
+                          </div>
+                          <span className="text-xs px-2 py-1 bg-indigo-100 text-indigo-700 rounded">
+                            Data Collected
+                          </span>
+                        </div>
+                        <div className="text-sm text-gray-600 mb-2">
+                          <p>Session ID: {session._id}</p>
+                          <p>Title: {session.title || "Untitled"}</p>
+                          <p>Role: {session.role}</p>
+                          <p>User: {session.userName || "Unknown"}</p>
+                          <p>Email: {session.userEmail || "N/A"}</p>
+                          <p>Messages: {session.messageCount || 0}</p>
+                          <p>
+                            All Data Collected:{" "}
+                            {session.allDataCollected ? "Yes" : "No"}
+                          </p>
+                        </div>
+                        <div className="flex gap-2 mt-3">
+                          <button
+                            onClick={() =>
+                              fetchDataCollectedSessionMatches(session._id)
+                            }
+                            className="text-xs px-3 py-1 bg-yellow-100 text-yellow-700 rounded hover:bg-yellow-200 transition-colors"
+                          >
+                            Matches
+                          </button>
+                          <button
+                            onClick={() =>
+                              fetchDataCollectedSessionConnections(session._id)
+                            }
+                            className="text-xs px-3 py-1 bg-blue-100 text-blue-700 rounded hover:bg-blue-200 transition-colors"
+                          >
+                            Applied/Connected
+                          </button>
+                        </div>
+                        {session.logs && session.logs.length > 0 && (
+                          <div className="mt-3">
+                            <p className="text-xs text-gray-500 mb-2">
+                              Recent Messages:
+                            </p>
+                            <div className="space-y-2 max-h-48 overflow-y-auto scrollbar-thin scrollbar-thumb-gray-300 scrollbar-track-gray-100">
+                              {session.logs.map((log, logIndex) => (
+                                <div
+                                  key={logIndex}
+                                  className="text-xs bg-gray-50 p-2 rounded"
+                                >
+                                  <span
+                                    className={`font-medium ${
+                                      log.role === "user"
+                                        ? "text-blue-600"
+                                        : "text-green-600"
+                                    }`}
+                                  >
+                                    {log.role}:
+                                  </span>
+                                  <span className="ml-1">{log.message}</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Data Collected Session Matches Modal */}
+        {showDataCollectedSessionMatches && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+              <div className="p-4 border-b flex justify-between items-center">
+                <h3 className="font-medium">
+                  Session Matches ({dataCollectedSessionMatches.length}/
+                  {sessionCount})
+                </h3>
+                <button
+                  onClick={() => setShowDataCollectedSessionMatches(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-4 overflow-y-auto max-h-[60vh]">
+                {dataCollectedSessionMatches.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">
+                    No matches found for this session.
+                  </p>
+                ) : (
+                  dataCollectedSessionMatches.map((match, index) => (
+                    <div key={index} className="border rounded p-4 mb-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium">Match #{index + 1}</h4>
+                          <p className="text-xs text-gray-500">
+                            From: {match.fromUser?.name} → To:{" "}
+                            {match.toUser?.name}
+                          </p>
+                        </div>
+                        <span className="text-xs px-2 py-1 bg-yellow-100 text-yellow-700 rounded">
+                          {match.matchPercentage || "N/A"}% Match
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600 mb-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <div>
+                            <p className="font-medium text-xs text-gray-500">
+                              FROM:
+                            </p>
+                            <p>Name: {match.fromUser?.name}</p>
+                            <p>Email: {match.fromUser?.email}</p>
+                            <p>Session: {match.fromUser?.sessionTitle}</p>
+                            <p>Role: {match.fromUser?.sessionRole}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium text-xs text-gray-500">
+                              TO:
+                            </p>
+                            <p>Name: {match.toUser?.name}</p>
+                            <p>Email: {match.toUser?.email}</p>
+                          </div>
+                        </div>
+                        <div className="mt-2 pt-2 border-t">
+                          <p>Contacted: {match.contacted ? "Yes" : "No"}</p>
+                          <p>
+                            Date:{" "}
+                            {new Date(match.createdAt).toLocaleDateString()}
+                          </p>
+                        </div>
+                      </div>
+                      {match.matchingReason && (
+                        <div className="mb-2">
+                          <p className="text-xs text-gray-500 mb-1">
+                            Matching Reason:
+                          </p>
+                          <p className="text-sm bg-gray-50 p-2 rounded">
+                            {match.matchingReason}
+                          </p>
+                        </div>
+                      )}
+                      {match.chatSummary && (
+                        <div>
+                          <p className="text-xs text-gray-500 mb-1">
+                            Chat Summary:
+                          </p>
+                          <p className="text-sm bg-gray-50 p-2 rounded">
+                            {match.chatSummary}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  ))
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Data Collected Session Connections Modal */}
+        {showDataCollectedSessionConnections && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[80vh] overflow-hidden">
+              <div className="p-4 border-b flex justify-between items-center">
+                <h3 className="font-medium">
+                  Session Connections ({dataCollectedSessionConnections.length}/
+                  {sessionCount})
+                </h3>
+                <button
+                  onClick={() => setShowDataCollectedSessionConnections(false)}
+                  className="text-gray-500 hover:text-gray-700"
+                >
+                  ✕
+                </button>
+              </div>
+              <div className="p-4 overflow-y-auto max-h-[60vh]">
+                {dataCollectedSessionConnections.length === 0 ? (
+                  <p className="text-gray-500 text-center py-8">
+                    No connections found for this session.
+                  </p>
+                ) : (
+                  dataCollectedSessionConnections.map((connection, index) => (
+                    <div key={index} className="border rounded p-4 mb-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <div>
+                          <h4 className="font-medium">
+                            Connection #{index + 1}
+                          </h4>
+                          <p className="text-xs text-gray-500">
+                            From: {connection.sender?.name} → To:{" "}
+                            {connection.receiver?.name}
+                          </p>
+                        </div>
+                        <span
+                          className={`text-xs px-2 py-1 rounded ${
+                            connection.emailSent
+                              ? "bg-green-100 text-green-700"
+                              : "bg-yellow-100 text-yellow-700"
+                          }`}
+                        >
+                          {connection.emailSent ? "Email Sent" : "Pending"}
+                        </span>
+                      </div>
+                      <div className="text-sm text-gray-600 mb-2">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                          <div>
+                            <p className="font-medium text-xs text-gray-500">
+                              FROM:
+                            </p>
+                            <p>Name: {connection.sender?.name}</p>
+                            <p>Email: {connection.sender?.email}</p>
+                            <p>Session: {connection.sender?.sessionTitle}</p>
+                            <p>Role: {connection.sender?.sessionRole}</p>
+                          </div>
+                          <div>
+                            <p className="font-medium text-xs text-gray-500">
+                              TO:
+                            </p>
+                            <p>Name: {connection.receiver?.name}</p>
+                            <p>Email: {connection.receiver?.email}</p>
+                            <p>Session: {connection.receiver?.sessionTitle}</p>
+                            <p>Role: {connection.receiver?.sessionRole}</p>
+                          </div>
+                        </div>
+                        <div className="mt-2 pt-2 border-t">
+                          <p>
+                            Date:{" "}
+                            {new Date(
+                              connection.createdAt
+                            ).toLocaleDateString()}
+                          </p>
+                          <p>
+                            Email Sent: {connection.emailSent ? "Yes" : "No"}
+                          </p>
+                        </div>
+                      </div>
+                      {connection.message && (
+                        <div className="mt-3">
+                          <p className="text-xs text-gray-500 mb-1">Message:</p>
+                          <div className="text-sm bg-gray-50 p-2 rounded border">
+                            {connection.message}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  ))
                 )}
               </div>
             </div>

@@ -21,12 +21,17 @@ export async function GET(req) {
         recruiterCount,
         matchesCount,
         connectionsCount,
+        allDataCollectedCount,
+        allSessionCount
       ] = await Promise.all([
         User.countDocuments({}),
         User.countDocuments({ profileType: "job_seeker" }),
         User.countDocuments({ profileType: "recruiter" }),
         Matches.countDocuments({}),
         Connection.countDocuments({}),
+        Session.countDocuments({ allDataCollected: true }),
+        Session.countDocuments({}),
+
       ]);
 
       return NextResponse.json({
@@ -37,6 +42,8 @@ export async function GET(req) {
           recruiterCount,
           matchesCount,
           connectionsCount,
+          allDataCollectedCount,
+          allSessionCount
         },
       });
     } else {
@@ -48,6 +55,8 @@ export async function GET(req) {
         recruiterCount,
         matchesCount,
         connectionsCount,
+        allDataCollectedCount,
+        allSessionCount
       ] = await Promise.all([
         User.find({}).select("name email profileType"),
         User.countDocuments({}),
@@ -55,6 +64,8 @@ export async function GET(req) {
         User.countDocuments({ profileType: "recruiter" }),
         Matches.countDocuments({}),
         Connection.countDocuments({}),
+        Session.countDocuments({ allDataCollected: true }),
+        Session.countDocuments({ }),
       ]);
 
       const usersWithSessions = await Promise.all(
@@ -80,6 +91,8 @@ export async function GET(req) {
           recruiterCount,
           matchesCount,
           connectionsCount,
+          allDataCollectedCount,
+          allSessionCount
         },
         users: usersWithSessions,
       });
