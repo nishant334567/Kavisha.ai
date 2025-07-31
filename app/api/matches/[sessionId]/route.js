@@ -17,6 +17,7 @@ export async function getMatches(sessionId) {
     session?.role === "job_seeker" ? "recruiter" : "job_seeker";
   const allProviders = await Session.find({
     role: oppositeRole,
+    allDataCollected: true,
     chatSummary: { $exists: true, $ne: "" },
   });
 
