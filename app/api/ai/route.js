@@ -36,9 +36,12 @@ export async function POST(request) {
     });
     const body = await request.json();
     const { history, userMessage, jobseeker, sessionId, resume } = body;
+
+ 
+    await connectDB();
+    // const session = await Session.findById(sessionId);
     const resumeText = resume || "";
 
-    // Remove the duplicate systemPrompt - we'll only use the imported ones
     if (
       !userMessage ||
       typeof userMessage !== "string" ||
@@ -66,7 +69,15 @@ export async function POST(request) {
             : SYSTEM_PROMPT_JOB_SEEKER,
       },
       ...(resumeText
-        ? [{ role: "system", content: `Resume/JD Document: ${resumeText}` }]
+        ? [
+            {
+              role: "user",
+              content:
+                jobseeker === "recruiter"
+                  ? `USER HAS PROVIDED JD: ${resumeText}\n\nIMPORTANT: The user has already uploaded their JD. Process this JD content and ask contextual questions based on it. DO NOT ask for JD again. Acknowledge that you can read the JD.`
+                  : `USER HAS PROVIDED RESUME: ${resumeText}\n\nIMPORTANT: The user has already uploaded their resume. Process this resume content and ask contextual questions based on it. DO NOT ask for resume again. Acknowledge that you can read the resume.`,
+            },
+          ]
         : []),
       ...history.map((m) => ({
         role: m.role,
@@ -74,6 +85,9 @@ export async function POST(request) {
       })),
       { role: "user", content: userMessage },
     ];
+
+
+ 
 
     const chatCompletion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -97,8 +111,6 @@ export async function POST(request) {
       title = parts[2];
       allDataCollected = parts[3]; // Keep as string
     } else {
-      ("Using original reply content, just fixing format");
-      // Use the original content (which is likely correct) and just add proper formatting
       const originalReply = parts[0] || replyAi; // Use parts[0] if available, otherwise full response
 
       const rePromptMessages = [
@@ -110,7 +122,15 @@ export async function POST(request) {
               : SYSTEM_PROMPT_JOB_SEEKER,
         },
         ...(resumeText
-          ? [{ role: "system", content: `Resume/JD Document: ${resumeText}` }]
+          ? [
+              {
+                role: "user",
+                content:
+                  jobseeker === "recruiter"
+                    ? `USER HAS PROVIDED JD: ${resumeText}\n\nIMPORTANT: The user has already uploaded their JD. Process this JD content and ask contextual questions based on it. DO NOT ask for JD again. Acknowledge that you can read the JD.`
+                    : `USER HAS PROVIDED RESUME: ${resumeText}\n\nIMPORTANT: The user has already uploaded their resume. Process this resume content and ask contextual questions based on it. DO NOT ask for resume again. Acknowledge that you can read the resume.`,
+              },
+            ]
           : []),
         ...history.map((m) => ({
           role: m.role,
@@ -137,7 +157,7 @@ ${originalReply}
 Do NOT change the reply content ("${originalReply}") - keep it exactly as is. Only add the missing format parts based on the conversation context.`,
         },
       ];
-
+      //
       const reChatCompletion = await openai.chat.completions.create({
         model: "gpt-4o-mini",
         messages: rePromptMessages,

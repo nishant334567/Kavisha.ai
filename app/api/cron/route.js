@@ -33,7 +33,6 @@ export async function GET() {
           return { email, success: false, error };
         }
 
-        console.log(`Email sent successfully to ${email}`);
         return { email, success: true, data };
       } catch (error) {
         console.error(`Error sending email to ${email}:`, error);
