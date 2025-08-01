@@ -1,9 +1,33 @@
 import SessionSection from "./components/SessionSection";
-
+import { getServerSession } from "next-auth";
+import { authOptions } from "../api/auth/[...nextauth]/route";
+import { redirect } from "next/navigation";
 export default async function Admin() {
+  const session = await getServerSession(authOptions);
+  
+  if (!session) {
+    redirect("/login");
+    return null;
+  }
+  const cookieStore = await cookies();
+
+  const cookieString = cookieStore
+    .getAll()
+    .map((c) => `${c.name}=${c.value}`)
+    .join("; ");
+
   const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-  const response = await fetch(`${baseUrl}/api/admin/stats`);
+
+  const apiUrl = baseUrl ? `${baseUrl}/api/admin/stats` : "/api/admin/stats";
+
+  const response = await fetch(apiUrl, {
+    cache: "no-store",
+    headers: {
+      Cookie: cookieString,
+    },
+  });
   const stats = await response.json();
+
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
