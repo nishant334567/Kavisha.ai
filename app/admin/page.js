@@ -2,9 +2,10 @@ import SessionSection from "./components/SessionSection";
 import { getServerSession } from "next-auth";
 import { authOptions } from "../api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
+import { cookies } from "next/headers";
 export default async function Admin() {
   const session = await getServerSession(authOptions);
-  
+
   if (!session) {
     redirect("/login");
     return null;
@@ -27,7 +28,6 @@ export default async function Admin() {
     },
   });
   const stats = await response.json();
-
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">
