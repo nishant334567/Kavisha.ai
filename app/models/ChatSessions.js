@@ -43,6 +43,11 @@ const ChatSessionsSchema = new mongoose.Schema(
   }
 );
 
+// Add indexes for better performance
+ChatSessionsSchema.index({ role: 1 });
+ChatSessionsSchema.index({ allDataCollected: 1 });
+ChatSessionsSchema.index({ createdAt: -1 });
+
 const Session =
   mongoose.models.ChatSessions ||
   mongoose.model("ChatSessions", ChatSessionsSchema);

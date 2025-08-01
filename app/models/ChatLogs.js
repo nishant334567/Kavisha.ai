@@ -25,5 +25,7 @@ const LogsSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+LogsSchema.index({ sessionId: 1 });
+
 const Logs = mongoose.models.Logs || mongoose.model("Logs", LogsSchema);
 export default Logs;
