@@ -1,7 +1,8 @@
 import SessionSection from "./components/SessionSection";
 
 export default async function Admin() {
-  const response = await fetch("http://localhost:3000/api/admin/stats");
+  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  const response = await fetch(`${baseUrl}/api/admin/stats`);
   const stats = await response.json();
 
   return (
