@@ -1,6 +1,7 @@
 "use client";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
+import Livechat from "./LiveChat";
 
 export default function MatchCard({
   type = 0,
@@ -18,12 +19,14 @@ export default function MatchCard({
   matchedUserEmail,
   senderSession,
   openDetailsPanel,
+  openChatSession
 }) {
   const { data: session } = useSession();
   const [latestCredits, setLatestCredits] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [alreadyContacted, setAlreadyContacted] = useState(false);
+  
 
   useEffect(() => {
     const fetchCredits = async () => {
@@ -46,6 +49,8 @@ export default function MatchCard({
     setAlreadyContacted(contacted);
     (contacted, alreadyContacted, "logs for contacts");
   }, [session?.user?.id]);
+
+
 
   const createConnection = async () => {
     // if (latestCredits <= 0 && profileType === "recruiter") {
@@ -123,7 +128,7 @@ export default function MatchCard({
   };
 
   return (
-    <div className="bg-white border border-slate-200 rounded-lg p-4 flex flex-col gap-2 min-h-[120px] w-full relative">
+    <div className="relative g-white border border-slate-200 rounded-lg p-4 flex flex-col gap-2 min-h-[120px] w-full relative">
       <div className="flex items-center justify-between">
         <span className="font-semibold text-slate-800 text-sm">
           Match: {matchPercentage || "-"}
@@ -230,7 +235,9 @@ export default function MatchCard({
             View Details
           </button>
         )}
+        <button onClick={()=>openChatSession(senderSession,matchedSessionId)}>Chat Now</button>
       </div>
+     
       {/* Temporarily disabled credit limit message for recruiters
       {!hasCredits && isRecruiter && (
         <div className="text-xs text-red-500 text-center">

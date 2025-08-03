@@ -20,23 +20,42 @@ app.prepare().then(() => {
 
   const activeUsers = new Map();
   const activeConnections = new Set();
-  
 
-  io.on("initialize_connection", (data) => {
-    const { senderSessionId, receiverSessionId } = data;
-    const connectionId = createConnectionId(senderSessionId, receiverSessionId);
-    activeConnections.add(connectionId);
-    console.log(`Connection added:${connectionId}`);
+  io.on("authenticate", (userData) => {});
+
+  io.on("disconnect", () => {});
+
+  io.on("connection", (socket) => {
+    console.log("User connected:", socket.id);
+    socket.on("disconnect", () => {
+      console.log("User disconnected:", socket.id);
+    });
+
+    socket.on("send_message", (data) => {
+      const { text, connectionId, timestamp, senderId } = data;
+
+      if (activeConnections.has(connectionId)) {
+        socket.to(connectionId).emit("message_received", {
+          text: text,
+          senderId: senderId,
+          timestamp: timestamp,
+        });
+        console.log(`✅ Message "${text}" sent to room ${connectionId}`);
+      } else {
+        console.log("❌ Room not found:", connectionId);
+      }
+    });
+
+    socket.on("join_room", (data) => {
+      socket.join(data.connectionId);
+      if (!activeConnections.has(connectionId)) {
+        activeConnections.add(data.connectionId);
+      }
+      console.log(`✅ User joined room: ${data.connectionId}`);
+    });
   });
 
-  io.on("send_message", (data) => {
-    const { senderSessionId, receiverSessionId, message } = data;
-    const connectionId = createConnectionId(senderSessionId, receiverSessionId);
-
-    if (activeConnections.has(connectionId)) {
-      //send message logic
-    } else {
-      console.log("No connection found");
-    }
+  httpServer.listen(3000, () => {
+    console.log(`nextjs+websocket service is running on port 3000`);
   });
 });

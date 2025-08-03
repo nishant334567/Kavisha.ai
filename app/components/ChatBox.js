@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import Matches from "./Matches";
 import RighPanel from "./Rightpanel";
 import Resume from "./Resume";
+import Livechat from "./LiveChat";
 
 export default function ChatBox({
   currentChatId,
@@ -25,6 +26,9 @@ export default function ChatBox({
   const [retry, setRetry] = useState(false);
   const [retryIndex, setRetryIndex] = useState(undefined);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [openChat, setOpenChat] = useState(false);
+  const [chatReceiverSession, setChatReceiverSession] = useState("");
+  const [chatSenderSession, setChatSenderSession] = useState("");
   useEffect(() => {
     setmessages(initialMessages || []);
     // setMatches(initialMatches);
@@ -78,6 +82,11 @@ export default function ChatBox({
   // };
   const updateResume = (filename, summary) => {
     setResumedata({ filename: filename, resumeSummary: summary });
+  };
+  const openChatSession = (c1, c2) => {
+    setOpenChat((prev) => !prev);
+    setChatReceiverSession(c2);
+    setChatSenderSession(c1);
   };
   const onResumeUpload = (newResumeData) => {
     if (newResumeData) {
@@ -339,6 +348,7 @@ export default function ChatBox({
               currentChatId={currentChatId}
               matches={matches}
               openDetailsPanel={openDetailsPanel}
+              openChatSession={openChatSession}
             />
           )}
           <div ref={endOfMessagesRef}></div>
@@ -432,6 +442,16 @@ export default function ChatBox({
           />
         )}
       </div> */}
+      {openChat && (
+        <div className="fixed bottom-4 right-4 z-50">
+          <Livechat
+            chatData={{
+              senderSession: chatSenderSession,
+              receiverSession: chatReceiverSession,
+            }}
+          />
+        </div>
+      )}
     </div>
   );
 }
