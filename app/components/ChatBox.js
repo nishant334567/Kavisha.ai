@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import Matches from "./Matches";
 import RighPanel from "./Rightpanel";
 import Resume from "./Resume";
+import VoiceRecorder from "./VoiceRecorder";
 
 export default function ChatBox({
   currentChatId,
@@ -25,6 +26,7 @@ export default function ChatBox({
   const [retry, setRetry] = useState(false);
   const [retryIndex, setRetryIndex] = useState(undefined);
   const [selectedFile, setSelectedFile] = useState(null);
+
   useEffect(() => {
     setmessages(initialMessages || []);
     // setMatches(initialMatches);
@@ -71,11 +73,11 @@ export default function ChatBox({
     return () => clearTimeout(timeout);
   }, [messages]);
 
-  // const openDetailsPanel = (type, dataObject) => {
-  //   setType(type);
-  //   setViewdata(dataObject);
-  //   toggleRightPanel();
-  // };
+  // Simple voice transcript handler
+  const handleVoiceTranscript = (transcript) => {
+    setInput(transcript);
+  };
+
   const updateResume = (filename, summary) => {
     setResumedata({ filename: filename, resumeSummary: summary });
   };
@@ -123,6 +125,7 @@ export default function ChatBox({
           { role: "assistant", message: data.reply },
         ]);
         setMessageLoading(false);
+
         if (
           data?.matchesWithObjectIds?.length > 0 &&
           data?.allDataCollected === "true"
@@ -183,6 +186,7 @@ export default function ChatBox({
       { role: "assistant", message: data.reply },
     ]);
     setMessageLoading(false);
+
     setRetry(false);
     setRetryIndex(undefined);
     if (
@@ -196,10 +200,14 @@ export default function ChatBox({
       setHasDatacollected(false);
     }
   };
-  const handleSubmit = async () => {
-    if (!input.trim()) return;
-    const newUserMessage = { role: "user", message: input };
-    const userText = input;
+  const handleSubmit = async (voiceText = null) => {
+    const messageText = input;
+    if (!messageText.trim()) {
+      console.log("❌ Input is empty");
+      return;
+    }
+
+    const newUserMessage = { role: "user", message: messageText };
     const updatedMessages = [...messages, newUserMessage];
     setmessages(updatedMessages);
     setInput("");
@@ -389,6 +397,8 @@ export default function ChatBox({
           >
             <img src="/message.png" height={25} width={25} alt="Send" />
           </button>
+
+          <VoiceRecorder onTranscript={handleVoiceTranscript} />
         </form>
 
         {/* Keep Resume component for file display and processing, but hidden file input */}
@@ -402,36 +412,6 @@ export default function ChatBox({
           setSelectedFile={setSelectedFile}
         />
       </div>
-
-      {/* <div>
-        {show && type === 1 && (
-          <RighPanel
-            type={1}
-            matches={matches}
-            session={session}
-            currentChatId={currentChatId}
-            toggleRightPanel={toggleRightPanel}
-          />
-        )}
-        {show && type === 2 && (
-          <RighPanel
-            type={2}
-            connections={connections}
-            session={session}
-            currentChatId={currentChatId}
-            toggleRightPanel={toggleRightPanel}
-          />
-        )}
-        {show && type === 3 && (
-          <RighPanel
-            type={3}
-            session={session}
-            currentChatId={currentChatId}
-            detailsObject={viewData}
-            toggleRightPanel={toggleRightPanel}
-          />
-        )}
-      </div> */}
     </div>
   );
 }
