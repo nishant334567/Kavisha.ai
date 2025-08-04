@@ -7,7 +7,13 @@ export async function GET(req, { params }) {
   const { currentChatId } = await params;
   await connectDB();
   try {
-    const matches = await Matches.find({ sessionId: currentChatId }).lean();
+    // 🔄 Get bidirectional matches: both outgoing (a→b) and incoming (b→a)
+    const matches = await Matches.find({
+      $or: [
+        { sessionId: currentChatId }, // Outgoing: current session matched others
+        { matchedSessionId: currentChatId }, // Incoming: others matched current session
+      ],
+    }).lean();
     const chatSession = await Session.findOne({ _id: currentChatId });
     let allDataCollected = false;
     if (chatSession) {
