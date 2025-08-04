@@ -13,6 +13,10 @@ export default function SessionSection({ totalSessions }) {
     roleType: "all",
     completionStatus: "all",
   });
+  const [match, setMatch] = useState(null);
+  const [showMatches, setShowMatches] = useState(false);
+  const [currentSessionTitle, setCurrentSessionTitle] = useState("");
+  const [loadingMatches, setLoadingMatches] = useState({});
 
   const fetchSessions = async (pageNum) => {
     setLoading(true);
@@ -99,6 +103,207 @@ export default function SessionSection({ totalSessions }) {
     setFilters(newFilters);
   };
 
+  const fetchMatches = async (id, sessionTitle) => {
+    setLoadingMatches((prev) => ({ ...prev, [id]: true }));
+    try {
+      const response = await fetch(`/api/admin/fetch-matches/${id}`);
+      const data = await response.json();
+      console.log("Match for id", id);
+      console.log("data", data);
+
+      if (data.success) {
+        setMatch(data.matches);
+        setCurrentSessionTitle(sessionTitle);
+        setShowMatches(true);
+      } else {
+        console.error("Failed to fetch matches:", data.message);
+      }
+    } catch (error) {
+      console.error("Error fetching matches:", error);
+    } finally {
+      setLoadingMatches((prev) => ({ ...prev, [id]: false }));
+    }
+  };
+
+  const closeMatches = () => {
+    setShowMatches(false);
+    setMatch(null);
+    setCurrentSessionTitle("");
+  };
+
+  // Modal component for displaying matches
+  const MatchesModal = () => {
+    if (!showMatches) return null;
+
+    return (
+      <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+        <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
+          {/* Header */}
+          <div className="flex justify-between items-center p-6 border-b">
+            <h2 className="text-xl font-semibold text-gray-800">
+              Matches for: {currentSessionTitle}
+            </h2>
+            <button
+              onClick={closeMatches}
+              className="text-gray-500 hover:text-gray-700 text-2xl font-bold"
+            >
+              ×
+            </button>
+          </div>
+
+          {/* Content */}
+          <div className="flex-1 overflow-y-auto p-6">
+            {Object.values(loadingMatches).some((loading) => loading) ? (
+              <div className="flex justify-center items-center h-32">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+              </div>
+            ) : match && match.length > 0 ? (
+              <div className="space-y-6">
+                {match.map((matchItem, index) => (
+                  <div
+                    key={index}
+                    className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
+                  >
+                    {/* Match Header */}
+                    <div className="flex justify-between items-start mb-4">
+                      <div>
+                        <h3 className="text-lg font-semibold text-gray-800">
+                          Match #{index + 1}
+                        </h3>
+                        <p className="text-sm text-gray-600">
+                          {new Date(matchItem.createdAt).toLocaleString()}
+                        </p>
+                      </div>
+                      <div className="text-right">
+                        <span className="inline-block px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm font-medium">
+                          {matchItem.matchPercentage || "N/A"}% Match
+                        </span>
+                      </div>
+                    </div>
+
+                    {/* User Information */}
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      {/* From User */}
+                      <div className="bg-white rounded-lg p-3 border">
+                        <h4 className="font-medium text-gray-700 mb-2">
+                          From User
+                        </h4>
+                        <div className="space-y-1 text-sm">
+                          <p>
+                            <span className="font-medium">Name:</span>{" "}
+                            {matchItem.fromUser?.name}
+                          </p>
+                          <p>
+                            <span className="font-medium">Email:</span>{" "}
+                            {matchItem.fromUser?.email}
+                          </p>
+                          <p>
+                            <span className="font-medium">Session:</span>{" "}
+                            {matchItem.fromUser?.sessionTitle}
+                          </p>
+                          <p>
+                            <span className="font-medium">Role:</span>{" "}
+                            {matchItem.fromUser?.sessionRole}
+                          </p>
+                        </div>
+                      </div>
+
+                      {/* To User */}
+                      <div className="bg-white rounded-lg p-3 border">
+                        <h4 className="font-medium text-gray-700 mb-2">
+                          To User
+                        </h4>
+                        <div className="space-y-1 text-sm">
+                          <p>
+                            <span className="font-medium">Name:</span>{" "}
+                            {matchItem.toUser?.name}
+                          </p>
+                          <p>
+                            <span className="font-medium">Email:</span>{" "}
+                            {matchItem.toUser?.email}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Match Details */}
+                    <div className="space-y-3">
+                      {matchItem.matchingReason && (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                          <h5 className="font-medium text-green-800 mb-1">
+                            ✅ Matching Reasons
+                          </h5>
+                          <p className="text-sm text-green-700">
+                            {matchItem.matchingReason}
+                          </p>
+                        </div>
+                      )}
+
+                      {matchItem.mismatchReason && (
+                        <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3">
+                          <h5 className="font-medium text-yellow-800 mb-1">
+                            ⚠️ Mismatch Reasons
+                          </h5>
+                          <p className="text-sm text-yellow-700">
+                            {matchItem.mismatchReason}
+                          </p>
+                        </div>
+                      )}
+
+                      {matchItem.chatSummary && (
+                        <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+                          <h5 className="font-medium text-blue-800 mb-1">
+                            💬 Chat Summary
+                          </h5>
+                          <p className="text-sm text-blue-700">
+                            {matchItem.chatSummary}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Contact Status */}
+                    {matchItem.contacted !== undefined && (
+                      <div className="mt-3">
+                        <span
+                          className={`inline-block px-3 py-1 rounded-full text-sm font-medium ${
+                            matchItem.contacted
+                              ? "bg-green-100 text-green-800"
+                              : "bg-gray-100 text-gray-800"
+                          }`}
+                        >
+                          {matchItem.contacted
+                            ? "✅ Contacted"
+                            : "⏳ Not Contacted"}
+                        </span>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-gray-500 text-lg">
+                  No matches found for this session.
+                </p>
+              </div>
+            )}
+          </div>
+
+          {/* Footer */}
+          <div className="border-t p-4 flex justify-end">
+            <button
+              onClick={closeMatches}
+              className="px-4 py-2 bg-gray-600 text-white rounded hover:bg-gray-700 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="mt-8">
       <button
@@ -143,6 +348,18 @@ export default function SessionSection({ totalSessions }) {
                     {session.role}
                   </span>
                 </div>
+                <button
+                  onClick={() =>
+                    fetchMatches(
+                      session._id,
+                      session.title || "Untitled Session"
+                    )
+                  }
+                  className="mb-3 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  disabled={loadingMatches[session._id]}
+                >
+                  {loadingMatches[session._id] ? "Loading..." : "View Matches"}
+                </button>
 
                 <div className="space-y-1 text-sm text-gray-600">
                   <p>
@@ -233,6 +450,9 @@ export default function SessionSection({ totalSessions }) {
           )}
         </div>
       )}
+
+      {/* Matches Modal */}
+      <MatchesModal />
     </div>
   );
 }

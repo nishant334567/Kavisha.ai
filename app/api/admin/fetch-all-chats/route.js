@@ -9,7 +9,7 @@ export async function GET(req) {
   const limit = 20;
   await connectDB();
   const sessions = await Session.find({})
-    .select("title role chatSummary updatedAt allDataCollected userId")
+    .select("title role chatSummary updatedAt allDataCollected userId _id")
     .populate("userId", "name email") // Add username and email
     .sort({ createdAt: -1 })
     .skip((page - 1) * limit)
