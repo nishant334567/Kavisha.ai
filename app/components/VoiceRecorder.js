@@ -76,6 +76,7 @@ export default function VoiceRecorder({
     <>
       <div>
         <button
+          type="button"
           onClick={() => handleClick()}
           disabled={disabled}
           className={`${disabled ? "opacity-50 cursor-not-allowed" : "hover:scale-110 transition-transform"}`}
