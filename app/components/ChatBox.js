@@ -410,13 +410,13 @@ export default function ChatBox({
           </label>
 
           {/* Microphone icon on the right */}
-          <div className="absolute right-12 top-1/2 -translate-y-1/2">
+          {/* <div className="absolute right-12 top-1/2 -translate-y-1/2">
             <VoiceRecorder
               onTranscript={handleVoiceTranscript}
               onRecordingStateChange={setIsRecording}
               disabled={messageLoading}
             />
-          </div>
+          </div> */}
 
           {/* Send button on the far right */}
           <button
