@@ -25,23 +25,40 @@ export default function Home({ initialChats, notifications }) {
   useEffect(() => {
     const fetchData = async () => {
       setChatsLoading(true);
-      const res = await fetch("/api/allchats");
-      const data = await res.json();
-      setMessages(data?.sessions[currentChatId]?.logs);
-      setAllchats(data);
-      setChatsLoading(false);
+      try {
+        const res = await fetch("/api/allchats");
+        const data = await res.json();
+        setMessages(data?.sessions[currentChatId]?.logs);
+        setAllchats(data);
+      } catch (error) {
+        console.error("Error fetching chats:", error);
+      } finally {
+        setChatsLoading(false);
+      }
     };
+
     const fetchConnections = async () => {
-      const resposne = await fetch(`/api/connections/${currentChatId}`);
-      const data = await resposne.json();
-      setConnections(data.connections);
+      if (!currentChatId) return;
+      try {
+        const response = await fetch(`/api/connections/${currentChatId}`);
+        const data = await response.json();
+        setConnections(data.connections);
+      } catch (error) {
+        console.error("Error fetching connections:", error);
+      }
     };
 
     const fetchMatches = async () => {
-      const response = await fetch(`/api/fetch-matches/${currentChatId}`);
-      const data = await response.json();
-      setMatches(data?.matches);
+      if (!currentChatId) return;
+      try {
+        const response = await fetch(`/api/fetch-matches/${currentChatId}`);
+        const data = await response.json();
+        setMatches(data?.matches);
+      } catch (error) {
+        console.error("Error fetching matches:", error);
+      }
     };
+
     fetchData();
     fetchConnections();
     fetchMatches();

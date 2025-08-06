@@ -116,25 +116,32 @@ export const authOptions = {
         let dbuser = await User.findOne({ email: session.user.email });
         if (dbuser) {
           token.id = dbuser._id.toString();
-        }
-        session.user.id = token.id;
-        session.user.profileType = dbuser?.profileType || null;
-        session.user.name = token.name;
-        session.user.image = token.image;
-        session.user.isAdmin = dbuser?.isAdmin || false;
+          session.user.id = token.id;
+          session.user.profileType = dbuser.profileType || null;
+          session.user.isAdmin = dbuser.isAdmin || false;
 
-        if (dbuser) {
+          // Only create session if user has profileType and no existing session
           const existing = await Session.findOne({ userId: token.id });
           if (!existing && dbuser.profileType) {
             await createSessionWithDefaultLog(token.id, dbuser.profileType);
           }
+        } else {
+          // If no dbuser found, use token values
+          session.user.id = token.id;
+          session.user.profileType = token.profileType;
+          session.user.isAdmin = token.isAdmin || false;
         }
+
+        session.user.name = token.name;
+        session.user.image = token.image;
       } catch (err) {
         console.error("Session callback error:", err);
+        // Fallback to token values if database operations fail
         session.user.id = token.id;
         session.user.profileType = token.profileType;
         session.user.name = token.name;
         session.user.image = token.image;
+        session.user.isAdmin = token.isAdmin || false;
       }
 
       return session;

@@ -34,34 +34,52 @@ export default function ChatBox({
 
   useEffect(() => {
     //fetch resume data initially
+    if (!currentChatId) return;
+
     const fetchResumeData = async () => {
-      const response = await fetch(`/api/resume-data/${currentChatId}`);
-      const data = await response.json();
-      setResumedata({
-        filename: data.resumeFilename,
-        resumeSummary: data.resumeSummary,
-      });
+      try {
+        const response = await fetch(`/api/resume-data/${currentChatId}`);
+        const data = await response.json();
+        setResumedata({
+          filename: data.resumeFilename,
+          resumeSummary: data.resumeSummary,
+        });
+      } catch (error) {
+        console.error("Error fetching resume data:", error);
+      }
     };
     fetchResumeData();
   }, [currentChatId]);
 
   useEffect(() => {
+    if (!currentChatId) return;
+
     const fetchDataCollectionStatus = async () => {
-      const response = await fetch(`/api/all-data-fetched/${currentChatId}`);
-      const data = await response.json();
-      setHasDatacollected(data.allDataCollected);
+      try {
+        const response = await fetch(`/api/all-data-fetched/${currentChatId}`);
+        const data = await response.json();
+        setHasDatacollected(data.allDataCollected);
+      } catch (error) {
+        console.error("Error fetching data collection status:", error);
+      }
     };
     fetchDataCollectionStatus();
   }, [currentChatId]);
 
   useEffect(() => {
-    const fetchMatches = async () => {
-      const response = await fetch(`/api/fetch-matches/${currentChatId}`);
-      const data = await response.json();
+    if (!currentChatId) return;
 
-      // setHasAllData(data.allDataCollected);
-      if (Array.isArray(data.matches) && data.matches.length > 0) {
-        setMatches(data.matches);
+    const fetchMatches = async () => {
+      try {
+        const response = await fetch(`/api/fetch-matches/${currentChatId}`);
+        const data = await response.json();
+
+        // setHasAllData(data.allDataCollected);
+        if (Array.isArray(data.matches) && data.matches.length > 0) {
+          setMatches(data.matches);
+        }
+      } catch (error) {
+        console.error("Error fetching matches:", error);
       }
     };
     fetchMatches();
@@ -72,6 +90,9 @@ export default function ChatBox({
     }, 100);
     return () => clearTimeout(timeout);
   }, [messages]);
+
+  // Voice recording state
+  const [isRecording, setIsRecording] = useState(false);
 
   // Simple voice transcript handler
   const handleVoiceTranscript = (transcript) => {
@@ -203,8 +224,7 @@ export default function ChatBox({
   const handleSubmit = async (voiceText = null) => {
     const messageText = input;
     if (!messageText.trim()) {
-      console.log("❌ Input is empty");
-      return;
+      // return;
     }
 
     const newUserMessage = { role: "user", message: messageText };
@@ -218,7 +238,7 @@ export default function ChatBox({
       method: "POST",
       body: JSON.stringify({
         history: messages, // Don't include the new message here - it's passed as userMessage
-        userMessage: userText,
+        userMessage: messageText,
         jobseeker: session?.user?.profileType,
         sessionId: currentChatId,
         resume: resumeData.resumeSummary,
@@ -360,10 +380,11 @@ export default function ChatBox({
           }}
         >
           <input
-            className="w-full border border-slate-300 px-8 py-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition bg-white text-slate-800"
+            className="w-full border border-slate-300 px-16 py-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition bg-white text-slate-800"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message here..."
+            disabled={messageLoading}
           />
 
           {/* Attachment icon on the left */}
@@ -388,17 +409,29 @@ export default function ChatBox({
             </span>
           </label>
 
+          {/* Microphone icon on the right */}
+          <div className="absolute right-12 top-1/2 -translate-y-1/2">
+            <VoiceRecorder
+              onTranscript={handleVoiceTranscript}
+              onRecordingStateChange={setIsRecording}
+              disabled={messageLoading}
+            />
+          </div>
+
+          {/* Send button on the far right */}
           <button
             type="submit"
-            disabled={!input.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-0 bg-transparent border-none"
+            disabled={!input.trim() || isRecording || messageLoading}
+            className={`absolute right-2 top-1/2 -translate-y-1/2 p-0 bg-transparent border-none ${
+              !input.trim() || isRecording || messageLoading
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+            }`}
             style={{ lineHeight: 0 }}
             tabIndex={0}
           >
             <img src="/message.png" height={25} width={25} alt="Send" />
           </button>
-
-          <VoiceRecorder onTranscript={handleVoiceTranscript} />
         </form>
 
         {/* Keep Resume component for file display and processing, but hidden file input */}

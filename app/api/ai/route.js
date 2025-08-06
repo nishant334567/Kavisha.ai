@@ -197,7 +197,6 @@ Click on the "find matches" button to see if ${
           matchesCount === 1 ? "it's" : "they're"
         } good, I'll keep looking out for more in the meantime. Cheers!`;
         reply = message;
-
       }
     }
 
@@ -270,12 +269,7 @@ Click on the "find matches" button to see if ${
             .filter((email) => email && email !== "Unknown")
         ),
       ];
-      console.log("Email to be sent!!", uniqueEmails);
       if (uniqueEmails.length > 0 && process.env.SEND_MATCH_EMAIL === "1") {
-        console.log(
-          `📧 Sending match notifications to ${uniqueEmails.length} unique users`
-        );
-
         try {
           // Create email batch for unique users
           const emailBatch = uniqueEmails.map((email) => ({
@@ -299,9 +293,6 @@ Click on the "find matches" button to see if ${
               console.error(`❌ Batch ${i / BATCH_SIZE + 1} failed:`, error);
             } else {
               totalEmailsSent += batch.length;
-              console.log(
-                `✅ Batch ${i / BATCH_SIZE + 1} sent successfully: ${batch.length} emails`
-              );
             }
 
             // Small delay between batches to avoid rate limits
@@ -309,10 +300,6 @@ Click on the "find matches" button to see if ${
               await new Promise((resolve) => setTimeout(resolve, 1000));
             }
           }
-
-          console.log(
-            `📧 Total match notification emails sent: ${totalEmailsSent}/${uniqueEmails.length}`
-          );
         } catch (emailError) {
           console.error(
             "❌ Error sending match notification emails:",

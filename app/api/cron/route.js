@@ -80,9 +80,6 @@ export async function GET() {
                 : [],
           });
           totalEmailsSent += emailBatch.length;
-          console.log(
-            `✅ Batch ${Math.floor(i / BATCH_SIZE) + 1} sent: ${emailBatch.length} emails`
-          );
           if (i + BATCH_SIZE < allIncompleteSessionUserEmails.length) {
             await new Promise((resolve) => setTimeout(resolve, 1000));
           }
