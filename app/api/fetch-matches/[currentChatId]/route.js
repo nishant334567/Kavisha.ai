@@ -4,9 +4,15 @@ import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
 
 export async function GET(req, { params }) {
-  const { currentChatId } = await params;
-  await connectDB();
   try {
+    const { currentChatId } = await params;
+    if (!currentChatId || currentChatId === "undefined") {
+      return NextResponse.json(
+        { error: "Missing or invalid currentChatId" },
+        { status: 400 }
+      );
+    }
+    await connectDB();
     // 🔄 Get bidirectional matches: both outgoing (a→b) and incoming (b→a)
     const matches = await Matches.find({
       $or: [

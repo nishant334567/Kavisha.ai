@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import Matches from "./Matches";
 import RighPanel from "./Rightpanel";
 import Resume from "./Resume";
+import VoiceRecorder from "./VoiceRecorder";
 
 export default function ChatBox({
   currentChatId,
@@ -25,6 +26,7 @@ export default function ChatBox({
   const [retry, setRetry] = useState(false);
   const [retryIndex, setRetryIndex] = useState(undefined);
   const [selectedFile, setSelectedFile] = useState(null);
+
   useEffect(() => {
     setmessages(initialMessages || []);
     // setMatches(initialMatches);
@@ -32,34 +34,52 @@ export default function ChatBox({
 
   useEffect(() => {
     //fetch resume data initially
+    if (!currentChatId) return;
+
     const fetchResumeData = async () => {
-      const response = await fetch(`/api/resume-data/${currentChatId}`);
-      const data = await response.json();
-      setResumedata({
-        filename: data.resumeFilename,
-        resumeSummary: data.resumeSummary,
-      });
+      try {
+        const response = await fetch(`/api/resume-data/${currentChatId}`);
+        const data = await response.json();
+        setResumedata({
+          filename: data.resumeFilename,
+          resumeSummary: data.resumeSummary,
+        });
+      } catch (error) {
+        console.error("Error fetching resume data:", error);
+      }
     };
     fetchResumeData();
   }, [currentChatId]);
 
   useEffect(() => {
+    if (!currentChatId) return;
+
     const fetchDataCollectionStatus = async () => {
-      const response = await fetch(`/api/all-data-fetched/${currentChatId}`);
-      const data = await response.json();
-      setHasDatacollected(data.allDataCollected);
+      try {
+        const response = await fetch(`/api/all-data-fetched/${currentChatId}`);
+        const data = await response.json();
+        setHasDatacollected(data.allDataCollected);
+      } catch (error) {
+        console.error("Error fetching data collection status:", error);
+      }
     };
     fetchDataCollectionStatus();
   }, [currentChatId]);
 
   useEffect(() => {
-    const fetchMatches = async () => {
-      const response = await fetch(`/api/fetch-matches/${currentChatId}`);
-      const data = await response.json();
+    if (!currentChatId) return;
 
-      // setHasAllData(data.allDataCollected);
-      if (Array.isArray(data.matches) && data.matches.length > 0) {
-        setMatches(data.matches);
+    const fetchMatches = async () => {
+      try {
+        const response = await fetch(`/api/fetch-matches/${currentChatId}`);
+        const data = await response.json();
+
+        // setHasAllData(data.allDataCollected);
+        if (Array.isArray(data.matches) && data.matches.length > 0) {
+          setMatches(data.matches);
+        }
+      } catch (error) {
+        console.error("Error fetching matches:", error);
       }
     };
     fetchMatches();
@@ -71,11 +91,14 @@ export default function ChatBox({
     return () => clearTimeout(timeout);
   }, [messages]);
 
-  // const openDetailsPanel = (type, dataObject) => {
-  //   setType(type);
-  //   setViewdata(dataObject);
-  //   toggleRightPanel();
-  // };
+  // Voice recording state
+  const [isRecording, setIsRecording] = useState(false);
+
+  // Simple voice transcript handler
+  const handleVoiceTranscript = (transcript) => {
+    setInput(transcript);
+  };
+
   const updateResume = (filename, summary) => {
     setResumedata({ filename: filename, resumeSummary: summary });
   };
@@ -123,6 +146,7 @@ export default function ChatBox({
           { role: "assistant", message: data.reply },
         ]);
         setMessageLoading(false);
+
         if (
           data?.matchesWithObjectIds?.length > 0 &&
           data?.allDataCollected === "true"
@@ -183,6 +207,7 @@ export default function ChatBox({
       { role: "assistant", message: data.reply },
     ]);
     setMessageLoading(false);
+
     setRetry(false);
     setRetryIndex(undefined);
     if (
@@ -196,10 +221,13 @@ export default function ChatBox({
       setHasDatacollected(false);
     }
   };
-  const handleSubmit = async () => {
-    if (!input.trim()) return;
-    const newUserMessage = { role: "user", message: input };
-    const userText = input;
+  const handleSubmit = async (voiceText = null) => {
+    const messageText = input;
+    if (!messageText.trim()) {
+      // return;
+    }
+
+    const newUserMessage = { role: "user", message: messageText };
     const updatedMessages = [...messages, newUserMessage];
     setmessages(updatedMessages);
     setInput("");
@@ -210,7 +238,7 @@ export default function ChatBox({
       method: "POST",
       body: JSON.stringify({
         history: messages, // Don't include the new message here - it's passed as userMessage
-        userMessage: userText,
+        userMessage: messageText,
         jobseeker: session?.user?.profileType,
         sessionId: currentChatId,
         resume: resumeData.resumeSummary,
@@ -352,10 +380,11 @@ export default function ChatBox({
           }}
         >
           <input
-            className="w-full border border-slate-300 px-8 py-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition bg-white text-slate-800"
+            className="w-full border border-slate-300 px-16 py-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition bg-white text-slate-800"
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message here..."
+            disabled={messageLoading}
           />
 
           {/* Attachment icon on the left */}
@@ -380,10 +409,24 @@ export default function ChatBox({
             </span>
           </label>
 
+          {/* Microphone icon on the right */}
+          <div className="absolute right-12 top-1/2 -translate-y-1/2">
+            <VoiceRecorder
+              onTranscript={handleVoiceTranscript}
+              onRecordingStateChange={setIsRecording}
+              disabled={messageLoading}
+            />
+          </div>
+
+          {/* Send button on the far right */}
           <button
             type="submit"
-            disabled={!input.trim()}
-            className="absolute right-2 top-1/2 -translate-y-1/2 p-0 bg-transparent border-none"
+            disabled={!input.trim() || isRecording || messageLoading}
+            className={`absolute right-2 top-1/2 -translate-y-1/2 p-0 bg-transparent border-none ${
+              !input.trim() || isRecording || messageLoading
+                ? "opacity-50 cursor-not-allowed"
+                : ""
+            }`}
             style={{ lineHeight: 0 }}
             tabIndex={0}
           >
@@ -402,36 +445,6 @@ export default function ChatBox({
           setSelectedFile={setSelectedFile}
         />
       </div>
-
-      {/* <div>
-        {show && type === 1 && (
-          <RighPanel
-            type={1}
-            matches={matches}
-            session={session}
-            currentChatId={currentChatId}
-            toggleRightPanel={toggleRightPanel}
-          />
-        )}
-        {show && type === 2 && (
-          <RighPanel
-            type={2}
-            connections={connections}
-            session={session}
-            currentChatId={currentChatId}
-            toggleRightPanel={toggleRightPanel}
-          />
-        )}
-        {show && type === 3 && (
-          <RighPanel
-            type={3}
-            session={session}
-            currentChatId={currentChatId}
-            detailsObject={viewData}
-            toggleRightPanel={toggleRightPanel}
-          />
-        )}
-      </div> */}
     </div>
   );
 }
