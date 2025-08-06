@@ -224,7 +224,7 @@ export default function ChatBox({
   const handleSubmit = async (voiceText = null) => {
     const messageText = input;
     if (!messageText.trim()) {
-      // return;
+      return;
     }
 
     const newUserMessage = { role: "user", message: messageText };
