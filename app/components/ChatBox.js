@@ -93,10 +93,29 @@ export default function ChatBox({
 
   // Voice recording state
   const [isRecording, setIsRecording] = useState(false);
+  const [voiceTranscript, setVoiceTranscript] = useState("");
+  const [isVoiceMode, setIsVoiceMode] = useState(false);
 
-  // Simple voice transcript handler
+  // Voice transcript handler - receives live transcript from voice recorder
   const handleVoiceTranscript = (transcript) => {
-    setInput(transcript);
+    setVoiceTranscript(transcript);
+    // Only update input if not manually editing
+    if (isVoiceMode) {
+      setInput(transcript);
+    }
+  };
+
+  // Handle recording state changes
+  const handleRecordingStateChange = (recording) => {
+    setIsRecording(recording);
+    if (recording) {
+      setIsVoiceMode(true);
+    }
+    // When recording stops completely, exit voice mode
+    if (!recording) {
+      setIsVoiceMode(false);
+      setVoiceTranscript("");
+    }
   };
 
   const updateResume = (filename, summary) => {
@@ -114,6 +133,12 @@ export default function ChatBox({
         const updatedMessages = [...messages, newUserMessage];
         setmessages(updatedMessages);
         setInput("");
+        // Clear voice transcript after sending
+        if (window.clearVoiceTranscript) {
+          window.clearVoiceTranscript();
+        }
+        setIsVoiceMode(false);
+        setVoiceTranscript("");
         setMessageLoading(true);
         const response = await fetch("/api/ai", {
           method: "POST",
@@ -231,6 +256,12 @@ export default function ChatBox({
     const updatedMessages = [...messages, newUserMessage];
     setmessages(updatedMessages);
     setInput("");
+    // Clear voice transcript after sending
+    if (window.clearVoiceTranscript) {
+      window.clearVoiceTranscript();
+    }
+    setIsVoiceMode(false);
+    setVoiceTranscript("");
     setMessageLoading(true);
 
     // Use the current messages state as history (without the new message since it's passed separately)
@@ -380,10 +411,26 @@ export default function ChatBox({
           }}
         >
           <input
-            className="w-full border border-slate-300 px-16 py-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition bg-white text-slate-800"
+            className={`w-full border px-16 py-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition bg-white text-slate-800 ${
+              isRecording
+                ? "border-red-300 ring-2 ring-red-100"
+                : "border-slate-300"
+            }`}
             value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="Type your message here..."
+            onChange={(e) => {
+              setInput(e.target.value);
+              // If user starts typing while in voice mode, exit voice mode to allow manual editing
+              if (isVoiceMode && e.target.value !== voiceTranscript) {
+                setIsVoiceMode(false);
+              }
+            }}
+            placeholder={
+              isRecording
+                ? isVoiceMode
+                  ? "Speaking... (type to edit)"
+                  : "Recording paused - you can edit"
+                : "Type your message here..."
+            }
             disabled={messageLoading}
           />
 
@@ -410,13 +457,13 @@ export default function ChatBox({
           </label>
 
           {/* Microphone icon on the right */}
-          {/* <div className="absolute right-12 top-1/2 -translate-y-1/2">
+          <div className="absolute right-12 top-1/2 -translate-y-1/2">
             <VoiceRecorder
               onTranscript={handleVoiceTranscript}
-              onRecordingStateChange={setIsRecording}
+              onRecordingStateChange={handleRecordingStateChange}
               disabled={messageLoading}
             />
-          </div> */}
+          </div>
 
           {/* Send button on the far right */}
           <button
