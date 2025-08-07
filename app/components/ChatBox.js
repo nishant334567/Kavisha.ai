@@ -359,7 +359,26 @@ export default function ChatBox({
               </div>
             ))}
           {messageLoading && (
-            <div className="text-slate-600 text-xs">Kavisha is typing...</div>
+            <div className="flex justify-start mb-4">
+              <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl px-4 py-2 border border-orange-200 hover:shadow-md transition-all duration-300 cursor-default">
+                <div className="flex items-center gap-3">
+                  <div className="flex gap-1">
+                    <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
+                    <div
+                      className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"
+                      style={{ animationDelay: "0.3s" }}
+                    ></div>
+                    <div
+                      className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"
+                      style={{ animationDelay: "0.6s" }}
+                    ></div>
+                  </div>
+                  <span className="text-slate-600 text-sm font-medium">
+                    Kavisha is thinking
+                  </span>
+                </div>
+              </div>
+            </div>
           )}
 
           {hasDatacollected && (
