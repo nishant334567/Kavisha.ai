@@ -273,7 +273,7 @@ Click on the "find matches" button to see if ${
         try {
           // Create email batch for unique users
           const emailBatch = uniqueEmails.map((email) => ({
-            from: "team@kavisha.ai",
+            from: "Team Kavisha <team@kavisha.ai>",
             to: [email],
             subject:
               "You got Matches! Review these people and opportunities and get connecting: Team Kavisha",

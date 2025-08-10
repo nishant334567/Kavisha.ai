@@ -4,7 +4,7 @@ import { useSession } from "next-auth/react";
 import Matches from "./Matches";
 import RighPanel from "./Rightpanel";
 import Resume from "./Resume";
-import VoiceRecorder from "./VoiceRecorder";
+import VoiceTranscriptModel from "./VoiceRecorder";
 
 export default function ChatBox({
   currentChatId,
@@ -26,6 +26,7 @@ export default function ChatBox({
   const [retry, setRetry] = useState(false);
   const [retryIndex, setRetryIndex] = useState(undefined);
   const [selectedFile, setSelectedFile] = useState(null);
+  const voiceRef = useRef(null);
 
   useEffect(() => {
     setmessages(initialMessages || []);
@@ -92,7 +93,7 @@ export default function ChatBox({
   }, [messages]);
 
   // Voice recording state
-  const [isRecording, setIsRecording] = useState(false);
+  const [recordingStatus, setRecordingStatus] = useState("none");
 
   // Simple voice transcript handler
   const handleVoiceTranscript = (transcript) => {
@@ -222,22 +223,24 @@ export default function ChatBox({
     }
   };
   const handleSubmit = async (voiceText = null) => {
-    const messageText = input;
-    if (!messageText.trim()) {
+    const messageText = (voiceText ?? input).trim();
+    if (!messageText) {
       return;
     }
+
+    // Clear input and recorder before sending
+    setInput("");
+    voiceRef.current?.clearVoice?.();
 
     const newUserMessage = { role: "user", message: messageText };
     const updatedMessages = [...messages, newUserMessage];
     setmessages(updatedMessages);
-    setInput("");
     setMessageLoading(true);
 
-    // Use the current messages state as history (without the new message since it's passed separately)
     const response = await fetch("/api/ai", {
       method: "POST",
       body: JSON.stringify({
-        history: messages, // Don't include the new message here - it's passed as userMessage
+        history: messages,
         userMessage: messageText,
         jobseeker: session?.user?.profileType,
         sessionId: currentChatId,
@@ -376,11 +379,12 @@ export default function ChatBox({
           className="bottom-0 relative mt-4"
           onSubmit={(e) => {
             e.preventDefault();
+            if (recordingStatus !== "none") return; // only allow normal submit when no voice session
             handleSubmit();
           }}
         >
           <input
-            className="w-full border border-slate-300 px-16 py-2 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition bg-white text-slate-800"
+            className={`w-full border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition bg-white text-slate-800 ${recordingStatus === "none" ? "pl-12 pr-24 py-2" : "pl-12 pr-16 py-2"}`}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message here..."
@@ -409,29 +413,31 @@ export default function ChatBox({
             </span>
           </label>
 
-          {/* Microphone icon on the right */}
-          <div className="absolute right-12 top-1/2 -translate-y-1/2">
-            <VoiceRecorder
-              onTranscript={handleVoiceTranscript}
-              onRecordingStateChange={setIsRecording}
-              disabled={messageLoading}
+          {/* Right-side controls: voice + (optional) main send */}
+          <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            <VoiceTranscriptModel
+              ref={voiceRef}
+              transcript={input}
+              handler={handleVoiceTranscript}
+              onRecordingStateChange={setRecordingStatus}
+              onSubmit={(text) => handleSubmit(text)}
             />
+            {recordingStatus === "none" && (
+              <button
+                type="submit"
+                disabled={!input.trim() || messageLoading}
+                className={`p-0 bg-transparent border-none ${
+                  !input.trim() || messageLoading
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+                style={{ lineHeight: 0 }}
+                tabIndex={0}
+              >
+                <img src="/message.png" height={25} width={25} alt="Send" />
+              </button>
+            )}
           </div>
-
-          {/* Send button on the far right */}
-          <button
-            type="submit"
-            disabled={!input.trim() || isRecording || messageLoading}
-            className={`absolute right-2 top-1/2 -translate-y-1/2 p-0 bg-transparent border-none ${
-              !input.trim() || isRecording || messageLoading
-                ? "opacity-50 cursor-not-allowed"
-                : ""
-            }`}
-            style={{ lineHeight: 0 }}
-            tabIndex={0}
-          >
-            <img src="/message.png" height={25} width={25} alt="Send" />
-          </button>
         </form>
 
         {/* Keep Resume component for file display and processing, but hidden file input */}

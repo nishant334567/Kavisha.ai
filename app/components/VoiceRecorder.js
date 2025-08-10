@@ -1,96 +1,221 @@
 "use client";
-import { useEffect, useState, useRef } from "react";
+import {
+  useState,
+  useRef,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
 
-export default function VoiceRecorder({
-  onTranscript,
-  onRecordingStateChange,
-  disabled,
-}) {
-  const [isSupported, setIsSupported] = useState(null);
-  const [isRecording, setIsRecording] = useState(false);
+const VoiceTranscriptModel = (
+  { transcript, handler, onRecordingStateChange, onSubmit },
+  ref
+) => {
+  const [recordingStatus, setRecordingstatus] = useState("none");
   const recognitionRef = useRef(null);
+  const finalRef = useRef("");
+  const endIntentRef = useRef(null);
+  const isActiveRef = useRef(false);
+
   useEffect(() => {
-    const speechRecognition =
-      window.speechRecognition || window.webkitSpeechRecognition;
-    setIsSupported(!!speechRecognition);
-  }, []);
+    onRecordingStateChange?.(recordingStatus);
+  }, [recordingStatus, onRecordingStateChange]);
+
+  useImperativeHandle(ref, () => ({
+    clearVoice: () => {
+      try {
+        recognitionRef.current?.abort?.();
+      } catch {}
+      handler("");
+      finalRef.current = "";
+      setRecordingstatus("none");
+      isActiveRef.current = false;
+      recognitionRef.current = null;
+      endIntentRef.current = null;
+    },
+  }));
+
+  const ensureRecognition = () => {
+    if (recognitionRef.current) return recognitionRef.current;
+    const SpeechRecognition =
+      window.SpeechRecognition || window.webkitSpeechRecognition;
+    const recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.lang = "en-US";
+
+    recognition.onresult = (e) => {
+      let interimResults = "";
+      let finalResults = "";
+      for (let i = e.resultIndex; i < e.results.length; i++) {
+        const result = e.results[i];
+        if (result.isFinal) {
+          finalResults += result[0].transcript + " ";
+        } else {
+          interimResults += result[0].transcript;
+        }
+      }
+      finalRef.current += finalResults;
+      if (isActiveRef.current) {
+        handler(finalRef.current + interimResults);
+      }
+    };
+
+    recognition.onstart = () => {
+      isActiveRef.current = true;
+      setRecordingstatus("on");
+    };
+
+    recognition.onend = () => {
+      isActiveRef.current = false;
+      const intent = endIntentRef.current;
+      if (intent === "pause") {
+        setRecordingstatus("pause");
+      } else if (intent === "stop") {
+        if (!finalRef.current.trim()) {
+          handler("");
+          setRecordingstatus("none");
+        } else {
+          setRecordingstatus("stop");
+        }
+      } else if (intent === "clear") {
+        handler("");
+        finalRef.current = "";
+        setRecordingstatus("none");
+      } else {
+        setRecordingstatus("pause");
+      }
+      endIntentRef.current = null;
+    };
+
+    recognitionRef.current = recognition;
+    return recognition;
+  };
 
   const startRecording = () => {
-    if (!isSupported) {
-      alert("Speech recognition not supported");
-      return;
+    if (recordingStatus === "none") {
+      finalRef.current = "";
+      handler("");
     }
-
-    if (disabled) {
-      return;
-    }
-
+    const recognition = ensureRecognition();
     try {
-      const speechRecognition =
-        window.speechRecognition || window.webkitSpeechRecognition;
-      const recognition = new speechRecognition();
-      recognition.onstart = () => {
-        setIsRecording(true);
-        onRecordingStateChange?.(true);
-      };
-      recognition.onend = () => {
-        setIsRecording(false);
-        onRecordingStateChange?.(false);
-      };
-      recognition.onresult = (e) => {
-        const transcript = e.results[0][0].transcript;
-        onTranscript(transcript);
-      };
-      recognitionRef.current = recognition;
       recognition.start();
-    } catch (err) {
-      alert("Error starting the recording");
-      setIsRecording(false);
-      onRecordingStateChange?.(false);
+    } catch {}
+  };
+
+  const pauseRecording = () => {
+    if (!recognitionRef.current || !isActiveRef.current) return;
+    endIntentRef.current = "pause";
+    try {
+      recognitionRef.current.stop();
+    } catch {
+      recognitionRef.current.abort?.();
     }
   };
 
   const stopRecording = () => {
-    setIsRecording(false);
-    onRecordingStateChange?.(false);
-    if (recognitionRef.current) {
+    if (!recognitionRef.current || !isActiveRef.current) return;
+    endIntentRef.current = "stop";
+    try {
       recognitionRef.current.stop();
-    }
-  };
-  const handleClick = () => {
-    if (isRecording) {
-      stopRecording();
-    } else {
-      startRecording();
+    } catch {
+      recognitionRef.current.abort?.();
     }
   };
 
-  const getIcon = () => {
-    if (isRecording) {
-      return <img src="mic-on.png" width={20} alt="Recording..." />;
-    } else {
-      return <img src="mic-black.png" width={20} alt="Start recording" />;
+  const resumeRecording = () => {
+    if (finalRef.current) {
+      handler(finalRef.current);
     }
+    startRecording();
   };
+
+  const clearRecording = () => {
+    endIntentRef.current = "clear";
+    if (recognitionRef.current && isActiveRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch {
+        recognitionRef.current.abort?.();
+      }
+    }
+    handler("");
+    finalRef.current = "";
+    setRecordingstatus("none");
+    isActiveRef.current = false;
+  };
+
+  const submitFromRecorder = () => {
+    const text = finalRef.current.trim();
+    if (!text) return;
+    onSubmit?.(text);
+    handler("");
+    finalRef.current = "";
+    setRecordingstatus("none");
+    isActiveRef.current = false;
+    try {
+      recognitionRef.current?.abort?.();
+    } catch {}
+    recognitionRef.current = null;
+  };
+
+  const handleMicClick = () => {
+    if (recordingStatus === "none") startRecording();
+  };
+
   return (
     <>
-      <div>
-        <button
-          type="button"
-          onClick={() => handleClick()}
-          disabled={disabled}
-          className={`${disabled ? "opacity-50 cursor-not-allowed" : "hover:scale-110 transition-transform"}`}
-          title={
-            disabled
-              ? "Please wait..."
-              : isRecording
-                ? "Stop recording"
-                : "Start recording"
-          }
-        >
-          {getIcon()}
+      {recordingStatus === "on" && (
+        <div>
+          <button type="button" onClick={pauseRecording}>
+            <img src="pause.png" width={20} />
+          </button>
+          <button type="button" onClick={stopRecording}>
+            <img src="stop.png" width={20} />
+          </button>
+        </div>
+      )}
+
+      {recordingStatus === "pause" && (
+        <div className="flex gap-2">
+          <button type="button" onClick={resumeRecording}>
+            <img src="play.png" width={20} />
+          </button>
+          {transcript && (
+            <button type="button" onClick={clearRecording}>
+              <img src="bin.png" height={20} width={20} />
+            </button>
+          )}
+          {transcript && (
+            <button type="button" onClick={submitFromRecorder}>
+              <img src="message.png" height={20} width={20} />
+            </button>
+          )}
+        </div>
+      )}
+
+      {recordingStatus === "stop" && (
+        <div className="gap-2">
+          {transcript && (
+            <button type="button" onClick={clearRecording}>
+              <img src="bin.png" height={20} width={20} />
+            </button>
+          )}
+          {transcript && (
+            <button type="button" onClick={submitFromRecorder}>
+              <img src="message.png" height={20} width={20} />
+            </button>
+          )}
+        </div>
+      )}
+
+      {recordingStatus === "none" && (
+        <button type="button" onClick={handleMicClick}>
+          <img src="mic-closed.png" width={20} />
         </button>
-      </div>
+      )}
     </>
   );
-}
+};
+
+export default forwardRef(VoiceTranscriptModel);

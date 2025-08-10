@@ -50,7 +50,7 @@ export async function GET() {
     ) {
       const batch = allIncompleteSessionUserEmails.slice(i, i + BATCH_SIZE);
       const emailBatch = batch.map((user) => ({
-        from: "team@kavisha.ai",
+        from: "Team Kavisha <team@kavisha.ai>",
         to: [user.email],
         subject:
           "Complete your conversation to meet great people & opportunities: Team Kavisha",

@@ -15,7 +15,7 @@ export async function POST(res) {
   } = await res.json();
   try {
     const { data, error } = await resend.emails.send({
-      from: "team@kavisha.ai",
+      from: "Team Kavisha <team@kavisha.ai>",
       to: toEmail,
       subject: "Team Kavisha.ai",
       react: EmailTemplate({
