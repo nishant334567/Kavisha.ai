@@ -27,11 +27,19 @@ export default function ChatBox({
   const [retryIndex, setRetryIndex] = useState(undefined);
   const [selectedFile, setSelectedFile] = useState(null);
   const voiceRef = useRef(null);
+  const [isMobile, setIsMobile] = useState(false);
 
   useEffect(() => {
     setmessages(initialMessages || []);
     // setMatches(initialMatches);
   }, [initialMessages, currentChatId]);
+
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const ua = navigator.userAgent || navigator.vendor || window.opera;
+      setIsMobile(/Mobi|Android|iPhone|iPad|iPod/i.test(ua));
+    }
+  }, []);
 
   useEffect(() => {
     //fetch resume data initially
@@ -403,7 +411,7 @@ export default function ChatBox({
           }}
         >
           <input
-            className={`w-full border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition bg-white text-slate-800 ${recordingStatus === "none" ? "pl-12 pr-24 py-2" : "pl-12 pr-16 py-2"}`}
+            className={`w-full border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition bg-white text-slate-800 pl-12 ${isMobile ? "pr-12" : recordingStatus === "none" ? "pr-24" : "pr-16"} py-2`}
             value={input}
             onChange={(e) => setInput(e.target.value)}
             placeholder="Type your message here..."
@@ -434,13 +442,15 @@ export default function ChatBox({
 
           {/* Right-side controls: voice + (optional) main send */}
           <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
-            <VoiceTranscriptModel
-              ref={voiceRef}
-              transcript={input}
-              handler={handleVoiceTranscript}
-              onRecordingStateChange={setRecordingStatus}
-              onSubmit={(text) => handleSubmit(text)}
-            />
+            {!isMobile && (
+              <VoiceTranscriptModel
+                ref={voiceRef}
+                transcript={input}
+                handler={handleVoiceTranscript}
+                onRecordingStateChange={setRecordingStatus}
+                onSubmit={(text) => handleSubmit(text)}
+              />
+            )}
             {recordingStatus === "none" && (
               <button
                 type="submit"
