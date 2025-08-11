@@ -139,32 +139,32 @@ export default function LoginPage() {
         {/* Hero */}
         <section>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Forge human connections with{" "}
+            Human connections in the age of AI.{" "}
             <span className="text-orange-500">Kavisha</span>
           </h1>
           <p className="text-gray-600 text-lg mb-6 max-w-xl">
-            An AI that blends empathy with intelligence to simplify hiring for
-            recruiters and job seekers alike.
+            Kavisha connects people by first understanding what they truly want.
+            Using smart, empathetic conversations, Kavisha is making great
+            connections. In the world of recruitment, for now.
           </p>
 
           <ul className="space-y-3 text-gray-700 mb-8">
             <li className="flex items-start gap-3">
               <span className="text-orange-500">✓</span>
               <span>
-                Human‑first conversations that respect context and intent
+                Respectful conversations for job seekers and recruiters
               </span>
             </li>
             <li className="flex items-start gap-3">
               <span className="text-orange-500">✓</span>
               <span>
-                AI‑powered matching to surface the right opportunities faster
+                ⁠⁠Deep qualification and matching for both sides to arrive at
+                perfect “connections”
               </span>
             </li>
             <li className="flex items-start gap-3">
               <span className="text-orange-500">✓</span>
-              <span>
-                Efficient, chat‑first workflow that reduces time‑to‑hire
-              </span>
+              <span>⁠⁠Reduced hassle, effort, and time to hire</span>
             </li>
           </ul>
 
