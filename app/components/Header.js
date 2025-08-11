@@ -6,10 +6,10 @@ export default function Header() {
   const { data: session } = useSession();
 
   return (
-    <header className="px-2 sm:px-4 py-4 sm:py-6">
+    <header className="px-2 sm:px-4 py-4 sm:py-4">
       <div className="max-w-xs sm:max-w-md mx-auto text-center">
         {/* Main Title - Responsive */}
-        <div className="font-bold text-4xl sm:text-5xl md:text-6xl text-slate-700 mb-2">
+        <div className="font-bold text-4xl sm:text-4xl md:text-6xl text-slate-700 mb-1">
           Kavisha.<span>ai</span>
         </div>
 

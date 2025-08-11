@@ -12,10 +12,14 @@ import User from "@/app/models/Users";
 import { getMatches } from "../matches/[sessionId]/route";
 import Matches from "@/app/models/Matches";
 import mongoose from "mongoose";
+import { Resend } from "resend";
+import NewMatchEmailTemplate from "@/app/components/NewMatchEmailTemplate";
 
 const openai = new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
 });
+
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -37,7 +41,6 @@ export async function POST(request) {
     const body = await request.json();
     const { history, userMessage, jobseeker, sessionId, resume } = body;
 
- 
     await connectDB();
     // const session = await Session.findById(sessionId);
     const resumeText = resume || "";
@@ -85,9 +88,6 @@ export async function POST(request) {
       })),
       { role: "user", content: userMessage },
     ];
-
-
- 
 
     const chatCompletion = await openai.chat.completions.create({
       model: "gpt-4o-mini",
@@ -260,6 +260,53 @@ Click on the "find matches" button to see if ${
       );
 
       await Matches.insertMany(matchesWithObjectIds);
+
+      // 📧 Send match notification emails AFTER user details are fetched
+      const uniqueEmails = [
+        ...new Set(
+          matchesWithObjectIds
+            .map((m) => m.matchedUserEmail)
+            .filter((email) => email && email !== "Unknown")
+        ),
+      ];
+      if (uniqueEmails.length > 0 && process.env.SEND_MATCH_EMAIL === "1") {
+        try {
+          // Create email batch for unique users
+          const emailBatch = uniqueEmails.map((email) => ({
+            from: "Team Kavisha <team@kavisha.ai>",
+            to: [email],
+            subject:
+              "You got Matches! Review these people and opportunities and get connecting: Team Kavisha",
+            react: NewMatchEmailTemplate({ receiverEmail: email }),
+          }));
+
+          // Send batch emails (max 100 per batch)
+          const BATCH_SIZE = 100;
+          let totalEmailsSent = 0;
+
+          for (let i = 0; i < emailBatch.length; i += BATCH_SIZE) {
+            const batch = emailBatch.slice(i, i + BATCH_SIZE);
+
+            const { data, error } = await resend.batch.send(batch);
+
+            if (error) {
+              console.error(`❌ Batch ${i / BATCH_SIZE + 1} failed:`, error);
+            } else {
+              totalEmailsSent += batch.length;
+            }
+
+            // Small delay between batches to avoid rate limits
+            if (i + BATCH_SIZE < emailBatch.length) {
+              await new Promise((resolve) => setTimeout(resolve, 1000));
+            }
+          }
+        } catch (emailError) {
+          console.error(
+            "❌ Error sending match notification emails:",
+            emailError
+          );
+        }
+      }
     }
 
     return NextResponse.json({

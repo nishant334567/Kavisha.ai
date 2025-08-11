@@ -12,27 +12,7 @@ export default function RighPanel({
   connections = [],
   openDetailsPanel,
 }) {
-  // const [dataArray, setDataArray] = useState([]);
-  // useEffect(() => {
-  //   if (type === 1) {
-  //     const fetchMatches = async () => {
-  //       const response = await fetch(`/api/fetch-matches/${currentChatId}`);
-  //       const data = await response.json();
 
-  //       setDataArray(data.matches);
-  //     };
-  //     fetchMatches();
-  //   }
-  //   if (type === 2) {
-  //     const fetchConnections = async () => {
-  //       const response = await fetch(`/api/connections/${currentChatId}`);
-  //       const data = await response.json();
-
-  //       setDataArray(data.connections);
-  //     };
-  //     fetchConnections();
-  //   }
-  // }, []);
   return (
     <div className="w-full h-full bg-white border-l border-slate-300 p-6 flex flex-col">
       <button
