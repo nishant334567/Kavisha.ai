@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
 import ChatSidebar from "./ChatSidebar";
 import ChatBox from "./ChatBox";
 import Header from "./Header";
 import RighPanel from "./Rightpanel";
-import { useSession } from "next-auth/react";
+import LiveChat from "./LiveChat";
 
 export default function Home({ initialChats, notifications }) {
   const { data: session } = useSession();
@@ -20,8 +21,11 @@ export default function Home({ initialChats, notifications }) {
   const [matches, setMatches] = useState([]);
   const [chatLoading, setChatsLoading] = useState(true);
   const [show, setShow] = useState(false);
-  const [type, setType] = useState(0);
+  const [type, setType] = useState(1);
   const [viewData, setViewdata] = useState({});
+  const [showInboxChat, setShowInboxChat] = useState(false);
+  const [inboxChatData, setInboxChatData] = useState(null);
+
   useEffect(() => {
     const fetchData = async () => {
       setChatsLoading(true);
@@ -72,10 +76,21 @@ export default function Home({ initialChats, notifications }) {
   const toggleRightPanel = () => {
     setShow((prev) => !prev);
   };
+
   const openDetailsPanel = (type, dataObject = {}) => {
     setType(type);
     type === 3 && setViewdata(dataObject);
     toggleRightPanel();
+  };
+
+  const handleOpenInboxChat = (chatData) => {
+    setInboxChatData(chatData);
+    setShowInboxChat(true);
+  };
+
+  const handleCloseInboxChat = () => {
+    setShowInboxChat(false);
+    setInboxChatData(null);
   };
   return (
     <div className="relative">
@@ -86,6 +101,7 @@ export default function Home({ initialChats, notifications }) {
             updateChatId={updateChatId}
             currentChatId={currentChatId}
             notifications={notifications}
+            onOpenInboxChat={handleOpenInboxChat}
           />
         </div>
         <div className="flex-col w-[80%] items-center justify-center mx-auto h-full md:w-[60%]">
@@ -136,6 +152,11 @@ export default function Home({ initialChats, notifications }) {
           </div>
         )}
       </div>
+
+      {/* Inbox LiveChat Modal */}
+      {showInboxChat && inboxChatData && (
+        <LiveChat chatData={inboxChatData} onClose={handleCloseInboxChat} />
+      )}
     </div>
   );
 }

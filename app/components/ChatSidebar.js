@@ -10,13 +10,56 @@ export default function ChatSidebar({
   updateChatId,
   currentChatId,
   notifications,
+  onOpenInboxChat, // Add this prop for opening inbox chats
 }) {
   const { data: session } = useSession();
   const [isDeleting, setIsdeleting] = useState(false);
   const [isCollapsed, setIscollapsed] = useState(true);
   const [openNotifications, setOpenNotifications] = useState(false);
   const [newChatLoading, setNewChatLoading] = useState(false);
+  const [inboxLoading, setInboxLoading] = useState(false);
+  const [activeChats, setActivechats] = useState([]);
+  const [inboxChats, setInboxChats] = useState([]);
+  const [openingChatId, setOpeningChatId] = useState(null);
   const router = useRouter();
+
+  const fetchAllInbox = async (chatId) => {
+    updateChatId(chatId);
+    setInboxLoading(true);
+    try {
+      const response = await fetch(`/api/inbox/${chatId}`);
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+
+      setInboxChats(data.chats || []);
+    } catch (error) {
+      console.error("Error fetching inbox:", error);
+      setInboxChats([]);
+    } finally {
+      setInboxLoading(false);
+    }
+  };
+
+  const handleInboxChatClick = async (receiverSession) => {
+    if (onOpenInboxChat) {
+      try {
+        // Pass the chat data in the format expected by LiveChat component
+        const chatData = {
+          senderSession: currentChatId, // Current user's session
+          receiverSession: receiverSession, // Other user's session
+        };
+
+        await onOpenInboxChat(chatData);
+      } catch (error) {
+        console.error("Error opening inbox chat:", error);
+      } finally {
+        setOpeningChatId(null);
+      }
+    } else {
+    }
+  };
 
   const deleteSession = async (id) => {
     setIsdeleting(true);
@@ -81,6 +124,13 @@ export default function ChatSidebar({
                       >
                         {allChats?.sessions[id]?.title || `Chat ${idx + 1}`}
                       </button>
+                      <button
+                        onClick={() => {
+                          fetchAllInbox(id);
+                        }}
+                      >
+                        <img src="chat.png" width={16} />
+                      </button>
                     </div>
                   ))}
               </div>
@@ -93,6 +143,7 @@ export default function ChatSidebar({
                 <img src="new-chat.png" width={16} />
                 {!newChatLoading ? "New Chat" : "Creating New Chat..."}
               </button>
+
               <button
                 className="flex items-center gap-2 justify-center text-xs bg-white w-full p-2  rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
                 onClick={() => signOut({ callbackUrl: "/login" })}
@@ -108,25 +159,84 @@ export default function ChatSidebar({
                   🛡️ Admin Dashboard
                 </button>
               )}
-              {/* <button
-                className="flex items-center gap-2 justify-center text-xs bg-white w-full p-2  rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
-                onClick={async () => {
-                  try {
-                    const response = await fetch("/api/linkedin-auth-url");
-                    const data = await response.json();
-                    if (data.authUrl) {
-                      window.location.href = data.authUrl;
-                    } else {
-                      console.error("Failed to get LinkedIn auth URL");
-                    }
-                  } catch (error) {
-                    console.error("Error getting LinkedIn auth URL:", error);
-                  }
-                }}
-              >
-                <img src="logout.png" width={16} />
-                Connect with Linkedin
-              </button> */}
+              {/* show all chats */}
+              {inboxLoading && (
+                <div className="flex items-center justify-center py-4">
+                  <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-500"></div>
+                  <span className="ml-2 text-xs text-slate-500">
+                    Loading inbox...
+                  </span>
+                </div>
+              )}
+              {!inboxLoading && inboxChats.length === 0 && (
+                <div className="text-center py-4">
+                  <p className="text-xs text-slate-400">No inbox chats found</p>
+                </div>
+              )}
+              {!inboxLoading && inboxChats.length > 0 && (
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <h3 className="text-sm font-semibold text-slate-700">
+                      Inbox Chats
+                    </h3>
+                    <span className="text-xs text-slate-500 bg-slate-100 px-2 py-1 rounded-full">
+                      {inboxChats.length}
+                    </span>
+                  </div>
+                  <div className="space-y-2">
+                    {inboxChats.map((chat) => (
+                      <div
+                        key={chat.userId}
+                        className={`bg-white border border-slate-200 rounded-lg p-3 transition-all duration-200 cursor-pointer ${
+                          openingChatId === chat.userId
+                            ? "border-blue-300 bg-blue-50"
+                            : "hover:border-slate-300 hover:shadow-sm"
+                        }`}
+                        onClick={() => handleInboxChatClick(chat.userId)}
+                      >
+                        <div className="flex items-start justify-between mb-2">
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center space-x-2 mb-1">
+                              <div
+                                className={`w-2 h-2 rounded-full ${
+                                  openingChatId === chat.userId
+                                    ? "bg-blue-500"
+                                    : "bg-green-500"
+                                }`}
+                              ></div>
+                              <span className="text-xs font-medium text-slate-700 truncate">
+                                {chat.connectionId}
+                              </span>
+                              {openingChatId === chat.userId && (
+                                <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-blue-500"></div>
+                              )}
+                            </div>
+                            <p className="text-sxs text-slate-600 line-clamp-2 leading-relaxed">
+                              {chat.lastMessage || "No message"}
+                            </p>
+                          </div>
+                          <div className="flex flex-col items-end space-y-1">
+                            <span
+                              className={`text-xs px-2 py-1 rounded-full font-medium ${
+                                openingChatId === chat.userId
+                                  ? "bg-blue-200 text-blue-800"
+                                  : "bg-blue-100 text-blue-700"
+                              }`}
+                            >
+                              {chat.messageCount}
+                            </span>
+                            <span className="text-xs text-slate-400">
+                              {new Date(
+                                chat.lastMessageTime
+                              ).toLocaleDateString()}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -149,6 +259,11 @@ export default function ChatSidebar({
             <div>
               <button onClick={() => setOpenNotifications((prev) => !prev)}>
                 <img src="notification.png" width={20} />
+              </button>
+            </div>
+            <div>
+              <button onClick={() => openAllChats()}>
+                <img src="chat.png" width={20} />
               </button>
             </div>
           </div>

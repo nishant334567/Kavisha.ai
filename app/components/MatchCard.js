@@ -19,15 +19,15 @@ export default function MatchCard({
   matchedUserEmail,
   senderSession,
   openDetailsPanel,
-  openChatSession
+  openChatSession,
 }) {
   const { data: session } = useSession();
   const [latestCredits, setLatestCredits] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
   const [showTooltip, setShowTooltip] = useState(false);
   const [alreadyContacted, setAlreadyContacted] = useState(false);
-  
 
+  
   useEffect(() => {
     const fetchCredits = async () => {
       if (!session?.user?.id) return;
@@ -49,8 +49,6 @@ export default function MatchCard({
     setAlreadyContacted(contacted);
     (contacted, alreadyContacted, "logs for contacts");
   }, [session?.user?.id]);
-
-
 
   const createConnection = async () => {
     // if (latestCredits <= 0 && profileType === "recruiter") {
@@ -235,9 +233,13 @@ export default function MatchCard({
             View Details
           </button>
         )}
-        <button onClick={()=>openChatSession(senderSession,matchedSessionId)}>Chat Now</button>
+        <button
+          onClick={() => openChatSession(senderSession, matchedSessionId)}
+        >
+          <img src="chat.png" width={50} height={50} />
+        </button>
       </div>
-     
+
       {/* Temporarily disabled credit limit message for recruiters
       {!hasCredits && isRecruiter && (
         <div className="text-xs text-red-500 text-center">

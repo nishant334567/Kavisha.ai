@@ -4,7 +4,12 @@ import { useSession } from "next-auth/react";
 import MatchCard from "./MatchCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
-export default function Matches({ currentChatId, matches, openDetailsPanel,openChatSession }) {
+export default function Matches({
+  currentChatId,
+  matches,
+  openDetailsPanel,
+  openChatSession,
+}) {
   const { data: session } = useSession();
 
   const scrollRef = useRef();
@@ -50,7 +55,11 @@ export default function Matches({ currentChatId, matches, openDetailsPanel,openC
                     profileType={session?.user?.profileType}
                     senderSession={currentChatId}
                     matchedUserId={item.matchedUserId}
-                    matchedSessionId={item.matchedSessionId}
+                    matchedSessionId={
+                      item.matchedSessionId === currentChatId
+                        ? item.sessionId
+                        : item.matchedSessionId
+                    }
                     matchedUserName={item.matchedUserName}
                     matchedUserEmail={item.matchedUserEmail}
                     openDetailsPanel={openDetailsPanel}

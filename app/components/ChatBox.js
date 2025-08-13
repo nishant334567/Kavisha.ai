@@ -2,7 +2,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import Matches from "./Matches";
-import RighPanel from "./Rightpanel";
 import Resume from "./Resume";
 import Livechat from "./LiveChat";
 
@@ -26,6 +25,9 @@ export default function ChatBox({
   const [retry, setRetry] = useState(false);
   const [retryIndex, setRetryIndex] = useState(undefined);
   const [selectedFile, setSelectedFile] = useState(null);
+  const [openChat, setOpenChat] = useState(false);
+  const [chatReceiverSession, setChatReceiverSession] = useState(null);
+  const [chatSenderSession, setChatSenderSession] = useState(null);
 
   //voice model contants
   const [isRecording, setIsRecording] = useState(false);
@@ -187,9 +189,9 @@ export default function ChatBox({
     setResumedata({ filename: filename, resumeSummary: summary });
   };
   const openChatSession = (c1, c2) => {
-    setOpenChat((prev) => !prev);
     setChatReceiverSession(c2);
     setChatSenderSession(c1);
+    setOpenChat((prev) => !prev);
   };
   const onResumeUpload = (newResumeData) => {
     if (newResumeData) {
@@ -658,6 +660,15 @@ export default function ChatBox({
           </div>
         )}
       </div>
+      {openChat && chatSenderSession && chatReceiverSession && (
+        <Livechat
+          chatData={{
+            senderSession: chatSenderSession,
+            receiverSession: chatReceiverSession,
+          }}
+          onClose={() => setOpenChat(false)}
+        />
+      )}
     </div>
   );
 }

@@ -1,5 +1,8 @@
+import "dotenv/config";
 import { createServer } from "http";
 import { Server } from "socket.io";
+import { connectDB } from "./lib/db.js";
+import ChatMessages from "./models/ChatMessages.js";
 import next from "next";
 
 const app = next({ dev: true, hostname: "localhost", port: 3000 });
@@ -14,11 +17,6 @@ app.prepare().then(() => {
     },
   });
 
-  function createConnectionId(sessionA, sessionB) {
-    return [sessionA, sessionB].sort().join("_");
-  }
-
-  const activeUsers = new Map();
   const activeConnections = new Set();
 
   io.on("authenticate", (userData) => {});
@@ -26,36 +24,70 @@ app.prepare().then(() => {
   io.on("disconnect", () => {});
 
   io.on("connection", (socket) => {
-    console.log("User connected:", socket.id);
-    socket.on("disconnect", () => {
-      console.log("User disconnected:", socket.id);
-    });
+    socket.on("disconnect", () => {});
 
-    socket.on("send_message", (data) => {
-      const { text, connectionId, timestamp, senderId } = data;
+    socket.on("send_message", async (data) => {
+      const {
+        text,
+        connectionId,
+        timestamp,
+        senderSessionId,
+        receiverSessionId,
+      } = data;
+      await connectDB();
 
+      const msg = await ChatMessages.create({
+        connectionId,
+        senderSessionId,
+        receiverSessionId,
+        text,
+        deliveredAt: activeConnections.has(connectionId) ? new Date() : null,
+        createdAt: timestamp,
+      });
       if (activeConnections.has(connectionId)) {
         socket.to(connectionId).emit("message_received", {
           text: text,
-          senderId: senderId,
-          timestamp: timestamp,
+          senderSessionId: senderSessionId,
+          receiverSessionId: receiverSessionId,
+          timestamp: msg.createdAt,
+          connectionId: connectionId,
         });
-        console.log(`✅ Message "${text}" sent to room ${connectionId}`);
       } else {
-        console.log("❌ Room not found:", connectionId);
       }
     });
 
-    socket.on("join_room", (data) => {
-      socket.join(data.connectionId);
+    socket.on("join_room", async (data) => {
+      const { connectionId } = data || {};
+      if (!connectionId) return;
+      socket.join(connectionId);
       if (!activeConnections.has(connectionId)) {
-        activeConnections.add(data.connectionId);
+        activeConnections.add(connectionId);
       }
-      console.log(`✅ User joined room: ${data.connectionId}`);
+
+      // Send full message history for this connection
+      try {
+        await connectDB();
+        const history = await ChatMessages.find({ connectionId })
+          .sort({ createdAt: 1 })
+          .lean();
+
+        socket.emit(
+          "message_history",
+          history.map((m) => ({
+            id: m._id.toString(),
+            text: m.text,
+            senderSessionId:
+              m.senderSessionId?.toString?.() ?? m.senderSessionId,
+            receiverSessionId:
+              m.receiverSessionId?.toString?.() ?? m.receiverSessionId,
+            timestamp: m.createdAt,
+          }))
+        );
+      } catch (e) {
+        console.error("Failed to load message history:", e);
+      }
     });
   });
 
-  httpServer.listen(3000, () => {
-    console.log(`nextjs+websocket service is running on port 3000`);
-  });
+  httpServer.listen(3000, () => {});
 });
