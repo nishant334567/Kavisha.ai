@@ -108,8 +108,6 @@ export default function SessionSection({ totalSessions }) {
     try {
       const response = await fetch(`/api/admin/fetch-matches/${id}`);
       const data = await response.json();
-      console.log("Match for id", id);
-      console.log("data", data);
 
       if (data.success) {
         setMatch(data.matches);

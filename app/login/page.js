@@ -139,13 +139,13 @@ export default function LoginPage() {
         {/* Hero */}
         <section>
           <h1 className="text-4xl md:text-5xl font-bold text-gray-900 mb-4">
-            Human connections in the age of AI.{" "}
+            Human connections in the age of AI:{" "}
             <span className="text-orange-500">Kavisha</span>
           </h1>
           <p className="text-gray-600 text-lg mb-6 max-w-xl">
             Kavisha connects people by first understanding what they truly want.
             Using smart, empathetic conversations, Kavisha is making great
-            connections. In the world of recruitment, for now.
+            connections everyday in the world of recruitment, for now.
           </p>
 
           <ul className="space-y-3 text-gray-700 mb-8">
