@@ -1,27 +1,38 @@
-import "dotenv/config";
-import { createServer } from "http";
-import { Server } from "socket.io";
-import { connectDB } from "./lib/db.js";
-import ChatMessages from "./models/ChatMessages.js";
-import next from "next";
+require("dotenv/config");
+const { createServer } = require("http");
+const { Server } = require("socket.io");
+const next = require("next");
+const express = require("express");
 
-const app = next({ dev: true, hostname: "localhost", port: 3000 });
+// Dynamic imports for ES module files
+let connectDB, ChatMessages;
+
+const dev = process.env.NODE_ENV !== "production";
+const app = next({ dev });
 const handler = app.getRequestHandler();
 
-app.prepare().then(() => {
-  const httpServer = createServer(handler);
-  const io = new Server(httpServer, {
+app.prepare().then(async () => {
+  // Dynamic imports for ES module files
+  try {
+    const dbModule = await import("./lib/db.js");
+    const chatMessagesModule = await import("./models/ChatMessages.js");
+    connectDB = dbModule.connectDB;
+    ChatMessages = chatMessagesModule.default;
+  } catch (error) {
+    console.error("Failed to import modules:", error);
+    process.exit(1);
+  }
+
+  const expressApp = express();
+  const server = createServer(expressApp);
+  const io = new Server(server, {
     cors: {
-      origin: "http://localhost:3000",
+      origin: process.env.CLIENT_URL || "*",
       methods: ["GET", "POST"],
     },
   });
 
   const activeConnections = new Set();
-
-  io.on("authenticate", (userData) => {});
-
-  io.on("disconnect", () => {});
 
   io.on("connection", (socket) => {
     socket.on("disconnect", () => {});
@@ -89,5 +100,9 @@ app.prepare().then(() => {
     });
   });
 
-  httpServer.listen(3000, () => {});
+  expressApp.use((req, res) => handler(req, res));
+  const PORT = process.env.PORT || 3000;
+  server.listen(PORT, () => {
+    console.log(`Server listening on port ${PORT}`);
+  });
 });
