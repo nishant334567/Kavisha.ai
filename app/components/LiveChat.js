@@ -26,7 +26,10 @@ export default function Livechat({ chatData, onClose }) {
 
   useEffect(() => {
     if (!socketRef.current) {
-      socketRef.current = io(`http://localhost:3000`);
+      // Use environment variable or dynamic URL for production
+      const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL || 
+                       (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+      socketRef.current = io(socketUrl);
     }
     const socket = socketRef.current;
 

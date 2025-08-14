@@ -5,11 +5,15 @@ import OpenAI from "openai";
 import { connectDB } from "@/app/lib/db";
 import mongoose from "mongoose";
 
-const openai = new OpenAI({
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-});
+}) : null;
 
 export async function getMatches(sessionId) {
+  if (!openai) {
+    throw new Error("OpenAI API key not configured");
+  }
+  
   await connectDB();
   const session = await Session.findById({ _id: sessionId });
 

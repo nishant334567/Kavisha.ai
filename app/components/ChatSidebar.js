@@ -261,11 +261,7 @@ export default function ChatSidebar({
                 <img src="notification.png" width={20} />
               </button>
             </div>
-            <div>
-              <button onClick={() => openAllChats()}>
-                <img src="chat.png" width={20} />
-              </button>
-            </div>
+        
           </div>
         )}
       </div>

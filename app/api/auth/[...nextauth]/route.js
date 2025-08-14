@@ -20,6 +20,13 @@ export const authOptions = {
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+      authorization: {
+        params: {
+          prompt: "consent",
+          access_type: "offline",
+          response_type: "code"
+        }
+      }
     }),
     LinkedInProvider({
       clientId: process.env.LINKEDIN_CLIENT_ID,
@@ -88,6 +95,10 @@ export const authOptions = {
 
   callbacks: {
     async redirect({ url, baseUrl }) {
+      // Handle relative URLs
+      if (url.startsWith("/")) return `${baseUrl}${url}`;
+      // Handle external URLs
+      else if (new URL(url).origin === baseUrl) return url;
       return baseUrl;
     },
     async jwt({ token, user }) {

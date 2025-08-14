@@ -7,7 +7,7 @@ import { Resend } from "resend";
 import Matches from "@/app/models/Matches";
 import Session from "@/app/models/ChatSessions";
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 const sendEmail = async (
   toEmail,
@@ -41,7 +41,14 @@ const sendEmail = async (
   }
 };
 
-export async function POST(req) {
+export async function POST(request) {
+  if (!resend) {
+    return NextResponse.json(
+      { error: "Resend API key not configured" },
+      { status: 500 }
+    );
+  }
+
   try {
     const {
       receiverId,
@@ -49,7 +56,7 @@ export async function POST(req) {
       senderId,
       senderProfileType,
       senderSession,
-    } = await req.json();
+    } = await request.json();
     if (
       !receiverId ||
       !receiverSession ||

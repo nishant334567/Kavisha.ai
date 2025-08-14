@@ -13,7 +13,10 @@ export default async function HomePage() {
     .map((c) => `${c.name}=${c.value}`)
     .join("; ");
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
+  // Use the current domain instead of hardcoded localhost
+  const baseUrl = process.env.NEXTAUTH_URL || 
+                  (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
+  
   const res = await fetch(`${baseUrl}/api/allchats`, {
     headers: {
       Cookie: cookieString,

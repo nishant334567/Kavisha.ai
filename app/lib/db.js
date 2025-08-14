@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const uri = process.env.MONGODB_URI;
 
@@ -14,7 +14,7 @@ const options = {
 let isConnected = false;
 let connectionPromise = null;
 
-export async function connectDB() {
+async function connectDB() {
   if (isConnected) {
     return;
   }
@@ -40,6 +40,8 @@ export async function connectDB() {
 }
 
 // Add a function to check connection status
-export function isDBConnected() {
+function isDBConnected() {
   return mongoose.connection.readyState === 1;
 }
+
+module.exports = { connectDB, isDBConnected };

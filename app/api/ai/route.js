@@ -15,11 +15,11 @@ import mongoose from "mongoose";
 import { Resend } from "resend";
 import NewMatchEmailTemplate from "@/app/components/NewMatchEmailTemplate";
 
-const openai = new OpenAI({
+const openai = process.env.OPENAI_API_KEY ? new OpenAI({
   apiKey: process.env.OPENAI_API_KEY,
-});
+}) : null;
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -34,6 +34,13 @@ export async function GET(request) {
 
 export async function POST(request) {
   try {
+    if (!openai) {
+      return NextResponse.json(
+        { error: "OpenAI API key not configured" },
+        { status: 500 }
+      );
+    }
+
     const token = await getToken({
       req: request,
       secret: process.env.NEXTAUTH_SECRET,

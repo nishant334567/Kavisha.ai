@@ -4,7 +4,7 @@ import User from "@/app/models/Users";
 import { IncompleteSessionEmailTemplate } from "@/app/components/IncompleteSessionEmailTemplate";
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = process.env.RESEND_API_KEY?new Resend(process.env.RESEND_API_KEY): null;
 
 export async function GET() {
   try {
@@ -14,6 +14,15 @@ export async function GET() {
           message: "❌ Unauthorized access",
         },
         { status: 401 }
+      );
+    }
+
+    if (!resend) {
+      return NextResponse.json(
+        {
+          message: "❌ Resend API key not configured",
+        },
+        { status: 500 }
       );
     }
 
