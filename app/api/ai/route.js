@@ -15,11 +15,15 @@ import mongoose from "mongoose";
 import { Resend } from "resend";
 import NewMatchEmailTemplate from "@/app/components/NewMatchEmailTemplate";
 
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-}) : null;
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  : null;
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -97,7 +101,7 @@ export async function POST(request) {
     ];
 
     const chatCompletion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages,
       temperature: 0.7, // Reduced from 1 for more consistent responses
       max_completion_tokens: 800, // Updated parameter name for OpenAI API
@@ -166,7 +170,7 @@ Do NOT change the reply content ("${originalReply}") - keep it exactly as is. On
       ];
       //
       const reChatCompletion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-4o",
         messages: rePromptMessages,
         temperature: 0.1,
       });
@@ -189,7 +193,7 @@ Do NOT change the reply content ("${originalReply}") - keep it exactly as is. On
     if (allDataCollected === "true") {
       await Matches.deleteMany({ sessionId: sessionId });
       matchesLatest = await getMatches(sessionId);
-
+      //
       if (matchesLatest.length > 0) {
         const matchesCount = matchesLatest.length;
 
@@ -244,6 +248,7 @@ Click on the "find matches" button to see if ${
             const matchedUser = await User.findById(m.matchedUserId).select(
               "name email"
             );
+
             return {
               ...m,
               sessionId: new mongoose.Types.ObjectId(m.sessionId),
@@ -265,7 +270,7 @@ Click on the "find matches" button to see if ${
           }
         })
       );
-
+      //
       await Matches.insertMany(matchesWithObjectIds);
 
       // 📧 Send match notification emails AFTER user details are fetched

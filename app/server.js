@@ -1,17 +1,17 @@
-require("dotenv/config");
+require("dotenv").config({ path: ".env.local" });
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const { connectDB } = require("./lib/db.js");
-const ChatMessages = require("./models/ChatMessages.js");
+const Messages = require("./models/Messages.js").default;
 const next = require("next");
 const express = require("express");
 
 // Memory optimization for production
-if (process.env.NODE_ENV === 'production') {
+if (process.env.NODE_ENV === "production") {
   // Increase heap size limit
-  const v8 = require('v8');
-  v8.setFlagsFromString('--max-old-space-size=1536');
-  
+  const v8 = require("v8");
+  v8.setFlagsFromString("--max-old-space-size=1536");
+
   // Force garbage collection periodically
   setInterval(() => {
     if (global.gc) {
@@ -29,8 +29,9 @@ app.prepare().then(() => {
   const server = createServer(expressApp);
   const io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || 
-              (process.env.NODE_ENV === 'production' ? "*" : "http://localhost:3000"),
+      origin:
+        process.env.CLIENT_URL ||
+        (process.env.NODE_ENV === "production" ? "*" : "http://localhost:3000"),
       methods: ["GET", "POST"],
       credentials: true,
     },
@@ -46,29 +47,19 @@ app.prepare().then(() => {
 
     socket.on("send_message", async (data) => {
       try {
-        const {
-          text,
-          connectionId,
-          timestamp,
-          senderSessionId,
-          receiverSessionId,
-        } = data;
+        const { text, connectionId, senderUserId } = data;
         await connectDB();
 
-        const msg = await ChatMessages.create({
-          connectionId,
-          senderSessionId,
-          receiverSessionId,
-          text,
-          deliveredAt: activeConnections.has(connectionId) ? new Date() : null,
-          createdAt: timestamp,
+        const msg = await Messages.create({
+          conversationId: connectionId,
+          senderId: senderUserId,
+          content: text,
         });
         if (activeConnections.has(connectionId)) {
           socket.to(connectionId).emit("message_received", {
             text: text,
-            senderSessionId: senderSessionId,
-            receiverSessionId: receiverSessionId,
-            timestamp: msg.createdAt,
+            senderUserId: senderUserId,
+            // timestamp: msg.createdAt,
             connectionId: connectionId,
           });
         }
@@ -89,21 +80,19 @@ app.prepare().then(() => {
         // Send full message history for this connection
         try {
           await connectDB();
-          const history = await ChatMessages.find({ connectionId })
+          const history = await Messages.find({
+            conversationId: connectionId,
+          })
             .sort({ createdAt: 1 })
             .lean()
-            .limit(100); // Limit history to prevent memory issues
-
+            .limit(100);
+          //
           socket.emit(
             "message_history",
             history.map((m) => ({
-              id: m._id.toString(),
-              text: m.text,
-              senderSessionId:
-                m.senderSessionId?.toString?.() ?? m.senderSessionId,
-              receiverSessionId:
-                m.receiverSessionId?.toString?.() ?? m.receiverSessionId,
-              timestamp: m.createdAt,
+              id: m.senderId,
+              text: m.content,
+              senderUserId: m.senderId,
             }))
           );
         } catch (e) {
@@ -121,8 +110,5 @@ app.prepare().then(() => {
   });
 
   const PORT = process.env.PORT || 3000;
-  server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Memory usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
-  });
+  server.listen(PORT, () => {});
 });

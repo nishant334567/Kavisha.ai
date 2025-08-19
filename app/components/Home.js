@@ -7,6 +7,7 @@ import ChatBox from "./ChatBox";
 import Header from "./Header";
 import RighPanel from "./Rightpanel";
 import LiveChat from "./LiveChat";
+import Inbox from "./Inbox";
 
 export default function Home({ initialChats, notifications }) {
   const { data: session } = useSession();
@@ -23,8 +24,6 @@ export default function Home({ initialChats, notifications }) {
   const [show, setShow] = useState(false);
   const [type, setType] = useState(1);
   const [viewData, setViewdata] = useState({});
-  const [showInboxChat, setShowInboxChat] = useState(false);
-  const [inboxChatData, setInboxChatData] = useState(null);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -83,15 +82,6 @@ export default function Home({ initialChats, notifications }) {
     toggleRightPanel();
   };
 
-  const handleOpenInboxChat = (chatData) => {
-    setInboxChatData(chatData);
-    setShowInboxChat(true);
-  };
-
-  const handleCloseInboxChat = () => {
-    setShowInboxChat(false);
-    setInboxChatData(null);
-  };
   return (
     <div className="relative">
       <div className="relative flex gap-4 w-screen">
@@ -101,7 +91,6 @@ export default function Home({ initialChats, notifications }) {
             updateChatId={updateChatId}
             currentChatId={currentChatId}
             notifications={notifications}
-            onOpenInboxChat={handleOpenInboxChat}
           />
         </div>
         <div className="flex-col w-[80%] items-center justify-center mx-auto h-full md:w-[60%]">
@@ -152,11 +141,12 @@ export default function Home({ initialChats, notifications }) {
           </div>
         )}
       </div>
+      {/* Floating Inbox on bottom right for desktop */}
 
       {/* Inbox LiveChat Modal */}
-      {showInboxChat && inboxChatData && (
+      {/* {showInboxChat && inboxChatData && (
         <LiveChat chatData={inboxChatData} onClose={handleCloseInboxChat} />
-      )}
+      )} */}
     </div>
   );
 }

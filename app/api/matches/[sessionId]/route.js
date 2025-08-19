@@ -5,15 +5,17 @@ import OpenAI from "openai";
 import { connectDB } from "@/app/lib/db";
 import mongoose from "mongoose";
 
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-}) : null;
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  : null;
 
 export async function getMatches(sessionId) {
   if (!openai) {
     throw new Error("OpenAI API key not configured");
   }
-  
+
   await connectDB();
   const session = await Session.findById({ _id: sessionId });
 
@@ -23,15 +25,17 @@ export async function getMatches(sessionId) {
     role: oppositeRole,
     allDataCollected: true,
     chatSummary: { $exists: true, $ne: "" },
-  });
+  }).populate("userId", "name email");
 
   const allProvidersList = allProviders
     .map(
       (s, i) => `
 [B${i + 1}]
-"userId": "${s.userId}"
+"userId": "${s.userId?._id}"
+"name": "${s.userId?.name}"
+"email": "${s.userId?.email}"
 "sessionId": "${s._id}"
-"title": "${s.title || "Job Posting"}"
+"title": "${s.title}"
 "chatSummary": "${s.chatSummary}"`
     )
     .join("\n");
@@ -48,7 +52,7 @@ Your task is to compare one user [A] (the user of this app) with multiple potent
 ${session?.chatSummary}
 ---
 
-Each [B] is a "${oppositeRole}" session with their own offering (chat summary):
+Each [B] is a "${oppositeRole}" session with their data and requirements:
 ${allProvidersList}
 ---
 
@@ -56,7 +60,7 @@ Instructions:
 - When writing matchingReason and mismatchReason, ALWAYS address [A] as 'you' or 'your' (never as 'A' or 'A\'s').
 - For example, say: "You are looking for...", "Your requirements are...", "You have 5 years of experience...".
 - NEVER use phrases like "A is looking for..." or "A's expectations...".
-- Compare [A]'s requirements with each [B]'s chatSummary.
+- Compare [A]'s chatSummary with each [B]'s chatSummary.
 - **CRITICAL RULE: Job role/title MUST match or be closely related. DO NOT return any match if the job roles are different or incompatible. This is non-negotiable.**
 - Examples of INCOMPATIBLE roles: Software Developer vs Sales Agent, Doctor vs Engineer, Teacher vs Marketing Manager.
 - Examples of COMPATIBLE roles: Frontend Developer vs Full-Stack Developer, Sales Executive vs Sales Manager, Data Analyst vs Data Scientist.
@@ -101,7 +105,7 @@ Strictly follow the format below (using the real userId/sessionId from above):
 `;
 
   const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
+    model: "gpt-4o",
     messages: [
       { role: "system", content: "You are a helpful assistant." },
       { role: "user", content: prompt },
