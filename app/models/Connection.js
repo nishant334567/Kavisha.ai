@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const ConnectionSchema = new mongoose.Schema(
   {
@@ -36,4 +36,4 @@ const ConnectionSchema = new mongoose.Schema(
 
 const Connection =
   mongoose.models.Connection || mongoose.model("Connection", ConnectionSchema);
-export default Connection;
+module.exports = Connection;

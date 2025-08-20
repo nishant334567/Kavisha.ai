@@ -1,8 +1,8 @@
-import { connectDB } from "./db";
-import Session from "../models/ChatSessions";
-import Logs from "../models/ChatLogs";
+const { connectDB } = require("./db");
+const Session = require("../models/ChatSessions");
+const Logs = require("../models/ChatLogs");
 
-export async function createSessionWithDefaultLog(userId, role) {
+async function createSessionWithDefaultLog(userId, role) {
   let newSessionId;
   try {
     await connectDB();
@@ -28,3 +28,5 @@ export async function createSessionWithDefaultLog(userId, role) {
     console.error("Failed to create Chat Session", err);
   }
 }
+
+module.exports = { createSessionWithDefaultLog };

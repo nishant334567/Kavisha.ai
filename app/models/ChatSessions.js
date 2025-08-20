@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const ChatSessionsSchema = new mongoose.Schema(
   {
@@ -51,4 +51,4 @@ ChatSessionsSchema.index({ createdAt: -1 });
 const Session =
   mongoose.models.ChatSessions ||
   mongoose.model("ChatSessions", ChatSessionsSchema);
-export default Session;
+module.exports = Session;
