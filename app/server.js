@@ -8,16 +8,14 @@ const express = require("express");
 
 // Memory optimization for production
 if (process.env.NODE_ENV === "production") {
-  // Increase heap size limit
   const v8 = require("v8");
   v8.setFlagsFromString("--max-old-space-size=1536");
 
-  // Force garbage collection periodically
   setInterval(() => {
     if (global.gc) {
       global.gc();
     }
-  }, 30000); // Every 30 seconds
+  }, 30000);
 }
 
 const dev = process.env.NODE_ENV !== "production";
@@ -27,27 +25,39 @@ const handler = app.getRequestHandler();
 app.prepare().then(() => {
   const expressApp = express();
   const server = createServer(expressApp);
+
   const io = new Server(server, {
     cors: {
-      origin:
-        process.env.CLIENT_URL ||
-        (process.env.NODE_ENV === "production" ? "*" : "http://localhost:3000"),
-      methods: ["GET", "POST"],
+      origin: "*",
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      allowedHeaders: ["*"],
       credentials: true,
     },
+    transports: ["polling", "websocket"],
+    allowEIO3: true,
+    path: "/socket.io/",
   });
 
   const activeConnections = new Set();
 
   io.on("connection", (socket) => {
+    socket.on("register_user", (userId) => {
+      socket.userId = userId;
+      activeConnections.add(socket.id);
+    });
+
     socket.on("disconnect", () => {
-      // Clean up connections to prevent memory leaks
       activeConnections.delete(socket.id);
     });
 
     socket.on("send_message", async (data) => {
       try {
         const { text, connectionId, senderUserId } = data;
+
+        if (!text || !connectionId || !senderUserId) {
+          return;
+        }
+
         await connectDB();
 
         const msg = await Messages.create({
@@ -55,11 +65,11 @@ app.prepare().then(() => {
           senderId: senderUserId,
           content: text,
         });
+
         if (activeConnections.has(connectionId)) {
           socket.to(connectionId).emit("message_received", {
             text: text,
             senderUserId: senderUserId,
-            // timestamp: msg.createdAt,
             connectionId: connectionId,
           });
         }
@@ -72,12 +82,12 @@ app.prepare().then(() => {
       try {
         const { connectionId } = data || {};
         if (!connectionId) return;
+
         socket.join(connectionId);
         if (!activeConnections.has(connectionId)) {
           activeConnections.add(connectionId);
         }
 
-        // Send full message history for this connection
         try {
           await connectDB();
           const history = await Messages.find({
@@ -86,7 +96,7 @@ app.prepare().then(() => {
             .sort({ createdAt: 1 })
             .lean()
             .limit(100);
-          //
+
           socket.emit(
             "message_history",
             history.map((m) => ({
@@ -104,8 +114,10 @@ app.prepare().then(() => {
     });
   });
 
-  // Handle all non-Socket.IO routes with Next.js
-  expressApp.use((req, res) => {
+  expressApp.use((req, res, next) => {
+    if (req.path.startsWith("/socket.io/")) {
+      return next();
+    }
     return handler(req, res);
   });
 

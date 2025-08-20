@@ -9,21 +9,29 @@ export default function SocketProvider({ children, userId }) {
 
   useEffect(() => {
     if (!userId) {
-      console.warn("Could find the relavant user");
       setIsOnline(false);
       return;
     }
     if (!socketRef.current) {
-      socketRef.current = io(
-        process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3000"
-      );
+      const socketUrl =
+        process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3000";
+
+      socketRef.current = io(socketUrl, {
+        withCredentials: true,
+        forceNew: true,
+      });
+
       socketRef.current.on("connect", () => {
         if (userId) {
           socketRef.current.emit("register_user", userId);
-
           setIsOnline(true);
         }
       });
+
+      socketRef.current.on("connect_error", () => {
+        setIsOnline(false);
+      });
+
       socketRef.current.on("disconnect", () => {
         setIsOnline(false);
       });
