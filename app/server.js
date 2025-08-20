@@ -6,20 +6,6 @@ const Messages = require("./models/Messages.js").default;
 const next = require("next");
 const express = require("express");
 
-// Memory optimization for production
-if (process.env.NODE_ENV === "production") {
-  // Increase heap size limit
-  const v8 = require("v8");
-  v8.setFlagsFromString("--max-old-space-size=1536");
-
-  // Force garbage collection periodically
-  setInterval(() => {
-    if (global.gc) {
-      global.gc();
-    }
-  }, 30000); // Every 30 seconds
-}
-
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handler = app.getRequestHandler();
