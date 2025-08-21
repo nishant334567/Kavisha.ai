@@ -19,12 +19,20 @@ export async function getMatches(sessionId) {
   await connectDB();
   const session = await Session.findById({ _id: sessionId });
 
-  const oppositeRole =
-    session?.role === "job_seeker" ? "recruiter" : "job_seeker";
+  const role = session?.role;
+  const isDating = role === "male" || role === "female";
+  let oppositeRole;
+  if (isDating) {
+    oppositeRole = role === "male" ? "female" : "male";
+  } else {
+    oppositeRole = role === "job_seeker" ? "recruiter" : "job_seeker";
+  }
   const allProviders = await Session.find({
     role: oppositeRole,
     allDataCollected: true,
     chatSummary: { $exists: true, $ne: "" },
+    // Never suggest the same user's other sessions
+    userId: { $ne: session?.userId },
   }).populate("userId", "name email");
 
   const allProvidersList = allProviders
@@ -40,14 +48,12 @@ export async function getMatches(sessionId) {
     )
     .join("\n");
 
-  const prompt = `
+  const jobPrompt = `
 You are a smart job-matching assistant.
-
-**CORE RULE: Only suggest matches where job roles/titles are compatible or closely related. Different job functions should NEVER be matched.**
 
 Your task is to compare one user [A] (the user of this app) with multiple potential matches [B] based on their chat summaries.
 
-[A] is a "${session?.role}" with the following requirements (chat summary):
+[A] is a "${role}" with the following requirements (chat summary):
 ---
 ${session?.chatSummary}
 ---
@@ -56,53 +62,62 @@ Each [B] is a "${oppositeRole}" session with their data and requirements:
 ${allProvidersList}
 ---
 
-Instructions:
-- When writing matchingReason and mismatchReason, ALWAYS address [A] as 'you' or 'your' (never as 'A' or 'A\'s').
-- For example, say: "You are looking for...", "Your requirements are...", "You have 5 years of experience...".
-- NEVER use phrases like "A is looking for..." or "A's expectations...".
-- Compare [A]'s chatSummary with each [B]'s chatSummary.
-- **CRITICAL RULE: Job role/title MUST match or be closely related. DO NOT return any match if the job roles are different or incompatible. This is non-negotiable.**
-- Examples of INCOMPATIBLE roles: Software Developer vs Sales Agent, Doctor vs Engineer, Teacher vs Marketing Manager.
-- Examples of COMPATIBLE roles: Frontend Developer vs Full-Stack Developer, Sales Executive vs Sales Manager, Data Analyst vs Data Scientist.
-- If job roles don't align, skip that candidate entirely - don't include them in results.
-- For each selected match, return:
+Rules:
+- Address [A] as "you" or "your" in all explanations.
+- Compare [A] and [B] summaries and only suggest matches where job titles/roles are compatible or closely related.
+- Skip candidates with incompatible roles entirely.
 
-  {
-    "sessionId": "${sessionId}"    // A's session 
-    "matchedUserId": "...",             // Use the exact userId from the [B] above
-    "matchedSessionId": "...",          // Use the exact sessionId from the [B] above
-    "title":"...",                      // // Use the exact title from the [B] above
-    "chatSummary":"...."                   // Use the exact chatSummary from the [B] above
-    "matchingReason": "Explain briefly why this match is relevant, addressing the user as 'you' or 'your' only.",
-    "matchPercentage": "50%" // if all data points match then 100%, if only half match then 50% and so on. NOTE: If job roles don't match, this should be 0% (but don't include 0% matches in results)
-    "mismatchReason": "Explain mismatches, again addressing the user as 'you' or 'your'."
-  }
+For each selected match, return:
+{
+  "sessionId": "${sessionId}",
+  "matchedUserId": "...",
+  "matchedSessionId": "...",
+  "title": "...",
+  "chatSummary": "...",
+  "matchingReason": "...",
+  "matchPercentage": "50%",
+  "mismatchReason": "..."
+}
 
+Return only a JSON array (max 10), no extra text.
+`;
 
-Format:
-- **BEFORE returning any match, verify that the job roles are compatible. If they're not, exclude that match completely.**
-- Return ONLY a JSON array of matched objects (maximum 10).
-- Use double quotes for all keys.
-- **For each match, use the exact userId and sessionId as provided above for each [B]. Do not invent or change these values.**
-- DO NOT include any explanation, intro, or text outside the JSON.
-- **REMINDER: Only return matches where job roles are related/compatible. Different job functions = NO MATCH.**
+  const datingPrompt = `
+You are a thoughtful dating match assistant.
 
-Strictly follow the format below (using the real userId/sessionId from above):
+Match [A] with potential partners [B] based on compatibility in values, interests, lifestyle, location, and preferences extracted from their chat summaries.
+
+[A] is "${role}" with the following details (chat summary):
+---
+${session?.chatSummary}
+---
+
+Each [B] is "${oppositeRole}" with details:
+${allProvidersList}
+---
+
+Rules:
+- Address [A] as "you" or "your" in all explanations.
+- Consider interests, age range, goals, lifestyle, and dealbreakers if mentioned.
+- Avoid suggesting matches with strong conflicts (e.g., non-overlapping locations or opposite relationship goals).
+
+For each selected match, return:
 [
   {
     "sessionId": "${sessionId}",
     "matchedUserId": "use from above",
     "matchedSessionId": "use from above",
     "title": "use from above",
-    "chatSummary": "use from above", 
-    "matchingReason": "This is what Kavisha found for you because the job roles align perfectly...",
-    "matchPercentage": "40%", //don't hard code the value, this is just an example. Based on matching algo, calculate the matching percentage yourself
-    "mismatchReason": "You are looking for onsite but the recruiter offers remote. Also, your expected salary is 200k but the offer is 100k-140k."
+    "chatSummary": "use from above",
+    "matchingReason": "Why this person may be a good match for you",
+    "matchPercentage": "70%",
+    "mismatchReason": "Any potential incompatibilities"
   }
 ]
 
-**FINAL CHECK: Only include matches where the job titles/roles are compatible. If you can't find any compatible roles, return an empty array [].**
-`;
+Return only the JSON array (max 10).`;
+
+  const prompt = isDating ? datingPrompt : jobPrompt;
 
   const completion = await openai.chat.completions.create({
     model: "gpt-4o",
@@ -137,13 +152,29 @@ Strictly follow the format below (using the real userId/sessionId from above):
   }
 
   const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
+  const allowedSessionIds = new Set(allProviders.map((s) => String(s._id)));
   const filteredmatches = Array.isArray(matches)
-    ? matches.filter(
-        (item) =>
-          isValidObjectId(item.sessionId) &&
-          isValidObjectId(item.matchedUserId) &&
-          isValidObjectId(item.matchedSessionId)
-      )
+    ? matches.filter((item) => {
+        if (
+          !isValidObjectId(item.sessionId) ||
+          !isValidObjectId(item.matchedUserId) ||
+          !isValidObjectId(item.matchedSessionId)
+        ) {
+          return false;
+        }
+        // Do not recommend self (same user) or the same session
+        if (
+          String(item.matchedSessionId) === String(sessionId) ||
+          String(item.matchedUserId) === String(session?.userId)
+        ) {
+          return false;
+        }
+        // Ensure the matched session comes from the candidate pool
+        if (!allowedSessionIds.has(String(item.matchedSessionId))) {
+          return false;
+        }
+        return true;
+      })
     : [];
   return filteredmatches;
 }

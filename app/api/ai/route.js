@@ -1,6 +1,7 @@
 import {
   SYSTEM_PROMPT_JOB_SEEKER,
   SYSTEM_PROMPT_RECRUITER,
+  SYSTEM_PROMPT_DATING,
 } from "@/app/lib/systemPrompt";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
@@ -74,13 +75,26 @@ export async function POST(request) {
       role: "user",
     });
 
+    const systemPrompt =
+      jobseeker === "recruiter"
+        ? SYSTEM_PROMPT_RECRUITER
+        : jobseeker === "male" || jobseeker === "female"
+          ? SYSTEM_PROMPT_DATING
+          : SYSTEM_PROMPT_JOB_SEEKER;
+
+    console.log(
+      "AI system prompt selected:",
+      jobseeker === "recruiter"
+        ? "RECRUITER"
+        : jobseeker === "male" || jobseeker === "female"
+          ? "DATING"
+          : "JOB_SEEKER"
+    );
+
     const messages = [
       {
         role: "system",
-        content:
-          jobseeker === "recruiter"
-            ? SYSTEM_PROMPT_RECRUITER
-            : SYSTEM_PROMPT_JOB_SEEKER,
+        content: systemPrompt,
       },
       ...(resumeText
         ? [
@@ -127,10 +141,7 @@ export async function POST(request) {
       const rePromptMessages = [
         {
           role: "system",
-          content:
-            jobseeker === "recruiter"
-              ? SYSTEM_PROMPT_RECRUITER
-              : SYSTEM_PROMPT_JOB_SEEKER,
+          content: systemPrompt,
         },
         ...(resumeText
           ? [

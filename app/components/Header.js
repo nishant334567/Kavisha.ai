@@ -15,9 +15,15 @@ export default function Header() {
 
         {/* Subtitle with emoji */}
         <div className="text-slate-500 text-sm sm:text-base px-2 sm:px-0">
-          {session?.user?.profileType !== "recruiter"
-            ? `I'm here to help you find the job you want. Let's talk!`
-            : `I'm here to help you hire people! Let's talk!`}{" "}
+          {session?.user?.profileType === "recruiter" &&
+            `I'm here to help you hire people! Let's talk!`}
+          {session?.user?.profileType === "job_seeker" &&
+            `I'm here to help you find the job you want. Let's talk!`}
+          {session?.user?.profileType === "male" &&
+            `I'm here to help you find someone special. Let's match!`}
+          {session?.user?.profileType === "female" &&
+            `I'm here to help you find someone special. Let's match!`}
+          {!session?.user?.profileType && `I'm here to help you. Let's talk!`}{" "}
           <span className="text-base sm:text-lg">😊</span>
         </div>
 

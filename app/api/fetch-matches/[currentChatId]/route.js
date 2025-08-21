@@ -13,14 +13,23 @@ export async function GET(req, { params }) {
       );
     }
     await connectDB();
-    // 🔄 Get bidirectional matches: both outgoing (a→b) and incoming (b→a)
-    const matches = await Matches.find({
-      $or: [
-        { sessionId: currentChatId }, // Outgoing: current session matched others
-        { matchedSessionId: currentChatId }, // Incoming: others matched current session
-      ],
+    // Get matches in both directions
+    let matches = await Matches.find({
+      $or: [{ sessionId: currentChatId }, { matchedSessionId: currentChatId }],
     }).lean();
-    const chatSession = await Session.findOne({ _id: currentChatId });
+
+    // Remove any self-matches (by id or email)
+    const chatSession = await Session.findById(currentChatId).populate(
+      "userId",
+      "email"
+    );
+    const uid = String(chatSession?.userId?._id || "");
+    const email = (chatSession?.userId?.email || "").toLowerCase();
+    matches = matches.filter(
+      (m) =>
+        String(m.matchedUserId || "") !== uid &&
+        (m.matchedUserEmail || "").toLowerCase() !== email
+    );
     let allDataCollected = false;
     if (chatSession) {
       allDataCollected = chatSession.allDataCollected;

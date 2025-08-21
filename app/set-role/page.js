@@ -68,6 +68,29 @@ export default function SetRole() {
             />
             <span className="ml-3 text-lg text-slate-700">Recruiter</span>
           </label>
+          <div className="h-px bg-slate-200 my-2" />
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="radio"
+              name="role"
+              value="male"
+              checked={role === "male"}
+              onChange={handleChange}
+              className="form-radio h-5 w-5 text-blue-600"
+            />
+            <span className="ml-3 text-lg text-slate-700">Male (Dating)</span>
+          </label>
+          <label className="flex items-center cursor-pointer">
+            <input
+              type="radio"
+              name="role"
+              value="female"
+              checked={role === "female"}
+              onChange={handleChange}
+              className="form-radio h-5 w-5 text-blue-600"
+            />
+            <span className="ml-3 text-lg text-slate-700">Female (Dating)</span>
+          </label>
         </div>
         <button
           type="submit"

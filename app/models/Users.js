@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema(
     },
     profileType: {
       type: String,
-      enum: ["job_seeker", "recruiter"],
+      enum: ["job_seeker", "recruiter", "male", "female"],
       required: false,
     },
     remainingCredits: { type: Number, default: 3 },

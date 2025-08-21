@@ -7,15 +7,8 @@ export async function POST(req) {
   try {
     const body = await req.json();
     //
-    const {
-      sessionA,
-      sessionB,
-      userA,
-      userB,
-      connectionId,
-      currentUserId,
-      // currentSessionId,
-    } = body;
+    const { sessionA, sessionB, userA, userB, connectionId, currentUserId } =
+      body;
     if (
       !sessionA ||
       !sessionB ||
@@ -32,9 +25,26 @@ export async function POST(req) {
     }
 
     await connectDB();
-    let conversation = await Conversations.find({
-      connectionId: connectionId,
-    });
+    // Use a canonical connection id (sorted) to avoid duplicates
+    const canonicalConnectionId =
+      connectionId || ""
+        ? connectionId
+        : [String(sessionA), String(sessionB)].sort().join("_");
+
+    // Atomically ensure a single conversation using upsert
+    await Conversations.findOneAndUpdate(
+      { connectionId: canonicalConnectionId },
+      {
+        $setOnInsert: {
+          sessionA,
+          sessionB,
+          userA,
+          userB,
+          connectionId: canonicalConnectionId,
+        },
+      },
+      { upsert: true, new: true }
+    );
 
     // const otherSessionId = connectionId
     //   .split("_")
@@ -46,24 +56,8 @@ export async function POST(req) {
       .populate("userId", "name email")
       .select("title");
 
-    const otherUser = otherSession[0].userId.name;
-    const jobTitle = otherSession[0].title;
-
-    if (conversation.length === 0) {
-      await Conversations.create({
-        sessionA,
-        sessionB,
-        userA,
-        userB,
-        connectionId,
-      });
-      // Re-populate after creation
-      // conversation = await Conversations.findOne({ connectionId })
-      //   .populate("userA", "name")
-      //   .populate("userB", "name")
-      //   .populate("sessionA", "title")
-      //   .populate("sessionB", "title");
-    }
+    const otherUser = otherSession?.[0]?.userId?.name || "Unknown User";
+    const jobTitle = otherSession?.[0]?.title || "Unknown Position";
 
     // Determine the other user and job title
     // let otherUser, jobTitle;
@@ -76,7 +70,7 @@ export async function POST(req) {
     // }
 
     return NextResponse.json({
-      connectionId,
+      connectionId: canonicalConnectionId,
       status: true,
       otherUser,
       jobTitle,

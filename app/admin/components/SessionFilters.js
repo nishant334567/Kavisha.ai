@@ -44,6 +44,8 @@ export default function SessionFilters({ filters, onFilterChange }) {
             <option value="all">All Roles</option>
             <option value="job_seeker">Job Seeker</option>
             <option value="recruiter">Recruiter</option>
+            <option value="male">Male (Dating)</option>
+            <option value="female">Female (Dating)</option>
           </select>
         </div>
 

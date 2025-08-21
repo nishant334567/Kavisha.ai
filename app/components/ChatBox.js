@@ -44,7 +44,7 @@ export default function ChatBox({
   const [transcribeError, setTranscribeError] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [audioModeOn, setAudioModeOn] = useState(false);
-  const [showInbox, setShowInbox] = useState(true);
+  const [showInbox, setShowInbox] = useState(false);
 
   //voice effects
 
