@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const LogsSchema = new mongoose.Schema(
   {
@@ -28,4 +28,4 @@ const LogsSchema = new mongoose.Schema(
 LogsSchema.index({ sessionId: 1 });
 
 const Logs = mongoose.models.Logs || mongoose.model("Logs", LogsSchema);
-export default Logs;
+module.exports = Logs;

@@ -27,7 +27,6 @@ export default function MatchCard({
   const [showTooltip, setShowTooltip] = useState(false);
   const [alreadyContacted, setAlreadyContacted] = useState(false);
 
-  
   useEffect(() => {
     const fetchCredits = async () => {
       if (!session?.user?.id) return;
@@ -134,13 +133,11 @@ export default function MatchCard({
       </div>
       {matchedUserName && (
         <div className="text-xs text-blue-600 font-medium">
-          👤 {hashName(matchedUserName)}
+          👤 {matchedUserName}
         </div>
       )}
       {matchedUserEmail && (
-        <div className="text-xs text-gray-600">
-          📧 {hashEmail(matchedUserEmail)}
-        </div>
+        <div className="text-xs text-gray-600">📧 {matchedUserEmail}</div>
       )}
       {matchTitle && (
         <div className="text-xs text-green-700 font-medium">{matchTitle}</div>
@@ -234,7 +231,14 @@ export default function MatchCard({
           </button>
         )}
         <button
-          onClick={() => openChatSession(senderSession, matchedSessionId)}
+          onClick={() =>
+            openChatSession(
+              senderSession,
+              matchedSessionId,
+              session?.user?.id,
+              matchedUserId
+            )
+          }
         >
           <img src="chat.png" width={50} height={50} />
         </button>

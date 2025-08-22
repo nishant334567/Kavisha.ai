@@ -1,23 +1,21 @@
-require("dotenv/config");
+require("dotenv").config({ path: ".env.local" });
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const { connectDB } = require("./lib/db.js");
-const ChatMessages = require("./models/ChatMessages.js");
+const Messages = require("./models/Messages.js");
 const next = require("next");
 const express = require("express");
 
 // Memory optimization for production
-if (process.env.NODE_ENV === 'production') {
-  // Increase heap size limit
-  const v8 = require('v8');
-  v8.setFlagsFromString('--max-old-space-size=1536');
-  
-  // Force garbage collection periodically
+if (process.env.NODE_ENV === "production") {
+  const v8 = require("v8");
+  v8.setFlagsFromString("--max-old-space-size=1536");
+
   setInterval(() => {
     if (global.gc) {
       global.gc();
     }
-  }, 30000); // Every 30 seconds
+  }, 30000);
 }
 
 const dev = process.env.NODE_ENV !== "production";
@@ -27,48 +25,51 @@ const handler = app.getRequestHandler();
 app.prepare().then(() => {
   const expressApp = express();
   const server = createServer(expressApp);
+
   const io = new Server(server, {
     cors: {
-      origin: process.env.CLIENT_URL || 
-              (process.env.NODE_ENV === 'production' ? "*" : "http://localhost:3000"),
-      methods: ["GET", "POST"],
+      origin: "*",
+      methods: ["GET", "POST", "PUT", "DELETE"],
+      allowedHeaders: ["*"],
       credentials: true,
     },
+    transports: ["polling", "websocket"],
+    allowEIO3: true,
+    path: "/socket.io/",
   });
 
   const activeConnections = new Set();
 
   io.on("connection", (socket) => {
+    socket.on("register_user", (userId) => {
+      socket.userId = userId;
+      activeConnections.add(socket.id);
+    });
+
     socket.on("disconnect", () => {
-      // Clean up connections to prevent memory leaks
       activeConnections.delete(socket.id);
     });
 
     socket.on("send_message", async (data) => {
       try {
-        const {
-          text,
-          connectionId,
-          timestamp,
-          senderSessionId,
-          receiverSessionId,
-        } = data;
+        const { text, connectionId, senderUserId } = data;
+
+        if (!text || !connectionId || !senderUserId) {
+          return;
+        }
+
         await connectDB();
 
-        const msg = await ChatMessages.create({
-          connectionId,
-          senderSessionId,
-          receiverSessionId,
-          text,
-          deliveredAt: activeConnections.has(connectionId) ? new Date() : null,
-          createdAt: timestamp,
+        const msg = await Messages.create({
+          conversationId: connectionId,
+          senderId: senderUserId,
+          content: text,
         });
+
         if (activeConnections.has(connectionId)) {
           socket.to(connectionId).emit("message_received", {
             text: text,
-            senderSessionId: senderSessionId,
-            receiverSessionId: receiverSessionId,
-            timestamp: msg.createdAt,
+            senderUserId: senderUserId,
             connectionId: connectionId,
           });
         }
@@ -81,29 +82,27 @@ app.prepare().then(() => {
       try {
         const { connectionId } = data || {};
         if (!connectionId) return;
+
         socket.join(connectionId);
         if (!activeConnections.has(connectionId)) {
           activeConnections.add(connectionId);
         }
 
-        // Send full message history for this connection
         try {
           await connectDB();
-          const history = await ChatMessages.find({ connectionId })
+          const history = await Messages.find({
+            conversationId: connectionId,
+          })
             .sort({ createdAt: 1 })
             .lean()
-            .limit(100); // Limit history to prevent memory issues
+            .limit(100);
 
           socket.emit(
             "message_history",
             history.map((m) => ({
-              id: m._id.toString(),
-              text: m.text,
-              senderSessionId:
-                m.senderSessionId?.toString?.() ?? m.senderSessionId,
-              receiverSessionId:
-                m.receiverSessionId?.toString?.() ?? m.receiverSessionId,
-              timestamp: m.createdAt,
+              id: m.senderId,
+              text: m.content,
+              senderUserId: m.senderId,
             }))
           );
         } catch (e) {
@@ -115,14 +114,13 @@ app.prepare().then(() => {
     });
   });
 
-  // Handle all non-Socket.IO routes with Next.js
-  expressApp.use((req, res) => {
+  expressApp.use((req, res, next) => {
+    if (req.path.startsWith("/socket.io/")) {
+      return next();
+    }
     return handler(req, res);
   });
 
   const PORT = process.env.PORT || 3000;
-  server.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Memory usage: ${Math.round(process.memoryUsage().heapUsed / 1024 / 1024)}MB`);
-  });
+  server.listen(PORT, () => {});
 });

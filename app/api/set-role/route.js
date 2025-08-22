@@ -10,7 +10,7 @@ export async function POST(req) {
     return NextResponse.json({ error: "Unauthorized access" });
   }
   const { role } = await req.json();
-  if (!["job_seeker", "recruiter"].includes(role)) {
+  if (!["job_seeker", "recruiter", "male", "female"].includes(role)) {
     return NextResponse.json({ error: "Invalid role" });
   }
   await connectDB();

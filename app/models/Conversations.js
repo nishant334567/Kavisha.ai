@@ -1,39 +1,35 @@
 const mongoose = require("mongoose");
-
-const ConnectionSchema = new mongoose.Schema(
+const ConversationSchema = new mongoose.Schema(
   {
-    senderSession: {
+    sessionA: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ChatSessions",
       required: true,
     },
-    receiverSession: {
+    sessionB: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ChatSessions",
       required: true,
     },
-    senderId: {
+    userA: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    receiverId: {
+    userB: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-    message: {
+    connectionId: {
       type: String,
+      unique: true,
       required: true,
-    },
-    emailSent: {
-      type: Boolean,
-      default: false,
     },
   },
-  { timestamps: { createdAt: true, updatedAt: true } }
+  { timestamps: true }
 );
 
-const Connection =
-  mongoose.models.Connection || mongoose.model("Connection", ConnectionSchema);
-module.exports = Connection;
+module.exports =
+  mongoose.models.Conversations ||
+  mongoose.model("Conversations", ConversationSchema);

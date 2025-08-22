@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const MatchesSchema = new mongoose.Schema({
   sessionId: {
@@ -29,4 +29,4 @@ const MatchesSchema = new mongoose.Schema({
 
 const Matches =
   mongoose.models.Matches || mongoose.model("Matches", MatchesSchema);
-export default Matches;
+module.exports = Matches;

@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const userSchema = new mongoose.Schema(
   {
@@ -16,7 +16,7 @@ const userSchema = new mongoose.Schema(
     },
     profileType: {
       type: String,
-      enum: ["job_seeker", "recruiter"],
+      enum: ["job_seeker", "recruiter", "male", "female"],
       required: false,
     },
     remainingCredits: { type: Number, default: 3 },
@@ -33,4 +33,4 @@ const userSchema = new mongoose.Schema(
 );
 
 const User = mongoose.models.User || mongoose.model("User", userSchema);
-export default User;
+module.exports = User;

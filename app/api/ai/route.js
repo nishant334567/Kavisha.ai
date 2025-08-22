@@ -1,6 +1,7 @@
 import {
   SYSTEM_PROMPT_JOB_SEEKER,
   SYSTEM_PROMPT_RECRUITER,
+  SYSTEM_PROMPT_DATING,
 } from "@/app/lib/systemPrompt";
 import { NextResponse } from "next/server";
 import OpenAI from "openai";
@@ -15,11 +16,15 @@ import mongoose from "mongoose";
 import { Resend } from "resend";
 import NewMatchEmailTemplate from "@/app/components/NewMatchEmailTemplate";
 
-const openai = process.env.OPENAI_API_KEY ? new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-}) : null;
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  : null;
 
-const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
 
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -70,13 +75,26 @@ export async function POST(request) {
       role: "user",
     });
 
+    const systemPrompt =
+      jobseeker === "recruiter"
+        ? SYSTEM_PROMPT_RECRUITER
+        : jobseeker === "male" || jobseeker === "female"
+          ? SYSTEM_PROMPT_DATING
+          : SYSTEM_PROMPT_JOB_SEEKER;
+
+    console.log(
+      "AI system prompt selected:",
+      jobseeker === "recruiter"
+        ? "RECRUITER"
+        : jobseeker === "male" || jobseeker === "female"
+          ? "DATING"
+          : "JOB_SEEKER"
+    );
+
     const messages = [
       {
         role: "system",
-        content:
-          jobseeker === "recruiter"
-            ? SYSTEM_PROMPT_RECRUITER
-            : SYSTEM_PROMPT_JOB_SEEKER,
+        content: systemPrompt,
       },
       ...(resumeText
         ? [
@@ -97,7 +115,7 @@ export async function POST(request) {
     ];
 
     const chatCompletion = await openai.chat.completions.create({
-      model: "gpt-4o-mini",
+      model: "gpt-4o",
       messages,
       temperature: 0.7, // Reduced from 1 for more consistent responses
       max_completion_tokens: 800, // Updated parameter name for OpenAI API
@@ -123,10 +141,7 @@ export async function POST(request) {
       const rePromptMessages = [
         {
           role: "system",
-          content:
-            jobseeker === "recruiter"
-              ? SYSTEM_PROMPT_RECRUITER
-              : SYSTEM_PROMPT_JOB_SEEKER,
+          content: systemPrompt,
         },
         ...(resumeText
           ? [
@@ -166,7 +181,7 @@ Do NOT change the reply content ("${originalReply}") - keep it exactly as is. On
       ];
       //
       const reChatCompletion = await openai.chat.completions.create({
-        model: "gpt-4o-mini",
+        model: "gpt-4o",
         messages: rePromptMessages,
         temperature: 0.1,
       });
@@ -189,7 +204,7 @@ Do NOT change the reply content ("${originalReply}") - keep it exactly as is. On
     if (allDataCollected === "true") {
       await Matches.deleteMany({ sessionId: sessionId });
       matchesLatest = await getMatches(sessionId);
-
+      //
       if (matchesLatest.length > 0) {
         const matchesCount = matchesLatest.length;
 
@@ -244,6 +259,7 @@ Click on the "find matches" button to see if ${
             const matchedUser = await User.findById(m.matchedUserId).select(
               "name email"
             );
+
             return {
               ...m,
               sessionId: new mongoose.Types.ObjectId(m.sessionId),
@@ -265,7 +281,7 @@ Click on the "find matches" button to see if ${
           }
         })
       );
-
+      //
       await Matches.insertMany(matchesWithObjectIds);
 
       // 📧 Send match notification emails AFTER user details are fetched

@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import Matches from "./Matches";
 import Resume from "./Resume";
 import Livechat from "./LiveChat";
+import Inbox from "./Inbox";
 
 export default function ChatBox({
   currentChatId,
@@ -26,9 +27,11 @@ export default function ChatBox({
   const [retryIndex, setRetryIndex] = useState(undefined);
   const [selectedFile, setSelectedFile] = useState(null);
   const [openChat, setOpenChat] = useState(false);
-  const [chatReceiverSession, setChatReceiverSession] = useState(null);
-  const [chatSenderSession, setChatSenderSession] = useState(null);
-
+  const [sessionA, setSessionA] = useState(null);
+  const [sessionB, setSessionB] = useState(null);
+  const [userA, setUserA] = useState(null);
+  const [userB, setUserB] = useState(null);
+  const [connectionId, setConnectionId] = useState(null);
   //voice model contants
   const [isRecording, setIsRecording] = useState(false);
   const timerRef = useRef(null);
@@ -41,6 +44,8 @@ export default function ChatBox({
   const [transcribeError, setTranscribeError] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
   const [audioModeOn, setAudioModeOn] = useState(false);
+  const [showInbox, setShowInbox] = useState(false);
+
   //voice effects
 
   useEffect(() => {
@@ -188,11 +193,15 @@ export default function ChatBox({
   const updateResume = (filename, summary) => {
     setResumedata({ filename: filename, resumeSummary: summary });
   };
-  const openChatSession = (c1, c2) => {
-    setChatReceiverSession(c2);
-    setChatSenderSession(c1);
+  const openChatSession = (sessionA, sessionB, userA, userB) => {
+    setSessionA(sessionA);
+    setSessionB(sessionB);
+    setUserA(userA);
+    setUserB(userB);
+    setConnectionId([sessionA, sessionB].sort().join("_"));
     setOpenChat((prev) => !prev);
   };
+
   const onResumeUpload = (newResumeData) => {
     if (newResumeData) {
       let resumeSubText = `I have sent my ${session?.user?.profileType === "recruiter" ? "JD" : "resume"}!! Please have a look at it.`;
@@ -660,13 +669,47 @@ export default function ChatBox({
           </div>
         )}
       </div>
-      {openChat && chatSenderSession && chatReceiverSession && (
+      {/* Inbox for desktop and mobile */}
+      {showInbox && (
+        <>
+          {/* Mobile: Centered modal overlay */}
+          <div className="block md:hidden fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center">
+            <div className="w-full max-w-sm mx-auto">
+              <Inbox
+                onOpenChat={openChatSession}
+                onClose={() => setShowInbox(false)}
+              />
+            </div>
+          </div>
+          {/* Desktop: Bottom right */}
+          <div className="hidden md:block fixed bottom-6 right-6 z-50 w-80 max-h-[60vh] overflow-y-auto shadow-2xl rounded-xl bg-white border border-slate-200">
+            <Inbox
+              onOpenChat={openChatSession}
+              onClose={() => setShowInbox(false)}
+            />
+          </div>
+        </>
+      )}
+      {showInbox === false && (
+        <button
+          onClick={() => setShowInbox(true)}
+          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg transition-colors text-sm"
+          style={{ minWidth: "fit-content" }}
+        >
+          <img src="/message.png" alt="All Messages" width={20} height={20} />
+          All Messages
+        </button>
+      )}
+      {openChat && sessionA && sessionB && userA && userB && (
         <Livechat
-          chatData={{
-            senderSession: chatSenderSession,
-            receiverSession: chatReceiverSession,
-          }}
+          sessionA={sessionA}
+          sessionB={sessionB}
+          userA={userA}
+          userB={userB}
+          currentUserId={session?.user?.id}
           onClose={() => setOpenChat(false)}
+          currentSessionId={currentChatId}
+          connectionId={connectionId}
         />
       )}
     </div>
