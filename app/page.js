@@ -1,28 +1,10 @@
 import Home from "./components/Home";
 import { getServerSession } from "next-auth";
-import { authOptions } from "@/app/api/auth/[...nextauth]/route"; // adjust path as needed
+import { authOptions } from "@/app/api/auth/[...nextauth]/route";
 import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
 
 export default async function HomePage() {
   const session = await getServerSession(authOptions);
-  const cookieStore = await cookies();
-
-  const cookieString = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
-
-  // Use the current domain instead of hardcoded localhost
-  const baseUrl = process.env.NEXTAUTH_URL || 
-                  (typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000');
-  
-  const res = await fetch(`${baseUrl}/api/allchats`, {
-    headers: {
-      Cookie: cookieString,
-    },
-  });
-  const allChats = await res.json();
 
   if (!session) {
     redirect("/login");
@@ -34,17 +16,14 @@ export default async function HomePage() {
     return null;
   }
 
-  const fetchNotis = await fetch(
-    `${baseUrl}/api/notifications/${session.user.id}`
-  );
-  const initialNotifications = await fetchNotis.json();
-
+  // Don't fetch data here - let the client handle it
+  // This makes the page load faster and simpler
   return (
     <div className="flex items-center justify-center max-h-screen bg-orange-100">
-      <div className=" flex flex-col gap-4 w-full mx-auto h-screen md:rounded-2xl">
+      <div className="flex flex-col gap-4 w-full mx-auto h-screen md:rounded-2xl">
         <Home
-          initialChats={allChats}
-          notifications={initialNotifications.messages}
+          initialChats={{ sessionIds: [], sessions: {} }}
+          notifications={[]}
         />
       </div>
     </div>

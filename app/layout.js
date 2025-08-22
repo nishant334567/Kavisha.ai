@@ -9,8 +9,9 @@ export default function RootLayout({ children }) {
     <html>
       <head>
         <title>Kavisha.ai</title>
+        <link rel="icon" href="data:," />
       </head>
-      <body className="bg-slate-50">
+      <body className="bg-slate-50" suppressHydrationWarning={true}>
         <SessionProvider>
           <SocketSessionWrapper>{children}</SocketSessionWrapper>
         </SessionProvider>

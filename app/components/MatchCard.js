@@ -1,7 +1,6 @@
 "use client";
 import { useSession } from "next-auth/react";
 import React, { useEffect, useState } from "react";
-import Livechat from "./LiveChat";
 
 export default function MatchCard({
   type = 0,
@@ -97,33 +96,6 @@ export default function MatchCard({
     }
   };
 
-  const isRecruiter = profileType === "recruiter";
-  // Temporarily allow unlimited connections for recruiters (like job seekers)
-  const hasCredits = isRecruiter ? true : latestCredits > 0;
-
-  // Function to hash/mask name
-  const hashName = (name) => {
-    if (!name || name === "Unknown") return "Unknown";
-    const parts = name.split(" ");
-    return parts
-      .map((part) =>
-        part.length > 1 ? part[0] + "*".repeat(part.length - 1) : part
-      )
-      .join(" ");
-  };
-
-  // Function to hash/mask email
-  const hashEmail = (email) => {
-    if (!email || email === "Unknown") return "Unknown";
-    const [username, domain] = email.split("@");
-    if (!domain) return email;
-    const hashedUsername =
-      username.length > 2
-        ? username.substring(0, 2) + "*".repeat(username.length - 2)
-        : username;
-    return `${hashedUsername}@${domain}`;
-  };
-
   return (
     <div className="relative g-white border border-slate-200 rounded-lg p-4 flex flex-col gap-2 min-h-[120px] w-full relative">
       <div className="flex items-center justify-between">
@@ -165,60 +137,27 @@ export default function MatchCard({
       <div className="flex text-xs gap-2">
         <div className="w-full relative">
           <button
-            className={`w-full px-2 py-1 rounded-md flex items-center justify-center ${
-              isLoading
-                ? "text-slate-500 bg-slate-300 cursor-not-allowed"
-                : alreadyContacted
-                  ? "bg-green-100 text-green-700 border border-green-300"
-                  : "text-white bg-slate-600 hover:bg-slate-700 transition-colors"
-            }`}
-            onClick={createConnection}
-            disabled={isLoading || alreadyContacted}
+            onClick={() =>
+              openChatSession(
+                senderSession,
+                matchedSessionId,
+                session?.user?.id,
+                matchedUserId
+              )
+            }
+            className="w-full px-2 py-1 rounded-md flex items-center justify-center 
+            bg-orange-600 hover:bg-orange-700 transition-colors"
           >
-            {isLoading ? (
-              "Connecting..."
-            ) : isRecruiter ? (
-              <>
-                <span>
-                  {alreadyContacted ? "Connected" : "Connect"}
-                  {/* ({latestCredits}/3) */}
-                </span>
-                <span
-                  className="ml-2 bg-gray-200 rounded-full w-5 h-5 flex items-center justify-center cursor-pointer"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setShowTooltip(!showTooltip);
-                  }}
-                  onMouseEnter={() => setShowTooltip(true)}
-                  onMouseLeave={() => setShowTooltip(false)}
-                  title="Pricing Information"
-                >
-                  <span className="text-gray-600 text-xs font-bold">?</span>
-                </span>
-              </>
-            ) : alreadyContacted ? (
-              "Applied"
-            ) : (
-              "Apply"
-            )}
+            <span className="text-white text-sm mr-2">Chat Now</span>
+            <img src="chat.png" width={15} height={15} />
           </button>
-
-          {showTooltip && isRecruiter && (
-            <div className="absolute -top-30 left-0 right-0 bg-slate-200 text-slate-700 text-xs p-2 rounded shadow-lg z-10">
-              <div className="text-left">
-                <div>1. 3 candidate profiles can be unlocked for free</div>
-                <div>2. After free credits: ₹51 per profile</div>
-              </div>
-              <div className="absolute top-full left-1/2 transform -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-slate-200"></div>
-            </div>
-          )}
         </div>
         {type != 1 && (
           <button
             onClick={() =>
               openDetailsPanel(3, {
-                matchedUserName: hashName(matchedUserName),
-                matchedUserEmail: hashEmail(matchedUserEmail),
+                matchedUserName: matchedUserName,
+                matchedUserEmail: matchedUserEmail,
                 matchPercentage,
                 description,
                 matchingReason,
@@ -230,27 +169,7 @@ export default function MatchCard({
             View Details
           </button>
         )}
-        <button
-          onClick={() =>
-            openChatSession(
-              senderSession,
-              matchedSessionId,
-              session?.user?.id,
-              matchedUserId
-            )
-          }
-        >
-          <img src="chat.png" width={50} height={50} />
-        </button>
       </div>
-
-      {/* Temporarily disabled credit limit message for recruiters
-      {!hasCredits && isRecruiter && (
-        <div className="text-xs text-red-500 text-center">
-          No credits remaining. Add credits to connect.
-        </div>
-      )}
-      */}
     </div>
   );
 }

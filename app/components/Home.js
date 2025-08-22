@@ -11,57 +11,98 @@ import Inbox from "./Inbox";
 
 export default function Home({ initialChats, notifications }) {
   const { data: session } = useSession();
+
+  // Safety checks for undefined data
+  const safeInitialChats = initialChats || { sessionIds: [], sessions: {} };
+  const safeNotifications = notifications || [];
+
   const [currentChatId, setCurrentchatid] = useState(
-    initialChats?.sessionIds?.[0]
+    safeInitialChats?.sessionIds?.[0] || null
   );
-  const [allChats, setAllchats] = useState(initialChats);
-  const [messages, setMessages] = useState(initialChats?.sessionIds?.[0]?.logs);
+  const [allChats, setAllchats] = useState(safeInitialChats);
+  const [messages, setMessages] = useState(
+    safeInitialChats?.sessionIds?.[0]
+      ? safeInitialChats.sessions[safeInitialChats.sessionIds[0]]?.logs || []
+      : []
+  );
 
   const [connections, setConnections] = useState([]);
   const [showSidebar, setShowSidebar] = useState(false);
   const [matches, setMatches] = useState([]);
-  const [chatLoading, setChatsLoading] = useState(true);
+  const [chatLoading, setChatsLoading] = useState(true); // Start with true since we need to fetch
+  const [chatError, setChatError] = useState(false);
   const [show, setShow] = useState(false);
   const [type, setType] = useState(1);
   const [viewData, setViewdata] = useState({});
 
+  // Client-side data fetching
+  const fetchData = async () => {
+    setChatsLoading(true);
+    setChatError(false);
+    try {
+      const res = await fetch("/api/allchats");
+      if (!res.ok) {
+        throw new Error(`HTTP error! status: ${res.status}`);
+      }
+      const data = await res.json();
+
+      // Set the chats data
+      setAllchats(data);
+
+      console.log("Fetched data:", data);
+      console.log("Current chatId:", currentChatId);
+      console.log("Session IDs:", data?.sessionIds);
+
+      // Update currentChatId if it's not set and we have sessions
+      if (!currentChatId && data?.sessionIds?.length > 0) {
+        const firstChatId = data.sessionIds[0];
+        console.log("Setting first chatId:", firstChatId);
+        setCurrentchatid(firstChatId);
+
+        // Set messages for the first chat
+        const firstChatMessages = data?.sessions[firstChatId]?.logs || [];
+        console.log("Setting first chat messages:", firstChatMessages);
+        setMessages(firstChatMessages);
+      } else if (currentChatId) {
+        // Set messages for the current chat
+        const currentChatMessages = data?.sessions[currentChatId]?.logs || [];
+        console.log("Setting current chat messages:", currentChatMessages);
+        setMessages(currentChatMessages);
+      }
+
+      setChatError(false);
+    } catch (error) {
+      console.error("Error fetching chats:", error);
+      setChatError(true);
+    } finally {
+      setChatsLoading(false);
+    }
+  };
+
+  const fetchConnections = async () => {
+    if (!currentChatId) return;
+    try {
+      const response = await fetch(`/api/connections/${currentChatId}`);
+      const data = await response.json();
+      setConnections(data.connections);
+    } catch (error) {
+      console.error("Error fetching connections:", error);
+    }
+  };
+
+  const fetchMatches = async () => {
+    if (!currentChatId) return;
+    try {
+      const response = await fetch(`/api/fetch-matches/${currentChatId}`);
+      const data = await response.json();
+      setMatches(data?.matches);
+    } catch (error) {
+      console.error("Error fetching matches:", error);
+    }
+  };
+
   useEffect(() => {
-    const fetchData = async () => {
-      setChatsLoading(true);
-      try {
-        const res = await fetch("/api/allchats");
-        const data = await res.json();
-        setMessages(data?.sessions[currentChatId]?.logs);
-        setAllchats(data);
-      } catch (error) {
-        console.error("Error fetching chats:", error);
-      } finally {
-        setChatsLoading(false);
-      }
-    };
-
-    const fetchConnections = async () => {
-      if (!currentChatId) return;
-      try {
-        const response = await fetch(`/api/connections/${currentChatId}`);
-        const data = await response.json();
-        setConnections(data.connections);
-      } catch (error) {
-        console.error("Error fetching connections:", error);
-      }
-    };
-
-    const fetchMatches = async () => {
-      if (!currentChatId) return;
-      try {
-        const response = await fetch(`/api/fetch-matches/${currentChatId}`);
-        const data = await response.json();
-        setMatches(data?.matches);
-      } catch (error) {
-        console.error("Error fetching matches:", error);
-      }
-    };
-
+    // Fetch initial data
     fetchData();
     fetchConnections();
     fetchMatches();

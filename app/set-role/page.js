@@ -15,6 +15,7 @@ export default function SetRole() {
       router.push("/login");
     }
   }, [session]);
+
   const handleChange = (e) => {
     setRole(e.target.value);
   };
@@ -36,70 +37,140 @@ export default function SetRole() {
     }
   };
 
+  const roleOptions = [
+    {
+      value: "job_seeker",
+      label: "Job Seeker",
+      icon: "💼",
+      description: "Looking for job opportunities",
+      category: "Professional",
+    },
+    {
+      value: "recruiter",
+      label: "Recruiter",
+      icon: "🔍",
+      description: "Hiring talent for companies",
+      category: "Professional",
+    },
+    {
+      value: "male",
+      label: "Male",
+      icon: "👨",
+      description: "Looking for dating connections",
+      category: "Dating",
+    },
+    {
+      value: "female",
+      label: "Female",
+      icon: "👩",
+      description: "Looking for dating connections",
+      category: "Dating",
+    },
+  ];
+
   return (
-    <div className="flex items-center justify-center min-h-screen bg-slate-50">
-      <form
-        onSubmit={handleSubmit}
-        className="bg-white p-8 rounded-lg shadow-md w-full max-w-md"
-      >
-        <h2 className="text-2xl font-semibold mb-6 text-center text-slate-800">
-          I am
-        </h2>
-        <div className="flex flex-col gap-4 mb-6">
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="role"
-              value="job_seeker"
-              checked={role === "job_seeker"}
-              onChange={handleChange}
-              className="form-radio h-5 w-5 text-blue-600"
-            />
-            <span className="ml-3 text-lg text-slate-700">Job Seeker</span>
-          </label>
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="role"
-              value="recruiter"
-              checked={role === "recruiter"}
-              onChange={handleChange}
-              className="form-radio h-5 w-5 text-blue-600"
-            />
-            <span className="ml-3 text-lg text-slate-700">Recruiter</span>
-          </label>
-          <div className="h-px bg-slate-200 my-2" />
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="role"
-              value="male"
-              checked={role === "male"}
-              onChange={handleChange}
-              className="form-radio h-5 w-5 text-blue-600"
-            />
-            <span className="ml-3 text-lg text-slate-700">Male (Dating)</span>
-          </label>
-          <label className="flex items-center cursor-pointer">
-            <input
-              type="radio"
-              name="role"
-              value="female"
-              checked={role === "female"}
-              onChange={handleChange}
-              className="form-radio h-5 w-5 text-blue-600"
-            />
-            <span className="ml-3 text-lg text-slate-700">Female (Dating)</span>
-          </label>
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-slate-50 flex items-center justify-center p-4">
+      <div className="w-full max-w-2xl">
+        {/* Header */}
+        <div className="text-center mb-8">
+          <h1 className="text-4xl font-bold text-slate-800 mb-2">
+            Choose Your Role
+          </h1>
+          <p className="text-slate-600 text-lg">
+            Tell us who you are to get started
+          </p>
         </div>
-        <button
-          type="submit"
-          className="w-full bg-blue-600 text-white py-2 rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50"
-          disabled={!role || isUpdating}
-        >
-          Continue
-        </button>
-      </form>
+
+        {/* Role Selection Form */}
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            {roleOptions.map((option) => (
+              <div key={option.value} className="relative">
+                <input
+                  type="radio"
+                  name="role"
+                  value={option.value}
+                  id={option.value}
+                  checked={role === option.value}
+                  onChange={handleChange}
+                  className="sr-only"
+                />
+                <label
+                  htmlFor={option.value}
+                  className={`block cursor-pointer p-6 rounded-xl border-2 transition-all duration-200 ${
+                    role === option.value
+                      ? "border-orange-500 bg-orange-50 shadow-lg shadow-orange-100"
+                      : "border-slate-200 bg-white hover:border-orange-300 hover:bg-orange-25"
+                  }`}
+                >
+                  <div className="flex items-start space-x-4">
+                    <div className="text-3xl">{option.icon}</div>
+                    <div className="flex-1">
+                      <div className="flex items-center justify-between mb-2">
+                        <h3 className="font-semibold text-slate-800 text-lg">
+                          {option.label}
+                        </h3>
+                        <div
+                          className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                            role === option.value
+                              ? "border-orange-500 bg-orange-500"
+                              : "border-slate-300"
+                          }`}
+                        >
+                          {role === option.value && (
+                            <div className="w-2 h-2 bg-white rounded-full"></div>
+                          )}
+                        </div>
+                      </div>
+                      <p className="text-slate-600 text-sm mb-2">
+                        {option.description}
+                      </p>
+                      <span
+                        className={`inline-block px-3 py-1 rounded-full text-xs font-medium ${
+                          option.category === "Professional"
+                            ? "bg-blue-100 text-blue-700"
+                            : "bg-pink-100 text-pink-700"
+                        }`}
+                      >
+                        {option.category}
+                      </span>
+                    </div>
+                  </div>
+                </label>
+              </div>
+            ))}
+          </div>
+
+          {/* Continue Button */}
+          <div className="pt-6">
+            <button
+              type="submit"
+              disabled={!role || isUpdating}
+              className={`w-full py-4 px-6 rounded-xl font-semibold text-lg transition-all duration-200 ${
+                role && !isUpdating
+                  ? "bg-orange-500 hover:bg-orange-600 text-white shadow-lg shadow-orange-200 hover:shadow-xl hover:shadow-orange-300 transform hover:-translate-y-0.5"
+                  : "bg-slate-200 text-slate-400 cursor-not-allowed"
+              }`}
+            >
+              {isUpdating ? (
+                <div className="flex items-center justify-center space-x-2">
+                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                  <span>Setting up...</span>
+                </div>
+              ) : (
+                "Continue"
+              )}
+            </button>
+          </div>
+        </form>
+
+        {/* Footer Note */}
+        {/* <div className="text-center mt-8">
+          <p className="text-slate-500 text-sm">
+            You can change your role later in your profile settings
+          </p>
+        </div> */}
+      </div>
     </div>
   );
 }
