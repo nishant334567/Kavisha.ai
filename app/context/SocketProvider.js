@@ -17,8 +17,11 @@ export default function SocketProvider({ children, userId }) {
         process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3000";
 
       socketRef.current = io(socketUrl, {
-        withCredentials: true,
+        withCredentials: false,
         forceNew: true,
+        transports: ["websocket", "polling"],
+        timeout: 20000,
+        reconnectionAttempts: 5,
       });
 
       socketRef.current.on("connect", () => {

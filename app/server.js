@@ -28,12 +28,14 @@ app.prepare().then(() => {
 
   const io = new Server(server, {
     cors: {
-      origin: "*",
+      origin:
+        process.env.NODE_ENV === "production"
+          ? "https://kavisha.ai"
+          : "http://localhost:3000",
       methods: ["GET", "POST", "PUT", "DELETE"],
       allowedHeaders: ["*"],
-      credentials: true,
     },
-    transports: ["polling", "websocket"],
+    transports: ["websocket", "polling"],
     allowEIO3: true,
     path: "/socket.io/",
   });
