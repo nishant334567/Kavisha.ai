@@ -19,8 +19,7 @@ export default function Inbox({ onOpenChat, onClose }) {
       setLoading(false);
     };
     fetchActiveChats();
-  }, [session?.user?.id]);
-  //
+  }, [session]);
 
   if (loading) {
     return (

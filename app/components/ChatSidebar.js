@@ -2,27 +2,63 @@
 
 import { useSession, signOut, signIn } from "next-auth/react";
 import { useEffect, useState } from "react";
-import Notification from "./Notification";
 import { useRouter } from "next/navigation";
+import { useBrandContext } from "../context/brand/BrandContextProvider";
 
 export default function ChatSidebar({
   allChats,
   updateChatId,
   currentChatId,
-  notifications,
+  currentChatType,
+  setCurrentChatType,
 }) {
   const { data: session } = useSession();
   const [isDeleting, setIsdeleting] = useState(false);
-  const [isCollapsed, setIscollapsed] = useState(true);
+  const [isCollapsed, setIscollapsed] = useState(false);
   const [openNotifications, setOpenNotifications] = useState(false);
   const [newChatLoading, setNewChatLoading] = useState(false);
   const [inboxLoading, setInboxLoading] = useState(false);
-
+  const brandContext = useBrandContext();
   const [inboxChats, setInboxChats] = useState([]);
   const [openingChatId, setOpeningChatId] = useState(null);
   const router = useRouter();
   if (session?.user) {
   }
+
+  const getRoleMeta = (role) => {
+    if (role === "recruiter") {
+      return {
+        label: "Recruiter",
+        cls: "bg-blue-100 text-blue-700 border-blue-200",
+      };
+    }
+    if (role === "dating") {
+      return {
+        label: "Dating",
+        cls: "bg-pink-100 text-pink-700 border-pink-200",
+      };
+    }
+    return {
+      label: "Job Seeker",
+      cls: "bg-orange-100 text-orange-700 border-orange-200",
+    };
+  };
+
+  const formatIST = (iso) => {
+    if (!iso) return "";
+    try {
+      return new Date(iso).toLocaleString("en-IN", {
+        timeZone: "Asia/Kolkata",
+        day: "2-digit",
+        month: "short",
+        hour: "2-digit",
+        minute: "2-digit",
+      });
+    } catch (e) {
+      return "";
+    }
+  };
+
   const fetchAllInbox = async (chatId) => {
     updateChatId(chatId);
     setInboxLoading(true);
@@ -42,15 +78,15 @@ export default function ChatSidebar({
     }
   };
 
-  const deleteSession = async (id) => {
-    setIsdeleting(true);
-    const response = await fetch("/api/allchats/", {
-      method: "DELETE",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ chatId: id }),
-    });
-    setIsdeleting(false);
-  };
+  // const deleteSession = async (id) => {
+  //   setIsdeleting(true);
+  //   const response = await fetch("/api/allchats/", {
+  //     method: "DELETE",
+  //     headers: { "Content-Type": "application/json" },
+  //     body: JSON.stringify({ chatId: id }),
+  //   });
+  //   setIsdeleting(false);
+  // };
   const toggleLeftSideBar = () => {
     setIscollapsed((prev) => !prev);
   };
@@ -58,23 +94,30 @@ export default function ChatSidebar({
     setOpenNotifications((prev) => !prev);
   };
   const newChat = async () => {
+    if (brandContext?.brandName === "Kavisha") {
+      updateChatId(null);
+      setCurrentChatType(null);
+      return;
+    }
     setNewChatLoading(true);
     const res = await fetch("/api/newchatsession", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId: session?.user?.id,
-        role: session?.user?.profileType,
+        role: currentChatType,
+        brand: brandContext?.subdomain,
       }),
     });
     const data = await res.json();
     if (data.success) updateChatId(data.sessionId);
     setNewChatLoading(false);
   };
+
   return (
-    <>
+    <div>
       <div className="relative">
-        <div className="absolute z-40 left-15 top-1/2">
+        {/* <div className="absolute z-40 left-15 top-1/2">
           {openNotifications && (
             <Notification
               toggle={toggleNotifications}
@@ -82,9 +125,9 @@ export default function ChatSidebar({
               notifications={notifications}
             />
           )}
-        </div>
+        </div> */}
         {!isCollapsed && (
-          <div className="flex flex-col h-full w-64 p-4">
+          <div className="bg-orange-50 absolute z-40 left-15 top-1/2 flex flex-col  w-64 p-4 overflow-y-auto">
             {/* User Info Section */}
             <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-gradient-to-r from-orange-100 to-orange-200 shadow-sm border border-orange-300">
               <div className="flex flex-col overflow-hidden">
@@ -104,7 +147,7 @@ export default function ChatSidebar({
                   <img src="close-sidebar.png" width={20} />
                 </button>
               </div>
-              <div className="space-y-4">
+              <div className="max-h-[27vh] overflow-y-auto space-y-4 scrollbar-none">
                 {allChats?.sessionIds?.length > 0 &&
                   allChats.sessionIds.map((id, idx) => (
                     <div className="flex w-full min-h-8 gap-2" key={id}>
@@ -113,17 +156,37 @@ export default function ChatSidebar({
                     ${currentChatId === id && "bg-gray-100"}
                   `}
                         type="button"
-                        onClick={() => updateChatId(id)}
-                      >
-                        {allChats?.sessions[id]?.title || `Chat ${idx + 1}`}
-                      </button>
-                      {/* <button
                         onClick={() => {
-                          fetchAllInbox(id);
+                          updateChatId(id);
+                          setCurrentChatType(allChats?.sessions[id]?.role);
                         }}
                       >
-                        <img src="chat.png" width={16} />
-                      </button> */}
+                        <div className="flex flex-col items-start text-left w-full">
+                          <div className="flex items-center gap-2 w-full">
+                            <span className="truncate">
+                              {allChats?.sessions[id]?.title ||
+                                `Chat ${idx + 1} `}
+                            </span>
+                            {(() => {
+                              const meta = getRoleMeta(
+                                allChats?.sessions[id]?.role
+                              );
+                              return (
+                                <span
+                                  className={`ml-auto px-2 py-0.5 text-[10px] rounded-full border ${meta.cls}`}
+                                >
+                                  {meta.label}
+                                </span>
+                              );
+                            })()}
+                          </div>
+                          {allChats?.sessions[id]?.updatedAt && (
+                            <span className="text-[10px] text-slate-500 mt-1">
+                              {formatIST(allChats?.sessions[id]?.updatedAt)}
+                            </span>
+                          )}
+                        </div>
+                      </button>
                     </div>
                   ))}
               </div>
@@ -144,7 +207,7 @@ export default function ChatSidebar({
                 <img src="logout.png" width={16} />
                 Sign Out
               </button>
-              {session?.user?.isAdmin && (
+              {brandContext?.isAdmin && (
                 <button
                   className="flex items-center gap-2 justify-center text-xs bg-white w-full p-2  rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
                   onClick={() => router.push("/admin")}
@@ -156,10 +219,10 @@ export default function ChatSidebar({
           </div>
         )}
         {isCollapsed && (
-          <div className="w-12 px-4 py-2 flex flex-col  min-h-full  space-y-4">
+          <div className="w-12 px-4 py-2 flex flex-col space-y-4">
             <div>
               <button onClick={() => toggleLeftSideBar()}>
-                <img src="close-sidebar.png" width={20} />
+                <img src="close-sidebar.png" width={25} />
               </button>
             </div>
             <div>
@@ -168,17 +231,17 @@ export default function ChatSidebar({
                   (newChat(), setIscollapsed((prev) => !prev));
                 }}
               >
-                <img src="new-chat.png" width={22} />
+                <img src="new-chat.png" width={25} />
               </button>
             </div>
             <div>
               <button onClick={() => setOpenNotifications((prev) => !prev)}>
-                <img src="notification.png" width={20} />
+                <img src="notification.png" width={25} />
               </button>
             </div>
           </div>
         )}
       </div>
-    </>
+    </div>
   );
 }

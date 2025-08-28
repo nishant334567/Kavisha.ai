@@ -1,7 +1,6 @@
 import NextAuth from "next-auth";
 // import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
-import LinkedInProvider from "next-auth/providers/linkedin";
 import { connectDB } from "@/app/lib/db";
 import User from "@/app/models/Users";
 import Session from "@/app/models/ChatSessions";
@@ -24,70 +23,7 @@ export const authOptions = {
         params: {
           prompt: "consent",
           access_type: "offline",
-          response_type: "code"
-        }
-      }
-    }),
-    LinkedInProvider({
-      clientId: process.env.LINKEDIN_CLIENT_ID,
-      clientSecret: process.env.LINKEDIN_CLIENT_SECRET,
-      authorization: {
-        params: {
-          scope: "openid email profile",
-        },
-      },
-      idToken: true,
-      token: {
-        async request({ client, params, checks, provider }) {
-          const tokenEndpoint = "https://www.linkedin.com/oauth/v2/accessToken";
-
-          const baseUrl = process.env.NEXTAUTH_URL || "http://localhost:3000";
-          const redirectUri = `${baseUrl}/api/auth/callback/linkedin`;
-
-          const body = new URLSearchParams({
-            grant_type: "authorization_code",
-            code: params.code,
-            redirect_uri: redirectUri,
-            client_id: provider.clientId,
-            client_secret: provider.clientSecret,
-          });
-
-          const response = await fetch(tokenEndpoint, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-              Accept: "application/json",
-            },
-            body: body.toString(),
-          });
-
-          if (!response.ok) {
-            const errorText = await response.text();
-            console.error(
-              "LinkedIn token exchange error:",
-              response.status,
-              errorText
-            );
-            throw new Error(
-              `Token exchange failed: ${response.status} - ${errorText}`
-            );
-          }
-
-          const tokens = await response.json();
-
-          // LinkedIn might return id_token only with OpenID Connect scope
-          const userinfoRes = await fetch(
-            "https://api.linkedin.com/v2/userinfo",
-            {
-              headers: {
-                Authorization: `Bearer ${tokens.access_token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
-          const userinfo = await userinfoRes.json();
-          ("Fetched user info", userinfo);
-          return tokens;
+          response_type: "code",
         },
       },
     }),
@@ -95,13 +31,12 @@ export const authOptions = {
 
   callbacks: {
     async redirect({ url, baseUrl }) {
-      // Handle relative URLs
       if (url.startsWith("/")) return `${baseUrl}${url}`;
-      // Handle external URLs
       else if (new URL(url).origin === baseUrl) return url;
       return baseUrl;
     },
-    async jwt({ token, user }) {
+
+    async jwt({ token, user, req }) {
       if (user) {
         await connectDB();
         let dbuser = await User.findOne({ email: user.email });
@@ -120,41 +55,13 @@ export const authOptions = {
       }
       return token;
     },
-    async session({ session, token }) {
-      try {
-        await connectDB();
-
-        let dbuser = await User.findOne({ email: session.user.email });
-        if (dbuser) {
-          token.id = dbuser._id.toString();
-          session.user.id = token.id;
-          session.user.profileType = dbuser.profileType || null;
-          session.user.isAdmin = dbuser.isAdmin || false;
-
-          // Only create session if user has profileType and no existing session
-          const existing = await Session.findOne({ userId: token.id });
-          if (!existing && dbuser.profileType) {
-            await createSessionWithDefaultLog(token.id, dbuser.profileType);
-          }
-        } else {
-          // If no dbuser found, use token values
-          session.user.id = token.id;
-          session.user.profileType = token.profileType;
-          session.user.isAdmin = token.isAdmin || false;
-        }
-
-        session.user.name = token.name;
-        session.user.image = token.image;
-      } catch (err) {
-        console.error("Session callback error:", err);
-        // Fallback to token values if database operations fail
-        session.user.id = token.id;
-        session.user.profileType = token.profileType;
-        session.user.name = token.name;
-        session.user.image = token.image;
-        session.user.isAdmin = token.isAdmin || false;
-      }
-
+    async session({ session, token, req }) {
+      session.user.id = token.id;
+      session.user.profileType = token.profileType;
+      session.user.isAdmin = token.isAdmin;
+      session.user.name = token.name;
+      session.user.image = token.image;
+      session.user.email = token.email;
       return session;
     },
   },

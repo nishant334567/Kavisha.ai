@@ -18,9 +18,8 @@ export async function getMatches(sessionId) {
 
   await connectDB();
   const session = await Session.findById({ _id: sessionId });
-
   const role = session?.role;
-  const isDating = role === "male" || role === "female";
+  const isDating = role === "dating";
   let oppositeRole;
   if (isDating) {
     oppositeRole = role === "male" ? "female" : "male";
@@ -85,20 +84,21 @@ Return only a JSON array (max 10), no extra text.
   const datingPrompt = `
 You are a thoughtful dating match assistant.
 
-Match [A] with potential partners [B] based on compatibility in values, interests, lifestyle, location, and preferences extracted from their chat summaries.
+Your task is to suggest date matches for [A] strictly using chat summaries. Base compatibility on values, interests, lifestyle, location, and preferences extracted from the summaries.
 
 [A] is "${role}" with the following details (chat summary):
 ---
 ${session?.chatSummary}
 ---
 
-Each [B] is "${oppositeRole}" with details:
+Candidates [B] come from sessions. Only consider candidates where brand is "kavisha" and role is "dating" (this is the only filter). Details:
 ${allProvidersList}
 ---
 
 Rules:
 - Address [A] as "you" or "your" in all explanations.
 - Consider interests, age range, goals, lifestyle, and dealbreakers if mentioned.
+- If a candidate does not meet brand "kavisha" and role "dating", ignore it.
 - Avoid suggesting matches with strong conflicts (e.g., non-overlapping locations or opposite relationship goals).
 
 For each selected match, return:
@@ -178,6 +178,7 @@ Return only the JSON array (max 10).`;
     : [];
   return filteredmatches;
 }
+
 export async function GET(req, { params }) {
   const { sessionId } = await params;
   const response = await getMatches(sessionId);
