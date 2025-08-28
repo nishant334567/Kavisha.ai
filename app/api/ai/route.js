@@ -51,7 +51,7 @@ export async function POST(request) {
       secret: process.env.NEXTAUTH_SECRET,
     });
     const body = await request.json();
-    const { history, userMessage, jobseeker, sessionId, resume } = body;
+    const { history, userMessage, sessionId, resume } = body;
 
     await connectDB();
     // const session = await Session.findById(sessionId);
@@ -67,7 +67,8 @@ export async function POST(request) {
         { status: 400 }
       );
     }
-
+    const session = await Session.findById(sessionId);
+    const sessionType = session?.role || "job_seeker";
     await Logs.create({
       message: userMessage,
       sessionId: sessionId,
@@ -76,21 +77,11 @@ export async function POST(request) {
     });
 
     const systemPrompt =
-      jobseeker === "recruiter"
+      sessionType === "recruiter"
         ? SYSTEM_PROMPT_RECRUITER
-        : jobseeker === "male" || jobseeker === "female"
+        : sessionType === "dating"
           ? SYSTEM_PROMPT_DATING
           : SYSTEM_PROMPT_JOB_SEEKER;
-
-    console.log(
-      "AI system prompt selected:",
-      jobseeker === "recruiter"
-        ? "RECRUITER"
-        : jobseeker === "male" || jobseeker === "female"
-          ? "DATING"
-          : "JOB_SEEKER"
-    );
-
     const messages = [
       {
         role: "system",
@@ -101,7 +92,7 @@ export async function POST(request) {
             {
               role: "user",
               content:
-                jobseeker === "recruiter"
+                sessionType === "recruiter"
                   ? `USER HAS PROVIDED JD: ${resumeText}\n\nIMPORTANT: The user has already uploaded their JD. Process this JD content and ask contextual questions based on it. DO NOT ask for JD again. Acknowledge that you can read the JD.`
                   : `USER HAS PROVIDED RESUME: ${resumeText}\n\nIMPORTANT: The user has already uploaded their resume. Process this resume content and ask contextual questions based on it. DO NOT ask for resume again. Acknowledge that you can read the resume.`,
             },
@@ -148,7 +139,7 @@ export async function POST(request) {
               {
                 role: "user",
                 content:
-                  jobseeker === "recruiter"
+                  sessionType === "recruiter"
                     ? `USER HAS PROVIDED JD: ${resumeText}\n\nIMPORTANT: The user has already uploaded their JD. Process this JD content and ask contextual questions based on it. DO NOT ask for JD again. Acknowledge that you can read the JD.`
                     : `USER HAS PROVIDED RESUME: ${resumeText}\n\nIMPORTANT: The user has already uploaded their resume. Process this resume content and ask contextual questions based on it. DO NOT ask for resume again. Acknowledge that you can read the resume.`,
               },
@@ -179,7 +170,7 @@ ${originalReply}
 Do NOT change the reply content ("${originalReply}") - keep it exactly as is. Only add the missing format parts based on the conversation context.`,
         },
       ];
-      //
+
       const reChatCompletion = await openai.chat.completions.create({
         model: "gpt-4o",
         messages: rePromptMessages,
@@ -204,7 +195,7 @@ Do NOT change the reply content ("${originalReply}") - keep it exactly as is. On
     if (allDataCollected === "true") {
       await Matches.deleteMany({ sessionId: sessionId });
       matchesLatest = await getMatches(sessionId);
-      //
+
       if (matchesLatest.length > 0) {
         const matchesCount = matchesLatest.length;
 
@@ -281,9 +272,8 @@ Click on the "find matches" button to see if ${
           }
         })
       );
-      //
-      await Matches.insertMany(matchesWithObjectIds);
 
+      const result = await Matches.insertMany(matchesWithObjectIds);
       // 📧 Send match notification emails AFTER user details are fetched
       const uniqueEmails = [
         ...new Set(

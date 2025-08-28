@@ -48,25 +48,17 @@ export default function Home({ initialChats, notifications }) {
 
       // Set the chats data
       setAllchats(data);
-
-      console.log("Fetched data:", data);
-      console.log("Current chatId:", currentChatId);
-      console.log("Session IDs:", data?.sessionIds);
-
       // Update currentChatId if it's not set and we have sessions
       if (!currentChatId && data?.sessionIds?.length > 0) {
         const firstChatId = data.sessionIds[0];
-        console.log("Setting first chatId:", firstChatId);
         setCurrentchatid(firstChatId);
 
         // Set messages for the first chat
         const firstChatMessages = data?.sessions[firstChatId]?.logs || [];
-        console.log("Setting first chat messages:", firstChatMessages);
         setMessages(firstChatMessages);
       } else if (currentChatId) {
         // Set messages for the current chat
         const currentChatMessages = data?.sessions[currentChatId]?.logs || [];
-        console.log("Setting current chat messages:", currentChatMessages);
         setMessages(currentChatMessages);
       }
 

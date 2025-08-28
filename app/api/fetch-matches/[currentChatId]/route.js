@@ -17,7 +17,6 @@ export async function GET(req, { params }) {
     let matches = await Matches.find({
       $or: [{ sessionId: currentChatId }, { matchedSessionId: currentChatId }],
     }).lean();
-
     // Remove any self-matches (by id or email)
     const chatSession = await Session.findById(currentChatId).populate(
       "userId",

@@ -5,7 +5,8 @@ import Session from "@/app/models/ChatSessions";
 import Logs from "@/app/models/ChatLogs";
 import { cookies } from "next/headers";
 
-export async function GET(req) {
+export async function GET(req, { params }) {
+  const { brand } = await params;
   let token;
   try {
     token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
@@ -13,7 +14,7 @@ export async function GET(req) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
     await connectDB();
-    const sessions = await Session.find({ userId: token.id });
+    const sessions = await Session.find({ userId: token.id, brand: brand });
     const sessionIds = sessions.map((session) => session._id);
 
     // Fetch logs for each session and build a map

@@ -1,5 +1,11 @@
 # See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
 
+# Sanity specific
+sanity/node_modules/
+sanity/.sanity/
+sanity/dist/
+sanity/.env.local
+
 # dependencies
 /node_modules
 /.pnp

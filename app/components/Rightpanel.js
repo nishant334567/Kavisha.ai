@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import MatchCard from "./MatchCard";
 import ConnectionCard from "./ConnectionCard";
-export default function RighPanel({
+export default function RightPanel({
   type,
   detailsObject = {},
   session,
@@ -12,7 +12,6 @@ export default function RighPanel({
   connections = [],
   openDetailsPanel,
 }) {
-
   return (
     <div className="w-full h-full bg-white border-l border-slate-300 p-6 flex flex-col">
       <button
