@@ -20,19 +20,29 @@ export async function getMatches(sessionId) {
   const session = await Session.findById({ _id: sessionId });
   const role = session?.role;
   const isDating = role === "dating";
+  const brand = session?.brand;
+  const isKavishaBrand =
+    typeof brand === "string" && brand.toLowerCase() === "kavisha";
   let oppositeRole;
-  if (isDating) {
-    oppositeRole = role === "male" ? "female" : "male";
-  } else {
+  if (!isDating) {
     oppositeRole = role === "job_seeker" ? "recruiter" : "job_seeker";
   }
-  const allProviders = await Session.find({
-    role: oppositeRole,
+  const providerQuery = {
+    role: oppositeRole || role,
     allDataCollected: true,
     chatSummary: { $exists: true, $ne: "" },
     // Never suggest the same user's other sessions
     userId: { $ne: session?.userId },
-  }).populate("userId", "name email");
+  };
+  if (isDating) {
+    providerQuery.brand = "kavisha";
+  } else if (brand && !isKavishaBrand) {
+    providerQuery.brand = brand;
+  }
+  const allProviders = await Session.find(providerQuery).populate(
+    "userId",
+    "name email"
+  );
 
   const allProvidersList = allProviders
     .map(
@@ -43,7 +53,8 @@ export async function getMatches(sessionId) {
 "email": "${s.userId?.email}"
 "sessionId": "${s._id}"
 "title": "${s.title}"
-"chatSummary": "${s.chatSummary}"`
+"chatSummary": "${s.chatSummary}"
+"brand": "${s.brand}"`
     )
     .join("\n");
 
@@ -52,12 +63,12 @@ You are a smart job-matching assistant.
 
 Your task is to compare one user [A] (the user of this app) with multiple potential matches [B] based on their chat summaries.
 
-[A] is a "${role}" with the following requirements (chat summary):
+[A] is "${role}" with the following requirements (chat summary):
 ---
 ${session?.chatSummary}
 ---
 
-Each [B] is a "${oppositeRole}" session with their data and requirements:
+Each [B] is "${oppositeRole}" session with their data and requirements:
 ${allProvidersList}
 ---
 
@@ -128,7 +139,7 @@ Return only the JSON array (max 10).`;
     temperature: 1,
   });
   const responseText = completion.choices[0].message.content;
-
+  console.log(responseText, "responseText");
   const match = responseText.match(/\[\s*{[\s\S]*?}\s*\]/);
 
   let matches = [];

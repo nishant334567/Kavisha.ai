@@ -82,9 +82,25 @@ export async function POST(request) {
         : sessionType === "dating"
           ? SYSTEM_PROMPT_DATING
           : SYSTEM_PROMPT_JOB_SEEKER;
-    const systemPrompt = brandData
-      ? `${baseSystemPrompt}\n\n## BRAND CONTEXT:\n${brandData}\n\nUse this brand information to provide contextual, relevant responses about the company, its services, and how they relate to the user's needs.`
-      : baseSystemPrompt;
+
+    const brandName = session?.brand || "";
+    const isKavishaBrand =
+      typeof brandName === "string" && brandName.toLowerCase() === "kavisha";
+    const brandRulesForJobSeeker =
+      sessionType === "job_seeker"
+        ? isKavishaBrand
+          ? "This is the Kavisha app (aggregator). You may ask which companies or industries the user prefers. Stay neutral; do not push a specific brand."
+          : `This chat is for brand "${brandName}". Assume the user is interested in working with this brand only. Do NOT ask which companies they want to work for or about other brands. Focus questions on fit for "${brandName}" only.`
+        : "";
+
+    const systemPrompt =
+      `${baseSystemPrompt}` +
+      (brandRulesForJobSeeker
+        ? `\n\n## BRAND RULES:\n${brandRulesForJobSeeker}`
+        : "") +
+      (brandData
+        ? `\n\n## BRAND CONTEXT:\n${brandData}\n\nUse this brand information to provide contextual, relevant responses about the company, its services, and how they relate to the user's needs.`
+        : "");
     const messages = [
       {
         role: "system",

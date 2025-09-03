@@ -2,6 +2,16 @@ import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
 export async function middleware(req) {
+  const host = req.headers.get("host") || "";
+  if (host.startsWith("www.")) {
+    const url = new URL(req.url);
+    url.host = host.slice(4);
+    return NextResponse.redirect(url, 308);
+  }
+  //remove
+  if (req.nextUrl.pathname.startsWith("/landing")) {
+    return NextResponse.next();
+  }
   const token = await getToken({ req, secret: process.env.AUTH_SECRET });
 
   if (!token && req.nextUrl.pathname === "/") {
@@ -12,5 +22,5 @@ export async function middleware(req) {
 }
 
 export const config = {
-  matcher: ["/"],
+  matcher: ["/:path*"],
 };
