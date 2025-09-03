@@ -8,8 +8,7 @@ on:
 env:
   PROJECT_ID: kavisha-ai-468913
   REGION: us-central1
-  REPOSITORY: web # existing Artifact Registry repo
-  IMAGE: us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/app:${{ github.sha }}
+  REPOSITORY: web
 
 jobs:
   deploy:
@@ -33,6 +32,9 @@ jobs:
 
       - name: Docker auth to Artifact Registry
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Set image tag (git SHA)
+        run: echo "IMAGE=us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/app:${{ github.sha }}" >> $GITHUB_ENV
 
       - name: Build image (once)
         run: docker build -t $IMAGE .
