@@ -10,6 +10,7 @@ env:
   PROJECT_ID: kavisha-ai-468913
   REGION: us-central1
   SERVICE: kavisha-ai
+  REPOSITORY: kavisha-ai # Artifact Registry repository name
 
 jobs:
   deploy:
@@ -26,12 +27,22 @@ jobs:
           service_account_key: ${{ secrets.GCP_SA_KEY }}
           export_default_credentials: true
 
-      - name: Configure Docker auth
-        run: gcloud auth configure-docker --quiet
+      - name: Configure Docker auth for Artifact Registry
+        run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
+
+      - name: Ensure Artifact Registry repo exists
+        run: |
+          gcloud artifacts repositories describe ${{ env.REPOSITORY }} \
+            --location=${{ env.REGION }} \
+            --project=${{ env.PROJECT_ID }} || \
+          gcloud artifacts repositories create ${{ env.REPOSITORY }} \
+            --repository-format=docker \
+            --location=${{ env.REGION }} \
+            --description="Docker repo for Cloud Run"
 
       - name: Build Docker image
         run: |
-          IMAGE=gcr.io/${{ env.PROJECT_ID }}/${{ env.SERVICE }}:${{ github.sha }}
+          IMAGE=us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}
           docker build -t $IMAGE .
           echo "IMAGE=$IMAGE" >> $GITHUB_ENV
 
