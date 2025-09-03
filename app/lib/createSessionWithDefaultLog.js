@@ -13,11 +13,12 @@ async function createSessionWithDefaultLog(userId, role, brand) {
 
     let message;
     if (role === "job_seeker") {
-      message = `Hey! I'm Kavisha. I'm here to help you find a great job or provide career guidance. Tell me a bit about yourself and what you're looking for.`;
+      message = `Hey! So happy to have your interest in working with Team ${brand.charAt(0).toUpperCase() + brand.slice(1)}!
+Tell me a bit about yourself and what you're looking for.`;
     } else if (role === "recruiter") {
-      message = `Hey! I'm Kavisha. I'm here to help you hire great people, fast. Tell me about the role and what you need.`;
+      message = `Hey! I'm ${brand.charAt(0).toUpperCase() + brand.slice(1)}'s recruitment bot. I'm here to help you hire great people, fast. Tell me about the role and what you need.`;
     } else if (role === "dating") {
-      message = `Hey! I'm Kavisha. I'm here to help you find a great match. Share a quick intro and what you're looking for (interests, age range, location, values, must-haves).`;
+      message = `Hey! I'm Kavisha's match making bot. I'm here to help you find a great match. Share a quick intro and what you're looking for.`;
     } else {
       message = `Hey! I'm Kavisha. Tell me a bit about yourself and how I can help.`;
     }

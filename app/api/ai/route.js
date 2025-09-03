@@ -51,7 +51,7 @@ export async function POST(request) {
       secret: process.env.NEXTAUTH_SECRET,
     });
     const body = await request.json();
-    const { history, userMessage, sessionId, resume } = body;
+    const { history, userMessage, sessionId, resume, brandData } = body;
 
     await connectDB();
     // const session = await Session.findById(sessionId);
@@ -76,12 +76,15 @@ export async function POST(request) {
       role: "user",
     });
 
-    const systemPrompt =
+    const baseSystemPrompt =
       sessionType === "recruiter"
         ? SYSTEM_PROMPT_RECRUITER
         : sessionType === "dating"
           ? SYSTEM_PROMPT_DATING
           : SYSTEM_PROMPT_JOB_SEEKER;
+    const systemPrompt = brandData
+      ? `${baseSystemPrompt}\n\n## BRAND CONTEXT:\n${brandData}\n\nUse this brand information to provide contextual, relevant responses about the company, its services, and how they relate to the user's needs.`
+      : baseSystemPrompt;
     const messages = [
       {
         role: "system",
@@ -106,7 +109,7 @@ export async function POST(request) {
     ];
 
     const chatCompletion = await openai.chat.completions.create({
-      model: "gpt-4o",
+      model: "gpt-4o-mini",
       messages,
       temperature: 0.7, // Reduced from 1 for more consistent responses
       max_completion_tokens: 800, // Updated parameter name for OpenAI API
@@ -172,7 +175,7 @@ Do NOT change the reply content ("${originalReply}") - keep it exactly as is. On
       ];
 
       const reChatCompletion = await openai.chat.completions.create({
-        model: "gpt-4o",
+        model: "gpt-4o-mini",
         messages: rePromptMessages,
         temperature: 0.1,
       });

@@ -1,4 +1,7 @@
-require("dotenv").config({ path: ".env.local" });
+// Load local env vars only during development to avoid leaking dev URLs in prod
+if (process.env.NODE_ENV !== "production") {
+  require("dotenv").config({ path: ".env.local" });
+}
 const { createServer } = require("http");
 const { Server } = require("socket.io");
 const { connectDB } = require("./lib/db.js");
@@ -28,10 +31,12 @@ app.prepare().then(() => {
 
   const io = new Server(server, {
     cors: {
-      origin:
-        process.env.NODE_ENV === "production"
-          ? "https://kavisha.ai"
-          : "http://localhost:3000",
+      origin: [
+        "http://localhost:3000",
+        "https://kavisha.ai",
+        "https://www.kavisha.ai",
+        /^https:\/\/.*\.kavisha\.ai$/,
+      ],
       methods: ["GET", "POST", "PUT", "DELETE"],
       allowedHeaders: ["*"],
     },

@@ -8,7 +8,7 @@ import { cookies } from "next/headers";
 export async function GET(req) {
   let token;
   try {
-    token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    token = await getToken({ req, secret: process.env.AUTH_SECRET });
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

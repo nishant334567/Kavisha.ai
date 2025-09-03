@@ -5,7 +5,7 @@ export async function POST(request) {
   const { userId, role, brand } = await request.json();
   const token = await getToken({
     req: request,
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.AUTH_SECRET,
   });
   if (!token) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });

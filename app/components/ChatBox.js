@@ -13,6 +13,8 @@ export default function ChatBox({
   updateChatId,
   openDetailsPanel,
   toggleRightPanel,
+  showInbox,
+  setShowInbox,
 }) {
   const endOfMessagesRef = useRef(null);
   const [messages, setMessages] = useState([]);
@@ -43,8 +45,7 @@ export default function ChatBox({
   const [transcriptText, setTranscriptText] = useState("");
   const [transcribeError, setTranscribeError] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
-  const [audioModeOn, setAudioModeOn] = useState(false);
-  const [showInbox, setShowInbox] = useState(false);
+
   const [chatLoading, setChatLoading] = useState(false);
 
   //voice effects
@@ -201,7 +202,7 @@ export default function ChatBox({
 
   const onResumeUpload = (newResumeData) => {
     if (newResumeData) {
-      let resumeSubText = `I have sent my ${session?.user?.profileType === "recruiter" ? "JD" : "resume"}!! Please have a look at it.`;
+      let resumeSubText = `I have sent my ${brandContext?.isBrandAdmin ? "JD" : "resume"}!! Please have a look at it.`;
       const resumeSent = async () => {
         const newUserMessage = {
           role: "user",
@@ -209,7 +210,7 @@ export default function ChatBox({
         };
         const userText = resumeSubText;
         const updatedMessages = [...messages, newUserMessage];
-        setmessages(updatedMessages);
+        setMessages(updatedMessages);
         setInput("");
         setMessageLoading(true);
         const response = await fetch("/api/ai", {
@@ -217,18 +218,18 @@ export default function ChatBox({
           body: JSON.stringify({
             history: messages,
             userMessage: userText,
-            jobseeker: session?.user?.profileType,
+            jobseeker: brandContext?.isBrandAdmin ? "recruiter" : "job_seeker",
             sessionId: currentChatId,
             resume: newResumeData,
+            brandData: brandContext?.brandData,
           }),
         });
         if (!response.ok) {
-          setmessages([
+          setMessages([
             ...updatedMessages,
             {
               role: "assistant",
-              message:
-                "Kavisha failed to respond to that. Can you please try again?",
+              message: `${brandContext?.brandName} failed to respond to that. Can you please try again?`,
             },
           ]);
           setMessageLoading(false);
@@ -238,7 +239,12 @@ export default function ChatBox({
         }
         const data = await response.json();
 
-        setmessages([
+        // Debug: Log which model was used
+        if (data.debug) {
+          console.log("🤖 AI Response Debug Info:", data.debug);
+        }
+
+        setMessages([
           ...updatedMessages,
           { role: "assistant", message: data.reply },
         ]);
@@ -267,7 +273,7 @@ export default function ChatBox({
       return index !== messages.length - 1;
     });
     const resendMessage = lastErrorRemoved[retryIndex];
-    setmessages(lastErrorRemoved);
+    setMessages(lastErrorRemoved);
     setMessageLoading(true);
 
     // Use the conversation history up to the retry point, excluding the failed message
@@ -278,18 +284,18 @@ export default function ChatBox({
       body: JSON.stringify({
         history: historyUpToRetry,
         userMessage: resendMessage?.message,
-        jobseeker: session?.user?.profileType,
+        jobseeker: brandContext?.isBrandAdmin ? "recruiter" : "job_seeker",
         sessionId: currentChatId,
         resume: resumeData.resumeSummary,
+        brandData: brandContext?.brandData,
       }),
     });
     if (!response.ok) {
-      setmessages([
+      setMessages([
         ...lastErrorRemoved,
         {
           role: "assistant",
-          message:
-            "Kavisha failed to respond to that. Can you please try again?",
+          message: `${brandContext?.brandName} failed to respond to that. Can you please try again?`,
         },
       ]);
       setRetry(true);
@@ -299,7 +305,7 @@ export default function ChatBox({
     }
     const data = await response.json();
 
-    setmessages([
+    setMessages([
       ...lastErrorRemoved,
       { role: "assistant", message: data.reply },
     ]);
@@ -342,6 +348,7 @@ export default function ChatBox({
         jobseeker: currentChatType,
         sessionId,
         resume: resumeData?.resumeSummary || "",
+        brandData: brandContext?.brandData,
       }),
     });
     if (!response.ok) {
@@ -394,23 +401,40 @@ export default function ChatBox({
 
   if (chatLoading) {
     return (
-      <div className="flex items-center justify-center h-[60vh] bg-orange-50 rounded-xl w-full">
-        <div className="text-center">
-          <div className="text-lg text-slate-600 mb-4">
-            Hang on, chats are loading, please wait...
+      <div className="h-[60vh] mx-auto w-full lg:w-3/5 bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="flex items-center justify-center text-slate-600 text-sm mb-3">
+            <span className="mr-2 animate-spin rounded-full h-4 w-4 border-2 border-sky-500 border-t-transparent"></span>
+            Loading chat…
           </div>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+          <div className="flex flex-col gap-3">
+            {[...Array(6)].map((_, i) => (
+              <div
+                key={i}
+                className={`flex ${i % 2 ? "justify-end" : "justify-start"}`}
+              >
+                <div
+                  className={`animate-pulse rounded-2xl ${
+                    i % 2 ? "bg-sky-100" : "bg-gray-100"
+                  } ${i % 3 === 0 ? "w-1/2" : "w-2/3"} h-6`}
+                ></div>
+              </div>
+            ))}
+          </div>
         </div>
       </div>
     );
   }
 
   return (
-    <div className="flex bg-orange-50 rounded-xl p-4 w-full">
-      <div className="relative w-full flex-1">
-        <div className="rounded-xl w-full p-2 font-light">
-          <div className="gap-4 absolute right-2 px-2 flex rounded-lg -top-8 sm:top-0 bg-orange-50 sm:bg-orange-100">
-            <div>
+    <div className="w-full lg:w-3/5 mx-auto flex bg-white rounded-xl p-4 h-[calc(100vh-56px)]">
+      <div className="relative w-full flex-1 min-h-0 flex flex-col">
+        <div className="rounded-xl w-full p-2 font-light h-full flex flex-col min-h-0">
+          <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-white sm:bg-gray-100 z-10">
+            {/* <div className="w-8 h-8 rounded-full bg-sky-700 text-white flex items-center justify-center text-sm font-semibold shadow">
+                {(brandContext?.brandName || "K").charAt(0).toUpperCase()}
+            </div> */}
+            {/* <div className="flex flex-col items-end gap-1">
               <button
                 // disabled={hasAllData}
                 onClick={() => {
@@ -418,7 +442,12 @@ export default function ChatBox({
                 }}
                 className="p-1 rounded-sm  text-xs text-slate-700 hover:bg-orange-200 transition-colors"
               >
-                <img src="circle.png" width={25} alt="Show Matches" />
+                <img
+                  src="circle.png"
+                  width={20}
+                  height={20}
+                  alt="Show Matches"
+                />
                 <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
                   Show Matches
                 </span>
@@ -429,15 +458,15 @@ export default function ChatBox({
                 }}
                 className="p-1 rounded-sm  text-xs  text-slate-700 hover:bg-orange-200 transition-colors"
               >
-                {/* <img src="arrow.png" width={20} alt="Connection Requests" /> */}
+                {/* <img src="arrow.png" width={20} alt="Connection Requests" /> 
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   viewBox="0 0 24 24"
                   data-supported-dps="24x24"
                   fill="currentColor"
                   // class="mercado-match"
-                  width="24"
-                  height="24"
+                  width="20"
+                  height="20"
                   focusable="false"
                 >
                   <path d="M12 16v6H3v-6a3 3 0 013-3h3a3 3 0 013 3zm5.5-3A3.5 3.5 0 1014 9.5a3.5 3.5 0 003.5 3.5zm1 2h-2a2.5 2.5 0 00-2.5 2.5V22h7v-4.5a2.5 2.5 0 00-2.5-2.5zM7.5 2A4.5 4.5 0 1012 6.5 4.49 4.49 0 007.5 2z"></path>
@@ -446,136 +475,195 @@ export default function ChatBox({
                   Connection Requests
                 </span>
               </button>
+            </div> */}
+          </div>
+
+          <div className="flex-1 min-h-0 h-full overflow-y-scroll pt-1 mt-16 scrollbar-none">
+            <div className="flex flex-col gap-2 min-h-full justify-end">
+              {currentChatId &&
+                messages.length > 0 &&
+                messages.map((m, i) => (
+                  <div
+                    key={i}
+                    className={
+                      m.role === "user"
+                        ? "flex justify-end"
+                        : "flex justify-start"
+                    }
+                  >
+                    <div
+                      className={`text-sm leading-relaxed break-words rounded-2xl px-4 py-2 max-w-[75%] sm:max-w-[60%] shadow-sm ${
+                        m.role === "user"
+                          ? "bg-sky-700 text-white"
+                          : "bg-gray-50 text-slate-800 border border-slate-200"
+                      }`}
+                    >
+                      {m.message}
+                    </div>
+                  </div>
+                ))}
+              {messageLoading && (
+                <div className="flex justify-start mb-4">
+                  <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl px-4 py-2 border border-gray-200 hover:shadow-md transition-all duration-300 cursor-default">
+                    <div className="flex items-center gap-3">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                        <div
+                          className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"
+                          style={{ animationDelay: "0.3s" }}
+                        ></div>
+                        <div
+                          className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"
+                          style={{ animationDelay: "0.6s" }}
+                        ></div>
+                      </div>
+                      <span className="text-slate-600 text-sm font-medium">
+                        {brandContext?.brandName} is thinking
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {hasDatacollected && (
+                <Matches
+                  currentChatId={currentChatId}
+                  matches={matches}
+                  openDetailsPanel={openDetailsPanel}
+                  openChatSession={openChatSession}
+                />
+              )}
+              <div ref={endOfMessagesRef}></div>
             </div>
           </div>
-          <div className="h-[47vh] overflow-y-auto scrollbar-none">
-            {currentChatId &&
-              messages.length > 0 &&
-              messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={m.role === "user" ? "text-right" : "text-left "}
-                >
-                  {/* {retryIndex === i && (
-                  <button
-                    onClick={() => {
-                      retryMessage();
-                    }}
-                    className="text-red-600 px-2 py-1 "
-                  >
-                    <img src="reload.png" width={20} height={20} />
-                  </button>
-                )} */}
-                  <div
-                    className={`w-full text-sm mb-2 break-words rounded px-3 py-2 sm:max-w-[45%] border inline-block ${
-                      m.role === "user"
-                        ? "bg-orange-100 sm:bg-white text-slate-800 border-orange-200"
-                        : "bg-orange-50 sm:bg-white text-slate-800 border-orange-200"
-                    }`}
-                  >
-                    {m.message}
-                  </div>
-                </div>
-              ))}
-            {messageLoading && (
-              <div className="flex justify-start mb-4">
-                <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-2xl px-4 py-2 border border-orange-200 hover:shadow-md transition-all duration-300 cursor-default">
-                  <div className="flex items-center gap-3">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"></div>
-                      <div
-                        className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"
-                        style={{ animationDelay: "0.3s" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-orange-400 rounded-full animate-pulse"
-                        style={{ animationDelay: "0.6s" }}
-                      ></div>
-                    </div>
-                    <span className="text-slate-600 text-sm font-medium">
-                      Kavisha is thinking
-                    </span>
-                  </div>
-                </div>
+          <div className="border-t border-slate-200 my-2 shrink-0"></div>
+          <form
+            className="bottom-0 relative mt-12 w-full shrink-0"
+            onSubmit={(e) => {
+              e.preventDefault();
+              handleSubmit();
+            }}
+          >
+            <textarea
+              rows={2}
+              className="w-full border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-500 transition bg-white text-slate-800 pl-12 pr-24 py-2 leading-6 resize-none placeholder-transparent"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault();
+                  handleSubmit();
+                }
+              }}
+              placeholder={`Message ${brandContext?.brandName}…`}
+              disabled={messageLoading}
+            />
+
+            {(!input || input.trim().length === 0) && (
+              <div className="pointer-events-none absolute inset-y-0 left-12 right-24 flex items-center text-slate-400 text-sm">
+                Message {brandContext?.brandName}…
               </div>
             )}
 
-            {hasDatacollected && (
-              <Matches
-                currentChatId={currentChatId}
-                matches={matches}
-                openDetailsPanel={openDetailsPanel}
-                openChatSession={openChatSession}
-              />
-            )}
-            <div ref={endOfMessagesRef}></div>
-          </div>
-          <div className="flex items-center gap-3 justify-center pt-2">
-            <span className="text-sm font-medium">Audio Mode</span>
-            <button
-              onClick={() => setAudioModeOn((prev) => !prev)}
-              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
-                audioModeOn ? "bg-orange-600" : "bg-gray-300"
-              }`}
-            >
-              <span
-                className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${
-                  audioModeOn ? "translate-x-6" : "translate-x-1"
-                }`}
-              />
-            </button>
-            <span className="text-sm">{audioModeOn ? "Off" : "On"}</span>
-          </div>
-          {!audioModeOn && (
-            <form
-              className="bottom-0 relative mt-4 w-full"
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSubmit();
-              }}
-            >
+            <label className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer text-slate-500 hover:text-blue-600 transition-colors">
               <input
-                className="w-full border border-slate-300 rounded focus:outline-none focus:ring-2 focus:ring-orange-300 focus:border-orange-300 transition bg-white text-slate-800 pl-12 pr-12 py-2"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                placeholder="Type your message here..."
-                disabled={messageLoading}
+                type="file"
+                accept=".pdf,.docx"
+                onChange={(e) => setSelectedFile(e.target.files[0])}
+                className="hidden"
               />
+              <span
+                className="hover:scale-110 transition-transform"
+                title={
+                  resumeData?.filename
+                    ? "Reselect"
+                    : brandContext?.isBrandAdmin
+                      ? "Share JD"
+                      : "Upload Resume"
+                }
+              >
+                <img src="attach.png" width={20} height={20} />
+              </span>
+            </label>
 
-              <label className="absolute left-2 top-1/2 -translate-y-1/2 cursor-pointer text-slate-600 hover:text-blue-600 transition-colors">
-                <input
-                  type="file"
-                  accept=".pdf,.docx"
-                  onChange={(e) => setSelectedFile(e.target.files[0])}
-                  className="hidden"
-                />
-                <span
-                  className="text-lg hover:scale-110 transition-transform"
-                  title={
-                    resumeData?.filename
-                      ? "Reselect"
-                      : session?.user?.profileType === "recruiter"
-                        ? "Share JD"
-                        : "Upload Resume"
-                  }
-                >
-                  <img src="attach.png" width={20} />
-                </span>
-              </label>
+            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
 
-              <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-2">
+              <div className="relative">
+                {isTranscribing && (
+                  <div className="absolute bottom-full mb-2 right-0 z-10">
+                    <div className="relative bg-white border border-slate-200 rounded-md shadow px-3 py-1.5 text-xs text-slate-600">
+                      Transcribing…
+                      <div className="absolute right-3 top-full w-3 h-3 bg-white border-r border-b border-slate-200 rotate-45"></div>
+                    </div>
+                  </div>
+                )}
+                {transcribeError && (
+                  <div className="absolute bottom-full mb-2 right-0 z-10">
+                    <div className="relative bg-white border border-red-300 rounded-md shadow px-3 py-1.5 text-xs text-red-600">
+                      {transcribeError}
+                      <div className="absolute right-3 top-full w-3 h-3 bg-white border-r border-b border-red-300 rotate-45"></div>
+                    </div>
+                  </div>
+                )}
+                {transcriptText && (
+                  <div className="absolute bottom-full mb-2 right-0 z-10 w-[min(80vw,28rem)]">
+                    <div className="relative bg-white border border-slate-200 rounded-lg p-3 shadow">
+                      <div className="text-xs text-slate-500 mb-1">
+                        Voice transcript
+                      </div>
+                      <div className="text-slate-800 text-sm whitespace-pre-wrap break-words max-h-40 overflow-auto">
+                        {transcriptText}
+                      </div>
+                      <div className="mt-2 flex gap-2 justify-end">
+                        <button
+                          onClick={() => handleSubmit(transcriptText)}
+                          className="px-3 py-1.5 rounded-md bg-orange-600 text-white hover:bg-orange-700 text-xs"
+                          type="button"
+                        >
+                          Send
+                        </button>
+                        <button
+                          onClick={() => setTranscriptText("")}
+                          className="px-3 py-1.5 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs"
+                          type="button"
+                        >
+                          Discard
+                        </button>
+                      </div>
+                      <div className="absolute right-3 top-full w-3 h-3 bg-white border-r border-b border-slate-200 rotate-45"></div>
+                    </div>
+                  </div>
+                )}
                 <button
-                  type="submit"
-                  disabled={!input.trim() || messageLoading}
-                  className={`p-0 bg-transparent border-none ${!input.trim() || messageLoading ? "opacity-50 cursor-not-allowed" : ""}`}
-                  style={{ lineHeight: 0 }}
-                  tabIndex={0}
+                  type="button"
+                  onClick={() =>
+                    isRecording ? stopRecording() : startRecording()
+                  }
+                  className="p-1 rounded-md hover:bg-slate-100"
+                  title={isRecording ? "Stop recording" : "Start recording"}
                 >
-                  <img src="/message.png" height={25} width={25} alt="Send" />
+                  <img
+                    src={isRecording ? "mic-on.png" : "mic-black.png"}
+                    width={20}
+                    height={20}
+                    alt="Mic"
+                  />
                 </button>
               </div>
-            </form>
-          )}
+              <button
+                type="submit"
+                disabled={!input.trim() || messageLoading}
+                className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-white ${
+                  !input.trim() || messageLoading
+                    ? "opacity-50 cursor-not-allowed"
+                    : ""
+                }`}
+              >
+                <img src="message.png" width={20} height={20} alt="Send" />
+              </button>
+            </div>
+          </form>
           {/* Keep Resume component for file display and processing, but hidden file input */}
           <Resume
             resumeData={resumeData}
@@ -586,127 +674,18 @@ export default function ChatBox({
             selectedFile={selectedFile}
             setSelectedFile={setSelectedFile}
           />
-
-          {audioModeOn && (
-            <div className="mt-4 pt-4 border-t border-slate-200">
-              {!isRecording && (
-                <div className="w-full flex flex-col sm:flex-row items-center justify-around">
-                  {audioUrl && (
-                    <audio
-                      controls
-                      src={audioUrl}
-                      className="mt-1 w-full max-w-sm"
-                    >
-                      Your browser does not support the audio element.
-                    </audio>
-                  )}
-                  <div className="relative mt-4 flex items-center justify-center">
-                    {isTranscribing && (
-                      <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-10">
-                        <div className="relative bg-white border border-slate-200 rounded-md shadow-lg px-3 py-2 text-sm text-slate-600">
-                          Transcribing…
-                          <div className="absolute left-1/2 top-full -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-slate-200 rotate-45"></div>
-                        </div>
-                      </div>
-                    )}
-                    {transcribeError && (
-                      <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-10">
-                        <div className="relative bg-white border border-red-300 rounded-md shadow-lg px-3 py-2 text-sm text-red-600">
-                          {transcribeError}
-                          <div className="absolute left-1/2 top-full -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-red-300 rotate-45"></div>
-                        </div>
-                      </div>
-                    )}
-                    {transcriptText && (
-                      <div className="absolute bottom-full mb-3 left-1/2 -translate-x-1/2 z-10 w-[min(80vw,32rem)]">
-                        <div className="relative bg-white border border-slate-200 rounded-lg p-3 shadow-lg">
-                          <div className="text-xs text-slate-500 mb-1">
-                            Voice transcript
-                          </div>
-                          <div className="text-slate-800 text-sm whitespace-pre-wrap break-words max-h-40 overflow-auto">
-                            {transcriptText}
-                          </div>
-                          <div className="mt-2 flex gap-2 justify-end">
-                            <button
-                              onClick={() => handleSubmit(transcriptText)}
-                              className="px-3 py-1.5 rounded-md bg-orange-600 text-white hover:bg-orange-700 text-sm"
-                            >
-                              Send
-                            </button>
-                            <button
-                              onClick={() => setTranscriptText("")}
-                              className="px-3 py-1.5 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 text-sm"
-                            >
-                              Discard
-                            </button>
-                          </div>
-                          <div className="absolute left-1/2 top-full -translate-x-1/2 w-3 h-3 bg-white border-r border-b border-slate-200 rotate-45"></div>
-                        </div>
-                      </div>
-                    )}
-                    <button
-                      onClick={() => startRecording()}
-                      className="ml-3 w-12 h-12 rounded-full border border-slate-300 bg-white hover:bg-slate-50 shadow-md flex items-center justify-center"
-                      title="Start recording"
-                    >
-                      <img
-                        src="/mic-closed.png"
-                        width={20}
-                        height={20}
-                        alt="Mic"
-                      />
-                    </button>
-                  </div>
-                </div>
-              )}
-              {isRecording && (
-                <div className="flex flex-col items-center gap-3 mt-2">
-                  <div className="text-sm text-slate-700">
-                    {String(Math.floor(seconds / 60)).padStart(2, "0")}:
-                    {String(seconds % 60).padStart(2, "0")}
-                  </div>
-                  <button
-                    onClick={stopRecording}
-                    className="px-4 py-2 rounded-md bg-red-600 text-white hover:bg-red-700"
-                    title="Stop recording"
-                  >
-                    Stop
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
         </div>
       </div>
       {/* Inbox for desktop and mobile */}
       {showInbox && (
-        <>
-          <div className="block md:hidden fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center">
-            <div className="w-full max-w-sm mx-auto">
-              <Inbox
-                onOpenChat={openChatSession}
-                onClose={() => setShowInbox(false)}
-              />
-            </div>
-          </div>
-
-          <div className="hidden md:block fixed bottom-6 right-6 z-50 w-80 max-h-[60vh] overflow-y-auto shadow-2xl rounded-xl bg-white border border-slate-200">
+        <div className="fixed inset-0 z-50 flex items-center justify-center md:items-end md:justify-end bg-black bg-opacity-30 md:bg-transparent">
+          <div className="w-full max-w-sm mx-auto md:mx-0 md:mr-6 md:mb-6 md:w-80 md:max-h-[60vh] overflow-y-auto shadow-2xl rounded-xl bg-white border border-slate-200">
             <Inbox
               onOpenChat={openChatSession}
               onClose={() => setShowInbox(false)}
             />
           </div>
-        </>
-      )}
-      {showInbox === false && (
-        <button
-          onClick={() => setShowInbox(true)}
-          className="fixed bottom-6 right-6 z-50 flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-full shadow-lg transition-colors text-sm"
-          style={{ minWidth: "fit-content" }}
-        >
-          <img src="/message.png" alt="All Messages" width={20} height={20} />
-          All Messages
-        </button>
+        </div>
       )}
       {openChat && sessionA && sessionB && userA && userB && (
         <Livechat

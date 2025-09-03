@@ -3,8 +3,6 @@ import NextAuth from "next-auth";
 import GoogleProvider from "next-auth/providers/google";
 import { connectDB } from "@/app/lib/db";
 import User from "@/app/models/Users";
-import Session from "@/app/models/ChatSessions";
-import { createSessionWithDefaultLog } from "@/app/lib/createSessionWithDefaultLog";
 
 export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
@@ -12,31 +10,16 @@ export const authOptions = {
     strategy: "jwt",
   },
   providers: [
-    // GitHubProvider({
-    //   clientId: process.env.GITHUB_CLIENT_ID,
-    //   clientSecret: process.env.GITHUB_CLIENT_SECRET,
-    // }),
     GoogleProvider({
       clientId: process.env.GOOGLE_CLIENT_ID,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-        },
-      },
     }),
   ],
-
   callbacks: {
     async redirect({ url, baseUrl }) {
-      if (url.startsWith("/")) return `${baseUrl}${url}`;
-      else if (new URL(url).origin === baseUrl) return url;
-      return baseUrl;
+      return new URL(url, baseUrl).toString();
     },
-
-    async jwt({ token, user, req }) {
+    async jwt({ token, user }) {
       if (user) {
         await connectDB();
         let dbuser = await User.findOne({ email: user.email });
@@ -46,7 +29,7 @@ export const authOptions = {
             email: user.email,
             image: user.image,
             profileType: null,
-            isAdmin: false, // Explicitly set default value
+            isAdmin: false,
           });
         }
         token.id = dbuser._id.toString();
@@ -55,7 +38,7 @@ export const authOptions = {
       }
       return token;
     },
-    async session({ session, token, req }) {
+    async session({ session, token }) {
       session.user.id = token.id;
       session.user.profileType = token.profileType;
       session.user.isAdmin = token.isAdmin;

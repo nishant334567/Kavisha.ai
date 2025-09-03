@@ -11,6 +11,8 @@ export default function ChatSidebar({
   currentChatId,
   currentChatType,
   setCurrentChatType,
+  onOpenInbox,
+  onSidebarWidthChange,
 }) {
   const { data: session } = useSession();
   const [isDeleting, setIsdeleting] = useState(false);
@@ -90,11 +92,17 @@ export default function ChatSidebar({
   const toggleLeftSideBar = () => {
     setIscollapsed((prev) => !prev);
   };
+
+  useEffect(() => {
+    if (typeof onSidebarWidthChange === "function") {
+      onSidebarWidthChange(isCollapsed ? 64 : 256);
+    }
+  }, [isCollapsed, onSidebarWidthChange]);
   const toggleNotifications = () => {
     setOpenNotifications((prev) => !prev);
   };
   const newChat = async () => {
-    if (brandContext?.brandName === "Kavisha") {
+    if (brandContext?.brandName === "Kavisha.ai") {
       updateChatId(null);
       setCurrentChatType(null);
       return;
@@ -105,7 +113,7 @@ export default function ChatSidebar({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId: session?.user?.id,
-        role: currentChatType,
+        role: brandContext?.isBrandAdmin ? "recruiter" : "job_seeker",
         brand: brandContext?.subdomain,
       }),
     });
@@ -127,27 +135,30 @@ export default function ChatSidebar({
           )}
         </div> */}
         {!isCollapsed && (
-          <div className="bg-orange-50 absolute z-40 left-15 top-1/2 flex flex-col  w-64 p-4 overflow-y-auto">
+          <div className="mt-12 fixed top-0 left-0 z-40 flex flex-col w-64 h-[calc(100vh-56px)] p-4 border-r border-slate-200 bg-white shadow-sm">
             {/* User Info Section */}
-            <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-gradient-to-r from-orange-100 to-orange-200 shadow-sm border border-orange-300">
+            <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-sky-700 ">
+              <div className="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-semibold">
+                {(brandContext?.brandName || "K").charAt(0).toUpperCase()}
+              </div>
               <div className="flex flex-col overflow-hidden">
-                <span className="font-semibold text-gray-800 truncate text-base">
+                <span className="font-semibold text-white truncate text-base">
                   {session?.user?.name || "User"}
                 </span>
-                <span className="text-xs text-gray-500 truncate">
+                <span className="text-xs text-white truncate">
                   {session?.user?.email}
                 </span>
               </div>
             </div>
+            <div className="flex justify-between mb-2">
+              <p className="font-semibold">Your Chats</p>
+              <button className="p-1" onClick={() => toggleLeftSideBar()}>
+                <img src="close-sidebar.png" width={20} />
+              </button>
+            </div>
             {/* End User Info Section */}
-            <div className="flex-1 overflow-y-auto">
-              <div className="flex justify-between mb-2">
-                <p className="font-semibold">Your Chats</p>
-                <button className="p-1" onClick={() => toggleLeftSideBar()}>
-                  <img src="close-sidebar.png" width={20} />
-                </button>
-              </div>
-              <div className="max-h-[27vh] overflow-y-auto space-y-4 scrollbar-none">
+            <div className="flex-1 overflow-y-auto scrollbar-none">
+              <div className="overflow-y-auto space-y-4 scrollbar-none">
                 {allChats?.sessionIds?.length > 0 &&
                   allChats.sessionIds.map((id, idx) => (
                     <div className="flex w-full min-h-8 gap-2" key={id}>
@@ -193,24 +204,36 @@ export default function ChatSidebar({
             </div>
             <div className="flex flex-col gap-2">
               <button
-                className="flex gap-2 justify-center text-xs bg-white text-black w-full p-2  mt-2 rounded-md font-medium"
+                className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
+                onClick={() => onOpenInbox && onOpenInbox()}
+              >
+                All Messages
+              </button>
+              <button
+                className="flex gap-2 justify-center text-xs bg-sky-700 hover:bg-sky-600 text-white w-full p-2 mt-2 rounded-md font-medium transition-colors"
                 onClick={() => newChat()}
               >
-                <img src="new-chat.png" width={16} />
                 {!newChatLoading ? "New Chat" : "Creating New Chat..."}
               </button>
 
               <button
-                className="flex items-center gap-2 justify-center text-xs bg-white w-full p-2  rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
+                className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-red-50 hover:border-red-200 transition-all duration-200 text-red-600 border border-slate-200"
                 onClick={() => signOut({ callbackUrl: "/login" })}
               >
-                <img src="logout.png" width={16} />
                 Sign Out
               </button>
-              {brandContext?.isAdmin && (
+              {brandContext?.isBrandAdmin && (
                 <button
-                  className="flex items-center gap-2 justify-center text-xs bg-white w-full p-2  rounded-md hover:bg-slate-50 transition-colors text-slate-700 border border-slate-200"
-                  onClick={() => router.push("/admin")}
+                  className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
+                  onClick={() => {
+                    const isKavisha =
+                      (brandContext?.brandName || "").toLowerCase() ===
+                      "kavisha.ai";
+                    const target = isKavisha
+                      ? "/admin"
+                      : `/admin/${(brandContext?.subdomain || "").toLowerCase()}`;
+                    router.push(target);
+                  }}
                 >
                   🛡️ Admin Dashboard
                 </button>
@@ -219,26 +242,33 @@ export default function ChatSidebar({
           </div>
         )}
         {isCollapsed && (
-          <div className="w-12 px-4 py-2 flex flex-col space-y-4">
-            <div>
-              <button onClick={() => toggleLeftSideBar()}>
-                <img src="close-sidebar.png" width={25} />
-              </button>
+          <div className="fixed top-0 left-0 z-40 w-16 h-full py-4 flex flex-col items-center gap-4 border-r border-slate-200 bg-white/90 backdrop-blur">
+            <div className="w-8 h-8 rounded-full bg-sky-700 text-white flex items-center justify-center text-sm font-semibold">
+              {(brandContext?.brandName || "K").charAt(0).toUpperCase()}
             </div>
-            <div>
-              <button
-                onClick={() => {
-                  (newChat(), setIscollapsed((prev) => !prev));
-                }}
-              >
-                <img src="new-chat.png" width={25} />
-              </button>
-            </div>
-            <div>
-              <button onClick={() => setOpenNotifications((prev) => !prev)}>
-                <img src="notification.png" width={25} />
-              </button>
-            </div>
+            <button
+              onClick={() => toggleLeftSideBar()}
+              className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100"
+              title="Open sidebar"
+            >
+              <img src="close-sidebar.png" width={20} height={20} />
+            </button>
+            <button
+              onClick={() => {
+                (newChat(), setIscollapsed((prev) => !prev));
+              }}
+              className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100"
+              title="New chat"
+            >
+              <img src="add.png" width={20} height={20} />
+            </button>
+            <button
+              onClick={() => onOpenInbox && onOpenInbox()}
+              className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100"
+              title="All messages"
+            >
+              <img src="chat.png" width={20} height={20} />
+            </button>
           </div>
         )}
       </div>

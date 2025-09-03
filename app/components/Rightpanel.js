@@ -15,7 +15,7 @@ export default function RightPanel({
   return (
     <div className="w-full h-full bg-white border-l border-slate-300 p-6 flex flex-col">
       <button
-        className="absolute top-2 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 hover:text-slate-800 transition-colors"
+        className="absolute top-16 right-2 w-8 h-8 flex items-center justify-center rounded-full bg-slate-200 hover:bg-slate-300 text-slate-600 hover:text-slate-800 transition-colors"
         onClick={() => toggleRightPanel()}
       >
         X

@@ -9,7 +9,7 @@ export async function GET(req, { params }) {
   const { brand } = await params;
   let token;
   try {
-    token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET });
+    token = await getToken({ req, secret: process.env.AUTH_SECRET });
     if (!token) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }

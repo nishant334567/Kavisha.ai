@@ -6,4 +6,5 @@ export default defineCliConfig({
     projectId: "wkgir1xd",
     dataset: "development",
   },
+  studioHost: "kavisha",
 });

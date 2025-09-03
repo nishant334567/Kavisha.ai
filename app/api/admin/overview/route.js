@@ -4,10 +4,34 @@ import { connectDB } from "@/app/lib/db";
 import { NextResponse } from "next/server";
 import Matches from "@/app/models/Matches";
 import Connection from "@/app/models/Connection";
+import { getToken } from "next-auth/jwt";
+import { client as sanity } from "@/app/lib/sanity";
 
 export async function GET(req) {
   try {
     await connectDB();
+
+    // Authorization: Only admins of brand "kavisha" may access
+    const token = await getToken({ req, secret: process.env.AUTH_SECRET });
+    const requesterEmail = token?.email || token?.user?.email;
+    if (!requesterEmail) {
+      return NextResponse.json(
+        { success: false, message: "Unauthorized" },
+        { status: 401 }
+      );
+    }
+    const brandDoc = await sanity.fetch(
+      `*[_type=="brand" && subdomain=="kavisha"][0]{admins}`
+    );
+    const isAdmin = Array.isArray(brandDoc?.admins)
+      ? brandDoc.admins.includes(requesterEmail)
+      : false;
+    if (!isAdmin) {
+      return NextResponse.json(
+        { success: false, message: "Forbidden" },
+        { status: 403 }
+      );
+    }
 
     // Get query parameters
     const { searchParams } = new URL(req.url);
@@ -22,7 +46,7 @@ export async function GET(req) {
         matchesCount,
         connectionsCount,
         allDataCollectedCount,
-        allSessionCount
+        allSessionCount,
       ] = await Promise.all([
         User.countDocuments({}),
         User.countDocuments({ profileType: "job_seeker" }),
@@ -31,7 +55,6 @@ export async function GET(req) {
         Connection.countDocuments({}),
         Session.countDocuments({ allDataCollected: true }),
         Session.countDocuments({}),
-
       ]);
 
       return NextResponse.json({
@@ -43,7 +66,7 @@ export async function GET(req) {
           matchesCount,
           connectionsCount,
           allDataCollectedCount,
-          allSessionCount
+          allSessionCount,
         },
       });
     } else {
@@ -56,7 +79,7 @@ export async function GET(req) {
         matchesCount,
         connectionsCount,
         allDataCollectedCount,
-        allSessionCount
+        allSessionCount,
       ] = await Promise.all([
         User.find({}).select("name email profileType"),
         User.countDocuments({}),
@@ -65,7 +88,7 @@ export async function GET(req) {
         Matches.countDocuments({}),
         Connection.countDocuments({}),
         Session.countDocuments({ allDataCollected: true }),
-        Session.countDocuments({ }),
+        Session.countDocuments({}),
       ]);
 
       const usersWithSessions = await Promise.all(
@@ -92,7 +115,7 @@ export async function GET(req) {
           matchesCount,
           connectionsCount,
           allDataCollectedCount,
-          allSessionCount
+          allSessionCount,
         },
         users: usersWithSessions,
       });

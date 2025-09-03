@@ -1,33 +1,102 @@
-import SessionSection from "./components/SessionSection";
-import { getServerSession } from "next-auth";
-import { authOptions } from "../api/auth/[...nextauth]/route";
-import { redirect } from "next/navigation";
-import { cookies } from "next/headers";
-export default async function Admin() {
-  const session = await getServerSession(authOptions);
+"use client";
 
-  if (!session) {
-    redirect("/login");
+import SessionSection from "./components/SessionSection";
+import { useBrandContext } from "../context/brand/BrandContextProvider";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+
+export default function Admin() {
+  const router = useRouter();
+  const { data: session, status } = useSession();
+  const brand = useBrandContext();
+  const [stats, setStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  // Auth gate (client-side)
+  useEffect(() => {
+    if (status === "unauthenticated") router.push("/login");
+  }, [status, router]);
+
+  // Brand admin gate: kavisha only
+  const brandLoaded = !!brand;
+  const canView =
+    brandLoaded &&
+    brand?.brandName?.toLowerCase() === "kavisha.ai" &&
+    brand?.isBrandAdmin;
+
+  useEffect(() => {
+    if (status !== "authenticated" || !canView) return;
+    const load = async () => {
+      try {
+        const res = await fetch(`/api/admin/overview?countsOnly=true`, {
+          cache: "no-store",
+        });
+        const json = await res.json();
+        if (!json?.success) throw new Error(json?.message || "Failed to load");
+        setStats({
+          stats: {
+            totalUser: json.counts.totalUsers,
+            totalUserWithJobSeekers: json.counts.jobSeekerCount,
+            totalUserWithRecruiter: json.counts.recruiterCount,
+            totalChatSessions: json.counts.allSessionCount,
+            totalMatches: json.counts.matchesCount,
+            totalConnections: json.counts.connectionsCount,
+            totalJobSeekerSession: json.counts.jobSeekerCount, // legacy mapping
+            totalJobSeekerNotInitiated: 0,
+            totalJobSeekerSessionInitiated: 0,
+            totalJobSeekerCompletedSession: json.counts.allDataCollectedCount,
+            totalRecruiterSession: json.counts.recruiterCount,
+            totalRecruiterNotInitiated: 0,
+            totalRecruiterWithSessionInitiated: 0,
+            totalRecruiterWithCompletedSession:
+              json.counts.allDataCollectedCount,
+          },
+        });
+      } catch (e) {
+        setError(e.message || "Failed to load");
+      } finally {
+        setLoading(false);
+      }
+    };
+    setLoading(true);
+    load();
+  }, [canView, status]);
+
+  // While auth or brand context is loading
+  if (status === "loading" || !brandLoaded) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <div className="text-gray-600">Loading…</div>
+      </div>
+    );
+  }
+
+  // If authenticated but not allowed, redirect to login with reason
+  if (status === "authenticated" && !canView) {
+    router.replace("/login?reason=unauthorized");
     return null;
   }
-  const cookieStore = await cookies();
 
-  const cookieString = cookieStore
-    .getAll()
-    .map((c) => `${c.name}=${c.value}`)
-    .join("; ");
+  // While data is loading after canView
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <div className="text-gray-600">Loading…</div>
+      </div>
+    );
+  }
 
-  const baseUrl = process.env.NEXT_PUBLIC_BASE_URL || "http://localhost:3000";
-
-  const apiUrl = baseUrl ? `${baseUrl}/api/admin/stats` : "/api/admin/stats";
-
-  const response = await fetch(apiUrl, {
-    cache: "no-store",
-    headers: {
-      Cookie: cookieString,
-    },
-  });
-  const stats = await response.json();
+  if (error || !stats) {
+    return (
+      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
+        <div className="rounded-md bg-red-50 border border-red-200 p-4 text-red-700">
+          {error || "Failed to load admin overview"}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50 p-6">

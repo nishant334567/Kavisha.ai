@@ -12,6 +12,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@sanity/image-url": "^1.2.0",
     "@sanity/vision": "^4.5.0",
     "sanity": "^4.5.0",
     "styled-components": "^6.1.19"

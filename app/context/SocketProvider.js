@@ -6,16 +6,24 @@ import { useRef, useEffect, useState } from "react";
 export default function SocketProvider({ children, userId }) {
   const socketRef = useRef(null);
   const [isOnline, setIsOnline] = useState(false);
+  const [socketUrl, setSocketUrl] = useState(null);
+
+  // Set socket URL only on client-side
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const url = `${window.location.protocol}//${window.location.host}`;
+      setSocketUrl(url);
+    }
+  }, []);
 
   useEffect(() => {
-    if (!userId) {
+    // Don't connect if no userId or no socketUrl yet
+    if (!userId || !socketUrl) {
       setIsOnline(false);
       return;
     }
-    if (!socketRef.current) {
-      const socketUrl =
-        process.env.NEXT_PUBLIC_SOCKET_URL || "http://localhost:3000";
 
+    if (!socketRef.current) {
       socketRef.current = io(socketUrl, {
         withCredentials: false,
         forceNew: true,
@@ -47,7 +55,7 @@ export default function SocketProvider({ children, userId }) {
       }
       setIsOnline(false);
     };
-  }, [userId]);
+  }, [userId, socketUrl]);
 
   return (
     <SocketContext.Provider value={{ socket: socketRef.current, isOnline }}>

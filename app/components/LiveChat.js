@@ -85,9 +85,7 @@ export default function Livechat({
         ...prev,
         {
           text: data?.text ?? "",
-          senderSessionId: data?.senderSessionId,
-          // receiverSessionId: data?.receiverSessionId,
-          // timestamp: data?.timestamp ?? new Date().toISOString(),
+          senderUserId: data?.senderUserId ?? data?.senderSessionId ?? "",
         },
       ]);
     };
@@ -109,7 +107,7 @@ export default function Livechat({
         .on("message_received", handleMessage);
 
       return () => {
-        // socket.off("connect", handleConnect);
+        socket.off("connect", handleConnect);
         socket.off("message_history", handleHistory);
         socket.off("message_received", handleMessage);
         // socket.disconnect();
@@ -154,23 +152,23 @@ export default function Livechat({
   };
 
   return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center">
-      <div className="bg-orange-50 rounded-xl w-full max-w-sm mx-auto flex flex-col h-[500px]">
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center p-4">
+      <div className="bg-white rounded-xl w-full max-w-sm mx-auto flex flex-col h-[500px] border border-slate-200 shadow-lg">
         {/* Header */}
-        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-orange-100 border-b border-orange-200 rounded-xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200 rounded-t-xl">
           <div>
-            <div className="font-semibold text-orange-600 text-base">
+            <div className="font-semibold text-slate-800 text-base">
               {chatInfo.otherUser}
             </div>
             <div className="text-xs text-slate-500">{chatInfo.jobTitle}</div>
           </div>
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-orange-200 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors"
             aria-label="Close Chat"
           >
             <svg
-              className="w-4 h-4 text-orange-600"
+              className="w-4 h-4 text-slate-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -201,7 +199,11 @@ export default function Livechat({
                     className={`flex ${isMe ? "justify-end" : "justify-start"}`}
                   >
                     <div
-                      className={`rounded-lg px-3 py-2 text-sm max-w-[75%] ${isMe ? "bg-orange-500 text-white" : "bg-white text-slate-800"}`}
+                      className={`rounded-2xl px-4 py-2 text-sm max-w-[75%] shadow-sm ${
+                        isMe
+                          ? "bg-sky-700 text-white"
+                          : "bg-gray-50 text-slate-800 border border-slate-200"
+                      }`}
                     >
                       {text}
                     </div>
@@ -212,7 +214,7 @@ export default function Livechat({
           )}
         </div>
         {/* Message Input */}
-        <div className="px-3 py-3 bg-orange-100 border-t border-orange-200 rounded-xl">
+        <div className="px-3 py-3 bg-slate-50 border-t border-slate-200 rounded-b-xl">
           <form
             className="flex gap-2"
             onSubmit={(e) => {
@@ -224,13 +226,13 @@ export default function Livechat({
               value={message}
               onChange={(e) => setMessage(e.target.value)}
               onKeyPress={handleKeyPress}
-              className="flex-1 border border-orange-200 rounded px-3 py-2 text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-orange-400 text-sm"
+              className="flex-1 border border-slate-300 rounded-xl px-3 py-2 text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-500 text-sm transition"
               placeholder="Type your message here..."
             />
             <button
               type="submit"
               disabled={!message.trim()}
-              className="px-4 py-2 bg-orange-500 hover:bg-orange-600 disabled:bg-orange-200 disabled:cursor-not-allowed text-white font-medium rounded transition-colors text-sm"
+              className="px-4 py-2 bg-sky-700 hover:bg-sky-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors text-sm"
             >
               Send
             </button>

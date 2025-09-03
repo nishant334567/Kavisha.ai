@@ -23,12 +23,14 @@ export default function HomePage() {
   const [viewData, setViewdata] = useState({});
   const [matches, setMatches] = useState([]);
   const [connections, setConnections] = useState([]);
+  const [showInbox, setShowInbox] = useState(false);
+  const [sidebarWidth, setSidebarWidth] = useState(256);
 
   useEffect(() => {
     if (
       !currentChatType &&
       brandContext &&
-      brandContext.brandName !== "Kavisha"
+      brandContext.brandName !== "Kavisha.ai"
     ) {
       if (brandContext.isBrandAdmin) {
         selectChatType("recruiter");
@@ -109,7 +111,7 @@ export default function HomePage() {
   const selectChatType = async (type) => {
     setCurrentChatType(type);
     if (!session || !brandContext) return;
-    if (brandContext.brandName === "Kavisha") {
+    if (brandContext.brandName === "Kavisha.ai") {
       try {
         setCreatingSession(true);
         const res = await fetch("/api/newchatsession", {
@@ -142,87 +144,46 @@ export default function HomePage() {
   }
 
   return (
-    <div className="max-h-screen">
-      <div>
-        <Header />
-      </div>
-      {/* Reserve space below header to avoid shifts */}
-      {/* Show type selector for Kavisha users who haven't selected a type */}
-      <div className="flex h-[70vh]">
-        <ChatSidebar
-          allChats={allChats}
-          updateChatId={setCurrentChatId}
-          currentChatId={currentChatId}
-          currentChatType={currentChatType}
-          setCurrentChatType={setCurrentChatType}
-        />
+    <div className="h-[calc(100vh-56px)] overflow-hidden">
+      <div className="flex h-full overflow-hidden">
+        <div style={{ width: sidebarWidth }}>
+          <ChatSidebar
+            allChats={allChats}
+            updateChatId={setCurrentChatId}
+            currentChatId={currentChatId}
+            currentChatType={currentChatType}
+            setCurrentChatType={setCurrentChatType}
+            onOpenInbox={() => setShowInbox(true)}
+            onSidebarWidthChange={(w) => setSidebarWidth(w)}
+          />
+        </div>
 
-        <div className="w-full">
-          {!currentChatId &&
-            brandContext &&
-            brandContext.brandName === "Kavisha" && (
+        <div className="w-full h-full flex flex-col">
+          {brandContext &&
+            brandContext.brandName === "Kavisha.ai" &&
+            (!currentChatId || !currentChatType) && (
               <SelectChatType
                 selectedType={currentChatType}
                 selectChatType={selectChatType}
                 isCreating={creatingSession}
               />
             )}
-
-          {/* {!currentChatType &&
-        brandContext &&
-        brandContext.brandName !== "Kavisha" &&
-        (brandContext.isBrandAdmin ? (
-          <button
-            onClick={() => {
-              selectChatType("recruiter");
-            }}
-          >
-            +Post A Job
-          </button>
-        ) : (
-          <button
-            onClick={() => {
-              selectChatType("job_seeker");
-            }}
-          >
-            {" "}
-            + Job Search
-          </button>
-        ))} */}
-
-          {/* Show chat once we have a chat ID */}
-          {
+          {currentChatId && (
             <ChatBox
               currentChatId={currentChatId}
               currentChatType={currentChatType}
               updateChatId={setCurrentChatId}
               openDetailsPanel={openDetailsPanel}
               toggleRightPanel={toggleRightPanel}
+              showInbox={showInbox}
+              setShowInbox={setShowInbox}
             />
-          }
+          )}
         </div>
       </div>
-      {/* Only show input if we have a chat type selected */}
-      {/* {currentChatType && (
-        <>
-          <input
-            type="text"
-            value={input}
-            onChange={handleInputChange}
-            placeholder="Type your message here..."
-            disabled={!currentChatType}
-          />
-          <button
-            onClick={() => handleSend()}
-            disabled={!input.trim() || !currentChatType}
-          >
-            Send
-          </button>
-        </>
-      )} */}
 
       {show && (
-        <div className="fixed top-0 right-0 z-40 w-64 bg-orange-50 h-screen max-h-screen overflow-y-auto scroll-auto scrollbar-none">
+        <div className="fixed top-0 right-0 z-40 w-72 bg-orange-50 h-screen h-full overflow-y-auto scroll-auto scrollbar-none">
           {/* <p>Right Panel</p> */}
           <div>
             {show && type === 1 && (

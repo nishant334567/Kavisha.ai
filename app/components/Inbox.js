@@ -23,29 +23,29 @@ export default function Inbox({ onOpenChat, onClose }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[50vh] bg-orange-50 rounded-xl">
+      <div className="flex items-center justify-center h-[50vh] bg-white rounded-xl border border-slate-200 shadow-sm">
         <div className="text-center">
           <div className="text-sm text-slate-600 mb-4">
             Hang on, all your messages are loading, please wait...
           </div>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-orange-500 mx-auto"></div>
+          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500 mx-auto"></div>
         </div>
       </div>
     );
   }
   return (
-    <div className="mb-4 relative bg-orange-50 rounded-xl overflow-hidden flex flex-col h-[400px]">
+    <div className="mb-4 relative bg-white rounded-xl overflow-hidden flex flex-col h-[400px] border border-slate-200 shadow-sm">
       {/* Header */}
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-orange-100 border-b border-orange-200">
-        <h2 className="text-base font-semibold text-orange-600">Inbox</h2>
+      <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
+        <h2 className="text-base font-semibold text-slate-800">All Messages</h2>
         {onClose && (
           <button
             onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-orange-200 transition-colors"
+            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors"
             aria-label="Close Inbox"
           >
             <svg
-              className="w-4 h-4 text-orange-600"
+              className="w-4 h-4 text-slate-600"
               fill="none"
               stroke="currentColor"
               viewBox="0 0 24 24"
@@ -73,7 +73,7 @@ export default function Inbox({ onOpenChat, onClose }) {
               activeChats.map((chat) => (
                 <button
                   key={chat._id}
-                  className="w-full text-left bg-white rounded-lg px-3 py-2 flex items-center gap-3 hover:bg-orange-100 transition-colors"
+                  className="w-full text-left bg-slate-50 rounded-lg px-3 py-2 flex items-center gap-3 hover:bg-sky-50 hover:border-sky-200 border border-transparent transition-all duration-200"
                   onClick={() =>
                     onOpenChat(
                       chat.sessionA,
@@ -91,7 +91,7 @@ export default function Inbox({ onOpenChat, onClose }) {
                       {chat.jobTitle}
                     </div>
                     {chat.lastMessage && (
-                      <div className="text-xs text-orange-500 truncate mt-1">
+                      <div className="text-xs text-sky-600 truncate mt-1">
                         {chat.lastMessage || ""}
                       </div>
                     )}
