@@ -2,28 +2,22 @@ name: Deploy to Cloud Run
 
 on:
   push:
-    branches:
-      - main # deploys when code is merged to main
-  workflow_dispatch: # allow manual trigger
+    branches: [main]
+  workflow_dispatch:
 
 env:
   PROJECT_ID: kavisha-ai-468913
   REGION: us-central1
-  SERVICE: kavisha-ai
-  REPOSITORY: kavisha-ai # Artifact Registry repository name
+  REPOSITORY: web # existing Artifact Registry repo
+  IMAGE: us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/app:${{ github.sha }}
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v3
-
-      - name: Set up gcloud CLI
-        uses: google-github-actions/setup-gcloud@v2
-        with:
-          project_id: ${{ env.PROJECT_ID }}
 
       - name: Authenticate to Google Cloud
         uses: google-github-actions/auth@v2
@@ -32,34 +26,29 @@ jobs:
           credentials_json: ${{ secrets.GCP_SA_KEY }}
           export_environment_variables: true
 
-      - name: Configure Docker auth for Artifact Registry
+      - name: Set up gcloud
+        uses: google-github-actions/setup-gcloud@v2
+        with:
+          project_id: ${{ env.PROJECT_ID }}
+
+      - name: Docker auth to Artifact Registry
         run: gcloud auth configure-docker us-central1-docker.pkg.dev --quiet
 
-      - name: Enable Artifact Registry API
-        run: gcloud services enable artifactregistry.googleapis.com --project ${{ env.PROJECT_ID }}
+      - name: Build image (once)
+        run: docker build -t $IMAGE .
 
-      - name: Ensure Artifact Registry repo exists
-        run: |
-          gcloud artifacts repositories describe ${{ env.REPOSITORY }} \
-            --location=${{ env.REGION }} \
-            --project=${{ env.PROJECT_ID }} || \
-          gcloud artifacts repositories create ${{ env.REPOSITORY }} \
-            --repository-format=docker \
-            --location=${{ env.REGION }} \
-            --description="Docker repo for Cloud Run"
-
-      - name: Build Docker image
-        run: |
-          IMAGE=us-central1-docker.pkg.dev/${{ env.PROJECT_ID }}/${{ env.REPOSITORY }}/${{ env.SERVICE }}:${{ github.sha }}
-          docker build -t $IMAGE .
-          echo "IMAGE=$IMAGE" >> $GITHUB_ENV
-
-      - name: Push Docker image
+      - name: Push image (once)
         run: docker push $IMAGE
 
-      - name: Deploy to Cloud Run
-        run: |
-          gcloud run services update ${{ env.SERVICE }} \
-            --image $IMAGE \
-            --region ${{ env.REGION }} \
-            --platform managed
+      # Update all services to the same image. Services must already exist with envs set.
+      - name: Deploy kavisha.ai
+        run: gcloud run services update kavisha-ai --image $IMAGE --region ${{ env.REGION }} --platform managed
+
+      - name: Deploy spyne.kavisha.ai
+        run: gcloud run services update web-spyne --image $IMAGE --region ${{ env.REGION }} --platform managed
+
+      - name: Deploy edufa.kavisha.ai
+        run: gcloud run services update web-edoofa --image $IMAGE --region ${{ env.REGION }} --platform managed
+
+      - name: Deploy upgrad.kavisha.ai
+        run: gcloud run services update web-upgrad --image $IMAGE --region ${{ env.REGION }} --platform managed
