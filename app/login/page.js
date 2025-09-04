@@ -125,7 +125,7 @@ export default function LoginPage() {
   const shouldShowBlockedMessage = isInAppBrowser && isMobile;
 
   return (
-    <div className="min-h-screen overflow-auto">
+    <div className="h-screen overflow-y-auto">
       <div className="mx-auto w-full lg:max-w-[60%] flex flex-col items-center px-8 py-8 min-h-[calc(100vh-56px)]">
         <div className="h-48 sm:h-80 w-full overflow-hidden rounded-xl my-4">
           <img
