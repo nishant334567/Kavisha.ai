@@ -120,6 +120,7 @@ export default function ChatSidebar({
               ? "recruiter"
               : "job_seeker",
         brand: brandContext?.subdomain,
+        initialmessage: brandContext?.initialmessage,
       }),
     });
     const data = await res.json();

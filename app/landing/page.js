@@ -22,6 +22,7 @@ export default function Landing() {
             userId: session.user.id,
             role: "job_seeker",
             brand: "kavisha",
+            initialmessage: undefined,
           }),
         });
         const data = await res.json();

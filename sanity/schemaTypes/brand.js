@@ -54,6 +54,13 @@ export default {
       validation: (Rule) => Rule.required(),
     },
     {
+      name: "initialmessage",
+      title: "Initial Message",
+      type: "string",
+      description:
+        "Optional first message the assistant sends when a new session is created",
+    },
+    {
       name: "subdomain",
       title: "Subdomain",
       type: "string",

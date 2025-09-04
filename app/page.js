@@ -121,6 +121,7 @@ export default function HomePage() {
             userId: session.user.id,
             role: type,
             brand: brandContext.subdomain,
+            initialmessage: brandContext?.initialmessage,
           }),
         });
         const data = await res.json();
