@@ -218,7 +218,10 @@ export default function ChatBox({
           body: JSON.stringify({
             history: messages,
             userMessage: userText,
-            jobseeker: brandContext?.isBrandAdmin ? "recruiter" : "job_seeker",
+            jobseeker:
+              brandContext?.header === "individual"
+                ? "individual"
+                : currentChatType || "",
             sessionId: currentChatId,
             resume: newResumeData,
             brandData: brandContext?.brandData,
@@ -238,11 +241,6 @@ export default function ChatBox({
           return;
         }
         const data = await response.json();
-
-        // Debug: Log which model was used
-        if (data.debug) {
-          console.log("🤖 AI Response Debug Info:", data.debug);
-        }
 
         setMessages([
           ...updatedMessages,
@@ -284,7 +282,10 @@ export default function ChatBox({
       body: JSON.stringify({
         history: historyUpToRetry,
         userMessage: resendMessage?.message,
-        jobseeker: brandContext?.isBrandAdmin ? "recruiter" : "job_seeker",
+        jobseeker:
+          brandContext?.header === "individual"
+            ? "individual"
+            : currentChatType || "",
         sessionId: currentChatId,
         resume: resumeData.resumeSummary,
         brandData: brandContext?.brandData,
@@ -345,7 +346,10 @@ export default function ChatBox({
       body: JSON.stringify({
         history: updatedMessages,
         userMessage: messageText,
-        jobseeker: currentChatType,
+        jobseeker:
+          brandContext?.header === "individual"
+            ? "individual"
+            : currentChatType || "",
         sessionId,
         resume: resumeData?.resumeSummary || "",
         brandData: brandContext?.brandData,

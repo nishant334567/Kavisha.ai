@@ -9,7 +9,7 @@ const ChatSessionsSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["job_seeker", "recruiter", "dating"],
+      enum: ["job_seeker", "recruiter", "dating", "individual"],
       required: true,
     },
     brand: {

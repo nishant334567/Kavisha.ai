@@ -51,7 +51,8 @@ export async function POST(request) {
       secret: process.env.NEXTAUTH_SECRET,
     });
     const body = await request.json();
-    const { history, userMessage, sessionId, resume, brandData } = body;
+    const { history, userMessage, sessionId, resume, brandData, jobseeker } =
+      body;
 
     await connectDB();
     // const session = await Session.findById(sessionId);
@@ -76,13 +77,43 @@ export async function POST(request) {
       role: "user",
     });
 
-    const baseSystemPrompt =
+    // Simple influencer persona chat: use brandData as the system prompt and return plain reply
+    if (jobseeker === "individual") {
+      const systemPrompt = `${brandData || ""}`;
+      const messages = [
+        { role: "system", content: systemPrompt },
+        ...history.map((m) => ({ role: m.role, content: m.message })),
+        { role: "user", content: userMessage },
+      ];
+
+      const chatCompletion = await openai.chat.completions.create({
+        model: "gpt-4o-mini",
+        messages,
+        temperature: 0.7,
+        max_completion_tokens: 800,
+      });
+
+      const reply = chatCompletion.choices?.[0]?.message?.content || "";
+
+      await Logs.create({
+        message: reply,
+        sessionId: sessionId,
+        userId: token.id,
+        role: "assistant",
+      });
+
+      return NextResponse.json({ reply });
+    }
+
+    let baseSystemPrompt =
       sessionType === "recruiter"
         ? SYSTEM_PROMPT_RECRUITER
         : sessionType === "dating"
           ? SYSTEM_PROMPT_DATING
           : SYSTEM_PROMPT_JOB_SEEKER;
-
+    if (jobseeker === "individual") {
+      baseSystemPrompt = brandData;
+    }
     const brandName = session?.brand || "";
     const isKavishaBrand =
       typeof brandName === "string" && brandName.toLowerCase() === "kavisha";

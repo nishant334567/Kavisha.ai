@@ -46,6 +46,9 @@ jobs:
       - name: Deploy kavisha.ai
         run: gcloud run services update kavisha-ai --image $IMAGE --region ${{ env.REGION }} --platform managed
 
+      - name: Deploy sanjeev.kavisha.ai
+        run: gcloud run services update sanjeev --image $IMAGE --region ${{ env.REGION }} --platform managed
+
       - name: Deploy spyne.kavisha.ai
         run: gcloud run services update web-spyne --image $IMAGE --region ${{ env.REGION }} --platform managed
 

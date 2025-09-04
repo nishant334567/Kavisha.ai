@@ -46,12 +46,14 @@ export default function BrandContextProvider({ children }) {
                   description,
                   brandData,
                   admins,
+                  header,
               }[0]`
         );
         if (brand) {
           const context = {
             brandId: brand._id,
             brandName: brand.brandName,
+            header: brand.header,
             logo: brand.logo,
             brandImage: brand.brandImage,
             title: brand.title,

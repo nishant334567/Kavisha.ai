@@ -113,7 +113,12 @@ export default function ChatSidebar({
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userId: session?.user?.id,
-        role: brandContext?.isBrandAdmin ? "recruiter" : "job_seeker",
+        role:
+          brandContext?.header === "individual"
+            ? "individual"
+            : brandContext?.isBrandAdmin
+              ? "recruiter"
+              : "job_seeker",
         brand: brandContext?.subdomain,
       }),
     });
@@ -178,18 +183,19 @@ export default function ChatSidebar({
                               {allChats?.sessions[id]?.title ||
                                 `Chat ${idx + 1} `}
                             </span>
-                            {(() => {
-                              const meta = getRoleMeta(
-                                allChats?.sessions[id]?.role
-                              );
-                              return (
-                                <span
-                                  className={`ml-auto px-2 py-0.5 text-[10px] rounded-full border ${meta.cls}`}
-                                >
-                                  {meta.label}
-                                </span>
-                              );
-                            })()}
+                            {brandContext?.header !== "individual" &&
+                              (() => {
+                                const meta = getRoleMeta(
+                                  allChats?.sessions[id]?.role
+                                );
+                                return (
+                                  <span
+                                    className={`ml-auto px-2 py-0.5 text-[10px] rounded-full border ${meta.cls}`}
+                                  >
+                                    {meta.label}
+                                  </span>
+                                );
+                              })()}
                           </div>
                           {allChats?.sessions[id]?.updatedAt && (
                             <span className="text-[10px] text-slate-500 mt-1">
@@ -203,12 +209,14 @@ export default function ChatSidebar({
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              <button
-                className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
-                onClick={() => onOpenInbox && onOpenInbox()}
-              >
-                All Messages
-              </button>
+              {brandContext?.header !== "individual" && (
+                <button
+                  className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
+                  onClick={() => onOpenInbox && onOpenInbox()}
+                >
+                  All Messages
+                </button>
+              )}
               <button
                 className="flex gap-2 justify-center text-xs bg-sky-700 hover:bg-sky-600 text-white w-full p-2 mt-2 rounded-md font-medium transition-colors"
                 onClick={() => newChat()}
@@ -262,13 +270,15 @@ export default function ChatSidebar({
             >
               <img src="add.png" width={20} height={20} />
             </button>
-            <button
-              onClick={() => onOpenInbox && onOpenInbox()}
-              className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100"
-              title="All messages"
-            >
-              <img src="chat.png" width={20} height={20} />
-            </button>
+            {brandContext?.header !== "individual" && (
+              <button
+                onClick={() => onOpenInbox && onOpenInbox()}
+                className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100"
+                title="All messages"
+              >
+                <img src="chat.png" width={20} height={20} />
+              </button>
+            )}
           </div>
         )}
       </div>

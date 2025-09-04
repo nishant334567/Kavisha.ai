@@ -34,18 +34,20 @@ export default function BrandAdminPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
-        <div className="text-gray-600">Loading…</div>
+      <div className="min-h-screen bg-white p-6 flex items-center justify-center">
+        <div className="text-slate-600">Loading…</div>
       </div>
     );
   }
 
   if (error || !data) {
     return (
-      <div className="min-h-screen bg-orange-50 p-6">
-        <div className="max-w-5xl mx-auto">
-          <h1 className="text-2xl font-semibold mb-4">Brand Dashboard</h1>
-          <div className="rounded-md border border-red-200 bg-red-50 p-4 text-red-700">
+      <div className="min-h-screen bg-white p-6">
+        <div className="mx-auto max-w-6xl">
+          <h1 className="text-2xl font-semibold text-slate-900 mb-4">
+            Brand Dashboard
+          </h1>
+          <div className="rounded-lg border border-red-200 bg-red-50 p-4 text-red-700">
             {error || data?.message || "Failed to load brand overview"}
           </div>
         </div>
@@ -59,73 +61,89 @@ export default function BrandAdminPage() {
     : [];
 
   return (
-    <div className="min-h-screen bg-orange-50 p-6">
-      <div className="max-w-5xl mx-auto">
-        <h1 className="text-3xl font-bold text-gray-900 mb-6">
-          {brand.toUpperCase()} Dashboard
-        </h1>
+    <div className="h-screen bg-white p-6 overflow-y-auto">
+      <div className="mx-auto max-w-6xl">
+        {/* Header */}
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-900">
+              {brand.toUpperCase()} Dashboard
+            </h1>
+            <p className="mt-1 text-slate-600 text-sm">
+              Overview of sessions and activity.
+            </p>
+          </div>
+        </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">
-              Job Seekers
-            </h2>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Users</span>
-                <span className="font-semibold">
+        {/* Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-slate-700">
+                Job Seekers
+              </h2>
+              <span className="text-slate-400">👤</span>
+            </div>
+            <div className="mt-4 space-y-2 text-sm">
+              <div className="flex justify-between text-slate-600">
+                <span>Users</span>
+                <span className="font-semibold text-slate-900">
                   {counts.jobSeeker?.users ?? 0}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">Sessions</span>
-                <span className="font-semibold">
+              <div className="flex justify-between text-slate-600">
+                <span>Sessions</span>
+                <span className="font-semibold text-slate-900">
                   {counts.jobSeeker?.sessions ?? 0}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">All data collected</span>
-                <span className="font-semibold text-green-600">
+              <div className="flex justify-between text-slate-600">
+                <span>All data collected</span>
+                <span className="font-semibold text-emerald-700">
                   {counts.jobSeeker?.allDataCollected ?? 0}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">
-              Recruiters
-            </h2>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Sessions</span>
-                <span className="font-semibold">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-slate-700">Recruiters</h2>
+              <span className="text-slate-400">🏢</span>
+            </div>
+            <div className="mt-4 space-y-2 text-sm">
+              <div className="flex justify-between text-slate-600">
+                <span>Sessions</span>
+                <span className="font-semibold text-slate-900">
                   {counts.recruiter?.sessions ?? 0}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">All data collected</span>
-                <span className="font-semibold text-green-600">
+              <div className="flex justify-between text-slate-600">
+                <span>All data collected</span>
+                <span className="font-semibold text-emerald-700">
                   {counts.recruiter?.allDataCollected ?? 0}
                 </span>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow p-6">
-            <h2 className="text-lg font-semibold text-gray-800 mb-3">
-              Sessions (All)
-            </h2>
-            <div className="space-y-2">
-              <div className="flex justify-between">
-                <span className="text-gray-600">Total</span>
-                <span className="font-semibold">
+          <div className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+            <div className="flex items-center justify-between">
+              <h2 className="text-sm font-medium text-slate-700">
+                Sessions (All)
+              </h2>
+              <span className="text-slate-400">💬</span>
+            </div>
+            <div className="mt-4 space-y-2 text-sm">
+              <div className="flex justify-between text-slate-600">
+                <span>Total</span>
+                <span className="font-semibold text-slate-900">
                   {counts.sessions?.total ?? 0}
                 </span>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-600">All data collected</span>
-                <span className="font-semibold text-green-600">
+              <div className="flex justify-between text-slate-600">
+                <span>All data collected</span>
+                <span className="font-semibold text-emerald-700">
                   {counts.sessions?.allDataCollected ?? 0}
                 </span>
               </div>
@@ -133,20 +151,23 @@ export default function BrandAdminPage() {
           </div>
         </div>
 
-        {/* Job Seeker Sessions - minimal list */}
-        <div className="mt-8 bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">
+        {/* Sessions grid */}
+        <div className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
+          <h2 className="text-base font-semibold text-slate-800 mb-4">
             Job Seeker Sessions
           </h2>
           {list.length === 0 ? (
-            <div className="text-gray-500">No sessions found.</div>
+            <div className="text-slate-500 text-sm">No sessions found.</div>
           ) : (
-            <ul className="divide-y divide-slate-200">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
               {list.map((s, idx) => (
-                <li key={idx} className="py-3">
+                <div
+                  key={idx}
+                  className="rounded-lg border border-slate-200 p-4 bg-white hover:shadow-sm transition-shadow"
+                >
                   <div className="flex items-start justify-between">
                     <div className="mr-4">
-                      <div className="text-sm font-medium text-slate-800">
+                      <div className="text-sm font-medium text-slate-900">
                         {s.name || "Unknown"}
                       </div>
                       <div className="text-xs text-slate-500">
@@ -154,23 +175,19 @@ export default function BrandAdminPage() {
                       </div>
                     </div>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full border ${
-                        s.allDataCollected
-                          ? "bg-green-50 text-green-700 border-green-200"
-                          : "bg-orange-50 text-orange-700 border-orange-200"
-                      }`}
+                      className={`text-xs px-2 py-0.5 rounded-full border ${s.allDataCollected ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-orange-50 text-orange-700 border-orange-200"}`}
                     >
                       {s.allDataCollected ? "All data collected" : "Pending"}
                     </span>
                   </div>
                   {s.chatSummary && (
-                    <div className="mt-2 text-sm text-slate-700">
+                    <div className="mt-2 text-sm text-slate-700 line-clamp-3">
                       {s.chatSummary}
                     </div>
                   )}
-                </li>
+                </div>
               ))}
-            </ul>
+            </div>
           )}
         </div>
       </div>
