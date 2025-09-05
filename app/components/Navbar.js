@@ -6,7 +6,7 @@ import { urlFor } from "../lib/sanity";
 export default function Navbar() {
   const { data: session } = useSession();
   const brand = useBrandContext();
-  console.log(window.location.origin);
+
   return (
     <nav className="w-full border-b border-gray-200 bg-white fixed top-0 left-0 z-50">
       <div className="px-4 h-14 flex items-center justify-between">
