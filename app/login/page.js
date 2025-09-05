@@ -130,9 +130,8 @@ export default function LoginPage() {
         <div className="h-48 sm:h-80 w-full overflow-hidden rounded-xl my-4">
           <img
             src={
-              brand?.brandImage
-                ? urlFor(brand.brandImage).width(800).height(320).url()
-                : "spyne.webp"
+              brand?.brandImage &&
+              urlFor(brand.brandImage).width(800).height(320).url()
             }
             alt={brand?.brandName || "Brand"}
             className="w-full h-full object-cover"
@@ -140,22 +139,18 @@ export default function LoginPage() {
         </div>
         <div className="text-center mx-auto max-w-4xl my-4">
           <p className="text-2xl sm:text-4xl lg:text-6xl font-bold my-2">
-            {brand?.title || (
-              <>
-                Transform your{" "}
-                <span className="text-sky-900">Automobile Merchandising</span>
-              </>
-            )}
+            {brand?.title}
           </p>
           <p className="text-gray-500 text-sm sm:text-base leading-relaxed px-4">
-            {brand?.subtitle ||
-              "We are looking for talented people to join our team. Chat through our conversational bot and help us understand your job preferences. Our chatbot will provide you jobs which best fits your skills and preferences."}
+            {brand?.subtitle}
           </p>
         </div>
         <div className="my-6 mb-8">
           <button
             onClick={() => {
-              !session?.user?.id ? signIn("google") : router.push("/");
+              !session?.user?.id
+                ? signIn("google", { callbackUrl: "/" })
+                : router.push("/");
             }}
             className="px-4 py-2 bg-sky-700 text-white rounded-md"
           >

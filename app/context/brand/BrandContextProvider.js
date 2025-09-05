@@ -4,12 +4,15 @@ import { useState, useEffect, useContext } from "react";
 import { useSession } from "next-auth/react";
 import BrandContext from "./BrandContext";
 import { client } from "@/app/lib/sanity";
+import Loader from "@/app/components/Loader";
 
 export default function BrandContextProvider({ children }) {
   const { data: session } = useSession();
   const [brandContext, setBrandContext] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    setLoading(true);
     const getSubdomain = () => {
       const hostname = window.location.hostname
         .toLowerCase()
@@ -69,10 +72,16 @@ export default function BrandContextProvider({ children }) {
         }
       } catch (err) {
         console.error("Failed to fetch brand context:", err);
+      } finally {
+        setLoading(false);
       }
     };
     brandDataFromSanity();
   }, [session]);
+
+  if (loading || !brandContext) {
+    return <Loader loadingMessage="Loading..." />;
+  }
   return (
     <BrandContext.Provider value={brandContext}>
       {children}
