@@ -496,7 +496,7 @@ export default function ChatBox({
                     }
                   >
                     <div
-                      className={`text-sm leading-relaxed break-words rounded-2xl px-4 py-2 max-w-[75%] sm:max-w-[60%] shadow-sm ${
+                      className={`text-sm leading-relaxed break-words rounded-2xl px-4 py-2  sm:max-w-[60%] shadow-sm ${
                         m.role === "user"
                           ? "bg-sky-700 text-white"
                           : "bg-gray-50 text-slate-800 border border-slate-200"
@@ -542,15 +542,15 @@ export default function ChatBox({
           </div>
           <div className="border-t border-slate-200 my-2 shrink-0"></div>
           <form
-            className="bottom-0 relative mt-12 w-full shrink-0"
+            className="bottom-0 relative mt-4 w-full shrink-0"
             onSubmit={(e) => {
               e.preventDefault();
               handleSubmit();
             }}
           >
             <textarea
-              rows={2}
-              className="w-full border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-500 transition bg-white text-slate-800 pl-12 pr-24 py-2 leading-6 resize-none placeholder-transparent"
+              rows={4}
+              className="w-full border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-500 transition bg-white text-slate-800 pl-10 pr-14 sm:pl-12 sm:pr-24 py-2 leading-6 resize-none placeholder-transparent"
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onKeyDown={(e) => {
@@ -564,12 +564,12 @@ export default function ChatBox({
             />
 
             {(!input || input.trim().length === 0) && (
-              <div className="pointer-events-none absolute inset-y-0 left-12 right-24 flex items-center text-slate-400 text-sm">
+              <div className="pointer-events-none absolute inset-y-0 left-10 right-14 sm:left-12 sm:right-24 flex items-center text-slate-400 text-sm">
                 Message {brandContext?.brandName}…
               </div>
             )}
 
-            <label className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer text-slate-500 hover:text-blue-600 transition-colors">
+            <label className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 cursor-pointer text-slate-500 hover:text-blue-600 transition-colors">
               <input
                 type="file"
                 accept=".pdf,.docx"
@@ -590,8 +590,8 @@ export default function ChatBox({
               </span>
             </label>
 
-            <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-              <span className="h-2 w-2 rounded-full bg-emerald-500"></span>
+            <div className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 flex items-center">
+              {/* <span className="h-2 w-2 rounded-full bg-emerald-500"></span> */}
 
               <div className="relative">
                 {isTranscribing && (
@@ -644,7 +644,7 @@ export default function ChatBox({
                   onClick={() =>
                     isRecording ? stopRecording() : startRecording()
                   }
-                  className="p-1 rounded-md hover:bg-slate-100"
+                  className="py-1 rounded-md hover:bg-slate-100"
                   title={isRecording ? "Stop recording" : "Start recording"}
                 >
                   <img
