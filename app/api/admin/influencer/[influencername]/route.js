@@ -4,22 +4,11 @@ import User from "@/app/models/Users";
 import ChatSessions from "@/app/models/ChatSessions";
 
 export async function GET(request, { params }) {
-  const { userId } = params;
+  const { influencername } = params;
 
   try {
     await connectDB();
-
-    const influencer = await User.findById(userId);
-
-    if (!influencer) {
-      return NextResponse.json(
-        { error: "Influencer not found" },
-        { status: 404 }
-      );
-    }
-
-    const brand = influencer.name.toLowerCase().replace(/\s+/g, "");
-    const relevantSessions = await ChatSessions.find({ brand: brand });
+    const relevantSessions = await ChatSessions.find({ brand: influencername });
 
     return NextResponse.json({ relevantSessions });
   } catch (error) {

@@ -16,7 +16,8 @@ export async function POST(request) {
 
     await connectDB();
 
-    const { title, description, link, contentType } = await request.json();
+    const { title, description, link, contentType, brandName } =
+      await request.json();
 
     if (!title || !description || !contentType) {
       return NextResponse.json(
@@ -31,6 +32,7 @@ export async function POST(request) {
       link: link || "",
       contentType,
       userId: token.id,
+      brandName,
     });
 
     await newEvent.save();
@@ -41,28 +43,5 @@ export async function POST(request) {
     });
   } catch (error) {
     return NextResponse.json({ error: "Failed to create" }, { status: 500 });
-  }
-}
-
-export async function GET(request) {
-  try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
-
-    if (!token) {
-      return NextResponse.json({ error: "Please login" }, { status: 401 });
-    }
-
-    await connectDB();
-
-    const events = await Events.find({ userId: token.id }).sort({
-      createdAt: -1,
-    });
-
-    return NextResponse.json({ events });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
   }
 }

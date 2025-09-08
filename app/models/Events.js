@@ -23,6 +23,10 @@ const EventSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    brandName: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,
