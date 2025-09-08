@@ -49,7 +49,7 @@ jobs:
       - name: Deploy sanjeev.kavisha.ai
         run: gcloud run services update sanjeev --image $IMAGE --region ${{ env.REGION }} --platform managed
 
-      - name: Deploy aloksama.kavisha.ai
+      - name: Deploy at aloksama.kavisha.ai
         run: gcloud run services update aloksama --image $IMAGE --region ${{ env.REGION }} --platform managed
 
       - name: Deploy spyne.kavisha.ai
