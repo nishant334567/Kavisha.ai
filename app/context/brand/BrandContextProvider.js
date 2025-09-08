@@ -41,15 +41,15 @@ export default function BrandContextProvider({ children }) {
               {
                   _id,
                   brandName,
+                  brandType,
                   subdomain,
                   logo,
                   brandImage,
                   title,
                   subtitle,
-                  description,
+                  header,
                   brandData,
                   admins,
-                  header,
                   initialmessage,
               }[0]`
         );
@@ -57,12 +57,12 @@ export default function BrandContextProvider({ children }) {
           const context = {
             brandId: brand._id,
             brandName: brand.brandName,
-            header: brand.header,
+            brandType: brand.brandType,
             logo: brand.logo,
             brandImage: brand.brandImage,
             title: brand.title,
             subtitle: brand.subtitle,
-            description: brand.description,
+            header: brand.header,
             brandData: brand.brandData,
             isBrandAdmin: brand.admins?.includes(session?.user?.email) || false,
             subdomain,
