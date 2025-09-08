@@ -235,6 +235,10 @@ export default function ChatSidebar({
                 <button
                   className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
                   onClick={() => {
+                    if (brandContext?.brandType === "influencer") {
+                      router.push(`/admin/influencer/${session?.user?.id}`);
+                      return;
+                    }
                     const isKavisha =
                       (brandContext?.brandName || "").toLowerCase() ===
                       "kavisha.ai";

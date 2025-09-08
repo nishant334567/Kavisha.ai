@@ -12,6 +12,20 @@ export default {
       validation: (Rule) => Rule.required(),
     },
     {
+      name: "brandType",
+      title: "Brand Type",
+      type: "string",
+      description: "The type of the brand (e.g., individual, brand)",
+      validation: (Rule) => Rule.required(),
+    },
+    {
+      name: "header",
+      title: "Brand Header",
+      type: "string",
+      description: "individual",
+      validation: (Rule) => Rule.required(),
+    },
+    {
       name: "logo",
       title: "Brand Logo",
       type: "image",
@@ -46,13 +60,7 @@ export default {
         "Subtitle or description text for the landing page (can be long)",
       validation: (Rule) => Rule.required(),
     },
-    {
-      name: "header",
-      title: "Header Text",
-      type: "string",
-      description: "The main header text to display",
-      validation: (Rule) => Rule.required(),
-    },
+
     {
       name: "initialmessage",
       title: "Initial Message",
@@ -74,12 +82,7 @@ export default {
       description: "Whether this brand configuration is currently active",
       initialValue: true,
     },
-    {
-      name: "description",
-      title: "Description",
-      type: "text",
-      description: "Brief description of the brand",
-    },
+
     {
       name: "brandData",
       title: "Brand Data",
