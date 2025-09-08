@@ -154,7 +154,7 @@ export default function LoginPage() {
             }}
             className="px-4 py-2 bg-sky-700 text-white rounded-md"
           >
-            {session?.user?.id ? "Go to Homepage" : "We are hiring"}
+            {session?.user?.id ? "Go to Homepage" : "Talk to me now"}
           </button>
         </div>
       </div>
