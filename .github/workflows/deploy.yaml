@@ -55,8 +55,8 @@ jobs:
       - name: Deploy spyne.kavisha.ai
         run: gcloud run services update web-spyne --image $IMAGE --region ${{ env.REGION }} --platform managed
 
-      - name: Deploy edufa.kavisha.ai
-        run: gcloud run services update web-edoofa --image $IMAGE --region ${{ env.REGION }} --platform managed
+      - name: Deploy fiitjee.kavisha.ai
+        run: gcloud run services update fiitjee --image $IMAGE --region ${{ env.REGION }} --platform managed
 
       - name: Deploy upgrad.kavisha.ai
         run: gcloud run services update web-upgrad --image $IMAGE --region ${{ env.REGION }} --platform managed
