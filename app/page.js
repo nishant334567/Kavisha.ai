@@ -3,12 +3,12 @@
 import { redirect } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
-import Header from "./components/Header";
 import { useBrandContext } from "./context/brand/BrandContextProvider";
 import SelectChatType from "./components/SelectType";
 import ChatBox from "./components/ChatBox";
 import ChatSidebar from "./components/ChatSidebar";
 import RightPanel from "./components/Rightpanel";
+import getChatOptions from "./utils/getChatOptions";
 
 export default function HomePage() {
   const { data: session } = useSession();
@@ -25,34 +25,21 @@ export default function HomePage() {
   const [connections, setConnections] = useState([]);
   const [showInbox, setShowInbox] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(256);
-
-  useEffect(() => {
-    if (
-      !currentChatType &&
-      brandContext &&
-      brandContext.brandName !== "Kavisha.ai"
-    ) {
-      if (brandContext.isBrandAdmin) {
-        selectChatType("recruiter");
-      } else {
-        selectChatType("job_seeker");
-      }
-    }
-  }, [currentChatType, brandContext]);
-
+  const [servicesProvided, setServicesProvided] = useState({});
   useEffect(() => {
     if (!session || !brandContext) return;
     const key = `lastChat:${session.user.id}:${brandContext.brandName}`;
     const saved = localStorage.getItem(key);
+    const key2 = `lastChatType:${session.user.id}`;
+    const savedType = localStorage.getItem(key2);
+    if (savedType && !currentChatType) setCurrentChatType(savedType);
     if (saved && !currentChatId) setCurrentChatId(saved);
-  }, [session, brandContext]);
+  }, [brandContext]);
 
-  // useEffect(() => {
-  //   if (!session || !brandContext || !currentChatId) return;
-  //   const key = `lastChat:${session.user.id}:${brandContext.brandName}`;
-  //   localStorage.setItem(key, currentChatId);
-  // }, [session, brandContext, currentChatId]);
-
+  useEffect(() => {
+    if (!brandContext) return;
+    setServicesProvided(brandContext.services);
+  }, [brandContext]);
   useEffect(() => {
     if (!session || !brandContext) return;
     const fetchData = async () => {
@@ -64,40 +51,16 @@ export default function HomePage() {
       const data = await res.json();
       setAllchats(data);
     };
-    const fetchMatches = async () => {
-      if (!currentChatId) return;
-      const res = await fetch(`/api/fetch-matches/${currentChatId}`, {
-        cache: "no-store",
-      });
-      if (!res.ok) throw new Error(`matches ${res.status}`);
-      const data = await res.json();
-      setMatches(Array.isArray(data?.matches) ? data.matches : []);
-    };
-
-    const fetchConnections = async () => {
-      if (!currentChatId) return;
-      const res = await fetch(`/api/connections/${currentChatId}`, {
-        cache: "no-store",
-      });
-      if (!res.ok) throw new Error(`connections ${res.status}`);
-      const data = await res.json();
-      setConnections(Array.isArray(data?.connections) ? data.connections : []);
-    };
     fetchData();
-    fetchMatches();
-    fetchConnections();
+
     if (currentChatId) {
       const key = `lastChat:${session.user.id}:${brandContext.brandName}`;
+      const key2 = `lastChatType:${session.user.id}`;
       localStorage.setItem(key, currentChatId);
+      localStorage.setItem(key2, currentChatType);
     }
-  }, [session, brandContext, currentChatId]);
+  }, [currentChatId, currentChatType]);
 
-  // useEffect(() => {
-  //   if (allChats) {
-  //     setCurrentChatType(allChats?.sessions[currentChatId]?.role);
-  //     ;
-  //   }
-  // }, [allChats, currentChatId]);
   const toggleRightPanel = () => {
     setShow((prev) => !prev);
   };
@@ -108,36 +71,31 @@ export default function HomePage() {
     toggleRightPanel();
   };
 
-  const selectChatType = async (type) => {
+  const selectChatType = async (type, initialMessage) => {
     setCurrentChatType(type);
     if (!session || !brandContext) return;
-    if (brandContext.brandName === "Kavisha.ai") {
-      try {
-        setCreatingSession(true);
-        const res = await fetch("/api/newchatsession", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            userId: session.user.id,
-            role: type,
-            brand: brandContext.subdomain,
-            initialmessage: brandContext?.initialmessage,
-          }),
-        });
-        const data = await res.json();
-        if (data?.success && data?.sessionId) {
-          setCurrentChatId(data.sessionId);
-        }
-      } catch (e) {
-        console.error("Failed to create session on type select", e);
-      } finally {
-        setCreatingSession(false);
-      }
-    }
-  };
 
-  const handleInputChange = (e) => {
-    setInput(e.target.value);
+    try {
+      setCreatingSession(true);
+      const res = await fetch("/api/newchatsession", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          userId: session.user.id,
+          role: type,
+          brand: brandContext.subdomain,
+          initialmessage: initialMessage,
+        }),
+      });
+      const data = await res.json();
+      if (data?.success && data?.sessionId) {
+        setCurrentChatId(data.sessionId);
+      }
+    } catch (e) {
+      console.error("Failed to create session on type select", e);
+    } finally {
+      setCreatingSession(false);
+    }
   };
 
   if (!session) {
@@ -160,15 +118,15 @@ export default function HomePage() {
         </div>
 
         <div className="w-full h-full flex flex-col">
-          {brandContext &&
-            brandContext.brandName === "Kavisha.ai" &&
-            (!currentChatId || !currentChatType) && (
-              <SelectChatType
-                selectedType={currentChatType}
-                selectChatType={selectChatType}
-                isCreating={creatingSession}
-              />
-            )}
+          {!currentChatType && !currentChatId && (
+            <SelectChatType
+              servicesProvided={servicesProvided}
+              selectedType={currentChatType}
+              selectChatType={selectChatType}
+              isCreating={creatingSession}
+            />
+          )}
+
           {currentChatId && (
             <ChatBox
               currentChatId={currentChatId}

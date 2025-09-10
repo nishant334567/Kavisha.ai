@@ -218,13 +218,10 @@ export default function ChatBox({
           body: JSON.stringify({
             history: messages,
             userMessage: userText,
-            jobseeker:
-              brandContext?.header === "individual"
-                ? "individual"
-                : currentChatType || "",
             sessionId: currentChatId,
             resume: newResumeData,
-            brandData: brandContext?.brandData,
+            type: currentChatType,
+            prompt: getServicePrompt(),
           }),
         });
         if (!response.ok) {
@@ -282,13 +279,10 @@ export default function ChatBox({
       body: JSON.stringify({
         history: historyUpToRetry,
         userMessage: resendMessage?.message,
-        jobseeker:
-          brandContext?.header === "individual"
-            ? "individual"
-            : currentChatType || "",
+        type: currentChatType,
         sessionId: currentChatId,
         resume: resumeData.resumeSummary,
-        brandData: brandContext?.brandData,
+        prompt: getServicePrompt(),
       }),
     });
     if (!response.ok) {
@@ -325,7 +319,20 @@ export default function ChatBox({
       setHasDatacollected(false);
     }
   };
+
+  // Function to get service-specific prompt based on chat type
+  const getServicePrompt = () => {
+    if (!brandContext?.services || !currentChatType) return "";
+
+    const service = brandContext.services.find(
+      (s) => s.name?.toLowerCase() === currentChatType?.toLowerCase()
+    );
+
+    return service?.prompt || "";
+  };
+
   const handleSubmit = async (voiceText = null) => {
+    // const { history, userMessage, sessionId, resume, type, prompt } = body;
     let sessionId = currentChatId;
 
     const messageText = (voiceText ?? input).trim();
@@ -346,13 +353,10 @@ export default function ChatBox({
       body: JSON.stringify({
         history: updatedMessages,
         userMessage: messageText,
-        jobseeker:
-          brandContext?.header === "individual"
-            ? "individual"
-            : currentChatType || "",
         sessionId,
         resume: resumeData?.resumeSummary || "",
-        brandData: brandContext?.brandData,
+        type: currentChatType,
+        prompt: getServicePrompt(),
       }),
     });
     if (!response.ok) {

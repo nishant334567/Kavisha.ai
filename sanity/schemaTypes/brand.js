@@ -19,13 +19,6 @@ export default {
       validation: (Rule) => Rule.required(),
     },
     {
-      name: "header",
-      title: "Brand Header",
-      type: "string",
-      description: "individual",
-      validation: (Rule) => Rule.required(),
-    },
-    {
       name: "logo",
       title: "Brand Logo",
       type: "image",
@@ -60,14 +53,6 @@ export default {
         "Subtitle or description text for the landing page (can be long)",
       validation: (Rule) => Rule.required(),
     },
-
-    {
-      name: "initialmessage",
-      title: "Initial Message",
-      type: "string",
-      description:
-        "Optional first message the assistant sends when a new session is created",
-    },
     {
       name: "subdomain",
       title: "Subdomain",
@@ -75,25 +60,60 @@ export default {
       description: "The subdomain this brand is for (e.g., spyne, kavisha)",
       validation: (Rule) => Rule.required(),
     },
-    {
-      name: "isActive",
-      title: "Is Active",
-      type: "boolean",
-      description: "Whether this brand configuration is currently active",
-      initialValue: true,
-    },
 
     {
-      name: "brandData",
-      title: "Brand Data",
-      type: "text",
-      rows: 30,
-      description:
-        "Detailed brand information, overview, services, business details, FAQs, and comprehensive context for AI chatbot (up to 5000 words recommended)",
-      validation: (Rule) =>
-        Rule.max(5000).warning(
-          "Brand data should not exceed 5000 words for optimal chatbot performance"
-        ),
+      name: "services",
+      title: "Services",
+      type: "array",
+      of: [
+        {
+          type: "object",
+          fields: [
+            {
+              name: "name",
+              title: "Service Name",
+              type: "string",
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: "initialMessage",
+              title: "ChatBot Initial Message",
+              type: "string",
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: "title",
+              title: "Service Title",
+              type: "string",
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: "prompt",
+              title: "Service Prompt",
+              type: "text",
+              rows: 4,
+              description: "AI prompt or description for this service",
+              validation: (Rule) => Rule.required(),
+            },
+            {
+              name: "logo",
+              title: "Service Logo",
+              type: "image",
+              description: "Logo/icon for this service",
+              options: {
+                hotspot: true,
+              },
+            },
+          ],
+          preview: {
+            select: {
+              title: "name",
+              subtitle: "title",
+              media: "logo",
+            },
+          },
+        },
+      ],
     },
     {
       name: "admins",

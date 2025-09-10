@@ -10,7 +10,7 @@ export default function BrandAdminPage() {
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
-
+  // const [reader,setReader] - useState(false)
   useEffect(() => {
     if (!brand) return;
     const load = async () => {
@@ -63,7 +63,6 @@ export default function BrandAdminPage() {
   return (
     <div className="h-screen bg-white p-6 overflow-y-auto">
       <div className="mx-auto max-w-6xl">
-        {/* Header */}
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold text-slate-900">

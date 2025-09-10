@@ -98,48 +98,16 @@ export default function ChatSidebar({
       onSidebarWidthChange(isCollapsed ? 64 : 256);
     }
   }, [isCollapsed, onSidebarWidthChange]);
-  const toggleNotifications = () => {
-    setOpenNotifications((prev) => !prev);
-  };
-  const newChat = async () => {
-    if (brandContext?.brandName === "Kavisha.ai") {
-      updateChatId(null);
-      setCurrentChatType(null);
-      return;
-    }
-    setNewChatLoading(true);
-    const res = await fetch("/api/newchatsession", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        userId: session?.user?.id,
-        role:
-          brandContext?.header === "individual"
-            ? "individual"
-            : brandContext?.isBrandAdmin
-              ? "recruiter"
-              : "job_seeker",
-        brand: brandContext?.subdomain,
-        initialmessage: brandContext?.initialmessage,
-      }),
-    });
-    const data = await res.json();
-    if (data.success) updateChatId(data.sessionId);
-    setNewChatLoading(false);
+
+  const newChat = () => {
+    updateChatId(null);
+    setCurrentChatType(null);
+    return;
   };
 
   return (
     <div>
       <div className="relative">
-        {/* <div className="absolute z-40 left-15 top-1/2">
-          {openNotifications && (
-            <Notification
-              toggle={toggleNotifications}
-              updateChatId={updateChatId}
-              notifications={notifications}
-            />
-          )}
-        </div> */}
         {!isCollapsed && (
           <div className="mt-12 fixed top-0 left-0 z-40 flex flex-col w-64 h-[calc(100vh-56px)] p-4 border-r border-slate-200 bg-white shadow-sm">
             {/* User Info Section */}
@@ -184,7 +152,7 @@ export default function ChatSidebar({
                               {allChats?.sessions[id]?.title ||
                                 `Chat ${idx + 1} `}
                             </span>
-                            {brandContext?.header !== "individual" &&
+                            {brandContext?.brandType !== "individual" &&
                               (() => {
                                 const meta = getRoleMeta(
                                   allChats?.sessions[id]?.role
@@ -210,7 +178,7 @@ export default function ChatSidebar({
               </div>
             </div>
             <div className="flex flex-col gap-2">
-              {brandContext?.header !== "individual" && (
+              {brandContext?.brandType !== "individual" && (
                 <button
                   className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
                   onClick={() => onOpenInbox && onOpenInbox()}
@@ -235,7 +203,7 @@ export default function ChatSidebar({
                 <button
                   className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
                   onClick={() => {
-                    if (brandContext?.brandType === "influencer") {
+                    if (brandContext?.brandType === "individual") {
                       router.push(`/admin/influencer/${session?.user?.id}`);
                       return;
                     }
@@ -275,7 +243,7 @@ export default function ChatSidebar({
             >
               <img src="add.png" width={20} height={20} />
             </button>
-            {brandContext?.header !== "individual" && (
+            {brandContext?.brandType !== "individual" && (
               <button
                 onClick={() => onOpenInbox && onOpenInbox()}
                 className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100"

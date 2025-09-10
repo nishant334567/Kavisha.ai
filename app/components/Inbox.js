@@ -35,7 +35,6 @@ export default function Inbox({ onOpenChat, onClose }) {
   }
   return (
     <div className="mb-4 relative bg-white rounded-xl overflow-hidden flex flex-col h-[400px] border border-slate-200 shadow-sm">
-      {/* Header */}
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
         <h2 className="text-base font-semibold text-slate-800">All Messages</h2>
         {onClose && (

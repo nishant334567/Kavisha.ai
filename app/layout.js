@@ -8,7 +8,7 @@ import Navbar from "@/app/components/Navbar";
 
 export default function RootLayout({ children }) {
   return (
-    <html>
+    <html lang="en">
       <head>
         <title>Kavisha.ai</title>
         <link rel="icon" href="data:," />
@@ -16,6 +16,7 @@ export default function RootLayout({ children }) {
       <body
         className="h-screen overflow-hidden"
         suppressHydrationWarning={true}
+        suppressContentEditableWarning={true}
       >
         <SessionProvider>
           <BrandContextProvider>
