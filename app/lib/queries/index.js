@@ -1,1 +1,0 @@
-export { brandQueries } from "./brand";

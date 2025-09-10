@@ -47,10 +47,9 @@ export default function BrandContextProvider({ children }) {
                   brandImage,
                   title,
                   subtitle,
-                  header,
-                  brandData,
                   admins,
                   initialmessage,
+                  services,
               }[0]`
         );
         if (brand) {
@@ -62,11 +61,10 @@ export default function BrandContextProvider({ children }) {
             brandImage: brand.brandImage,
             title: brand.title,
             subtitle: brand.subtitle,
-            header: brand.header,
-            brandData: brand.brandData,
             isBrandAdmin: brand.admins?.includes(session?.user?.email) || false,
             subdomain,
             initialmessage: brand.initialmessage,
+            services: brand.services,
           };
           setBrandContext(context);
         }

@@ -103,26 +103,6 @@ export default function SessionSection({ totalSessions }) {
     setFilters(newFilters);
   };
 
-  const fetchMatches = async (id, sessionTitle) => {
-    setLoadingMatches((prev) => ({ ...prev, [id]: true }));
-    try {
-      const response = await fetch(`/api/admin/fetch-matches/${id}`);
-      const data = await response.json();
-
-      if (data.success) {
-        setMatch(data.matches);
-        setCurrentSessionTitle(sessionTitle);
-        setShowMatches(true);
-      } else {
-        console.error("Failed to fetch matches:", data.message);
-      }
-    } catch (error) {
-      console.error("Error fetching matches:", error);
-    } finally {
-      setLoadingMatches((prev) => ({ ...prev, [id]: false }));
-    }
-  };
-
   const closeMatches = () => {
     setShowMatches(false);
     setMatch(null);
@@ -136,7 +116,6 @@ export default function SessionSection({ totalSessions }) {
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
         <div className="bg-white rounded-lg shadow-xl max-w-4xl w-full mx-4 max-h-[90vh] flex flex-col">
-          {/* Header */}
           <div className="flex justify-between items-center p-6 border-b">
             <h2 className="text-xl font-semibold text-gray-800">
               Matches for: {currentSessionTitle}
@@ -162,7 +141,6 @@ export default function SessionSection({ totalSessions }) {
                     key={index}
                     className="border rounded-lg p-4 bg-gray-50 hover:bg-gray-100 transition-colors"
                   >
-                    {/* Match Header */}
                     <div className="flex justify-between items-start mb-4">
                       <div>
                         <h3 className="text-lg font-semibold text-gray-800">
@@ -346,18 +324,6 @@ export default function SessionSection({ totalSessions }) {
                     {session.role}
                   </span>
                 </div>
-                <button
-                  onClick={() =>
-                    fetchMatches(
-                      session._id,
-                      session.title || "Untitled Session"
-                    )
-                  }
-                  className="mb-3 px-3 py-1 bg-blue-600 text-white rounded text-sm hover:bg-blue-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
-                  disabled={loadingMatches[session._id]}
-                >
-                  {loadingMatches[session._id] ? "Loading..." : "View Matches"}
-                </button>
 
                 <div className="space-y-1 text-sm text-gray-600">
                   <p>

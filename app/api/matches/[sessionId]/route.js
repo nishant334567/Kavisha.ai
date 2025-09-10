@@ -1,9 +1,10 @@
 import { NextResponse } from "next/server";
 import Session from "@/app/models/ChatSessions";
-import User from "@/app/models/Users";
 import OpenAI from "openai";
 import { connectDB } from "@/app/lib/db";
 import mongoose from "mongoose";
+import { createChatCompletion } from "@/app/utils/getAiResponse";
+import generateMatchingPrompt from "@/app/utils/matchingPromptGenerator";
 
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({
@@ -11,38 +12,25 @@ const openai = process.env.OPENAI_API_KEY
     })
   : null;
 
-export async function getMatches(sessionId) {
+export async function getMatches(sessionId, role) {
+  if (role === "lead_journey") {
+    return [];
+  }
   if (!openai) {
     throw new Error("OpenAI API key not configured");
   }
 
   await connectDB();
   const session = await Session.findById({ _id: sessionId });
-  const role = session?.role;
-  const isDating = role === "dating";
-  const brand = session?.brand;
-  const isKavishaBrand =
-    typeof brand === "string" && brand.toLowerCase() === "kavisha";
-  let oppositeRole;
-  if (!isDating) {
-    oppositeRole = role === "job_seeker" ? "recruiter" : "job_seeker";
-  }
-  const providerQuery = {
-    role: oppositeRole || role,
+
+  let oppositeRole = role === "job_seeker" ? "recruiter" : "job_seeker";
+
+  const allProviders = await Session.find({
+    role: oppositeRole,
     allDataCollected: true,
     chatSummary: { $exists: true, $ne: "" },
-    // Never suggest the same user's other sessions
-    userId: { $ne: session?.userId },
-  };
-  if (isDating) {
-    providerQuery.brand = "kavisha";
-  } else if (brand && !isKavishaBrand) {
-    providerQuery.brand = brand;
-  }
-  const allProviders = await Session.find(providerQuery).populate(
-    "userId",
-    "name email"
-  );
+    ...(session.brand !== "kavisha" && { brand: session.brand }),
+  }).populate("userId", "name email");
 
   const allProvidersList = allProviders
     .map(
@@ -58,141 +46,31 @@ export async function getMatches(sessionId) {
     )
     .join("\n");
 
-  const jobPrompt = `
-You are a smart job-matching assistant.
+  const prompt = generateMatchingPrompt({
+    sessionId,
+    role,
+    oppositeRole,
+    sessionSummary: session.chatSummary,
+    allProvidersList,
+  });
 
-Your task is to compare one user [A] (the user of this app) with multiple potential matches [B] based on their chat summaries.
-
-[A] is "${role}" with the following requirements (chat summary):
----
-${session?.chatSummary}
----
-
-Each [B] is "${oppositeRole}" session with their data and requirements:
-${allProvidersList}
----
-
-Rules:
-- Address [A] as "you" or "your" in all explanations.
-- Compare [A] and [B] summaries and only suggest matches where job titles/roles are compatible or closely related.
-- Skip candidates with incompatible roles entirely.
-
-For each selected match, return:
-{
-  "sessionId": "${sessionId}",
-  "matchedUserId": "...",
-  "matchedSessionId": "...",
-  "title": "...",
-  "chatSummary": "...",
-  "matchingReason": "...",
-  "matchPercentage": "50%",
-  "mismatchReason": "..."
-}
-
-Return only a JSON array (max 10), no extra text.
-`;
-
-  const datingPrompt = `
-You are a thoughtful dating match assistant.
-
-Your task is to suggest date matches for [A] strictly using chat summaries. Base compatibility on values, interests, lifestyle, location, and preferences extracted from the summaries.
-
-[A] is "${role}" with the following details (chat summary):
----
-${session?.chatSummary}
----
-
-Candidates [B] come from sessions. Only consider candidates where brand is "kavisha" and role is "dating" (this is the only filter). Details:
-${allProvidersList}
----
-
-Rules:
-- Address [A] as "you" or "your" in all explanations.
-- Consider interests, age range, goals, lifestyle, and dealbreakers if mentioned.
-- If a candidate does not meet brand "kavisha" and role "dating", ignore it.
-- Avoid suggesting matches with strong conflicts (e.g., non-overlapping locations or opposite relationship goals).
-
-For each selected match, return:
-[
-  {
-    "sessionId": "${sessionId}",
-    "matchedUserId": "use from above",
-    "matchedSessionId": "use from above",
-    "title": "use from above",
-    "chatSummary": "use from above",
-    "matchingReason": "Why this person may be a good match for you",
-    "matchPercentage": "70%",
-    "mismatchReason": "Any potential incompatibilities"
-  }
-]
-
-Return only the JSON array (max 10).`;
-
-  const prompt = isDating ? datingPrompt : jobPrompt;
-
-  const completion = await openai.chat.completions.create({
-    model: "gpt-4o-mini",
-    messages: [
-      { role: "system", content: "You are a helpful assistant." },
+  const completion = await createChatCompletion(
+    "gpt-4o-mini",
+    [
+      { role: "system", content: "You are a smart job-matching assistant." },
       { role: "user", content: prompt },
     ],
-    temperature: 1,
-  });
+    0.7,
+    800
+  );
   const responseText = completion.choices[0].message.content;
-  console.log(responseText, "responseText");
-  const match = responseText.match(/\[\s*{[\s\S]*?}\s*\]/);
 
-  let matches = [];
-  if (match) {
-    try {
-      matches = JSON.parse(match[0]);
-    } catch (e) {
-      return NextResponse.json(
-        {
-          error: "Could not parse matches (malformed JSON array)",
-          raw: responseText,
-        },
-        { status: 500 }
-      );
-    }
-  } else {
-    return NextResponse.json(
-      { error: "No JSON array found in response", raw: responseText },
-      { status: 500 }
-    );
-  }
-
-  const isValidObjectId = (id) => mongoose.Types.ObjectId.isValid(id);
-  const allowedSessionIds = new Set(allProviders.map((s) => String(s._id)));
-  const filteredmatches = Array.isArray(matches)
-    ? matches.filter((item) => {
-        if (
-          !isValidObjectId(item.sessionId) ||
-          !isValidObjectId(item.matchedUserId) ||
-          !isValidObjectId(item.matchedSessionId)
-        ) {
-          return false;
-        }
-        // Do not recommend self (same user) or the same session
-        if (
-          String(item.matchedSessionId) === String(sessionId) ||
-          String(item.matchedUserId) === String(session?.userId)
-        ) {
-          return false;
-        }
-        // Ensure the matched session comes from the candidate pool
-        if (!allowedSessionIds.has(String(item.matchedSessionId))) {
-          return false;
-        }
-        return true;
-      })
-    : [];
-  return filteredmatches;
+  return [];
 }
 
-export async function GET(req, { params }) {
-  const { sessionId } = await params;
-  const response = await getMatches(sessionId);
+// export async function GET(req, { params }) {
+//   const { sessionId } = await params;
+//   const response = await getMatches(sessionId);
 
-  return NextResponse.json({ matches: response });
-}
+//   return NextResponse.json({ matches: response });
+// }

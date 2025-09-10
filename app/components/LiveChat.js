@@ -154,7 +154,6 @@ export default function Livechat({
   return (
     <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center p-4">
       <div className="bg-white rounded-xl w-full max-w-sm mx-auto flex flex-col h-[500px] border border-slate-200 shadow-lg">
-        {/* Header */}
         <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200 rounded-t-xl">
           <div>
             <div className="font-semibold text-slate-800 text-base">

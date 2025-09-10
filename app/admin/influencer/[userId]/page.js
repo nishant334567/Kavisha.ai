@@ -17,7 +17,7 @@ export default function InfluencerPage() {
         `/api/admin/influencer/${brandContext?.subdomain}`
       );
       const data = await response.json();
-      console.log(data);
+
       setRelevantSessions(data.relevantSessions);
     };
 
@@ -35,7 +35,6 @@ export default function InfluencerPage() {
   return (
     <div className="min-h-screen bg-gray-50 p-3 sm:p-4 md:p-6">
       <div className="max-w-7xl mx-auto">
-        {/* Header Section */}
         <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-4 sm:p-6 mb-4 sm:mb-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
             <div className="flex items-center space-x-3 sm:space-x-4">
