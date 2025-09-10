@@ -8,7 +8,6 @@ import SelectChatType from "./components/SelectType";
 import ChatBox from "./components/ChatBox";
 import ChatSidebar from "./components/ChatSidebar";
 import RightPanel from "./components/Rightpanel";
-import getChatOptions from "./utils/getChatOptions";
 
 export default function HomePage() {
   const { data: session } = useSession();

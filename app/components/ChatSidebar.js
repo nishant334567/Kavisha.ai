@@ -15,14 +15,11 @@ export default function ChatSidebar({
   onSidebarWidthChange,
 }) {
   const { data: session } = useSession();
-  const [isDeleting, setIsdeleting] = useState(false);
   const [isCollapsed, setIscollapsed] = useState(false);
-  const [openNotifications, setOpenNotifications] = useState(false);
   const [newChatLoading, setNewChatLoading] = useState(false);
   const [inboxLoading, setInboxLoading] = useState(false);
   const brandContext = useBrandContext();
   const [inboxChats, setInboxChats] = useState([]);
-  const [openingChatId, setOpeningChatId] = useState(null);
   const router = useRouter();
   if (session?.user) {
   }
