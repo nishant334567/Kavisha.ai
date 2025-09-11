@@ -5,10 +5,11 @@ export async function middleware(req) {
   const host = req.headers.get("host") || "";
   if (host.startsWith("www.")) {
     const url = new URL(req.url);
-    url.host = host.slice(4);
+    const newHost = host.slice(4);
+    url.host = newHost;
     return NextResponse.redirect(url, 308);
   }
-  //remove
+
   if (req.nextUrl.pathname.startsWith("/landing")) {
     return NextResponse.next();
   }
