@@ -1,12 +1,11 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
-import User from "@/app/models/Users";
 import { getToken } from "next-auth/jwt";
 import { client as sanity } from "@/app/lib/sanity";
 
 // GET /api/admin/overview/[brand]
-// Returns brand-scoped metrics for non-"kavisha" brands, using dynamic route param
+// Returns all sessions for the specified brand (admin only)
 export async function GET(req, { params }) {
   try {
     await connectDB();
@@ -15,16 +14,7 @@ export async function GET(req, { params }) {
 
     if (!brand) {
       return NextResponse.json(
-        { success: false, message: "Missing 'brand' query parameter" },
-        { status: 400 }
-      );
-    }
-    if (brand === "kavisha") {
-      return NextResponse.json(
-        {
-          success: false,
-          message: "This endpoint is intended for non-'kavisha' brands",
-        },
+        { success: false, message: "Missing brand parameter" },
         { status: 400 }
       );
     }
@@ -32,106 +22,62 @@ export async function GET(req, { params }) {
     // Authorization: only brand admins may access
     const token = await getToken({ req, secret: process.env.AUTH_SECRET });
     const requesterEmail = token?.email || token?.user?.email;
+
     if (!requesterEmail) {
       return NextResponse.json(
         { success: false, message: "Unauthorized" },
         { status: 401 }
       );
     }
+
+    // Check if user is admin for this brand
     const brandDoc = await sanity.fetch(
       `*[_type=="brand" && subdomain==$brand][0]{admins}`,
       { brand }
     );
+
     const isAdmin = Array.isArray(brandDoc?.admins)
       ? brandDoc.admins.includes(requesterEmail)
       : false;
+
     if (!isAdmin) {
       return NextResponse.json(
-        { success: false, message: "Forbidden" },
+        { success: false, message: "Forbidden - not a brand admin" },
         { status: 403 }
       );
     }
 
-    // Core counts for the brand
-    const [
-      jobSeekerSessions,
-      jobSeekerAllDataSessions,
-      recruiterSessions,
-      recruiterAllDataSessions,
-      distinctJobSeekerUsers,
-      distinctRecruiterUsers,
-      allSessionsCount,
-      allAllDataCount,
-    ] = await Promise.all([
-      Session.countDocuments({ brand, role: "job_seeker" }),
-      Session.countDocuments({
-        brand,
-        role: "job_seeker",
-        allDataCollected: true,
-      }),
-      Session.countDocuments({ brand, role: "recruiter" }),
-      Session.countDocuments({
-        brand,
-        role: "recruiter",
-        allDataCollected: true,
-      }),
-      // Distinct users who have job_seeker sessions in this brand
-      Session.distinct("userId", { brand, role: "job_seeker" }).then(
-        (ids) => ids.length
-      ),
-      // Distinct users who have recruiter sessions in this brand
-      Session.distinct("userId", { brand, role: "recruiter" }).then(
-        (ids) => ids.length
-      ),
-      // Overall sessions
-      Session.countDocuments({ brand }),
-      Session.countDocuments({ brand, allDataCollected: true }),
-    ]);
-
-    // Fetch job_seeker sessions with minimal fields and user info
-    const jobSeekerSessionList = await Session.find({
-      brand,
-      role: "job_seeker",
-    })
-      .select("chatSummary allDataCollected userId")
+    // Fetch all sessions for this brand
+    const sessions = await Session.find({ brand })
       .populate("userId", "name email")
+      .sort({ createdAt: -1 })
       .lean();
 
-    const jobSeekerAllSessions = Array.isArray(jobSeekerSessionList)
-      ? jobSeekerSessionList.map((s) => ({
-          chatSummary: s.chatSummary || "",
-          allDataCollected: !!s.allDataCollected,
-          name: s.userId?.name || "",
-          email: s.userId?.email || "",
-        }))
-      : [];
+    // Format sessions data
+    const formattedSessions = sessions.map((session) => ({
+      _id: session._id,
+      brand: session.brand,
+      role: session.role,
+      chatSummary: session.chatSummary || "",
+      allDataCollected: !!session.allDataCollected,
+      createdAt: session.createdAt,
+      updatedAt: session.updatedAt,
+      user: {
+        name: session.userId?.name || "",
+        email: session.userId?.email || "",
+      },
+    }));
 
-    const payload = {
+    return NextResponse.json({
       success: true,
       brand,
-      counts: {
-        jobSeeker: {
-          users: distinctJobSeekerUsers,
-          sessions: jobSeekerSessions,
-          allDataCollected: jobSeekerAllDataSessions,
-        },
-        recruiter: {
-          users: distinctRecruiterUsers,
-          sessions: recruiterSessions,
-          allDataCollected: recruiterAllDataSessions,
-        },
-        sessions: {
-          total: allSessionsCount,
-          allDataCollected: allAllDataCount,
-        },
-      },
-      jobSeekerAllSessions: jobSeekerAllSessions,
-    };
-    return NextResponse.json(payload);
+      sessions: formattedSessions,
+      total: formattedSessions.length,
+    });
   } catch (error) {
     console.error("Brand overview API error:", error);
     return NextResponse.json(
-      { success: false, message: "Failed to fetch brand overview" },
+      { success: false, message: "Failed to fetch brand sessions" },
       { status: 500 }
     );
   }

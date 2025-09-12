@@ -55,10 +55,32 @@ export default function BrandAdminPage() {
     );
   }
 
-  const counts = data.counts || {};
-  const list = Array.isArray(data.jobSeekerAllSessions)
-    ? data.jobSeekerAllSessions
-    : [];
+  const sessions = Array.isArray(data.sessions) ? data.sessions : [];
+  const totalSessions = data.total || 0;
+
+  // Calculate counts from sessions
+  const jobSeekerSessions = sessions.filter((s) => s.role === "job_seeker");
+  const recruiterSessions = sessions.filter((s) => s.role === "recruiter");
+  const allDataCollectedSessions = sessions.filter((s) => s.allDataCollected);
+
+  const counts = {
+    jobSeeker: {
+      users: new Set(jobSeekerSessions.map((s) => s.user.email)).size,
+      sessions: jobSeekerSessions.length,
+      allDataCollected: jobSeekerSessions.filter((s) => s.allDataCollected)
+        .length,
+    },
+    recruiter: {
+      users: new Set(recruiterSessions.map((s) => s.user.email)).size,
+      sessions: recruiterSessions.length,
+      allDataCollected: recruiterSessions.filter((s) => s.allDataCollected)
+        .length,
+    },
+    sessions: {
+      total: totalSessions,
+      allDataCollected: allDataCollectedSessions.length,
+    },
+  };
 
   return (
     <div className="h-screen bg-white p-6 overflow-y-auto">
@@ -153,37 +175,45 @@ export default function BrandAdminPage() {
         {/* Sessions grid */}
         <div className="mt-8 rounded-xl border border-slate-200 bg-white p-6 shadow-sm">
           <h2 className="text-base font-semibold text-slate-800 mb-4">
-            Job Seeker Sessions
+            All Sessions ({totalSessions})
           </h2>
-          {list.length === 0 ? (
+          {sessions.length === 0 ? (
             <div className="text-slate-500 text-sm">No sessions found.</div>
           ) : (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-              {list.map((s, idx) => (
+              {sessions.map((session, idx) => (
                 <div
-                  key={idx}
+                  key={session._id || idx}
                   className="rounded-lg border border-slate-200 p-4 bg-white hover:shadow-sm transition-shadow"
                 >
                   <div className="flex items-start justify-between">
                     <div className="mr-4">
                       <div className="text-sm font-medium text-slate-900">
-                        {s.name || "Unknown"}
+                        {session.user.name || "Unknown"}
                       </div>
                       <div className="text-xs text-slate-500">
-                        {s.email || "-"}
+                        {session.user.email || "-"}
+                      </div>
+                      <div className="text-xs text-slate-400 mt-1">
+                        {session.role === "job_seeker"
+                          ? "👤 Job Seeker"
+                          : "🏢 Recruiter"}
                       </div>
                     </div>
                     <span
-                      className={`text-xs px-2 py-0.5 rounded-full border ${s.allDataCollected ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-orange-50 text-orange-700 border-orange-200"}`}
+                      className={`text-xs px-2 py-0.5 rounded-full border ${session.allDataCollected ? "bg-emerald-50 text-emerald-700 border-emerald-200" : "bg-orange-50 text-orange-700 border-orange-200"}`}
                     >
-                      {s.allDataCollected ? "All data collected" : "Pending"}
+                      {session.allDataCollected ? "Complete" : "Pending"}
                     </span>
                   </div>
-                  {s.chatSummary && (
+                  {session.chatSummary && (
                     <div className="mt-2 text-sm text-slate-700 line-clamp-3">
-                      {s.chatSummary}
+                      {session.chatSummary}
                     </div>
                   )}
+                  <div className="mt-2 text-xs text-slate-400">
+                    {new Date(session.createdAt).toLocaleDateString()}
+                  </div>
                 </div>
               ))}
             </div>
