@@ -37,6 +37,14 @@ const ChatSessionsSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    embedding: {
+      type: [Number],
+      required: false,
+    },
+    status: {
+      type: String,
+      default: "in-progress",
+    },
   },
   {
     timestamps: true, // This automatically adds createdAt and updatedAt fields
@@ -46,6 +54,7 @@ const ChatSessionsSchema = new mongoose.Schema(
 // Add indexes for better performance
 ChatSessionsSchema.index({ role: 1 });
 ChatSessionsSchema.index({ allDataCollected: 1 });
+ChatSessionsSchema.index({ embedding: 1 });
 ChatSessionsSchema.index({ createdAt: -1 });
 
 const Session =

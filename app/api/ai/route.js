@@ -5,11 +5,15 @@ import { getToken } from "next-auth/jwt";
 import Session from "@/app/models/ChatSessions";
 import { getMatches } from "../matches/[sessionId]/route";
 import Matches from "@/app/models/Matches";
-import { createChatCompletion } from "@/app/utils/getAiResponse";
+import {
+  createChatCompletion,
+  createEmbedding,
+} from "@/app/utils/getAiResponse";
 import { generateMatchMessage } from "@/app/utils/matchMessageGenerator";
 import { generateReprompt } from "@/app/utils/repromptGenerator";
 import { generateResumeContext } from "@/app/utils/resumeContextGenerator";
 import { SYSTEM_PROMPT } from "@/app/lib/systemPrompt";
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const sessionId = searchParams.get("sessionId");
@@ -128,13 +132,30 @@ export async function POST(request) {
       }
     }
     let matchesLatest = [];
-    if (type !== "lead_journey" || allDataCollected === "true") {
-      await Matches.deleteMany({ sessionId: sessionId });
-      matchesLatest = await getMatches(sessionId);
-      if (matchesLatest.length > 0) {
-        reply = generateMatchMessage(matchesLatest.length);
-        await Matches.insertMany(matchesLatest);
-      }
+    if (
+      type !== "lead_journey" ||
+      allDataCollected === "true" ||
+      allDataCollected
+    ) {
+      const emb = await createEmbedding(summary);
+      console.log("emb", emb);
+      await Session.updateOne(
+        { _id: sessionId },
+        {
+          $set: {
+            chatSummary: summary,
+            embedding: emb,
+          },
+        },
+        { upsert: true }
+      );
+
+      // await Matches.deleteMany({ sessionId: sessionId });
+      // matchesLatest = await getMatches(sessionId);
+      // if (matchesLatest.length > 0) {
+      //   reply = generateMatchMessage(matchesLatest.length);
+      //   await Matches.insertMany(matchesLatest);
+      // }
     }
 
     await Logs.create({
