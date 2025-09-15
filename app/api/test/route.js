@@ -9,9 +9,6 @@ const openai = process.env.OPENAI_API_KEY
       apiKey: process.env.OPENAI_API_KEY,
     })
   : null;
-if (!openai) {
-  throw new Error("OpenAI API key not configured");
-}
 export async function POST(req) {
   await connectDB(); // connect mongoose once
 
@@ -20,6 +17,13 @@ export async function POST(req) {
 
     if (!query) {
       return NextResponse.json({ error: "Query is required" }, { status: 400 });
+    }
+
+    if (!openai) {
+      return NextResponse.json(
+        { error: "OpenAI API key not configured" },
+        { status: 500 }
+      );
     }
 
     // 1. Generate embedding
