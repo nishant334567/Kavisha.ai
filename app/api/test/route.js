@@ -4,10 +4,14 @@ import { connectDB } from "@/app/lib/db";
 // import ChatSession from "@/app/models/ChatSessions";
 import Session from "@/app/models/ChatSessions";
 
-const openai = new OpenAI({
-  apiKey: process.env.OPENAI_API_KEY,
-});
-
+const openai = process.env.OPENAI_API_KEY
+  ? new OpenAI({
+      apiKey: process.env.OPENAI_API_KEY,
+    })
+  : null;
+if (!openai) {
+  throw new Error("OpenAI API key not configured");
+}
 export async function POST(req) {
   await connectDB(); // connect mongoose once
 
