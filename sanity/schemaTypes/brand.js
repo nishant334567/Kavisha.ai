@@ -11,11 +11,13 @@ export default {
       description: "The name of the brand (e.g., Kavisha, Amazon)",
       validation: (Rule) => Rule.required(),
     },
+
     {
-      name: "brandType",
-      title: "Brand Type",
+      name: "loginButtonText",
+      title: "Login Button Text",
       type: "string",
-      description: "The type of the brand (e.g., individual, brand)",
+      description:
+        "The text for the login button (e.g., 'Talk to me now, Talk to us now')",
       validation: (Rule) => Rule.required(),
     },
     {

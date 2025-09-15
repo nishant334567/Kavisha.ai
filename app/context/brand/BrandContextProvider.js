@@ -41,7 +41,7 @@ export default function BrandContextProvider({ children }) {
               {
                   _id,
                   brandName,
-                  brandType,
+                  loginButtonText,
                   subdomain,
                   logo,
                   brandImage,
@@ -56,7 +56,7 @@ export default function BrandContextProvider({ children }) {
           const context = {
             brandId: brand._id,
             brandName: brand.brandName,
-            brandType: brand.brandType,
+            loginButtonText: brand.loginButtonText,
             logo: brand.logo,
             brandImage: brand.brandImage,
             title: brand.title,
