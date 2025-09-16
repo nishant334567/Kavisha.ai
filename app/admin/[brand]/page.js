@@ -15,6 +15,7 @@ export default function BrandAdminPage() {
   const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState(null);
   const [filters, setFilters] = useState({ role: "all", status: "all" });
+  const [searchType, setSearchType] = useState("job_seeker");
 
   const statusOptions = [
     "rejected",
@@ -60,7 +61,11 @@ export default function BrandAdminPage() {
       const response = await fetch("/api/test", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: searchQuery.trim() }),
+        body: JSON.stringify({
+          query: searchQuery.trim(),
+          type: searchType,
+          brand: brand,
+        }),
       });
 
       const result = await response.json();
@@ -157,6 +162,15 @@ export default function BrandAdminPage() {
         {/* Search Box */}
         <div className="mb-6">
           <form onSubmit={handleSearch} className="flex gap-2">
+            <select
+              value={searchType}
+              onChange={(e) => setSearchType(e.target.value)}
+              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+            >
+              <option value="job_seeker">Job Seekers</option>
+              <option value="recruiter">Recruiters</option>
+              <option value="lead_journey">Lead Journey</option>
+            </select>
             <input
               type="text"
               value={searchQuery}
@@ -184,6 +198,7 @@ export default function BrandAdminPage() {
         </div>
 
         {/* Filter Buttons */}
+
         <div className="mb-6 flex flex-wrap gap-2">
           {/* Role Filter */}
           <div className="flex gap-1">

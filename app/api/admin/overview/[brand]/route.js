@@ -58,6 +58,8 @@ export async function GET(req, { params }) {
       _id: session._id,
       brand: session.brand,
       role: session.role,
+      status: session.status,
+      title: session.title,
       chatSummary: session.chatSummary || "",
       allDataCollected: !!session.allDataCollected,
       createdAt: session.createdAt,
