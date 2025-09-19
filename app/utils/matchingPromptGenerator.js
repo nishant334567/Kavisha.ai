@@ -1,7 +1,6 @@
 // app/utils/matchingPromptGenerator.js
 export default function generateMatchingPrompt({
   sessionId,
-  role,
   sessionSummary,
   allProvidersList,
 }) {
@@ -10,7 +9,6 @@ export default function generateMatchingPrompt({
 TASK: Analyze and match job seekers with recruiters (or vice versa) based on their detailed profiles and requirements.
 
 USER PROFILE [A]:
-Role: ${role}
 Requirements Summary:
 ---
 ${sessionSummary}
@@ -20,19 +18,30 @@ POTENTIAL MATCHES [B]:
 ${allProvidersList}
 ---
 
-MATCHING CRITERIA:
-1. **Role Compatibility**: Job titles and career levels must align
-2. **Skill Alignment**: Core skills and experience should overlap significantly
-3. **Industry Relevance**: Similar or complementary industries
-4. **Location Preference**: Geographic compatibility (if mentioned)
-5. **Experience Level**: Appropriate seniority match
-6. **Salary Expectations**: Reasonable alignment (if mentioned)
+MATCHING CRITERIA (ALL MUST BE MET):
+1. **STRICT ROLE COMPATIBILITY**: Job titles must be in the SAME or DIRECTLY RELATED field/industry
+   - Musicians should only match with music/entertainment roles
+   - Tech roles should only match with tech positions
+   - Finance roles should only match with finance/business positions
+   - NO cross-industry matches (e.g., musician ≠ research intern, developer ≠ marketing intern)
+2. **SKILL ALIGNMENT**: Core skills and experience must overlap significantly (70%+)
+3. **INDUSTRY RELEVANCE**: Must be in the SAME industry or directly complementary
+4. **EXPERIENCE LEVEL**: Must be appropriate seniority match (no interns for senior roles, no senior roles for interns)
+5. **CAREER PROGRESSION**: Role should make sense for the person's career path
+6. **Location Preference**: Geographic compatibility (if mentioned)
+7. **Salary Expectations**: Reasonable alignment (if mentioned)
+
+STRICT FILTERING RULES:
+- REJECT any match where roles are in completely different industries
+- REJECT any match where experience levels are vastly different (intern vs senior)
+- REJECT any match where the role doesn't align with the person's career trajectory
+- ONLY consider matches where there's genuine professional relevance
 
 SCORING GUIDELINES:
-- 90-100%: Perfect match across all criteria
-- 80-89%: Strong match with minor gaps
-- 70-79%: Good match with some concerns
-- 60-69%: Moderate match with significant gaps
+- 90-100%: Perfect match across all criteria with same industry
+- 80-89%: Strong match with same industry, minor gaps
+- 70-79%: Good match with same industry, some concerns
+- 60-69%: Moderate match with same industry, significant gaps
 - Below 60%: Poor match, skip entirely
 
 OUTPUT FORMAT:
@@ -73,10 +82,14 @@ SAMPLE OUTPUT:
   }
 ]
 
-IMPORTANT:
-- Only return matches with 60%+ compatibility
+CRITICAL IMPORTANT RULES:
+- ONLY return matches with 60%+ compatibility AND same industry
+- REJECT cross-industry matches completely (musician ≠ research intern, developer ≠ marketing intern)
+- REJECT inappropriate experience level matches (intern ≠ senior role)
+- Be extremely strict about role relevance - better to return fewer high-quality matches
 - Be specific and detailed in your reasoning
 - Address the user as "you" in explanations
 - Focus on concrete, actionable insights
-- Return only valid JSON array, no additional text`;
+- Return only valid JSON array, no additional text
+- If no relevant matches exist, return an empty array []`;
 }
