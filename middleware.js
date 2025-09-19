@@ -10,7 +10,7 @@ export async function middleware(req) {
     url.port = "";
     return NextResponse.redirect(url, 308);
   }
-  //remove
+
   if (req.nextUrl.pathname.startsWith("/landing")) {
     return NextResponse.next();
   }
