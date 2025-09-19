@@ -10,6 +10,8 @@ export async function GET(req, { params }) {
     await connectDB();
     const conversations = await Conversations.find({
       $or: [{ userA: userId }, { userB: userId }],
+      sessionA: { $exists: true, $ne: null },
+      sessionB: { $exists: true, $ne: null },
     })
       .lean()
       .populate("sessionA", "title")
@@ -18,9 +20,16 @@ export async function GET(req, { params }) {
       .populate("userB", "name")
       .exec();
 
+    // Filter out conversations where sessions are null after populate
+    const validConversations = conversations.filter(
+      (conversation) => conversation.sessionA && conversation.sessionB
+    );
+
+    // let result = [];
     const result = await Promise.all(
-      conversations.map(async (conversation) => {
-        let otherUser, jobTitle;
+      validConversations.map(async (conversation) => {
+        let otherUser = "User A",
+          jobTitle = "Job title not found";
         if (conversation.userA._id.toString() === userId) {
           otherUser = conversation.userB.name;
           jobTitle = conversation.sessionB.title;

@@ -16,6 +16,21 @@ export default function BrandAdminPage() {
   const [searchResults, setSearchResults] = useState(null);
   const [filters, setFilters] = useState({ role: "all", status: "all" });
   const [searchType, setSearchType] = useState("job_seeker");
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [emailData, setEmailData] = useState({ subject: "", body: "" });
+  const [sendingEmail, setSendingEmail] = useState(false);
+  const [emailResults, setEmailResults] = useState(null);
+  const [sortBy, setSortBy] = useState("createdAt");
+  const [sortOrder, setSortOrder] = useState("desc");
+  const [commentUpdating, setCommentUpdating] = useState({});
+  const [showIndividualEmailModal, setShowIndividualEmailModal] =
+    useState(false);
+  const [selectedSession, setSelectedSession] = useState(null);
+  const [individualEmailData, setIndividualEmailData] = useState({
+    subject: "",
+    body: "",
+  });
+  const [sendingIndividualEmail, setSendingIndividualEmail] = useState(false);
 
   const statusOptions = [
     "rejected",
@@ -49,6 +64,33 @@ export default function BrandAdminPage() {
       console.error("Failed to update status:", error);
     } finally {
       setUpdating((prev) => ({ ...prev, [sessionId]: false }));
+    }
+  };
+
+  const updateSessionComment = async (sessionId, comment) => {
+    setCommentUpdating((prev) => ({ ...prev, [sessionId]: true }));
+    try {
+      const response = await fetch(`/api/admin/update-session-comment`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, comment }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        setData((prev) => ({
+          ...prev,
+          sessions: prev.sessions.map((session) =>
+            session._id === sessionId
+              ? { ...session, comment: comment }
+              : session
+          ),
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to update comment:", error);
+    } finally {
+      setCommentUpdating((prev) => ({ ...prev, [sessionId]: false }));
     }
   };
 
@@ -87,12 +129,144 @@ export default function BrandAdminPage() {
     setSearchResults(null);
   };
 
+  const handleSendEmail = async () => {
+    if (!emailData.subject.trim() || !emailData.body.trim()) {
+      alert("Please enter both subject and body");
+      return;
+    }
+
+    setSendingEmail(true);
+    try {
+      const recipients = sessions
+        .map((session) => ({
+          email: session.user?.email,
+          name: session.user?.name,
+        }))
+        .filter((recipient) => recipient.email);
+
+      if (recipients.length === 0) {
+        alert("No valid email addresses found in filtered sessions");
+        return;
+      }
+
+      const response = await fetch("/api/admin/send-bulk-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipients,
+          subject: emailData.subject,
+          body: emailData.body,
+          brand: brand,
+        }),
+      });
+
+      const result = await response.json();
+      setEmailResults(result);
+
+      if (result.success) {
+        setShowEmailModal(false);
+        setEmailData({ subject: "", body: "" });
+      }
+    } catch (error) {
+      console.error("Failed to send emails:", error);
+      alert("Failed to send emails. Please try again.");
+    } finally {
+      setSendingEmail(false);
+    }
+  };
+
+  const handleSendIndividualEmail = async () => {
+    if (
+      !individualEmailData.subject.trim() ||
+      !individualEmailData.body.trim()
+    ) {
+      alert("Please enter both subject and body");
+      return;
+    }
+
+    if (!selectedSession?.user?.email) {
+      alert("No email address found for this user");
+      return;
+    }
+
+    setSendingIndividualEmail(true);
+    try {
+      const recipients = [
+        {
+          email: selectedSession.user.email,
+          name: selectedSession.user.name,
+        },
+      ];
+
+      const response = await fetch("/api/admin/send-bulk-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipients,
+          subject: individualEmailData.subject,
+          body: individualEmailData.body,
+          brand: brand,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        setShowIndividualEmailModal(false);
+        setIndividualEmailData({ subject: "", body: "" });
+        setSelectedSession(null);
+        alert("Email sent successfully!");
+      } else {
+        alert("Failed to send email. Please try again.");
+      }
+    } catch (error) {
+      console.error("Failed to send email:", error);
+      alert("Failed to send email. Please try again.");
+    } finally {
+      setSendingIndividualEmail(false);
+    }
+  };
+
   const applyFilters = (allSessions) => {
     return allSessions.filter((session) => {
       const roleMatch = filters.role === "all" || session.role === filters.role;
       const statusMatch =
         filters.status === "all" || session.status === filters.status;
       return roleMatch && statusMatch;
+    });
+  };
+
+  const sortSessions = (sessions) => {
+    return [...sessions].sort((a, b) => {
+      let aValue, bValue;
+
+      switch (sortBy) {
+        case "createdAt":
+          aValue = new Date(a.createdAt);
+          bValue = new Date(b.createdAt);
+          break;
+        case "name":
+          aValue = (a.user?.name || "").toLowerCase();
+          bValue = (b.user?.name || "").toLowerCase();
+          break;
+        case "status":
+          aValue = (a.status || "").toLowerCase();
+          bValue = (b.status || "").toLowerCase();
+          break;
+        case "email":
+          aValue = (a.user?.email || "").toLowerCase();
+          bValue = (b.user?.email || "").toLowerCase();
+          break;
+        default:
+          aValue = a[sortBy];
+          bValue = b[sortBy];
+      }
+
+      if (sortOrder === "asc") {
+        return aValue > bValue ? 1 : aValue < bValue ? -1 : 0;
+      } else {
+        return aValue < bValue ? 1 : aValue > bValue ? -1 : 0;
+      }
     });
   };
 
@@ -141,9 +315,21 @@ export default function BrandAdminPage() {
   }
 
   const allSessions = Array.isArray(data.sessions) ? data.sessions : [];
-  const sessions = searchResults
+  const filteredSessions = searchResults
     ? applyFilters(searchResults)
     : applyFilters(allSessions);
+  const sessions = sortSessions(filteredSessions);
+
+  // Calculate counts for each filter
+  const getRoleCount = (role) => {
+    if (role === "all") return allSessions.length;
+    return allSessions.filter((session) => session.role === role).length;
+  };
+
+  const getStatusCount = (status) => {
+    if (status === "all") return allSessions.length;
+    return allSessions.filter((session) => session.status === status).length;
+  };
 
   return (
     <div className="h-screen bg-white p-6 overflow-y-auto">
@@ -197,53 +383,133 @@ export default function BrandAdminPage() {
           </form>
         </div>
 
-        {/* Filter Buttons */}
+        {/* Sort Controls */}
+        <div className="mb-4 flex flex-wrap gap-4 items-center">
+          <div className="flex gap-2 items-center">
+            <span className="text-sm text-gray-600">Sort by:</span>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
+            >
+              <option value="createdAt">Date Created</option>
+              <option value="name">Name</option>
+              <option value="status">Status</option>
+              <option value="email">Email</option>
+            </select>
+            <select
+              value={sortOrder}
+              onChange={(e) => setSortOrder(e.target.value)}
+              className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
+            >
+              <option value="desc">
+                {sortBy === "createdAt"
+                  ? "Newest First"
+                  : sortBy === "name" || sortBy === "email"
+                    ? "A-Z"
+                    : "Descending"}
+              </option>
+              <option value="asc">
+                {sortBy === "createdAt"
+                  ? "Oldest First"
+                  : sortBy === "name" || sortBy === "email"
+                    ? "Z-A"
+                    : "Ascending"}
+              </option>
+            </select>
+          </div>
+        </div>
 
-        <div className="mb-6 flex flex-wrap gap-2">
-          {/* Role Filter */}
-          <div className="flex gap-1">
-            <span className="text-sm text-gray-600 px-2 py-1">Role:</span>
-            {["all", "job_seeker", "recruiter", "dating", "lead_journey"].map(
-              (role) => (
+        {/* Filter Buttons and Email Action */}
+        <div className="mb-6 flex flex-wrap gap-4 items-center justify-between">
+          <div className="flex flex-wrap gap-2">
+            {/* Role Filter */}
+            <div className="flex gap-1">
+              <span className="text-sm text-gray-600 px-2 py-1">Role:</span>
+              {["all", "job_seeker", "recruiter", "dating", "lead_journey"].map(
+                (role) => (
+                  <button
+                    key={role}
+                    onClick={() => setFilters((prev) => ({ ...prev, role }))}
+                    className={`px-3 py-1 text-xs rounded-full flex items-center gap-1 ${
+                      filters.role === role
+                        ? "bg-blue-600 text-white"
+                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
+                    }`}
+                  >
+                    <span>
+                      {role === "all" ? "All" : role.replace("_", " ")}
+                    </span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                        filters.role === role
+                          ? "bg-white/20 text-white"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {getRoleCount(role)}
+                    </span>
+                  </button>
+                )
+              )}
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex gap-1">
+              <span className="text-sm text-gray-600 px-2 py-1">Status:</span>
+              {[
+                "all",
+                "rejected",
+                "on hold",
+                "on boarded",
+                "in progress",
+                "completed",
+              ].map((status) => (
                 <button
-                  key={role}
-                  onClick={() => setFilters((prev) => ({ ...prev, role }))}
-                  className={`px-3 py-1 text-xs rounded-full ${
-                    filters.role === role
-                      ? "bg-blue-600 text-white"
+                  key={status}
+                  onClick={() => setFilters((prev) => ({ ...prev, status }))}
+                  className={`px-3 py-1 text-xs rounded-full flex items-center gap-1 ${
+                    filters.status === status
+                      ? "bg-green-600 text-white"
                       : "bg-gray-200 text-gray-700 hover:bg-gray-300"
                   }`}
                 >
-                  {role === "all" ? "All" : role.replace("_", " ")}
+                  <span>{status === "all" ? "All" : status}</span>
+                  <span
+                    className={`px-1.5 py-0.5 rounded-full text-[10px] ${
+                      filters.status === status
+                        ? "bg-white/20 text-white"
+                        : "bg-gray-100 text-gray-600"
+                    }`}
+                  >
+                    {getStatusCount(status)}
+                  </span>
                 </button>
-              )
-            )}
+              ))}
+            </div>
           </div>
 
-          {/* Status Filter */}
-          <div className="flex gap-1">
-            <span className="text-sm text-gray-600 px-2 py-1">Status:</span>
-            {[
-              "all",
-              "rejected",
-              "on hold",
-              "on boarded",
-              "in progress",
-              "completed",
-            ].map((status) => (
-              <button
-                key={status}
-                onClick={() => setFilters((prev) => ({ ...prev, status }))}
-                className={`px-3 py-1 text-xs rounded-full ${
-                  filters.status === status
-                    ? "bg-green-600 text-white"
-                    : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
-              >
-                {status === "all" ? "All" : status}
-              </button>
-            ))}
-          </div>
+          {/* Send Email Button */}
+          <button
+            onClick={() => setShowEmailModal(true)}
+            disabled={sessions.length === 0}
+            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+          >
+            <svg
+              className="w-4 h-4"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+              />
+            </svg>
+            Send Email ({sessions.length})
+          </button>
         </div>
 
         {/* Sessions List */}
@@ -261,12 +527,40 @@ export default function BrandAdminPage() {
                 <div className=" gap-4">
                   {/* User Info */}
                   <div>
-                    <h3 className="text-lg font-semibold text-slate-900">
-                      {session.user?.name || "Unknown User"}
-                    </h3>
-                    <p className="text-sm text-slate-600">
-                      {session.user?.email || "No email"}
-                    </p>
+                    <div className="flex justify-between items-start">
+                      <div>
+                        <h3 className="text-lg font-semibold text-slate-900">
+                          {session.user?.name || "Unknown User"}
+                        </h3>
+                        <p className="text-sm text-slate-600">
+                          {session.user?.email || "No email"}
+                        </p>
+                      </div>
+                      {session.user?.email && (
+                        <button
+                          onClick={() => {
+                            setSelectedSession(session);
+                            setShowIndividualEmailModal(true);
+                          }}
+                          className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 flex items-center gap-1"
+                        >
+                          <svg
+                            className="w-3 h-3"
+                            fill="none"
+                            stroke="currentColor"
+                            viewBox="0 0 24 24"
+                          >
+                            <path
+                              strokeLinecap="round"
+                              strokeLinejoin="round"
+                              strokeWidth={2}
+                              d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                            />
+                          </svg>
+                          Email
+                        </button>
+                      )}
+                    </div>
                     <div className="mt-2">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {session.role || "Unknown Role"}
@@ -376,10 +670,238 @@ export default function BrandAdminPage() {
                     <p className="text-sm text-slate-600">{session.title}</p>
                   </div>
                 )}
+
+                {/* Comment Section */}
+                <div className="mt-4 pt-4 border-t border-slate-200">
+                  <h4 className="text-sm font-medium text-slate-700 mb-2">
+                    Admin Comment
+                  </h4>
+                  <textarea
+                    value={session.comment || ""}
+                    onChange={(e) => {
+                      const newComment = e.target.value;
+                      // Update local state immediately for better UX
+                      setData((prev) => ({
+                        ...prev,
+                        sessions: prev.sessions.map((s) =>
+                          s._id === session._id
+                            ? { ...s, comment: newComment }
+                            : s
+                        ),
+                      }));
+                    }}
+                    placeholder="Add a comment for this session..."
+                    rows={3}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+                  />
+                  <div className="flex justify-between items-center mt-2">
+                    <button
+                      onClick={() =>
+                        updateSessionComment(session._id, session.comment || "")
+                      }
+                      disabled={commentUpdating[session._id]}
+                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      {commentUpdating[session._id]
+                        ? "Saving..."
+                        : "Save Comment"}
+                    </button>
+                    {commentUpdating[session._id] && (
+                      <p className="text-xs text-gray-500">Saving...</p>
+                    )}
+                  </div>
+                </div>
               </div>
             ))
           )}
         </div>
+
+        {/* Email Modal */}
+        {showEmailModal && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-lg font-semibold mb-4">
+                Send Email to {sessions.length} Users
+              </h3>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    value={emailData.subject}
+                    onChange={(e) =>
+                      setEmailData((prev) => ({
+                        ...prev,
+                        subject: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter email subject"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Message Body
+                  </label>
+                  <textarea
+                    value={emailData.body}
+                    onChange={(e) =>
+                      setEmailData((prev) => ({
+                        ...prev,
+                        body: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter your message here..."
+                    rows={8}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
+                </div>
+
+                <div className="text-sm text-gray-600">
+                  <p>This email will be sent to {sessions.length} users:</p>
+                  <ul className="mt-2 max-h-32 overflow-y-auto">
+                    {sessions.slice(0, 10).map((session, idx) => (
+                      <li key={idx} className="flex justify-between">
+                        <span>{session.user?.name || "Unknown"}</span>
+                        <span className="text-gray-500">
+                          {session.user?.email}
+                        </span>
+                      </li>
+                    ))}
+                    {sessions.length > 10 && (
+                      <li className="text-gray-500">
+                        ... and {sessions.length - 10} more
+                      </li>
+                    )}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSendEmail}
+                  disabled={
+                    sendingEmail ||
+                    !emailData.subject.trim() ||
+                    !emailData.body.trim()
+                  }
+                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sendingEmail ? "Sending..." : "Send Email"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowEmailModal(false);
+                    setEmailData({ subject: "", body: "" });
+                    setEmailResults(null);
+                  }}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              {/* Email Results */}
+              {emailResults && (
+                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
+                  <h4 className="font-medium mb-2">Email Results:</h4>
+                  <p className="text-sm text-gray-600 mb-2">
+                    {emailResults.message}
+                  </p>
+                  <div className="text-sm">
+                    <p>Total: {emailResults.results?.total}</p>
+                    <p className="text-green-600">
+                      Successful: {emailResults.results?.successful}
+                    </p>
+                    <p className="text-red-600">
+                      Failed: {emailResults.results?.failed}
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+
+        {/* Individual Email Modal */}
+        {showIndividualEmailModal && selectedSession && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
+              <h3 className="text-lg font-semibold mb-4">
+                Send Email to {selectedSession.user?.name || "User"}
+              </h3>
+              <p className="text-sm text-gray-600 mb-4">
+                {selectedSession.user?.email}
+              </p>
+
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Subject
+                  </label>
+                  <input
+                    type="text"
+                    value={individualEmailData.subject}
+                    onChange={(e) =>
+                      setIndividualEmailData((prev) => ({
+                        ...prev,
+                        subject: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter email subject"
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Message Body
+                  </label>
+                  <textarea
+                    value={individualEmailData.body}
+                    onChange={(e) =>
+                      setIndividualEmailData((prev) => ({
+                        ...prev,
+                        body: e.target.value,
+                      }))
+                    }
+                    placeholder="Enter your message here..."
+                    rows={8}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                </div>
+              </div>
+
+              <div className="flex gap-3 mt-6">
+                <button
+                  onClick={handleSendIndividualEmail}
+                  disabled={
+                    sendingIndividualEmail ||
+                    !individualEmailData.subject.trim() ||
+                    !individualEmailData.body.trim()
+                  }
+                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {sendingIndividualEmail ? "Sending..." : "Send Email"}
+                </button>
+                <button
+                  onClick={() => {
+                    setShowIndividualEmailModal(false);
+                    setIndividualEmailData({ subject: "", body: "" });
+                    setSelectedSession(null);
+                  }}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

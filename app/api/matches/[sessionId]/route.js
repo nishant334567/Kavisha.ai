@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import Session from "@/app/models/ChatSessions";
+import Matches from "@/app/models/Matches";
 import OpenAI from "openai";
 import { connectDB } from "@/app/lib/db";
 import mongoose from "mongoose";
@@ -23,7 +24,12 @@ export async function getMatches(sessionId, role) {
   await connectDB();
   const session = await Session.findById({ _id: sessionId });
 
-  let oppositeRole = role === "job_seeker" ? "recruiter" : "job_seeker";
+  let oppositeRole =
+    role === "dating"
+      ? "dating"
+      : role === "job_seeker"
+        ? "recruiter"
+        : "job_seeker";
 
   const allProviders = await Session.find({
     role: oppositeRole,
@@ -48,7 +54,6 @@ export async function getMatches(sessionId, role) {
 
   const prompt = generateMatchingPrompt({
     sessionId,
-    role,
     oppositeRole,
     sessionSummary: session.chatSummary,
     allProvidersList,
@@ -65,7 +70,48 @@ export async function getMatches(sessionId, role) {
   );
   const responseText = completion.choices[0].message.content;
 
-  return [];
+  // Extract JSON from markdown code blocks if present
+  let jsonText = responseText;
+  if (responseText.includes("```json")) {
+    const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
+    if (jsonMatch) {
+      jsonText = jsonMatch[1].trim();
+    }
+  }
+
+  // Parse the JSON response and return the array
+  try {
+    const matches = JSON.parse(jsonText);
+    if (!Array.isArray(matches)) {
+      return [];
+    }
+
+    // Delete all existing matches for this session
+    await Matches.deleteMany({ sessionId: sessionId });
+
+    // Insert new matches into the database
+    if (matches.length > 0) {
+      const matchesToInsert = matches.map((match) => ({
+        sessionId: sessionId,
+        matchedUserId: match.matchedUserId,
+        matchedSessionId: match.matchedSessionId,
+        title: match.title,
+        chatSummary: match.chatSummary,
+        matchingReason: match.matchingReason,
+        matchPercentage: match.matchPercentage,
+        mismatchReason: match.mismatchReason,
+        matchedUserName: match.matchedUserName || "",
+        matchedUserEmail: match.matchedUserEmail || "",
+      }));
+
+      await Matches.insertMany(matchesToInsert);
+    }
+
+    return matches;
+  } catch (error) {
+    console.error("Error parsing matches JSON:", error);
+    return [];
+  }
 }
 
 // export async function GET(req, { params }) {

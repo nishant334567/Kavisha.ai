@@ -132,30 +132,8 @@ export async function POST(request) {
       }
     }
     let matchesLatest = [];
-    if (
-      type !== "lead_journey" ||
-      allDataCollected === "true" ||
-      allDataCollected
-    ) {
-      const emb = await createEmbedding(summary);
-      console.log("emb", emb);
-      await Session.updateOne(
-        { _id: sessionId },
-        {
-          $set: {
-            chatSummary: summary,
-            embedding: emb,
-          },
-        },
-        { upsert: true }
-      );
-
-      // await Matches.deleteMany({ sessionId: sessionId });
-      // matchesLatest = await getMatches(sessionId);
-      // if (matchesLatest.length > 0) {
-      //   reply = generateMatchMessage(matchesLatest.length);
-      //   await Matches.insertMany(matchesLatest);
-      // }
+    if (allDataCollected === "true" || allDataCollected) {
+      matchesLatest = await getMatches(sessionId, type);
     }
 
     await Logs.create({
