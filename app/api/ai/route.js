@@ -35,7 +35,8 @@ export async function POST(request) {
       req: request,
       secret: process.env.NEXTAUTH_SECRET,
     });
-    const { history, userMessage, sessionId, resume, type, prompt } = body;
+    const { history, userMessage, sessionId, resume, type, prompt, userId } =
+      body;
 
     await connectDB();
     const resumeText = resume || "";
@@ -132,8 +133,9 @@ export async function POST(request) {
       }
     }
     let matchesLatest = [];
-    if (allDataCollected === "true" || allDataCollected) {
-      matchesLatest = await getMatches(sessionId, type);
+    if (allDataCollected === "true") {
+      matchesLatest = await getMatches(userId, sessionId, type);
+      console.log("matchesLatest", matchesLatest);
     }
 
     await Logs.create({
@@ -160,7 +162,7 @@ export async function POST(request) {
       summary,
       title,
       allDataCollected,
-      matchesLatest,
+      matchesWithObjectIds: matchesLatest,
     });
   } catch (error) {
     console.error(error);

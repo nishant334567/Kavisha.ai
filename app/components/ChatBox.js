@@ -222,6 +222,7 @@ export default function ChatBox({
             resume: newResumeData,
             type: currentChatType,
             prompt: getServicePrompt(),
+            userId: session?.user?.id,
           }),
         });
         if (!response.ok) {
@@ -283,6 +284,7 @@ export default function ChatBox({
         sessionId: currentChatId,
         resume: resumeData.resumeSummary,
         prompt: getServicePrompt(),
+        userId: session?.user?.id,
       }),
     });
     if (!response.ok) {
@@ -357,6 +359,7 @@ export default function ChatBox({
         resume: resumeData?.resumeSummary || "",
         type: currentChatType,
         prompt: getServicePrompt(),
+        userId: session?.user?.id,
       }),
     });
     if (!response.ok) {

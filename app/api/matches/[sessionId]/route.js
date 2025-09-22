@@ -6,14 +6,14 @@ import { connectDB } from "@/app/lib/db";
 import mongoose from "mongoose";
 import { createChatCompletion } from "@/app/utils/getAiResponse";
 import generateMatchingPrompt from "@/app/utils/matchingPromptGenerator";
-
+import { matchmakingPromptGenerator } from "@/app/utils/matchingPromptGenerator";
 const openai = process.env.OPENAI_API_KEY
   ? new OpenAI({
       apiKey: process.env.OPENAI_API_KEY,
     })
   : null;
 
-export async function getMatches(sessionId, role) {
+export async function getMatches(userId, sessionId, role) {
   if (role === "lead_journey") {
     return [];
   }
@@ -26,15 +26,17 @@ export async function getMatches(sessionId, role) {
 
   let oppositeRole =
     role === "dating"
-      ? "dating"
+      ? "dating" // Dating matches with dating
       : role === "job_seeker"
-        ? "recruiter"
-        : "job_seeker";
+        ? "recruiter" // Job seeker matches with recruiter
+        : "job_seeker"; // Recruiter matches with job seeker
 
   const allProviders = await Session.find({
     role: oppositeRole,
     allDataCollected: true,
     chatSummary: { $exists: true, $ne: "" },
+    _id: { $ne: sessionId }, // Exclude current session
+    userId: { $ne: userId }, // Exclude current user
     ...(session.brand !== "kavisha" && { brand: session.brand }),
   }).populate("userId", "name email");
 
@@ -51,18 +53,25 @@ export async function getMatches(sessionId, role) {
 "brand": "${s.brand}"`
     )
     .join("\n");
-
-  const prompt = generateMatchingPrompt({
-    sessionId,
-    oppositeRole,
-    sessionSummary: session.chatSummary,
-    allProvidersList,
-  });
+  let prompt = "";
+  if (role === "dating") {
+    prompt = matchmakingPromptGenerator({
+      sessionId,
+      sessionSummary: session.chatSummary,
+      allProvidersList,
+    });
+  } else {
+    prompt = generateMatchingPrompt({
+      sessionId,
+      sessionSummary: session.chatSummary,
+      allProvidersList,
+    });
+  }
 
   const completion = await createChatCompletion(
     "gpt-4o-mini",
     [
-      { role: "system", content: "You are a smart job-matching assistant." },
+      { role: "system", content: "You are a smart matching assistant." },
       { role: "user", content: prompt },
     ],
     0.7,
@@ -87,14 +96,16 @@ export async function getMatches(sessionId, role) {
     }
 
     // Delete all existing matches for this session
-    await Matches.deleteMany({ sessionId: sessionId });
+    await Matches.deleteMany({
+      sessionId: new mongoose.Types.ObjectId(sessionId),
+    });
 
     // Insert new matches into the database
     if (matches.length > 0) {
       const matchesToInsert = matches.map((match) => ({
-        sessionId: sessionId,
-        matchedUserId: match.matchedUserId,
-        matchedSessionId: match.matchedSessionId,
+        sessionId: new mongoose.Types.ObjectId(sessionId),
+        matchedUserId: new mongoose.Types.ObjectId(match.matchedUserId),
+        matchedSessionId: new mongoose.Types.ObjectId(match.matchedSessionId),
         title: match.title,
         chatSummary: match.chatSummary,
         matchingReason: match.matchingReason,

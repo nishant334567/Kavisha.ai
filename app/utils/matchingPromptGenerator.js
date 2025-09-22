@@ -49,8 +49,8 @@ Return a JSON array of matches. Each match must include:
 
 {
   "sessionId": "${sessionId}",
-  "matchedUserId": "user_id_here",
-  "matchedSessionId": "session_id_here", 
+  "matchedUserId": "user_id_from_providers_list",
+  "matchedSessionId": "session_id_from_providers_list", 
   "title": "Job Title or Role",
   "chatSummary": "Brief summary of their profile",
   "matchingReason": "Detailed explanation of why this is a good match",
@@ -91,5 +91,95 @@ CRITICAL IMPORTANT RULES:
 - Address the user as "you" in explanations
 - Focus on concrete, actionable insights
 - Return only valid JSON array, no additional text
-- If no relevant matches exist, return an empty array []`;
+- If no relevant matches exist, return an empty array []
+
+CRITICAL: Use the EXACT userId and sessionId values from the POTENTIAL MATCHES [B] list above. DO NOT use the same sessionId for both current and matched sessions. The sessionId should remain "${sessionId}" but matchedUserId and matchedSessionId must come from the providers list.`;
+}
+
+export function matchmakingPromptGenerator({
+  sessionId,
+  sessionSummary,
+  allProvidersList,
+}) {
+  return `You are an expert dating and relationship compatibility AI with deep understanding of personal preferences, values, and lifestyle compatibility.
+
+TASK: Analyze and match individuals based on their dating preferences, personality traits, and relationship goals.
+
+USER PROFILE [A]:
+Dating Preferences Summary:
+---
+${sessionSummary}
+---
+
+POTENTIAL MATCHES [B]:
+${allProvidersList}
+---
+
+MATCHING CRITERIA (SIMPLE APPROACH):
+1. **BASIC REQUIREMENTS**: Profile must meet the stated requirements/preferences
+2. **DEAL BREAKERS**: Must not violate any explicitly mentioned deal breakers
+3. **AGE RANGE**: Must be within specified age range (if mentioned)
+4. **LOCATION**: Must be in acceptable location range (if specified)
+5. **RELATIONSHIP GOAL**: Must be compatible with stated relationship intentions
+
+SIMPLE FILTERING RULES:
+- MATCH if profile meets the basic requirements
+- REJECT if profile violates any deal breakers
+- REJECT if profile is clearly outside age range
+- REJECT if profile is in incompatible location
+- REJECT if relationship goals are completely opposite
+
+SIMPLE SCORING:
+- 80-100%: Good match - meets all basic requirements
+- 60-79%: Decent match - meets most requirements with minor gaps
+- Below 60%: Poor match - skip entirely
+
+OUTPUT FORMAT:
+Return a JSON array of matches. Each match must include:
+
+{
+  "sessionId": "${sessionId}",
+  "matchedUserId": "user_id_from_providers_list",
+  "matchedSessionId": "session_id_from_providers_list", 
+  "title": "Potential Match",
+  "chatSummary": "Brief summary of their dating profile and preferences",
+  "matchingReason": "Detailed explanation of why this is a good romantic match",
+  "matchPercentage": "85%",
+  "mismatchReason": "Any concerns or areas that might need work"
+}
+
+SAMPLE OUTPUT:
+[
+  {
+    "sessionId": "${sessionId}",
+    "matchedUserId": "user123",
+    "matchedSessionId": "session456",
+    "title": "Potential Match",
+    "chatSummary": "Looking for a serious relationship, enjoys hiking and outdoor activities, values family, works in tech, age 28, lives in downtown area",
+    "matchingReason": "Excellent match! Both seeking serious relationships, share love for outdoor activities and nature. Similar values around family and career. Age and location are compatible. Both have stable careers and similar life stages.",
+    "matchPercentage": "92%",
+    "mismatchReason": "Minor difference in work schedules, but both are flexible"
+  },
+  {
+    "sessionId": "${sessionId}",
+    "matchedUserId": "user789",
+    "matchedSessionId": "session101",
+    "title": "Potential Match",
+    "chatSummary": "Interested in casual dating initially, loves art and music, creative professional, age 26, enjoys city life and cultural events",
+    "matchingReason": "Good potential match with shared interests in arts and culture. Both are creative and enjoy city life. Age is compatible and both are open to seeing where things go.",
+    "matchPercentage": "78%",
+    "mismatchReason": "Different relationship goals initially - one wants serious, other wants casual to start"
+  }
+]
+
+SIMPLE RULES:
+- ONLY return matches with 60%+ compatibility
+- MATCH if profile meets basic requirements
+- REJECT if profile violates deal breakers
+- REJECT if profile is clearly out of bounds
+- Keep reasoning simple and straightforward
+- Return only valid JSON array, no additional text
+- If no relevant matches exist, return an empty array []
+
+CRITICAL: Use the EXACT userId and sessionId values from the POTENTIAL MATCHES [B] list above. DO NOT use the same sessionId for both current and matched sessions. The sessionId should remain "${sessionId}" but matchedUserId and matchedSessionId must come from the providers list.`;
 }
