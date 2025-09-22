@@ -10,7 +10,7 @@ export default function SelectChatType({
     const icons = {
       job_seeker: (
         <svg
-          className="w-8 h-8"
+          className="w-6 h-6"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -25,7 +25,7 @@ export default function SelectChatType({
       ),
       recruiter: (
         <svg
-          className="w-8 h-8"
+          className="w-6 h-6"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -40,7 +40,7 @@ export default function SelectChatType({
       ),
       dating: (
         <svg
-          className="w-8 h-8"
+          className="w-6 h-6"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -55,7 +55,7 @@ export default function SelectChatType({
       ),
       lead_journey: (
         <svg
-          className="w-8 h-8"
+          className="w-6 h-6"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -72,7 +72,7 @@ export default function SelectChatType({
     return (
       icons[serviceName] || (
         <svg
-          className="w-8 h-8"
+          className="w-6 h-6"
           fill="none"
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -99,16 +99,16 @@ export default function SelectChatType({
   };
 
   const base =
-    "group relative px-8 py-6 text-left rounded-2xl border-2 transition-all duration-300 shadow-lg hover:shadow-xl focus:outline-none focus:ring-4 disabled:opacity-60 disabled:cursor-not-allowed w-[320px] h-[200px]";
+    "group relative px-6 py-3 text-center rounded-lg border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 disabled:opacity-60 disabled:cursor-not-allowed w-full";
 
   const cls = (item) =>
     selectedType === item.name
-      ? "bg-gradient-to-br from-blue-600 to-purple-700 text-white border-blue-500 scale-105 shadow-2xl"
-      : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50";
+      ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
+      : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50 hover:border-slate-400";
 
   return (
     <div className="flex items-center justify-center px-4 h-full min-h-screen">
-      <div className="flex pt-12 pb-20 h-screen overflow-y-auto flex-wrap items-center justify-center gap-6 max-w-6xl">
+      <div className="flex flex-col gap-3 w-full max-w-md">
         {servicesProvided.length > 0 &&
           servicesProvided.map((item) => (
             <button
@@ -120,34 +120,13 @@ export default function SelectChatType({
               disabled={isCreating}
             >
               {isCreating && selectedType === item.name ? (
-                <div className="flex flex-col items-center justify-center space-y-3">
-                  <span className="inline-block h-8 w-8 rounded-full border-3 border-white/70 border-t-transparent animate-spin"></span>
-                  <span className="text-lg font-semibold">Starting…</span>
+                <div className="flex flex-col items-center justify-center h-full space-y-3">
+                  <span className="inline-block h-6 w-6 rounded-full border-2 border-white/70 border-t-transparent animate-spin"></span>
+                  <span className="text-sm font-semibold">Starting…</span>
                 </div>
               ) : (
-                <div className="flex flex-col items-start space-y-3">
-                  <div className="flex items-center space-x-3">
-                    <div
-                      className={`p-2 rounded-xl ${selectedType === item.name ? "bg-white/20" : "bg-blue-100"}`}
-                    >
-                      {getIcon(item.name)}
-                    </div>
-                    <div>
-                      <h3 className="text-xl font-bold">{item.title}</h3>
-                    </div>
-                  </div>
-                  <p
-                    className={`text-sm leading-relaxed line-clamp-3 ${selectedType === item.name ? "text-white/90" : "text-slate-600"}`}
-                  >
-                    {getSubtext(item.name)}
-                  </p>
-                  <div className="flex items-center text-sm font-medium">
-                    <span
-                      className={`${selectedType === item.name ? "text-white/80" : "text-blue-600"}`}
-                    >
-                      Get Started →
-                    </span>
-                  </div>
+                <div className="flex items-center justify-center">
+                  <span className="text-sm font-medium">{item.title}</span>
                 </div>
               )}
             </button>
