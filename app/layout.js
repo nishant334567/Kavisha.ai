@@ -14,7 +14,7 @@ export default function RootLayout({ children }) {
         <link rel="icon" href="data:," />
       </head>
       <body
-        className="h-screen overflow-hidden"
+        className="h-full"
         suppressHydrationWarning={true}
         suppressContentEditableWarning={true}
       >
@@ -22,7 +22,7 @@ export default function RootLayout({ children }) {
           <BrandContextProvider>
             <SocketSessionWrapper>
               <Navbar />
-              <div className="pt-14 min-h-[calc(100vh-56px)]">{children}</div>
+              <div className="mt-12 min-h-[calc(100vh-56px)]">{children}</div>
             </SocketSessionWrapper>
           </BrandContextProvider>
         </SessionProvider>
