@@ -33,12 +33,12 @@ export default function HomePage() {
     const savedType = localStorage.getItem(key2);
     if (savedType && !currentChatType) setCurrentChatType(savedType);
     if (saved && !currentChatId) setCurrentChatId(saved);
-  }, [brandContext]);
+  }, []);
 
   useEffect(() => {
     if (!brandContext) return;
     setServicesProvided(brandContext.services);
-  }, [brandContext]);
+  }, []);
   useEffect(() => {
     if (!session || !brandContext) return;
     const fetchData = async () => {

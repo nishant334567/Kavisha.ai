@@ -61,6 +61,7 @@ export default function BrandContextProvider({ children }) {
             brandImage: brand.brandImage,
             title: brand.title,
             subtitle: brand.subtitle,
+            admins: brand.admins || [],
             isBrandAdmin: brand.admins?.includes(session?.user?.email) || false,
             subdomain,
             initialmessage: brand.initialmessage,
@@ -75,7 +76,7 @@ export default function BrandContextProvider({ children }) {
       }
     };
     brandDataFromSanity();
-  }, [session]);
+  }, []);
 
   if (loading || !brandContext) {
     return <Loader loadingMessage="Loading..." />;

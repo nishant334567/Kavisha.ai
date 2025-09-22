@@ -2,6 +2,7 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { useBrandContext } from "../../context/brand/BrandContextProvider";
 
 export default function BrandAdminPage() {
   const params = useParams();
@@ -31,7 +32,10 @@ export default function BrandAdminPage() {
     body: "",
   });
   const [sendingIndividualEmail, setSendingIndividualEmail] = useState(false);
-
+  const [newAdminEmail, setNewAdminEmail] = useState("");
+  const [addingAdmin, setAddingAdmin] = useState(false);
+  const [assigning, setAssigning] = useState({});
+  const brandContext = useBrandContext();
   const statusOptions = [
     "rejected",
     "on hold",
@@ -91,6 +95,33 @@ export default function BrandAdminPage() {
       console.error("Failed to update comment:", error);
     } finally {
       setCommentUpdating((prev) => ({ ...prev, [sessionId]: false }));
+    }
+  };
+
+  const assignSession = async (sessionId, assignedTo) => {
+    setAssigning((prev) => ({ ...prev, [sessionId]: true }));
+    try {
+      const response = await fetch(`/api/admin/assign-session`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ sessionId, assignedTo }),
+      });
+
+      if (response.ok) {
+        // Update local state
+        setData((prev) => ({
+          ...prev,
+          sessions: prev.sessions.map((session) =>
+            session._id === sessionId
+              ? { ...session, assignedTo: assignedTo }
+              : session
+          ),
+        }));
+      }
+    } catch (error) {
+      console.error("Failed to assign session:", error);
+    } finally {
+      setAssigning((prev) => ({ ...prev, [sessionId]: false }));
     }
   };
 
@@ -331,18 +362,93 @@ export default function BrandAdminPage() {
     return allSessions.filter((session) => session.status === status).length;
   };
 
+  const isValidEmail = (email) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  const handleAddAdmin = async () => {
+    if (!newAdminEmail.trim()) {
+      alert("Please enter an email address");
+      return;
+    }
+
+    if (!isValidEmail(newAdminEmail)) {
+      alert("Please enter a valid email address");
+      return;
+    }
+
+    // Check if admin already exists in brand context
+    const existingAdmins = brandContext.admins || [];
+    if (existingAdmins.includes(newAdminEmail.trim().toLowerCase())) {
+      alert("This admin already exists for this brand");
+      return;
+    }
+
+    setAddingAdmin(true);
+    try {
+      const response = await fetch("/api/admin/add-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email: newAdminEmail.trim(), brand: brand }),
+      });
+
+      const result = await response.json();
+
+      if (result.success) {
+        alert(
+          "Admin added successfully! They will receive an email notification."
+        );
+        setNewAdminEmail("");
+        // Refresh brand context to update admin list
+        if (brandContext.refreshBrandContext) {
+          await brandContext.refreshBrandContext();
+        }
+      } else {
+        alert(result.error || "Failed to add admin");
+      }
+    } catch (error) {
+      console.error("Failed to add admin:", error);
+      alert("Failed to add admin. Please try again.");
+    } finally {
+      setAddingAdmin(false);
+    }
+  };
+
   return (
     <div className="h-screen bg-white p-6 overflow-y-auto">
       <div className="mx-auto max-w-7xl">
         <div className="mb-6">
-          <h1 className="text-3xl font-bold text-slate-900">
-            {brand.toUpperCase()} Sessions
-          </h1>
-          <p className="mt-1 text-slate-600">
-            {searchResults
-              ? `Search results (${sessions.length})`
-              : `All sessions (${sessions.length})`}
-          </p>
+          <div className="flex justify-between items-start mb-4">
+            <div>
+              <h1 className="text-3xl font-bold text-slate-900">
+                {brand.toUpperCase()} Sessions
+              </h1>
+              <p className="mt-1 text-slate-600">
+                {searchResults
+                  ? `Search results (${sessions.length})`
+                  : `All sessions (${sessions.length})`}
+              </p>
+            </div>
+
+            {/* Add Admin Section */}
+            <div className="flex gap-2 items-center">
+              <input
+                type="email"
+                value={newAdminEmail}
+                onChange={(e) => setNewAdminEmail(e.target.value)}
+                placeholder="Enter admin email..."
+                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+              />
+              <button
+                onClick={handleAddAdmin}
+                disabled={!isValidEmail(newAdminEmail) || addingAdmin}
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center gap-2"
+              >
+                {addingAdmin ? "Adding..." : "Add Admin"}
+              </button>
+            </div>
+          </div>
         </div>
 
         {/* Search Box */}
@@ -561,10 +667,15 @@ export default function BrandAdminPage() {
                         </button>
                       )}
                     </div>
-                    <div className="mt-2">
+                    <div className="mt-2 flex gap-2">
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {session.role || "Unknown Role"}
                       </span>
+                      {session.assignedTo && (
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          Assigned to: {session.assignedTo}
+                        </span>
+                      )}
                     </div>
 
                     {/* Status Update Dropdown for Job Seekers */}
@@ -592,6 +703,33 @@ export default function BrandAdminPage() {
                         )}
                       </div>
                     )}
+
+                    {/* Assignment Dropdown */}
+                    <div className="mt-3">
+                      <label className="block text-xs font-medium text-gray-700 mb-1">
+                        Assign to:
+                      </label>
+                      <select
+                        value={session.assignedTo || ""}
+                        onChange={(e) =>
+                          assignSession(session._id, e.target.value)
+                        }
+                        disabled={assigning[session._id]}
+                        className="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                      >
+                        <option value="">Unassigned</option>
+                        {brandContext.admins?.map((admin) => (
+                          <option key={admin} value={admin}>
+                            {admin}
+                          </option>
+                        ))}
+                      </select>
+                      {assigning[session._id] && (
+                        <span className="ml-2 text-xs text-gray-500">
+                          Assigning...
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                   {/* Session Info */}

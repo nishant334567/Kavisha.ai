@@ -64,6 +64,7 @@ export async function GET(req, { params }) {
       allDataCollected: !!session.allDataCollected,
       createdAt: session.createdAt,
       updatedAt: session.updatedAt,
+      assignedTo: session.assignedTo,
       user: {
         name: session.userId?.name || "",
         email: session.userId?.email || "",
@@ -84,3 +85,5 @@ export async function GET(req, { params }) {
     );
   }
 }
+
+//i am just updating this file to make sure i am being engaged in some sort of q

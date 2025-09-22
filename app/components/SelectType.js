@@ -107,8 +107,8 @@ export default function SelectChatType({
       : "bg-white text-slate-700 border-slate-200 hover:border-blue-300 hover:bg-gradient-to-br hover:from-blue-50 hover:to-purple-50";
 
   return (
-    <div className="flex h-full items-center justify-center py-12 px-4">
-      <div className="flex flex-wrap justify-center gap-6 max-w-6xl">
+    <div className="flex items-center justify-center px-4 h-full min-h-screen">
+      <div className="flex pt-12 pb-20 h-screen overflow-y-auto flex-wrap items-center justify-center gap-6 max-w-6xl">
         {servicesProvided.length > 0 &&
           servicesProvided.map((item) => (
             <button

@@ -49,6 +49,10 @@ const ChatSessionsSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    assignedTo: {
+      type: String,
+      default: "",
+    },
   },
   {
     timestamps: true, // This automatically adds createdAt and updatedAt fields
