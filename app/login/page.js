@@ -125,8 +125,8 @@ export default function LoginPage() {
   const shouldShowBlockedMessage = isInAppBrowser && isMobile;
 
   return (
-    <div className="h-screen overflow-y-auto">
-      <div className="mx-auto w-full lg:max-w-[60%] flex flex-col items-center px-8 py-8 min-h-[calc(100vh-56px)]">
+    <div className="h-screen scrollbar-none overflow-y-auto">
+      <div className="mx-auto w-full lg:max-w-[60%] flex flex-col items-center px-8 py-8">
         <div className="h-48 sm:h-80 w-full overflow-hidden rounded-xl my-4">
           <img
             src={
@@ -145,7 +145,7 @@ export default function LoginPage() {
             {brand?.subtitle}
           </p>
         </div>
-        <div className="my-6 mb-8">
+        <div className="mt-2 mb-20">
           <button
             onClick={() => {
               !session?.user?.id

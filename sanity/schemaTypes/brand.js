@@ -93,7 +93,7 @@ export default {
               name: "prompt",
               title: "Service Prompt",
               type: "text",
-              rows: 4,
+              rows: 25,
               description: "AI prompt or description for this service",
               validation: (Rule) => Rule.required(),
             },
