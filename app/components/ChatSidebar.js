@@ -161,8 +161,46 @@ export default function ChatSidebar({
                 </button>
               </div>
               {/* End User Info Section */}
-              <div className="flex-1 overflow-y-auto scrollbar-none">
-                <div className="overflow-y-auto space-y-4 scrollbar-none">
+              <div>
+                <div className="py-4 gap-2">
+                  <button
+                    className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
+                    onClick={() => onOpenInbox && onOpenInbox()}
+                  >
+                    All Messages
+                  </button>
+
+                  <button
+                    className="flex gap-2 justify-center text-xs bg-sky-700 hover:bg-sky-600 text-white w-full p-2 mt-2 rounded-md font-medium transition-colors"
+                    onClick={() => newChat()}
+                  >
+                    {!newChatLoading ? "New Chat" : "Creating New Chat..."}
+                  </button>
+
+                  <button
+                    className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-red-50 hover:border-red-200 transition-all duration-200 text-red-600 border border-slate-200"
+                    onClick={() => signOut({ callbackUrl: "/login" })}
+                  >
+                    Sign Out
+                  </button>
+                  {brandContext?.isBrandAdmin && (
+                    <button
+                      className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
+                      onClick={() => {
+                        const isKavisha =
+                          (brandContext?.subdomain || "").toLowerCase() ===
+                          "kavisha";
+                        const target = isKavisha
+                          ? "/admin"
+                          : `/admin/${(brandContext?.subdomain || "").toLowerCase()}`;
+                        router.push(target);
+                      }}
+                    >
+                      🛡️ Admin Dashboard
+                    </button>
+                  )}
+                </div>
+                <div className="h-[45vh] overflow-y-auto space-y-4 scrollbar-none">
                   {allChats?.sessionIds?.length > 0 &&
                     allChats.sessionIds.map((id, idx) => (
                       <div className="flex w-full min-h-8 gap-2" key={id}>
@@ -194,44 +232,6 @@ export default function ChatSidebar({
                       </div>
                     ))}
                 </div>
-              </div>
-              <div className="flex flex-col gap-2">
-                <button
-                  className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
-                  onClick={() => onOpenInbox && onOpenInbox()}
-                >
-                  All Messages
-                </button>
-
-                <button
-                  className="flex gap-2 justify-center text-xs bg-sky-700 hover:bg-sky-600 text-white w-full p-2 mt-2 rounded-md font-medium transition-colors"
-                  onClick={() => newChat()}
-                >
-                  {!newChatLoading ? "New Chat" : "Creating New Chat..."}
-                </button>
-
-                <button
-                  className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-red-50 hover:border-red-200 transition-all duration-200 text-red-600 border border-slate-200"
-                  onClick={() => signOut({ callbackUrl: "/login" })}
-                >
-                  Sign Out
-                </button>
-                {brandContext?.isBrandAdmin && (
-                  <button
-                    className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
-                    onClick={() => {
-                      const isKavisha =
-                        (brandContext?.subdomain || "").toLowerCase() ===
-                        "kavisha";
-                      const target = isKavisha
-                        ? "/admin"
-                        : `/admin/${(brandContext?.subdomain || "").toLowerCase()}`;
-                      router.push(target);
-                    }}
-                  >
-                    🛡️ Admin Dashboard
-                  </button>
-                )}
               </div>
             </div>
           </>
