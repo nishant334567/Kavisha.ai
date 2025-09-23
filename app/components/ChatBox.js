@@ -29,8 +29,6 @@ export default function ChatBox({
   // const [retryIndex, setRetryIndex] = useState(undefined);
   const [selectedFile, setSelectedFile] = useState(null);
   const [openChat, setOpenChat] = useState(false);
-  const [sessionA, setSessionA] = useState(null);
-  const [sessionB, setSessionB] = useState(null);
   const [userA, setUserA] = useState(null);
   const [userB, setUserB] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
@@ -191,12 +189,10 @@ export default function ChatBox({
   const updateResume = (filename, summary) => {
     setResumedata({ filename: filename, resumeSummary: summary });
   };
-  const openChatSession = (sessionA, sessionB, userA, userB) => {
-    setSessionA(sessionA);
-    setSessionB(sessionB);
+  const openChatSession = (userA, userB) => {
     setUserA(userA);
     setUserB(userB);
-    setConnectionId([sessionA, sessionB].sort().join("_"));
+    setConnectionId([userA, userB].sort().join("_"));
     setOpenChat((prev) => !prev);
   };
 
@@ -698,15 +694,12 @@ export default function ChatBox({
           </div>
         </div>
       )}
-      {openChat && sessionA && sessionB && userA && userB && (
+      {openChat && userA && userB && (
         <Livechat
-          sessionA={sessionA}
-          sessionB={sessionB}
           userA={userA}
           userB={userB}
           currentUserId={session?.user?.id}
           onClose={() => setOpenChat(false)}
-          currentSessionId={currentChatId}
           connectionId={connectionId}
         />
       )}

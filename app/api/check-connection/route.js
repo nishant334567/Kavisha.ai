@@ -1,23 +1,14 @@
 import { connectDB } from "@/app/lib/db";
 import Conversations from "@/app/models/Conversations";
 import { NextResponse } from "next/server";
-import Session from "@/app/models/ChatSessions";
+import User from "@/app/models/Users";
 
 export async function POST(req) {
   try {
     const body = await req.json();
-    //
-    const { sessionA, sessionB, userA, userB, connectionId, currentUserId } =
-      body;
-    if (
-      !sessionA ||
-      !sessionB ||
-      !userA ||
-      !userB ||
-      !connectionId ||
-      !currentUserId
-      // !currentSessionId
-    ) {
+    const { userA, userB, connectionId, currentUserId } = body;
+
+    if (!userA || !userB || !currentUserId) {
       return NextResponse.json(
         { status: false, error: "Missing required fields" },
         { status: 400 }
@@ -25,19 +16,16 @@ export async function POST(req) {
     }
 
     await connectDB();
+
     // Use a canonical connection id (sorted) to avoid duplicates
     const canonicalConnectionId =
-      connectionId || ""
-        ? connectionId
-        : [String(sessionA), String(sessionB)].sort().join("_");
+      connectionId || [String(userA), String(userB)].sort().join("_");
 
     // Atomically ensure a single conversation using upsert
     await Conversations.findOneAndUpdate(
       { connectionId: canonicalConnectionId },
       {
         $setOnInsert: {
-          sessionA,
-          sessionB,
           userA,
           userB,
           connectionId: canonicalConnectionId,
@@ -46,34 +34,15 @@ export async function POST(req) {
       { upsert: true, new: true }
     );
 
-    // const otherSessionId = connectionId
-    //   .split("_")
-    //   .find((id) => id !== currentSessionId);
-    //
+    // Get the other user's information
     const otherUserId = userA === currentUserId ? userB : userA;
-
-    const otherSession = await Session.find({ userId: otherUserId })
-      .populate("userId", "name email")
-      .select("title");
-
-    const otherUser = otherSession?.[0]?.userId?.name || "Unknown User";
-    const jobTitle = otherSession?.[0]?.title || "Unknown Position";
-
-    // Determine the other user and job title
-    // let otherUser, jobTitle;
-    // if (conversation.userA._id.toString() === currentUserId) {
-    //   otherUser = conversation.userB.name;
-    //   jobTitle = conversation.sessionB.title;
-    // } else {
-    //   otherUser = conversation.userA.name;
-    //   jobTitle = conversation.sessionA.title;
-    // }
+    const otherUser = await User.findById(otherUserId).select("name email");
 
     return NextResponse.json({
       connectionId: canonicalConnectionId,
       status: true,
-      otherUser,
-      jobTitle,
+      otherUser: otherUser?.name || "Unknown User",
+      otherUserEmail: otherUser?.email || "",
     });
   } catch (error) {
     return NextResponse.json(

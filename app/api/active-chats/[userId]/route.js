@@ -10,32 +10,23 @@ export async function GET(req, { params }) {
     await connectDB();
     const conversations = await Conversations.find({
       $or: [{ userA: userId }, { userB: userId }],
-      sessionA: { $exists: true, $ne: null },
-      sessionB: { $exists: true, $ne: null },
     })
       .lean()
-      .populate("sessionA", "title")
-      .populate("sessionB", "title")
-      .populate("userA", "name")
-      .populate("userB", "name")
+      .populate("userA", "name email")
+      .populate("userB", "name email")
       .exec();
 
-    // Filter out conversations where sessions are null after populate
-    const validConversations = conversations.filter(
-      (conversation) => conversation.sessionA && conversation.sessionB
-    );
-
-    // let result = [];
     const result = await Promise.all(
-      validConversations.map(async (conversation) => {
-        let otherUser = "User A",
-          jobTitle = "Job title not found";
+      conversations.map(async (conversation) => {
+        let otherUser = "Unknown User",
+          otherUserEmail = "";
+
         if (conversation.userA._id.toString() === userId) {
           otherUser = conversation.userB.name;
-          jobTitle = conversation.sessionB.title;
+          otherUserEmail = conversation.userB.email;
         } else {
           otherUser = conversation.userA.name;
-          jobTitle = conversation.sessionA.title;
+          otherUserEmail = conversation.userA.email;
         }
 
         const lastMessage = await Messages.findOne({
@@ -47,12 +38,10 @@ export async function GET(req, { params }) {
         return {
           _id: conversation._id,
           otherUser,
-          jobTitle,
+          otherUserEmail,
           lastMessage: lastMessage?.content,
           userA: conversation.userA._id,
           userB: conversation.userB._id,
-          sessionA: conversation.sessionA._id,
-          sessionB: conversation.sessionB._id,
         };
       })
     );

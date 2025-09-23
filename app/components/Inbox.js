@@ -73,21 +73,14 @@ export default function Inbox({ onOpenChat, onClose }) {
                 <button
                   key={chat._id}
                   className="w-full text-left bg-slate-50 rounded-lg px-3 py-2 flex items-center gap-3 hover:bg-sky-50 hover:border-sky-200 border border-transparent transition-all duration-200"
-                  onClick={() =>
-                    onOpenChat(
-                      chat.sessionA,
-                      chat.sessionB,
-                      chat.userA,
-                      chat.userB
-                    )
-                  }
+                  onClick={() => onOpenChat(chat.userA, chat.userB)}
                 >
                   <div className="flex-1">
                     <div className="font-medium text-slate-800 truncate">
                       {chat.otherUser}
                     </div>
                     <div className="text-xs text-slate-500 truncate">
-                      {chat.jobTitle}
+                      {chat.otherUserEmail}
                     </div>
                     {chat.lastMessage && (
                       <div className="text-xs text-sky-600 truncate mt-1">
