@@ -135,7 +135,6 @@ export async function POST(request) {
     let matchesLatest = [];
     if (allDataCollected === "true") {
       matchesLatest = await getMatches(userId, sessionId, type);
-      console.log("matchesLatest", matchesLatest);
     }
 
     await Logs.create({

@@ -45,11 +45,10 @@ export default function BrandAdminPage() {
   const [loadingLogs, setLoadingLogs] = useState(false);
   const brandContext = useBrandContext();
   const statusOptions = [
-    "rejected",
-    "on hold",
-    "on boarded",
-    "in progress",
+    "session initiated",
     "completed",
+    "in progress",
+    "onboarded",
   ];
 
   const updateSessionStatus = async (sessionId, newStatus) => {
@@ -424,8 +423,6 @@ export default function BrandAdminPage() {
   };
 
   const openChatSession = (userA, userB) => {
-    console.log("userA", userA);
-    console.log("userB", userB);
     setUserA(userA);
     setUserB(userB);
     setConnectionId([userA, userB].sort().join("_"));
@@ -505,45 +502,36 @@ export default function BrandAdminPage() {
       <div className="mx-auto max-w-7xl px-6 py-8">
         {/* Search Box */}
         <div className="mb-8">
-          <form
-            onSubmit={handleSearch}
-            className="flex flex-col sm:flex-row gap-3"
-          >
-            <select
-              value={searchType}
-              onChange={(e) => setSearchType(e.target.value)}
-              className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm sm:w-auto w-full"
-            >
-              <option value="job_seeker">Job Seekers</option>
-              <option value="recruiter">Recruiters</option>
-              <option value="lead_journey">Lead Journey</option>
-            </select>
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search sessions in natural language..."
-              className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
-            />
-            <div className="flex gap-2">
-              <button
-                type="submit"
-                disabled={searching || !searchQuery.trim()}
-                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors flex-1 sm:flex-none"
-              >
-                {searching ? "Searching..." : "Search"}
-              </button>
-              {searchResults && (
-                <button
-                  type="button"
-                  onClick={clearSearch}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm font-medium transition-colors"
+          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div className="flex items-start gap-3">
+              <div className="flex-shrink-0">
+                <svg
+                  className="w-5 h-5 text-blue-600 mt-0.5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
                 >
-                  Clear
-                </button>
-              )}
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-sm font-medium text-blue-800 mb-1">
+                  Advanced Search Coming Soon
+                </h3>
+                <p className="text-sm text-blue-700">
+                  We're building an intelligent search feature that will help
+                  recruiters and admins find precise results using natural
+                  language queries. This will make it easier to discover the
+                  right candidates and sessions based on specific criteria.
+                </p>
+              </div>
             </div>
-          </form>
+          </div>
         </div>
 
         {/* Sort Controls */}
@@ -616,32 +604,34 @@ export default function BrandAdminPage() {
                   "all",
                   "job_seeker",
                   "recruiter",
-                  "dating",
+                  brandContext.subdomain === "kavisha" ? "dating" : null,
                   "lead_journey",
-                ].map((role) => (
-                  <button
-                    key={role}
-                    onClick={() => setFilters((prev) => ({ ...prev, role }))}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
-                      filters.role === role
-                        ? "bg-blue-600 text-white shadow-sm"
-                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                    }`}
-                  >
-                    <span>
-                      {role === "all" ? "All" : role.replace("_", " ")}
-                    </span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                ]
+                  .filter(Boolean)
+                  .map((role) => (
+                    <button
+                      key={role}
+                      onClick={() => setFilters((prev) => ({ ...prev, role }))}
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
                         filters.role === role
-                          ? "bg-white/20 text-white"
-                          : "bg-gray-100 text-gray-600"
+                          ? "bg-blue-600 text-white shadow-sm"
+                          : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
                       }`}
                     >
-                      {getRoleCount(role)}
-                    </span>
-                  </button>
-                ))}
+                      <span>
+                        {role === "all" ? "All" : role.replace("_", " ")}
+                      </span>
+                      <span
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                          filters.role === role
+                            ? "bg-white/20 text-white"
+                            : "bg-gray-100 text-gray-600"
+                        }`}
+                      >
+                        {getRoleCount(role)}
+                      </span>
+                    </button>
+                  ))}
               </div>
             </div>
 
@@ -651,11 +641,10 @@ export default function BrandAdminPage() {
               <div className="flex flex-wrap gap-1">
                 {[
                   "all",
-                  "rejected",
-                  "on hold",
-                  "on boarded",
-                  "in progress",
+                  "session initiated",
                   "completed",
+                  "in progress",
+                  "onboarded",
                 ].map((status) => (
                   <button
                     key={status}
@@ -666,7 +655,7 @@ export default function BrandAdminPage() {
                         : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
                     }`}
                   >
-                    <span>{status === "all" ? "All" : status}</span>
+                    <span>{status}</span>
                     <span
                       className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
                         filters.status === status

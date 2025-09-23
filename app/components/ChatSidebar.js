@@ -187,12 +187,7 @@ export default function ChatSidebar({
                     <button
                       className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
                       onClick={() => {
-                        const isKavisha =
-                          (brandContext?.subdomain || "").toLowerCase() ===
-                          "kavisha";
-                        const target = isKavisha
-                          ? "/admin"
-                          : `/admin/${(brandContext?.subdomain || "").toLowerCase()}`;
+                        const target = `/admin/${(brandContext?.subdomain || "").toLowerCase()}`;
                         router.push(target);
                       }}
                     >

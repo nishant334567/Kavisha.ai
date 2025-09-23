@@ -53,6 +53,8 @@ export default function BrandContextProvider({ children }) {
               }[0]`
         );
         if (brand) {
+          const isAdmin = brand.admins?.includes(session?.user?.email) || false;
+
           const context = {
             brandId: brand._id,
             brandName: brand.brandName,
@@ -62,7 +64,7 @@ export default function BrandContextProvider({ children }) {
             title: brand.title,
             subtitle: brand.subtitle,
             admins: brand.admins || [],
-            isBrandAdmin: brand.admins?.includes(session?.user?.email) || false,
+            isBrandAdmin: isAdmin,
             subdomain,
             initialmessage: brand.initialmessage,
             services: brand.services,
@@ -76,7 +78,7 @@ export default function BrandContextProvider({ children }) {
       }
     };
     brandDataFromSanity();
-  }, []);
+  }, [session?.user?.email]);
 
   if (loading || !brandContext) {
     return <Loader loadingMessage="Loading..." />;
