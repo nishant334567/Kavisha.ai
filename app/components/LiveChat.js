@@ -4,13 +4,10 @@ import { useSession } from "next-auth/react";
 import useSocket from "../context/useSocket";
 
 export default function Livechat({
-  sessionA,
-  sessionB,
   userA,
   userB,
   currentUserId,
   onClose,
-  currentSessionId,
   connectionId,
 }) {
   const [message, setMessage] = useState("");
@@ -19,7 +16,7 @@ export default function Livechat({
   const listRef = useRef(null);
   const [chatInfo, setChatInfo] = useState({
     otherUser: "",
-    jobTitle: "",
+    // jobTitle: "",
     connectionId: null,
   });
 
@@ -35,20 +32,15 @@ export default function Livechat({
     });
   };
 
-  useEffect(() => {}, [sessionA, sessionB, userA, userB, connectionId]);
   useEffect(() => {
     const checkConnection = async () => {
-      const cid = [sessionA, sessionB].sort().join("_");
       const response = await fetch(`/api/check-connection`, {
         method: "POST",
         body: JSON.stringify({
-          sessionA,
-          sessionB,
           userA,
           userB,
           connectionId: connectionId,
           currentUserId,
-          // currentSessionId,
         }),
       });
       const data = await response.json();
@@ -56,13 +48,12 @@ export default function Livechat({
       if (data.status && data.connectionId) {
         setChatInfo({
           otherUser: data.otherUser,
-          jobTitle: data.jobTitle,
           connectionId: data.connectionId,
         });
       }
     };
     checkConnection();
-  }, [sessionA, sessionB, userA, userB, connectionId]);
+  }, [userA, userB, connectionId, currentUserId]);
 
   useEffect(() => {
     if (!socket || !chatInfo.connectionId) return;
@@ -81,13 +72,27 @@ export default function Livechat({
     };
 
     const handleMessage = (data) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: data?.text ?? "",
-          senderUserId: data?.senderUserId ?? data?.senderSessionId ?? "",
-        },
-      ]);
+      setMessages((prev) => {
+        // Check if this message already exists to prevent duplicates
+        const messageExists = prev.some(
+          (msg) =>
+            msg.text === (data?.text ?? "") &&
+            msg.senderUserId ===
+              (data?.senderUserId ?? data?.senderSessionId ?? "")
+        );
+
+        if (messageExists) {
+          return prev; // Don't add duplicate
+        }
+
+        return [
+          ...prev,
+          {
+            text: data?.text ?? "",
+            senderUserId: data?.senderUserId ?? data?.senderSessionId ?? "",
+          },
+        ];
+      });
     };
 
     if (socket && chatInfo.connectionId) {
@@ -131,15 +136,8 @@ export default function Livechat({
         // timestamp: new Date().toISOString(),
       };
       socket.emit("send_message", payload);
-
-      setMessages((prev) => [
-        ...prev,
-        {
-          text: message,
-          senderUserId: session?.user?.id,
-          // timestamp: payload.timestamp,
-        },
-      ]);
+      // Don't add to local state here - let the socket handle it
+      // This prevents duplicate messages
     }
     setMessage("");
   };
@@ -159,7 +157,7 @@ export default function Livechat({
             <div className="font-semibold text-slate-800 text-base">
               {chatInfo.otherUser}
             </div>
-            <div className="text-xs text-slate-500">{chatInfo.jobTitle}</div>
+            {/* <div className="text-xs text-slate-500">{chatInfo.jobTitle}</div> */}
           </div>
           <button
             onClick={onClose}

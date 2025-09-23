@@ -1,16 +1,6 @@
 const mongoose = require("mongoose");
 const ConversationSchema = new mongoose.Schema(
   {
-    sessionA: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ChatSessions",
-      required: true,
-    },
-    sessionB: {
-      type: mongoose.Schema.Types.ObjectId,
-      ref: "ChatSessions",
-      required: true,
-    },
     userA: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

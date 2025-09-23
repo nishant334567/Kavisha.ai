@@ -49,7 +49,7 @@ export async function GET(req, { params }) {
 
     // Fetch all sessions for this brand
     const sessions = await Session.find({ brand })
-      .populate("userId", "name email")
+      .populate("userId", "name email _id")
       .sort({ createdAt: -1 })
       .lean();
 
@@ -65,9 +65,11 @@ export async function GET(req, { params }) {
       createdAt: session.createdAt,
       updatedAt: session.updatedAt,
       assignedTo: session.assignedTo,
+      comment: session.comment || "",
       user: {
         name: session.userId?.name || "",
         email: session.userId?.email || "",
+        _id: session.userId?._id || "",
       },
     }));
 

@@ -46,15 +46,20 @@ app.prepare().then(() => {
   });
 
   const activeConnections = new Set();
+  const userSockets = new Map(); // Map userId to socket.id
 
   io.on("connection", (socket) => {
     socket.on("register_user", (userId) => {
       socket.userId = userId;
       activeConnections.add(socket.id);
+      userSockets.set(userId, socket.id);
     });
 
     socket.on("disconnect", () => {
       activeConnections.delete(socket.id);
+      if (socket.userId) {
+        userSockets.delete(socket.userId);
+      }
     });
 
     socket.on("send_message", async (data) => {
@@ -73,13 +78,12 @@ app.prepare().then(() => {
           content: text,
         });
 
-        if (activeConnections.has(connectionId)) {
-          socket.to(connectionId).emit("message_received", {
-            text: text,
-            senderUserId: senderUserId,
-            connectionId: connectionId,
-          });
-        }
+        // Broadcast to all sockets in the connection room
+        io.to(connectionId).emit("message_received", {
+          text: text,
+          senderUserId: senderUserId,
+          connectionId: connectionId,
+        });
       } catch (error) {
         console.error("Error in send_message:", error);
       }
@@ -91,9 +95,6 @@ app.prepare().then(() => {
         if (!connectionId) return;
 
         socket.join(connectionId);
-        if (!activeConnections.has(connectionId)) {
-          activeConnections.add(connectionId);
-        }
 
         try {
           await connectDB();

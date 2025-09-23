@@ -3,11 +3,12 @@
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useBrandContext } from "../../context/brand/BrandContextProvider";
-
+import Livechat from "../../components/LiveChat";
+import { useSession } from "next-auth/react";
 export default function BrandAdminPage() {
   const params = useParams();
   const brand = (params?.brand || "").toLowerCase();
-
+  const { data: session } = useSession();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
@@ -35,6 +36,13 @@ export default function BrandAdminPage() {
   const [newAdminEmail, setNewAdminEmail] = useState("");
   const [addingAdmin, setAddingAdmin] = useState(false);
   const [assigning, setAssigning] = useState({});
+  const [openChat, setOpenChat] = useState(false);
+  const [userA, setUserA] = useState(null);
+  const [userB, setUserB] = useState(null);
+  const [connectionId, setConnectionId] = useState(null);
+  const [showLogsModal, setShowLogsModal] = useState(false);
+  const [selectedSessionLogs, setSelectedSessionLogs] = useState(null);
+  const [loadingLogs, setLoadingLogs] = useState(false);
   const brandContext = useBrandContext();
   const statusOptions = [
     "rejected",
@@ -320,7 +328,7 @@ export default function BrandAdminPage() {
       }
     };
     load();
-  }, [brand]);
+  }, []);
 
   if (loading) {
     return (
@@ -415,16 +423,57 @@ export default function BrandAdminPage() {
     }
   };
 
+  const openChatSession = (userA, userB) => {
+    console.log("userA", userA);
+    console.log("userB", userB);
+    setUserA(userA);
+    setUserB(userB);
+    setConnectionId([userA, userB].sort().join("_"));
+    setOpenChat((prev) => !prev);
+  };
+
+  const showLogs = async (session) => {
+    setSelectedSessionLogs(session);
+    setShowLogsModal(true);
+    setLoadingLogs(true);
+
+    try {
+      const response = await fetch(`/api/admin/session-logs/${session._id}`);
+      const data = await response.json();
+
+      if (data.success) {
+        setSelectedSessionLogs({
+          ...session,
+          logs: data.logs,
+        });
+      } else {
+        console.error("Failed to fetch logs:", data.message);
+        setSelectedSessionLogs({
+          ...session,
+          logs: [],
+        });
+      }
+    } catch (error) {
+      console.error("Error fetching logs:", error);
+      setSelectedSessionLogs({
+        ...session,
+        logs: [],
+      });
+    } finally {
+      setLoadingLogs(false);
+    }
+  };
+
   return (
-    <div className="h-screen bg-white p-6 overflow-y-auto">
-      <div className="mx-auto max-w-7xl">
-        <div className="mb-6">
-          <div className="flex justify-between items-start mb-4">
+    <div className="min-h-screen bg-gray-50">
+      <div className="bg-white border-b border-gray-200">
+        <div className="mx-auto max-w-7xl px-6 py-8">
+          <div className="flex justify-between items-start">
             <div>
-              <h1 className="text-3xl font-bold text-slate-900">
+              <h1 className="text-3xl font-bold text-gray-900">
                 {brand.toUpperCase()} Sessions
               </h1>
-              <p className="mt-1 text-slate-600">
+              <p className="mt-2 text-gray-600">
                 {searchResults
                   ? `Search results (${sessions.length})`
                   : `All sessions (${sessions.length})`}
@@ -432,32 +481,38 @@ export default function BrandAdminPage() {
             </div>
 
             {/* Add Admin Section */}
-            <div className="flex gap-2 items-center">
+            <div className="flex gap-3 items-center">
               <input
                 type="email"
                 value={newAdminEmail}
                 onChange={(e) => setNewAdminEmail(e.target.value)}
                 placeholder="Enter admin email..."
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm"
+                className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm bg-white"
               />
               <button
                 onClick={handleAddAdmin}
                 disabled={!isValidEmail(newAdminEmail) || addingAdmin}
-                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center gap-2"
+                className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center gap-2 transition-colors"
               >
                 {addingAdmin ? "Adding..." : "Add Admin"}
               </button>
             </div>
           </div>
         </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="mx-auto max-w-7xl px-6 py-8">
         {/* Search Box */}
-        <div className="mb-6">
-          <form onSubmit={handleSearch} className="flex gap-2">
+        <div className="mb-8">
+          <form
+            onSubmit={handleSearch}
+            className="flex flex-col sm:flex-row gap-3"
+          >
             <select
               value={searchType}
               onChange={(e) => setSearchType(e.target.value)}
-              className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm sm:w-auto w-full"
             >
               <option value="job_seeker">Job Seekers</option>
               <option value="recruiter">Recruiters</option>
@@ -468,35 +523,37 @@ export default function BrandAdminPage() {
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder="Search sessions in natural language..."
-              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm"
             />
-            <button
-              type="submit"
-              disabled={searching || !searchQuery.trim()}
-              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {searching ? "Searching..." : "Search"}
-            </button>
-            {searchResults && (
+            <div className="flex gap-2">
               <button
-                type="button"
-                onClick={clearSearch}
-                className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                type="submit"
+                disabled={searching || !searchQuery.trim()}
+                className="px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium transition-colors flex-1 sm:flex-none"
               >
-                Clear
+                {searching ? "Searching..." : "Search"}
               </button>
-            )}
+              {searchResults && (
+                <button
+                  type="button"
+                  onClick={clearSearch}
+                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm font-medium transition-colors"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
           </form>
         </div>
 
         {/* Sort Controls */}
-        <div className="mb-4 flex flex-wrap gap-4 items-center">
-          <div className="flex gap-2 items-center">
-            <span className="text-sm text-gray-600">Sort by:</span>
+        <div className="mb-6 flex flex-wrap gap-4 items-center justify-between">
+          <div className="flex gap-3 items-center">
+            <span className="text-sm font-medium text-gray-700">Sort by:</span>
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
+              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
             >
               <option value="createdAt">Date Created</option>
               <option value="name">Name</option>
@@ -506,7 +563,7 @@ export default function BrandAdminPage() {
             <select
               value={sortOrder}
               onChange={(e) => setSortOrder(e.target.value)}
-              className="px-3 py-1 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
+              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
             >
               <option value="desc">
                 {sortBy === "createdAt"
@@ -524,82 +581,12 @@ export default function BrandAdminPage() {
               </option>
             </select>
           </div>
-        </div>
-
-        {/* Filter Buttons and Email Action */}
-        <div className="mb-6 flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex flex-wrap gap-2">
-            {/* Role Filter */}
-            <div className="flex gap-1">
-              <span className="text-sm text-gray-600 px-2 py-1">Role:</span>
-              {["all", "job_seeker", "recruiter", "dating", "lead_journey"].map(
-                (role) => (
-                  <button
-                    key={role}
-                    onClick={() => setFilters((prev) => ({ ...prev, role }))}
-                    className={`px-3 py-1 text-xs rounded-full flex items-center gap-1 ${
-                      filters.role === role
-                        ? "bg-blue-600 text-white"
-                        : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                    }`}
-                  >
-                    <span>
-                      {role === "all" ? "All" : role.replace("_", " ")}
-                    </span>
-                    <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                        filters.role === role
-                          ? "bg-white/20 text-white"
-                          : "bg-gray-100 text-gray-600"
-                      }`}
-                    >
-                      {getRoleCount(role)}
-                    </span>
-                  </button>
-                )
-              )}
-            </div>
-
-            {/* Status Filter */}
-            <div className="flex gap-1">
-              <span className="text-sm text-gray-600 px-2 py-1">Status:</span>
-              {[
-                "all",
-                "rejected",
-                "on hold",
-                "on boarded",
-                "in progress",
-                "completed",
-              ].map((status) => (
-                <button
-                  key={status}
-                  onClick={() => setFilters((prev) => ({ ...prev, status }))}
-                  className={`px-3 py-1 text-xs rounded-full flex items-center gap-1 ${
-                    filters.status === status
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                  }`}
-                >
-                  <span>{status === "all" ? "All" : status}</span>
-                  <span
-                    className={`px-1.5 py-0.5 rounded-full text-[10px] ${
-                      filters.status === status
-                        ? "bg-white/20 text-white"
-                        : "bg-gray-100 text-gray-600"
-                    }`}
-                  >
-                    {getStatusCount(status)}
-                  </span>
-                </button>
-              ))}
-            </div>
-          </div>
 
           {/* Send Email Button */}
           <button
             onClick={() => setShowEmailModal(true)}
             disabled={sessions.length === 0}
-            className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
           >
             <svg
               className="w-4 h-4"
@@ -618,104 +605,263 @@ export default function BrandAdminPage() {
           </button>
         </div>
 
+        {/* Filter Buttons */}
+        <div className="mb-8">
+          <div className="flex flex-col sm:flex-row gap-4">
+            {/* Role Filter */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Role:</span>
+              <div className="flex flex-wrap gap-1">
+                {[
+                  "all",
+                  "job_seeker",
+                  "recruiter",
+                  "dating",
+                  "lead_journey",
+                ].map((role) => (
+                  <button
+                    key={role}
+                    onClick={() => setFilters((prev) => ({ ...prev, role }))}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
+                      filters.role === role
+                        ? "bg-blue-600 text-white shadow-sm"
+                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                    }`}
+                  >
+                    <span>
+                      {role === "all" ? "All" : role.replace("_", " ")}
+                    </span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                        filters.role === role
+                          ? "bg-white/20 text-white"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {getRoleCount(role)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex flex-col sm:flex-row sm:items-center gap-2">
+              <span className="text-sm font-medium text-gray-700">Status:</span>
+              <div className="flex flex-wrap gap-1">
+                {[
+                  "all",
+                  "rejected",
+                  "on hold",
+                  "on boarded",
+                  "in progress",
+                  "completed",
+                ].map((status) => (
+                  <button
+                    key={status}
+                    onClick={() => setFilters((prev) => ({ ...prev, status }))}
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
+                      filters.status === status
+                        ? "bg-green-600 text-white shadow-sm"
+                        : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
+                    }`}
+                  >
+                    <span>{status === "all" ? "All" : status}</span>
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
+                        filters.status === status
+                          ? "bg-white/20 text-white"
+                          : "bg-gray-100 text-gray-600"
+                      }`}
+                    >
+                      {getStatusCount(status)}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Sessions List */}
-        <div className="space-y-4 overflow-y-auto scrollbar-none grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
           {sessions.length === 0 ? (
-            <div className="text-center py-12 text-slate-500">
-              No sessions found.
+            <div className="col-span-full text-center py-16">
+              <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                <svg
+                  className="w-12 h-12 text-gray-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-medium text-gray-900 mb-2">
+                No sessions found
+              </h3>
+              <p className="text-gray-500">
+                Try adjusting your filters or search criteria.
+              </p>
             </div>
           ) : (
-            sessions.map((session, idx) => (
+            sessions.map((currentUserSession, idx) => (
               <div
-                key={session._id || idx}
-                className="rounded-lg border border-slate-200 p-6 bg-white shadow-sm"
+                key={currentUserSession._id || idx}
+                className="group bg-white rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200 overflow-hidden"
               >
-                <div className=" gap-4">
-                  {/* User Info */}
-                  <div>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <h3 className="text-lg font-semibold text-slate-900">
-                          {session.user?.name || "Unknown User"}
-                        </h3>
-                        <p className="text-sm text-slate-600">
-                          {session.user?.email || "No email"}
-                        </p>
+                <div className="p-6">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                          {(currentUserSession.user?.name || "U")
+                            .charAt(0)
+                            .toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h3 className="text-lg font-semibold text-gray-900 truncate">
+                            {currentUserSession.user?.name || "Unknown User"}
+                          </h3>
+                          <p className="text-sm text-gray-500 truncate">
+                            {currentUserSession.user?.email || "No email"}
+                          </p>
+                        </div>
                       </div>
-                      {session.user?.email && (
-                        <button
-                          onClick={() => {
-                            setSelectedSession(session);
-                            setShowIndividualEmailModal(true);
-                          }}
-                          className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 flex items-center gap-1"
-                        >
-                          <svg
-                            className="w-3 h-3"
-                            fill="none"
-                            stroke="currentColor"
-                            viewBox="0 0 24 24"
-                          >
-                            <path
-                              strokeLinecap="round"
-                              strokeLinejoin="round"
-                              strokeWidth={2}
-                              d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
-                            />
-                          </svg>
-                          Email
-                        </button>
-                      )}
-                    </div>
-                    <div className="mt-2 flex gap-2">
-                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {session.role || "Unknown Role"}
-                      </span>
-                      {session.assignedTo && (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                          Assigned to: {session.assignedTo}
+                      <div className="flex items-center gap-2">
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {currentUserSession.role || "Unknown Role"}
                         </span>
-                      )}
-                    </div>
-
-                    {/* Status Update Dropdown for Job Seekers */}
-                    {session.role === "job_seeker" && (
-                      <div className="mt-3">
-                        <select
-                          value={session.status || ""}
-                          onChange={(e) =>
-                            updateSessionStatus(session._id, e.target.value)
-                          }
-                          disabled={updating[session._id]}
-                          className="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
-                        >
-                          <option value="">Select Status</option>
-                          {statusOptions.map((option) => (
-                            <option key={option} value={option}>
-                              {option}
-                            </option>
-                          ))}
-                        </select>
-                        {updating[session._id] && (
-                          <span className="ml-2 text-xs text-gray-500">
-                            Updating...
+                        {currentUserSession.assignedTo && (
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                            {currentUserSession.assignedTo}
                           </span>
                         )}
                       </div>
-                    )}
+                    </div>
+                  </div>
 
-                    {/* Assignment Dropdown */}
-                    <div className="mt-3">
-                      <label className="block text-xs font-medium text-gray-700 mb-1">
-                        Assign to:
+                  {/* Action Buttons */}
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    {currentUserSession.user?.email && (
+                      <button
+                        onClick={() => {
+                          setSelectedSession(currentUserSession);
+                          setShowIndividualEmailModal(true);
+                        }}
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-blue-700 bg-blue-50 hover:bg-blue-100 rounded-lg transition-colors"
+                      >
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
+                          />
+                        </svg>
+                        Email
+                      </button>
+                    )}
+                    {currentUserSession.user?._id && (
+                      <button
+                        onClick={() =>
+                          openChatSession(
+                            session?.user?.id,
+                            currentUserSession.user?._id
+                          )
+                        }
+                        className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 rounded-lg transition-colors"
+                      >
+                        <svg
+                          className="w-3.5 h-3.5"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                          />
+                        </svg>
+                        Chat
+                      </button>
+                    )}
+                    <button
+                      onClick={() => showLogs(currentUserSession)}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-medium text-gray-700 bg-gray-50 hover:bg-gray-100 rounded-lg transition-colors"
+                    >
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
+                      Logs
+                    </button>
+                  </div>
+
+                  {/* Status and Assignment Controls */}
+                  <div className="space-y-3 mb-4">
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                        Status
                       </label>
                       <select
-                        value={session.assignedTo || ""}
+                        value={currentUserSession.status || ""}
                         onChange={(e) =>
-                          assignSession(session._id, e.target.value)
+                          updateSessionStatus(
+                            currentUserSession._id,
+                            e.target.value
+                          )
                         }
-                        disabled={assigning[session._id]}
-                        className="text-xs px-2 py-1 border border-gray-300 rounded focus:ring-1 focus:ring-purple-500 focus:border-purple-500"
+                        disabled={updating[currentUserSession._id]}
+                        className="w-full text-sm px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+                      >
+                        <option value="">Select Status</option>
+                        {statusOptions.map((option) => (
+                          <option key={option} value={option}>
+                            {option}
+                          </option>
+                        ))}
+                      </select>
+                      {updating[currentUserSession._id] && (
+                        <p className="mt-1 text-xs text-gray-500">
+                          Updating...
+                        </p>
+                      )}
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-medium text-gray-700 mb-1.5">
+                        Assign to
+                      </label>
+                      <select
+                        value={currentUserSession.assignedTo || ""}
+                        onChange={(e) =>
+                          assignSession(currentUserSession._id, e.target.value)
+                        }
+                        disabled={assigning[currentUserSession._id]}
+                        className="w-full text-sm px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"
                       >
                         <option value="">Unassigned</option>
                         {brandContext.admins?.map((admin) => (
@@ -724,42 +870,77 @@ export default function BrandAdminPage() {
                           </option>
                         ))}
                       </select>
-                      {assigning[session._id] && (
-                        <span className="ml-2 text-xs text-gray-500">
+                      {assigning[currentUserSession._id] && (
+                        <p className="mt-1 text-xs text-gray-500">
                           Assigning...
-                        </span>
+                        </p>
                       )}
                     </div>
                   </div>
 
                   {/* Session Info */}
-                  <div>
-                    <h4 className="text-sm font-medium text-slate-700 mb-2">
+                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                        />
+                      </svg>
                       Session Details
                     </h4>
-                    <div className="space-y-1 text-sm text-slate-600">
+                    <div className="grid grid-cols-2 gap-3 text-sm">
                       <div>
-                        Status:{" "}
-                        <span className="font-medium">
-                          {session.status || "Unknown"}
+                        <span className="text-gray-500">Status:</span>
+                        <span
+                          className={`ml-1 font-medium ${
+                            currentUserSession.status === "completed"
+                              ? "text-green-600"
+                              : currentUserSession.status === "in-progress"
+                                ? "text-blue-600"
+                                : currentUserSession.status === "on hold"
+                                  ? "text-yellow-600"
+                                  : currentUserSession.status === "rejected"
+                                    ? "text-red-600"
+                                    : "text-gray-600"
+                          }`}
+                        >
+                          {currentUserSession.status || "Unknown"}
                         </span>
                       </div>
                       <div>
-                        Data Collected:{" "}
-                        <span className="font-medium">
-                          {session.allDataCollected ? "Yes" : "No"}
+                        <span className="text-gray-500">Data:</span>
+                        <span
+                          className={`ml-1 font-medium ${
+                            currentUserSession.allDataCollected
+                              ? "text-green-600"
+                              : "text-orange-600"
+                          }`}
+                        >
+                          {currentUserSession.allDataCollected
+                            ? "Complete"
+                            : "Incomplete"}
                         </span>
                       </div>
                       <div>
-                        Brand:{" "}
-                        <span className="font-medium">
-                          {session.brand || "Unknown"}
+                        <span className="text-gray-500">Brand:</span>
+                        <span className="ml-1 font-medium text-gray-900">
+                          {currentUserSession.brand || "Unknown"}
                         </span>
                       </div>
                       <div>
-                        Created:{" "}
-                        <span className="font-medium">
-                          {new Date(session.createdAt).toLocaleDateString()}
+                        <span className="text-gray-500">Created:</span>
+                        <span className="ml-1 font-medium text-gray-900">
+                          {new Date(
+                            currentUserSession.createdAt
+                          ).toLocaleDateString()}
                         </span>
                       </div>
                     </div>
@@ -767,15 +948,28 @@ export default function BrandAdminPage() {
 
                   {/* Summary */}
                   <div>
-                    <h4 className="text-sm font-medium text-slate-700 mb-2">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
                       Summary
                     </h4>
-                    {session.chatSummary ? (
-                      <p className="text-sm text-slate-600 line-clamp-4">
-                        {session.chatSummary}
+                    {currentUserSession.chatSummary ? (
+                      <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed">
+                        {currentUserSession.chatSummary}
                       </p>
                     ) : (
-                      <p className="text-sm text-slate-400 italic">
+                      <p className="text-sm text-gray-400 italic">
                         No chat summary available
                       </p>
                     )}
@@ -783,46 +977,100 @@ export default function BrandAdminPage() {
                 </div>
 
                 {/* Resume Info */}
-                {session.resumeSummary && (
-                  <div className="mt-4 pt-4 border-t border-slate-200">
-                    <h4 className="text-sm font-medium text-slate-700 mb-2">
+                {currentUserSession.resumeSummary && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                        />
+                      </svg>
                       Resume Summary
                     </h4>
-                    <p className="text-sm text-slate-600">
-                      {session.resumeSummary}
+                    <p className="text-sm text-gray-600 leading-relaxed">
+                      {currentUserSession.resumeSummary}
                     </p>
-                    {session.resumeFilename && (
-                      <p className="text-xs text-slate-500 mt-1">
-                        File: {session.resumeFilename}
+                    {currentUserSession.resumeFilename && (
+                      <p className="text-xs text-gray-500 mt-2 flex items-center gap-1">
+                        <svg
+                          className="w-3 h-3"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M7 21h10a2 2 0 002-2V9.414a1 1 0 00-.293-.707l-5.414-5.414A1 1 0 0012.586 3H7a2 2 0 00-2 2v14a2 2 0 002 2z"
+                          />
+                        </svg>
+                        {currentUserSession.resumeFilename}
                       </p>
                     )}
                   </div>
                 )}
 
                 {/* Title */}
-                {session.title && (
-                  <div className="mt-4 pt-4 border-t border-slate-200">
-                    <h4 className="text-sm font-medium text-slate-700 mb-1">
+                {currentUserSession.title && (
+                  <div className="mt-4 pt-4 border-t border-gray-200">
+                    <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                      <svg
+                        className="w-4 h-4 text-gray-500"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
+                        />
+                      </svg>
                       Title
                     </h4>
-                    <p className="text-sm text-slate-600">{session.title}</p>
+                    <p className="text-sm text-gray-600">
+                      {currentUserSession.title}
+                    </p>
                   </div>
                 )}
 
                 {/* Comment Section */}
-                <div className="mt-4 pt-4 border-t border-slate-200">
-                  <h4 className="text-sm font-medium text-slate-700 mb-2">
+                <div className="mt-4 pt-4 border-t border-gray-200">
+                  <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <svg
+                      className="w-4 h-4 text-gray-500"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                      />
+                    </svg>
                     Admin Comment
                   </h4>
                   <textarea
-                    value={session.comment || ""}
+                    value={currentUserSession.comment || ""}
                     onChange={(e) => {
                       const newComment = e.target.value;
                       // Update local state immediately for better UX
                       setData((prev) => ({
                         ...prev,
                         sessions: prev.sessions.map((s) =>
-                          s._id === session._id
+                          s._id === currentUserSession._id
                             ? { ...s, comment: newComment }
                             : s
                         ),
@@ -830,21 +1078,37 @@ export default function BrandAdminPage() {
                     }}
                     placeholder="Add a comment for this session..."
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none bg-gray-50"
                   />
-                  <div className="flex justify-between items-center mt-2">
+                  <div className="flex justify-between items-center mt-3">
                     <button
                       onClick={() =>
-                        updateSessionComment(session._id, session.comment || "")
+                        updateSessionComment(
+                          currentUserSession._id,
+                          currentUserSession.comment || ""
+                        )
                       }
-                      disabled={commentUpdating[session._id]}
-                      className="px-3 py-1 bg-blue-600 text-white text-xs rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                      disabled={commentUpdating[currentUserSession._id]}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                     >
-                      {commentUpdating[session._id]
+                      <svg
+                        className="w-3.5 h-3.5"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                      {commentUpdating[currentUserSession._id]
                         ? "Saving..."
                         : "Save Comment"}
                     </button>
-                    {commentUpdating[session._id] && (
+                    {commentUpdating[currentUserSession._id] && (
                       <p className="text-xs text-gray-500">Saving...</p>
                     )}
                   </div>
@@ -1041,6 +1305,147 @@ export default function BrandAdminPage() {
           </div>
         )}
       </div>
+
+      {openChat && userA && userB && (
+        <Livechat
+          userA={userA}
+          userB={userB}
+          currentUserId={session?.user?.id}
+          onClose={() => setOpenChat(false)}
+          connectionId={connectionId}
+        />
+      )}
+
+      {/* Logs Modal */}
+      {showLogsModal && selectedSessionLogs && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                  {(selectedSessionLogs.user?.name || "U")
+                    .charAt(0)
+                    .toUpperCase()}
+                </div>
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    Chat Logs
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {selectedSessionLogs.user?.name || "Unknown User"}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => {
+                  setShowLogsModal(false);
+                  setSelectedSessionLogs(null);
+                }}
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 transition-colors"
+                aria-label="Close Logs"
+              >
+                <svg
+                  className="w-5 h-5 text-gray-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+              {loadingLogs ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="flex flex-col items-center gap-4">
+                    <div className="animate-spin rounded-full h-10 w-10 border-b-2 border-blue-600"></div>
+                    <div className="text-gray-600 font-medium">
+                      Loading chat logs...
+                    </div>
+                  </div>
+                </div>
+              ) : selectedSessionLogs.logs &&
+                selectedSessionLogs.logs.length > 0 ? (
+                <div className="space-y-4">
+                  {selectedSessionLogs.logs.map((log, index) => (
+                    <div
+                      key={log._id || index}
+                      className={`flex ${
+                        log.role === "user" ? "justify-end" : "justify-start"
+                      }`}
+                    >
+                      <div
+                        className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
+                          log.role === "user"
+                            ? "bg-blue-600 text-white"
+                            : "bg-white text-gray-800 border border-gray-200"
+                        }`}
+                      >
+                        <div className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                          {log.message}
+                        </div>
+                        <div
+                          className={`text-xs mt-2 ${
+                            log.role === "user"
+                              ? "text-blue-100"
+                              : "text-gray-500"
+                          }`}
+                        >
+                          {new Date(log.createdAt).toLocaleString()}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <div className="text-center py-12">
+                  <div className="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+                    <svg
+                      className="w-8 h-8 text-gray-400"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={1.5}
+                        d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                      />
+                    </svg>
+                  </div>
+                  <h4 className="text-lg font-medium text-gray-900 mb-2">
+                    No chat logs available
+                  </h4>
+                  <p className="text-gray-500">
+                    This session doesn't have any chat logs yet.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            <div className="p-4 bg-white border-t border-gray-200 flex justify-between items-center text-sm text-gray-600">
+              <div className="flex items-center gap-4">
+                <span className="font-medium">
+                  Total Messages: {selectedSessionLogs.logs?.length || 0}
+                </span>
+                <span className="text-gray-400">•</span>
+                <span>Session: {selectedSessionLogs._id}</span>
+              </div>
+              <div className="text-xs text-gray-400">
+                {selectedSessionLogs.logs?.length > 0 &&
+                  `Last message: ${new Date(selectedSessionLogs.logs[selectedSessionLogs.logs.length - 1]?.createdAt).toLocaleString()}`}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

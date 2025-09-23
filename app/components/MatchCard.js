@@ -63,14 +63,7 @@ export default function MatchCard({
       <div className="flex text-xs gap-2">
         <div className="w-full relative">
           <button
-            onClick={() =>
-              openChatSession(
-                senderSession,
-                matchedSessionId,
-                session?.user?.id,
-                matchedUserId
-              )
-            }
+            onClick={() => openChatSession(session?.user?.id, matchedUserId)}
             className="w-full px-2 py-1 rounded-md flex items-center justify-center 
             bg-orange-600 hover:bg-orange-700 transition-colors"
           >
