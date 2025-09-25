@@ -8,13 +8,30 @@ import { generateResumeContext } from "@/app/utils/resumeContextGenerator";
 import { SYSTEM_PROMPT } from "@/app/lib/systemPrompt";
 import { VertexAI } from "@google-cloud/vertexai";
 
-const vertexAI =(process.env.GOOGLE_CLOUD_PROJECT)? new VertexAI({
-  project: process.env.GOOGLE_CLOUD_PROJECT,
-  location: "us-central1",
-}):null;
+const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT_ID;
+const clientEmail = process.env.GCP_CLIENT_EMAIL;
+const privateKey = process.env.GCP_PRIVATE_KEY
+  ? process.env.GCP_PRIVATE_KEY.replace(/\\n/g, "\n")
+  : undefined;
+
+const vertexAI = projectId
+  ? new VertexAI({
+      project: projectId,
+      location: process.env.GOOGLE_CLOUD_LOCATION || "us-central1",
+      googleAuthOptions:
+        clientEmail && privateKey
+          ? {
+              credentials: {
+                client_email: clientEmail,
+                private_key: privateKey,
+              },
+            }
+          : undefined,
+    })
+  : null;
 
 const model = vertexAI?.getGenerativeModel({
-  model: "gemini-2.5-flash",
+  model: process.env.VERTEX_MODEL || "gemini-2.5-flash",
 });
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
@@ -32,6 +49,12 @@ const finalSystemPrompt = (prompt) => {
 };
 export async function POST(request) {
   try {
+    if (!model) {
+      return NextResponse.json(
+        { error: "Vertex AI is not configured. Set GCP env vars." },
+        { status: 500 }
+      );
+    }
     const body = await request.json();
     const token = await getToken({
       req: request,
@@ -52,7 +75,6 @@ export async function POST(request) {
 
     const geminiContents = [];
 
-    // Add system prompt as user content
     if (finalSystemPrompt(prompt, type)) {
       geminiContents.push({
         role: "user",
@@ -60,7 +82,6 @@ export async function POST(request) {
       });
     }
 
-    // Add resume context
     if (generateResumeContext(resumeText, type)) {
       geminiContents.push({
         role: "user",
@@ -68,7 +89,6 @@ export async function POST(request) {
       });
     }
 
-    // Add history
     history.forEach((m) => {
       if (m.role === "user") {
         geminiContents.push({
@@ -83,7 +103,6 @@ export async function POST(request) {
       }
     });
 
-    // Add current user message
     geminiContents.push({
       role: "user",
       parts: [{ text: userMessage || "" }],
