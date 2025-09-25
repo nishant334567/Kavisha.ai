@@ -8,12 +8,12 @@ import { generateResumeContext } from "@/app/utils/resumeContextGenerator";
 import { SYSTEM_PROMPT } from "@/app/lib/systemPrompt";
 import { VertexAI } from "@google-cloud/vertexai";
 
-const vertexAI = new VertexAI({
-  project: process.env.PROJECT_ID,
+const vertexAI =(process.env.GOOGLE_CLOUD_PROJECT)? new VertexAI({
+  project: process.env.GOOGLE_CLOUD_PROJECT,
   location: "us-central1",
-});
+}):null;
 
-const model = vertexAI.getGenerativeModel({
+const model = vertexAI?.getGenerativeModel({
   model: "gemini-2.5-flash",
 });
 export async function GET(request) {
