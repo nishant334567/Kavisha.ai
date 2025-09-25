@@ -4,16 +4,18 @@ import Logs from "@/app/models/ChatLogs";
 import { getToken } from "next-auth/jwt";
 import Session from "@/app/models/ChatSessions";
 import { getMatches } from "../matches/[sessionId]/route";
-import Matches from "@/app/models/Matches";
-import {
-  createChatCompletion,
-  createEmbedding,
-} from "@/app/utils/getAiResponse";
-import { generateMatchMessage } from "@/app/utils/matchMessageGenerator";
-import { generateReprompt } from "@/app/utils/repromptGenerator";
 import { generateResumeContext } from "@/app/utils/resumeContextGenerator";
 import { SYSTEM_PROMPT } from "@/app/lib/systemPrompt";
+import { VertexAI } from "@google-cloud/vertexai";
 
+const vertexAI = new VertexAI({
+  project: process.env.PROJECT_ID,
+  location: "us-central1",
+});
+
+const model = vertexAI.getGenerativeModel({
+  model: "gemini-2.5-flash",
+});
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const sessionId = searchParams.get("sessionId");
@@ -25,7 +27,7 @@ export async function GET(request) {
   return NextResponse.json({ logs });
 }
 
-const finalSystemPrompt = (prompt, role) => {
+const finalSystemPrompt = (prompt) => {
   return prompt + SYSTEM_PROMPT;
 };
 export async function POST(request) {
@@ -48,90 +50,68 @@ export async function POST(request) {
       role: "user",
     });
 
-    const messages = [
-      {
-        role: "system",
-        content: finalSystemPrompt(prompt, type) || "",
-      },
-      {
+    const geminiContents = [];
+
+    // Add system prompt as user content
+    if (finalSystemPrompt(prompt, type)) {
+      geminiContents.push({
         role: "user",
-        content: generateResumeContext(resumeText, type) || "",
-      },
-      ...history.map((m) => ({
-        role: m.role,
-        content: m.message || "",
-      })),
-      { role: "user", content: userMessage || "" },
-    ];
+        parts: [{ text: `System: ${finalSystemPrompt(prompt, type)}` }],
+      });
+    }
 
-    const chatCompletion = await createChatCompletion(
-      "gpt-4o-mini",
-      messages,
-      0.7,
-      800
-    );
+    // Add resume context
+    if (generateResumeContext(resumeText, type)) {
+      geminiContents.push({
+        role: "user",
+        parts: [{ text: generateResumeContext(resumeText, type) }],
+      });
+    }
 
-    let replyAi = chatCompletion.choices[0].message.content;
+    // Add history
+    history.forEach((m) => {
+      if (m.role === "user") {
+        geminiContents.push({
+          role: "user",
+          parts: [{ text: m.message || "" }],
+        });
+      } else if (m.role === "assistant") {
+        geminiContents.push({
+          role: "model",
+          parts: [{ text: m.message || "" }],
+        });
+      }
+    });
+
+    // Add current user message
+    geminiContents.push({
+      role: "user",
+      parts: [{ text: userMessage || "" }],
+    });
+
+    const responseGemini = await model.generateContent({
+      contents: geminiContents,
+    });
+
+    const reParts = responseGemini.response.candidates[0].content.parts[0].text
+      .split("////")
+      .map((item) => item.trim());
     let reply = "";
     let summary = "";
     let title = "";
-    let allDataCollected = "false";
-
-    // Simplified format parsing - avoid re-prompting loops
-    const parts = replyAi.split("////").map((item) => item.trim());
-    if (parts.length === 4) {
-      reply = parts[0];
-      summary = parts[1];
-      title = parts[2];
-      allDataCollected = parts[3]; // Keep as string
+    let allDataCollected = "";
+    if (reParts.length === 4) {
+      reply = reParts[0];
+      summary = reParts[1];
+      title = reParts[2];
+      allDataCollected = reParts[3];
     } else {
-      const originalReply = parts[0] || replyAi; // Use parts[0] if available, otherwise full response
-
-      const rePromptMessages = [
-        {
-          role: "system",
-          content: finalSystemPrompt(prompt, type) || "",
-        },
-        {
-          role: "user",
-          content: generateResumeContext(resumeText, type) || "",
-        },
-
-        ...history.map((m) => ({
-          role: m.role,
-          content: m.message || "",
-        })),
-        { role: "user", content: userMessage || "" },
-        {
-          role: "assistant",
-          content: originalReply,
-        },
-        {
-          role: "system",
-          content: generateReprompt(originalReply),
-        },
-      ];
-
-      const reChatCompletion = await createChatCompletion(
-        "gpt-4o-mini",
-        rePromptMessages,
-        0.1,
-        800
+      return NextResponse.json(
+        { error: "something went wrong" },
+        { status: 500 }
       );
-      const reReplyAi = reChatCompletion.choices[0].message.content;
-      const reParts = reReplyAi.split("////").map((item) => item.trim());
-      if (reParts.length === 4) {
-        reply = reParts[0];
-        summary = reParts[1];
-        title = reParts[2];
-        allDataCollected = reParts[3];
-      } else {
-        return NextResponse.json(
-          { error: "something went wrong" },
-          { status: 500 }
-        );
-      }
     }
+
     let matchesLatest = [];
     if (allDataCollected === "true") {
       matchesLatest = await getMatches(userId, sessionId, type);
