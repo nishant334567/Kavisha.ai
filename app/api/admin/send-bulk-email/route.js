@@ -59,11 +59,6 @@ export async function POST(req) {
            `,
         };
 
-        console.log("Email data:", {
-          from: emailData.from,
-          to: emailData.to,
-          subject: emailData.subject,
-        });
 
         const { data, error } = await resend.emails.send(emailData);
 
@@ -76,9 +71,6 @@ export async function POST(req) {
           };
         }
 
-        console.log(
-          `Successfully sent email to ${recipient.email}, messageId: ${data.id}`
-        );
         return { email: recipient.email, success: true, messageId: data.id };
       } catch (error) {
         console.error(`Error sending email to ${recipient.email}:`, error);

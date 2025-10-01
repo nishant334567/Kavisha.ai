@@ -45,18 +45,13 @@ export async function GET(req) {
         conversationId: { $in: orphanedConnectionIds },
       });
       deletedMessagesCount = messagesDeleteResult.deletedCount;
-      console.log(
-        `Deleted ${deletedMessagesCount} messages from orphaned conversations`
-      );
+
 
       // Delete orphaned conversations
       const conversationsDeleteResult = await Conversations.deleteMany({
         _id: { $in: orphanedIds },
       });
       deletedConversationsCount = conversationsDeleteResult.deletedCount;
-      console.log(
-        `Deleted ${deletedConversationsCount} orphaned conversations`
-      );
 
       // Log details of deleted conversations
       orphanedConversations.forEach((conv) => {

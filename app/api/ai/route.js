@@ -6,33 +6,8 @@ import Session from "@/app/models/ChatSessions";
 import { getMatches } from "../matches/[sessionId]/route";
 import { generateResumeContext } from "@/app/utils/resumeContextGenerator";
 import { SYSTEM_PROMPT } from "@/app/lib/systemPrompt";
-import { VertexAI } from "@google-cloud/vertexai";
+import getGeminiModel from "@/app/lib/getAiModel";
 
-const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT_ID;
-const clientEmail = process.env.GCP_CLIENT_EMAIL;
-const privateKey = process.env.GCP_PRIVATE_KEY
-  ? process.env.GCP_PRIVATE_KEY.replace(/\\n/g, "\n")
-  : undefined;
-
-const vertexAI = projectId
-  ? new VertexAI({
-      project: projectId,
-      location: process.env.GOOGLE_CLOUD_LOCATION || "us-central1",
-      googleAuthOptions:
-        clientEmail && privateKey
-          ? {
-              credentials: {
-                client_email: clientEmail,
-                private_key: privateKey,
-              },
-            }
-          : undefined,
-    })
-  : null;
-
-const model = vertexAI?.getGenerativeModel({
-  model: process.env.VERTEX_MODEL || "gemini-2.5-flash",
-});
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const sessionId = searchParams.get("sessionId");
@@ -49,6 +24,8 @@ const finalSystemPrompt = (prompt) => {
 };
 export async function POST(request) {
   try {
+    const model = getGeminiModel("gemini-2.5-pro");
+    
     if (!model) {
       return NextResponse.json(
         { error: "Vertex AI is not configured. Set GCP env vars." },

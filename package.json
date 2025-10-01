@@ -10,12 +10,15 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@google-cloud/aiplatform": "^5.7.0",
     "@google-cloud/vertexai": "^1.10.0",
     "@google/genai": "^1.20.0",
+    "@pinecone-database/pinecone": "^6.1.2",
     "@sanity/image-url": "^1.1.0",
     "@sanity/vision": "^4.5.0",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
+    "google-auth-library": "^10.3.0",
     "lucide-react": "^0.525.0",
     "mongodb": "^6.17.0",
     "mongoose": "^8.16.0",

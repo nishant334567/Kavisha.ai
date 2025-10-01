@@ -5,19 +5,18 @@ import { useEffect, useState } from "react";
 import { useBrandContext } from "../../context/brand/BrandContextProvider";
 import Livechat from "../../components/LiveChat";
 import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 export default function BrandAdminPage() {
   const params = useParams();
   const brand = (params?.brand || "").toLowerCase();
   const { data: session } = useSession();
+  const router = useRouter();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [updating, setUpdating] = useState({});
-  const [searchQuery, setSearchQuery] = useState("");
-  const [searching, setSearching] = useState(false);
   const [searchResults, setSearchResults] = useState(null);
   const [filters, setFilters] = useState({ role: "all", status: "all" });
-  const [searchType, setSearchType] = useState("job_seeker");
   const [showEmailModal, setShowEmailModal] = useState(false);
   const [emailData, setEmailData] = useState({ subject: "", body: "" });
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -132,40 +131,6 @@ export default function BrandAdminPage() {
     }
   };
 
-  const handleSearch = async (e) => {
-    e.preventDefault();
-    if (!searchQuery.trim()) return;
-
-    setSearching(true);
-    try {
-      const response = await fetch("/api/test", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          query: searchQuery.trim(),
-          type: searchType,
-          brand: brand,
-        }),
-      });
-
-      const result = await response.json();
-      if (result.matches) {
-        setSearchResults(result.matches);
-      } else {
-        setSearchResults([]);
-      }
-    } catch (error) {
-      console.error("Search failed:", error);
-      setSearchResults([]);
-    } finally {
-      setSearching(false);
-    }
-  };
-
-  const clearSearch = () => {
-    setSearchQuery("");
-    setSearchResults(null);
-  };
 
   const handleSendEmail = async () => {
     if (!emailData.subject.trim() || !emailData.body.trim()) {
@@ -353,7 +318,7 @@ export default function BrandAdminPage() {
   }
 
   const allSessions = Array.isArray(data.sessions) ? data.sessions : [];
-  const filteredSessions = searchResults
+    const filteredSessions = searchResults
     ? applyFilters(searchResults)
     : applyFilters(allSessions);
   const sessions = sortSessions(filteredSessions);
@@ -493,6 +458,9 @@ export default function BrandAdminPage() {
               >
                 {addingAdmin ? "Adding..." : "Add Admin"}
               </button>
+            </div>
+            <div>
+              <button onClick={()=>{router.push(`/admin/${brand}/train`)}}>Train chatbot</button>
             </div>
           </div>
         </div>
