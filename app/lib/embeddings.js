@@ -1,13 +1,13 @@
 import { GoogleAuth } from 'google-auth-library';
 
 
-const auth = new GoogleAuth({
+const auth =(process.env.GCP_CLIENT_EMAIL && process.env.GCP_PRIVATE_KEY) ? new GoogleAuth({
   credentials: {
     client_email: process.env.GCP_CLIENT_EMAIL,
     private_key: process.env.GCP_PRIVATE_KEY.replace(/\\n/g, '\n'),
   },
   scopes: ['https://www.googleapis.com/auth/cloud-platform'],
-});
+}):null;
 
 export async function generateEmbedding(text) {
     try {

@@ -7,10 +7,10 @@ import { SYSTEM_PROMPT } from "../../lib/systemPrompt.js";
 import getGeminiModel from "../../lib/getAiModel.js";
 export async function POST(req){
     const {userMessage, history,sessionId, brand} = await req.json()
-    const token = await getToken({
+    const token =(process.env.NEXTAUTH_SECRET)? await getToken({
         req: req,
         secret: process.env.NEXTAUTH_SECRET,
-      });
+      }):null;
     const model = getGeminiModel("gemini-2.5-pro");
     
     if (!model) {
@@ -48,11 +48,12 @@ export async function POST(req){
 INSTRUCTIONS:
 - Answer the user's question based on the provided context and conversation history
 - Be concise but comprehensive - provide complete answers without unnecessary verbosity
-- If the context doesn't contain relevant information, say so clearly
+- If you don't have specific information about something, respond naturally without mentioning technical limitations
 - Maintain a helpful and professional tone
 - Focus on being accurate rather than verbose
 - Use plain text format - no markdown, asterisks, or special formatting
 - Provide clean, readable responses suitable for API consumption
+- Always sound natural and conversational, never mention "context" or "provided information" in your response
 
 CONVERSATION HISTORY:
 ${formattedHistory}

@@ -1,7 +1,7 @@
 import { Pinecone } from '@pinecone-database/pinecone';
 
-const pc  = new Pinecone({
+const pc = (process.env.PINECONE_API_KEY) ? new Pinecone({
   apiKey: process.env.PINECONE_API_KEY
-});
+}) : null;
 
 export default pc;
