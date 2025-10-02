@@ -40,9 +40,6 @@ export async function GET(req, { params }) {
     const userId = user._id;
     let totalDeleted = 0;
 
-    console.log(
-      `Starting deletion process for user: ${user.email} (${userId})`
-    );
 
     // 1. Find all chat sessions for this user
     const userSessions = await ChatSessions.find({ userId });

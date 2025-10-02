@@ -67,7 +67,7 @@ export default function ChatBox({
 
   useEffect(() => {
     //fetch resume data initially
-    if (!currentChatId) return;
+    if (!currentChatId || currentChatType==="lead_journey") return;
 
     const fetchResumeData = async () => {
       try {
@@ -85,7 +85,7 @@ export default function ChatBox({
   }, [currentChatId]);
 
   useEffect(() => {
-    if (!currentChatId) return;
+    if (!currentChatId || currentChatType==="lead_journey") return;
 
     const fetchDataCollectionStatus = async () => {
       try {
@@ -100,7 +100,7 @@ export default function ChatBox({
   }, [currentChatId]);
 
   useEffect(() => {
-    if (!currentChatId) return;
+    if (!currentChatId || currentChatType==="lead_journey") return;
 
     const fetchMatches = async () => {
       try {
@@ -345,8 +345,9 @@ export default function ChatBox({
 
     setMessages(updatedMessages);
     setMessageLoading(true);
-
-    const response = await fetch("/api/ai", {
+let response;
+if(currentChatType!=="lead_journey"){
+    response = await fetch("/api/ai", {
       method: "POST",
       body: JSON.stringify({
         history: updatedMessages,
@@ -358,6 +359,18 @@ export default function ChatBox({
         userId: session?.user?.id,
       }),
     });
+  }else{
+    response = await fetch("/api/betterresponse", {
+      method: "POST",
+      body: JSON.stringify({
+        history: updatedMessages,
+        userMessage: messageText,
+        sessionId,
+        brand: brandContext.subdomain,
+      }),
+    });
+  }
+    console.log("response", response);
     if (!response.ok) {
       setMessages([
         ...updatedMessages,
@@ -379,13 +392,13 @@ export default function ChatBox({
       { role: "assistant", message: data.reply },
     ]);
     setMessageLoading(false);
-    if (
-      data?.matchesWithObjectIds?.length > 0 &&
-      data?.allDataCollected === "true"
-    ) {
-      setMatches(data?.matchesWithObjectIds);
-      setHasDatacollected(true);
-    }
+    // if (
+    //   data?.matchesWithObjectIds?.length > 0 &&
+    //   data?.allDataCollected === "true"
+    // ) {
+    //   setMatches(data?.matchesWithObjectIds);
+    //   setHasDatacollected(true);
+    // }
     if (data?.allDataCollected === "false") {
       setHasDatacollected(false);
     }
