@@ -2,15 +2,19 @@ import { NextResponse } from "next/server";
 import { generateEmbedding } from "../../lib/embeddings.js";
 import pc from "../../lib/pinecone.js";
 import Logs from "../../models/ChatLogs.js";
+import Session from "../../models/ChatSessions.js";
 import { getToken } from "next-auth/jwt";
 import { SYSTEM_PROMPT } from "../../lib/systemPrompt.js";
 import getGeminiModel from "../../lib/getAiModel.js";
+import { connectDB } from "../../lib/db.js";
 export async function POST(req){
-    const {userMessage, history,sessionId, brand} = await req.json()
+    const {userMessage, history,sessionId, brand, prompt} = await req.json()
     const token =(process.env.NEXTAUTH_SECRET)? await getToken({
         req: req,
         secret: process.env.NEXTAUTH_SECRET,
       }):null;
+    
+    await connectDB();
     const model = getGeminiModel("gemini-2.5-pro");
     
     if (!model) {
@@ -30,31 +34,26 @@ export async function POST(req){
         );
     }
     
-    const index = pc.index("intelligent-kavisha").namespace(brand);
-    const results = await index.query({
-        vector: userMessageEmbedding,
-        topK: 1,
-        includeMetadata: true,
-    });
-    
     let context = "";
-    if (results.matches && results.matches.length > 0) {
-        context = results.matches.map(match => match.metadata?.text || "").join(" ");
+    try {
+        const index = pc.index("intelligent-kavisha").namespace(brand);
+        const results = await index.query({
+            vector: userMessageEmbedding,
+            topK: 1,
+            includeMetadata: true,
+        });
+        
+        if (results.matches && results.matches.length > 0) {
+            context = results.matches.map(match => match.metadata?.text || "").join(" ");
+        }
+    } catch (pineconeError) {
+        console.error("Pinecone query failed:", pineconeError);
+        // Continue without context if Pinecone fails
+        context = "";
     }
     console.log("context collected",context);
-    const prompt = `You are an intelligent AI assistant specialized in providing accurate,
-     helpful, and contextually relevant responses.
 
-INSTRUCTIONS:
-- Answer the user's question based on the provided context and conversation history
-- Be concise but comprehensive - provide complete answers without unnecessary verbosity
-- If you don't have specific information about something, respond naturally without mentioning technical limitations
-- Maintain a helpful and professional tone
-- Focus on being accurate rather than verbose
-- Use plain text format - no markdown, asterisks, or special formatting
-- Provide clean, readable responses suitable for API consumption
-- Always sound natural and conversational, never mention "context" or "provided information" in your response
-
+    const finalPrompt = `${prompt}
 CONVERSATION HISTORY:
 ${formattedHistory}
 
@@ -67,27 +66,8 @@ Please provide a helpful response based on the above information:`;
 
     let geminiContents = [{
         role: "user",
-        parts: [{ text: prompt + SYSTEM_PROMPT }],
+        parts: [{ text: finalPrompt +SYSTEM_PROMPT}],
     }];
-    
-    history.forEach((m) => {
-        if (m.role === "user") {
-          geminiContents.push({
-            role: "user",
-            parts: [{ text: m.message || "" }],
-          });
-        } else if (m.role === "assistant") {
-          geminiContents.push({
-            role: "model",
-            parts: [{ text: m.message || "" }],
-          });
-        }
-    });
-  
-    geminiContents.push({
-        role: "user",
-        parts: [{ text: userMessage || "" }],
-    });
 
     try {
       const responseGemini = await model.generateContent({
@@ -111,6 +91,19 @@ Please provide a helpful response based on the above information:`;
         role: "assistant",
       });
       if (reParts.length === 4) {
+        // Update session with summary, title, and data collection status
+        await Session.updateOne(
+          { _id: sessionId },
+          {
+            $set: {
+              chatSummary: reParts[1],
+              title: reParts[2],
+              allDataCollected: reParts[3] === "true",
+            },
+          },
+          { upsert: true }
+        );
+        
         return NextResponse.json({
           reply: reParts[0],
           summary: reParts[1],

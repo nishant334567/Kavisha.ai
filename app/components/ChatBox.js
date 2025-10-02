@@ -367,6 +367,7 @@ if(currentChatType!=="lead_journey"){
         userMessage: messageText,
         sessionId,
         brand: brandContext.subdomain,
+        prompt: getServicePrompt(),
       }),
     });
   }
