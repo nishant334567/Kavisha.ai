@@ -25,8 +25,8 @@ export default function ChatBox({
   const [matches, setMatches] = useState([]);
   const [resumeData, setResumedata] = useState({});
   const [hasDatacollected, setHasDatacollected] = useState();
-  // const [retry, setRetry] = useState(false);
-  // const [retryIndex, setRetryIndex] = useState(undefined);
+  const [retry, setRetry] = useState(false);
+  const [retryIndex, setRetryIndex] = useState(undefined);
   const [selectedFile, setSelectedFile] = useState(null);
   const [openChat, setOpenChat] = useState(false);
   const [userA, setUserA] = useState(null);
@@ -381,8 +381,8 @@ if(currentChatType!=="lead_journey"){
             "Kavisha failed to respond to that. Can you please try again?",
         },
       ]);
-      // setRetry(true);
-      // setRetryIndex(updatedMessages.length - 1);
+      setRetry(true);
+      setRetryIndex(updatedMessages.length - 1);
       setMessageLoading(false);
       return;
     }

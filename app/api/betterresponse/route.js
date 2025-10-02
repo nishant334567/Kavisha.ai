@@ -39,12 +39,23 @@ export async function POST(req){
         const index = pc.index("intelligent-kavisha").namespace(brand);
         const results = await index.query({
             vector: userMessageEmbedding,
-            topK: 1,
+            topK: 5, // Get top 5 matches
             includeMetadata: true,
+            includeValues: false, // We don't need the actual vector values
         });
-        
+        console.log("results", results);
         if (results.matches && results.matches.length > 0) {
-            context = results.matches.map(match => match.metadata?.text || "").join(" ");
+            // Filter matches by similarity score threshold (0.7 = 70% similarity)
+            const SIMILARITY_THRESHOLD = 0.5;
+            const relevantMatches = results.matches.filter(match => 
+                match.score && match.score >= SIMILARITY_THRESHOLD
+            );
+
+            console.log(`Found ${results.matches.length} matches, ${relevantMatches.length} above threshold`);
+            
+            if (relevantMatches.length > 0) {
+                context = relevantMatches.map(match => match.metadata?.text || "").join(" ");
+            }
         }
     } catch (pineconeError) {
         console.error("Pinecone query failed:", pineconeError);

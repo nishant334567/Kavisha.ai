@@ -22,7 +22,7 @@ export async function POST(request) {
 
     const totalWords = getWordCount(text);
     const chunks = text.split(" ");
-    const chunkSize = 250;
+    const chunkSize = 600;
     const totalChunks = Math.ceil(chunks.length / chunkSize);
     
     const results = [];
