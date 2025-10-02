@@ -9,7 +9,44 @@ export default function TrainPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
+  const [pdfLoading, setPdfLoading] = useState(false);
 const brandContext = useBrandContext();
+
+  const handlePdfUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    if (file.type !== 'application/pdf') {
+      setError('Please select a PDF file');
+      return;
+    }
+
+    setPdfLoading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('pdf', file);
+
+      const response = await fetch('/api/new-extract-pdf', {
+        method: 'POST',
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to extract text from PDF');
+      }
+
+      setText(data.text);
+      setSuccess(`Successfully extracted text from PDF: ${file.name}`);
+    } catch (err) {
+      setError(err.message);
+    } finally {
+      setPdfLoading(false);
+    }
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -40,7 +77,7 @@ const brandContext = useBrandContext();
       }
 
       setEmbedding(data.embedding);
-      setSuccess(`Successfully saved embedding for ${brand}`);
+      setSuccess(`Successfully saved embedding for ${brandContext.subdomain}`);
       setText('');
     } catch (err) {
       setError(err.message);
@@ -58,6 +95,24 @@ const brandContext = useBrandContext();
           </h1>
           
           <form onSubmit={handleSubmit} className="space-y-4">
+            
+            <div>
+              <label className="block text-sm font-medium mb-2">
+                Upload PDF:
+              </label>
+              <div className="flex items-center space-x-4">
+                <input
+                  type="file"
+                  accept=".pdf"
+                  onChange={handlePdfUpload}
+                  disabled={pdfLoading}
+                  className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100 disabled:opacity-50"
+                />
+                {pdfLoading && (
+                  <span className="text-sm text-blue-600">Extracting text...</span>
+                )}
+              </div>
+            </div>
 
             <div>
               <label className="block text-sm font-medium mb-2">
@@ -74,7 +129,7 @@ const brandContext = useBrandContext();
             
             <button
               type="submit"
-              disabled={loading || !text.trim()}
+              disabled={loading || !text.trim() || pdfLoading}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? 'Saving...' : 'Save Training Data'}
