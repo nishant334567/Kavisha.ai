@@ -54,18 +54,6 @@ export default function BrandContextProvider({ children }) {
         );
         if (brand) {
           const isAdmin = brand.admins?.includes(session?.user?.email) || false;
-          let filteredServices = [];
-          if (isAdmin) {
-            filteredServices =
-              brand.services?.filter(
-                (service) => service.name === "recruiter"
-              ) || [];
-          } else {
-            filteredServices =
-              brand.services?.filter(
-                (service) => service.name !== "recruiter"
-              ) || [];
-          }
           const context = {
             brandId: brand._id,
             brandName: brand.brandName,
@@ -78,7 +66,7 @@ export default function BrandContextProvider({ children }) {
             isBrandAdmin: isAdmin,
             subdomain,
             initialmessage: brand.initialmessage,
-            services: filteredServices,
+            services: brand.services,
           };
           setBrandContext(context);
         }
