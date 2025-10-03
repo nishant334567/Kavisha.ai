@@ -351,11 +351,11 @@ if(currentChatType!=="lead_journey"){
       method: "POST",
       body: JSON.stringify({
         history: updatedMessages,
-        userMessage: messageText,
+        userMessage: messageText || "",
         sessionId,
         resume: resumeData?.resumeSummary || "",
         type: currentChatType,
-        prompt: getServicePrompt(),
+        prompt: getServicePrompt() || "",
         userId: session?.user?.id,
       }),
     });
