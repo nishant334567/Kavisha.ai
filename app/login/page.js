@@ -1,7 +1,6 @@
 "use client";
 import { signIn, signOut, useSession } from "next-auth/react";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { urlFor } from "../lib/sanity";
 import { useRouter } from "next/navigation";
 
 export default function LoginPage() {
@@ -12,10 +11,7 @@ export default function LoginPage() {
     <div className="h-full overflow-y-auto mx-auto w-full lg:max-w-[60%] px-8 py-8 space-y-8">
       <div className="mt-4 h-48 sm:h-80 w-full  rounded-xl">
         <img
-          src={
-            brand?.brandImage &&
-            urlFor(brand.brandImage).width(800).height(320).url()
-          }
+          src={brand?.brandImageUrl}
           alt={brand?.brandName || "Brand"}
           className="w-full h-full object-cover"
         />
