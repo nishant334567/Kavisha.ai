@@ -3,7 +3,7 @@
 import { useState, useEffect, useContext } from "react";
 import { useSession } from "next-auth/react";
 import BrandContext from "./BrandContext";
-import { client } from "@/app/lib/sanity";
+import { client, urlFor } from "@/app/lib/sanity";
 import Loader from "@/app/components/Loader";
 
 export default function BrandContextProvider({ children }) {
@@ -49,17 +49,30 @@ export default function BrandContextProvider({ children }) {
                   subtitle,
                   admins,
                   initialmessage,
-                  services,
+                  services
               }[0]`
         );
         if (brand) {
+          console.log("Brand data from Sanity:", brand);
+
+          // Generate URLs using urlFor helper with proper null checks
+          const logoUrl = brand.logo?.asset?._ref
+            ? urlFor(brand.logo).url()
+            : null;
+          const brandImageUrl = brand.brandImage?.asset?._ref
+            ? urlFor(brand.brandImage).url()
+            : null;
+
+          console.log("Generated Logo URL:", logoUrl);
+          console.log("Generated Brand Image URL:", brandImageUrl);
+
           const isAdmin = brand.admins?.includes(session?.user?.email) || false;
           const context = {
             brandId: brand._id,
             brandName: brand.brandName,
             loginButtonText: brand.loginButtonText,
-            logo: brand.logo,
-            brandImage: brand.brandImage,
+            logoUrl: logoUrl,
+            brandImageUrl: brandImageUrl,
             title: brand.title,
             subtitle: brand.subtitle,
             admins: brand.admins || [],
@@ -68,6 +81,7 @@ export default function BrandContextProvider({ children }) {
             initialmessage: brand.initialmessage,
             services: brand.services,
           };
+          console.log("Final context:", context);
           setBrandContext(context);
         }
       } catch (err) {
