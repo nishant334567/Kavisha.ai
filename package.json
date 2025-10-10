@@ -10,6 +10,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@distube/ytdl-core": "^4.16.12",
+    "@google-cloud/speech": "^7.2.0",
     "@google-cloud/vertexai": "^1.10.0",
     "@pinecone-database/pinecone": "^6.1.2",
     "@sanity/image-url": "^1.1.0",
@@ -17,6 +19,7 @@
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "google-auth-library": "^10.3.0",
+    "https-proxy-agent": "^7.0.6",
     "lucide-react": "^0.525.0",
     "mongodb": "^6.17.0",
     "mongoose": "^8.16.0",
@@ -31,7 +34,9 @@
     "sanity": "^4.5.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "styled-components": "^6.1.19"
+    "styled-components": "^6.1.19",
+    "yt-dlp-wrap": "^2.3.12",
+    "ytdl-core": "^4.11.5"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",

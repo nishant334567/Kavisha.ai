@@ -45,7 +45,7 @@ export default function ChatBox({
   const [isTranscribing, setIsTranscribing] = useState(false);
 
   const [chatLoading, setChatLoading] = useState(false);
-
+  const [historyTillNow, setHistoryTillNow] = useState("");
   //voice effects
 
   useEffect(() => {
@@ -67,7 +67,7 @@ export default function ChatBox({
 
   useEffect(() => {
     //fetch resume data initially
-    if (!currentChatId || currentChatType==="lead_journey") return;
+    if (!currentChatId || currentChatType === "lead_journey") return;
 
     const fetchResumeData = async () => {
       try {
@@ -85,7 +85,7 @@ export default function ChatBox({
   }, [currentChatId]);
 
   useEffect(() => {
-    if (!currentChatId || currentChatType==="lead_journey") return;
+    if (!currentChatId || currentChatType === "lead_journey") return;
 
     const fetchDataCollectionStatus = async () => {
       try {
@@ -100,7 +100,7 @@ export default function ChatBox({
   }, [currentChatId]);
 
   useEffect(() => {
-    if (!currentChatId || currentChatType==="lead_journey") return;
+    if (!currentChatId || currentChatType === "lead_journey") return;
 
     const fetchMatches = async () => {
       try {
@@ -345,32 +345,33 @@ export default function ChatBox({
 
     setMessages(updatedMessages);
     setMessageLoading(true);
-let response;
-if(currentChatType!=="lead_journey"){
-    response = await fetch("/api/ai", {
-      method: "POST",
-      body: JSON.stringify({
-        history: updatedMessages,
-        userMessage: messageText || "",
-        sessionId,
-        resume: resumeData?.resumeSummary || "",
-        type: currentChatType,
-        prompt: getServicePrompt() || "",
-        userId: session?.user?.id,
-      }),
-    });
-  }else{
-    response = await fetch("/api/betterresponse", {
-      method: "POST",
-      body: JSON.stringify({
-        history: updatedMessages,
-        userMessage: messageText,
-        sessionId,
-        brand: brandContext.subdomain,
-        prompt: getServicePrompt(),
-      }),
-    });
-  }
+    let response;
+    if (currentChatType !== "lead_journey") {
+      response = await fetch("/api/ai", {
+        method: "POST",
+        body: JSON.stringify({
+          history: updatedMessages,
+          userMessage: messageText || "",
+          sessionId,
+          resume: resumeData?.resumeSummary || "",
+          type: currentChatType,
+          prompt: getServicePrompt() || "",
+          userId: session?.user?.id,
+        }),
+      });
+    } else {
+      response = await fetch("/api/betterresponse", {
+        method: "POST",
+        body: JSON.stringify({
+          // history: updatedMessages,
+          userMessage: messageText,
+          sessionId,
+          brand: brandContext.subdomain,
+          prompt: getServicePrompt(),
+          historyTillNow,
+        }),
+      });
+    }
     console.log("response", response);
     if (!response.ok) {
       setMessages([
@@ -392,14 +393,15 @@ if(currentChatType!=="lead_journey"){
       ...updatedMessages,
       { role: "assistant", message: data.reply },
     ]);
+    setHistoryTillNow(data.summary);
     setMessageLoading(false);
-    // if (
-    //   data?.matchesWithObjectIds?.length > 0 &&
-    //   data?.allDataCollected === "true"
-    // ) {
-    //   setMatches(data?.matchesWithObjectIds);
-    //   setHasDatacollected(true);
-    // }
+    if (
+      data?.matchesWithObjectIds?.length > 0 &&
+      data?.allDataCollected === "true"
+    ) {
+      setMatches(data?.matchesWithObjectIds);
+      setHasDatacollected(true);
+    }
     if (data?.allDataCollected === "false") {
       setHasDatacollected(false);
     }
