@@ -1,19 +1,6 @@
 import { NextResponse } from "next/server";
-import { createClient } from "next-sanity";
+import { client } from "@/app/lib/sanity";
 
-const getSanityClient = () => {
-  // During build time, use fallback values
-  const projectId = process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "wkgir1xd";
-  const dataset = process.env.NEXT_PUBLIC_SANITY_DATASET || "production";
-
-  return createClient({
-    projectId,
-    dataset,
-    apiVersion: "2025-01-01",
-    useCdn: false,
-    token: process.env.SANITY_API_TOKEN || "",
-  });
-};
 export async function POST(req) {
   try {
     if (!process.env.SANITY_API_TOKEN) {
@@ -33,7 +20,6 @@ export async function POST(req) {
     }
 
     const trimmedEmail = email.trim().toLowerCase();
-    const client = getSanityClient();
 
     const brandData = await client.fetch(
       `*[_type=="brand" && subdomain=="${brand}"][0]`

@@ -16,6 +16,7 @@ const getClient = () => {
     dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "development",
     apiVersion: "2025-01-01",
     useCdn: false,
+    token: process.env.SANITY_API_TOKEN, // Add token for mutations
   });
 };
 
