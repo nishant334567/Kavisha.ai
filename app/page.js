@@ -37,8 +37,27 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!brandContext) return;
-    setServicesProvided(brandContext.services);
-  }, []);
+
+    let filteredServices = brandContext.services || [];
+
+    // For non-Kavisha brands, apply role-based filtering
+    if (brandContext.subdomain !== "kavisha") {
+      if (brandContext.isBrandAdmin) {
+        // Admin: ONLY show recruiter service
+        filteredServices = filteredServices.filter(
+          (service) => service.name?.toLowerCase() === "recruiter"
+        );
+      } else {
+        // Non-admin: Show all EXCEPT recruiter
+        filteredServices = filteredServices.filter(
+          (service) => service.name?.toLowerCase() !== "recruiter"
+        );
+      }
+    }
+    // For Kavisha brand: show all services (no filtering)
+
+    setServicesProvided(filteredServices);
+  }, [brandContext]);
   useEffect(() => {
     if (!session || !brandContext) return;
     const fetchData = async () => {

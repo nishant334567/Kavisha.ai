@@ -217,75 +217,95 @@ export default function EditProfilePage() {
             <div>
               <div>Edit Services:</div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 ">
-                {services.map((service) => (
-                  <div
-                    key={service.name}
-                    className="flex flex-col gap-4 border border-gray-300 rounded-lg p-4  overflow-y-auto"
-                  >
-                    <div className="grid grid-cols-1 gap-4 flex-shrink-0">
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">
-                          Service Name
-                        </label>
-                        <input
-                          type="text"
-                          disabled
-                          value={service.name}
-                          className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
-                        />
+                {services
+                  .filter(
+                    (service) =>
+                      // Show all services for Kavisha, hide recruiter for other brands
+                      brandContext.subdomain === "kavisha" ||
+                      service.name?.toLowerCase() !== "recruiter"
+                  )
+                  .map((service) => (
+                    <div
+                      key={service.name}
+                      className="flex flex-col gap-4 border border-gray-300 rounded-lg p-4  overflow-y-auto"
+                    >
+                      <div className="grid grid-cols-1 gap-4 flex-shrink-0">
+                        <div className="flex flex-col gap-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            Service Name
+                          </label>
+                          <input
+                            type="text"
+                            disabled
+                            value={service.name}
+                            className="px-3 py-2 border border-gray-300 rounded-lg bg-gray-100 text-gray-600"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            Service Initial Message
+                          </label>
+                          <input
+                            type="text"
+                            value={service.initialMessage}
+                            onChange={(e) =>
+                              updateService(
+                                service.name,
+                                "initialMessage",
+                                e.target.value
+                              )
+                            }
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                          />
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            Service Title
+                          </label>
+                          <input
+                            type="text"
+                            value={service.title}
+                            onChange={(e) =>
+                              updateService(
+                                service.name,
+                                "title",
+                                e.target.value
+                              )
+                            }
+                            className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
+                          />
+                        </div>
                       </div>
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">
-                          Service Initial Message
-                        </label>
-                        <input
-                          type="text"
-                          value={service.initialMessage}
-                          onChange={(e) =>
-                            updateService(
-                              service.name,
-                              "initialMessage",
-                              e.target.value
-                            )
-                          }
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                        />
-                      </div>
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">
-                          Service Title
-                        </label>
-                        <input
-                          type="text"
-                          value={service.title}
-                          onChange={(e) =>
-                            updateService(service.name, "title", e.target.value)
-                          }
-                          className="px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none transition"
-                        />
+                      <div className="flex-1 min-h-0">
+                        <div className="flex flex-col gap-2">
+                          <label className="text-sm font-medium text-gray-700">
+                            Service Prompt
+                          </label>
+                          <textarea
+                            value={service.prompt}
+                            onChange={(e) =>
+                              updateService(
+                                service.name,
+                                "prompt",
+                                e.target.value
+                              )
+                            }
+                            className="w-full h-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none overflow-y-auto"
+                            style={{ minHeight: "200px" }}
+                          />
+                        </div>
                       </div>
                     </div>
-                    <div className="flex-1 min-h-0">
-                      <div className="flex flex-col gap-2">
-                        <label className="text-sm font-medium text-gray-700">
-                          Service Prompt
-                        </label>
-                        <textarea
-                          value={service.prompt}
-                          onChange={(e) =>
-                            updateService(
-                              service.name,
-                              "prompt",
-                              e.target.value
-                            )
-                          }
-                          className="w-full h-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none resize-none overflow-y-auto"
-                          style={{ minHeight: "200px" }}
-                        />
-                      </div>
-                    </div>
-                  </div>
-                ))}
+                  ))}
+                {services.filter(
+                  (service) =>
+                    brandContext.subdomain === "kavisha" ||
+                    service.name?.toLowerCase() !== "recruiter"
+                ).length === 0 && (
+                  <p className="text-sm text-gray-500 italic col-span-2">
+                    No editable services available
+                  </p>
+                )}
               </div>
             </div>
             <div className="pt-4 border-t border-gray-200">
