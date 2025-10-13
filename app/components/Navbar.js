@@ -2,15 +2,20 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { urlFor } from "../lib/sanity";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const brand = useBrandContext();
+  const router = useRouter();
 
   return (
     <nav className="w-full border-b border-gray-200 bg-white fixed top-0 left-0 z-50">
       <div className="px-4 h-14 flex items-center justify-between">
-        <div className="flex items-center gap-3">
+        <div
+          className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
+          onClick={() => router.push("/")}
+        >
           {brand?.logoUrl ? (
             <img
               src={brand.logoUrl}
