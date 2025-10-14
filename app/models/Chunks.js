@@ -1,13 +1,25 @@
 import mongoose from "mongoose";
 
 const ChunksSchema = new mongoose.Schema({
-    text: {
-        type: String,
-        required: true,
-    },
+  text: {
+    type: String,
+    required: true,
+  },
+  brand: {
+    type: String,
+    required: true,
+  },
+  chunkId: {
+    type: String,
+    required: true,
+    unique: true,
+  },
+  createdAt: {
+    type: Date,
+    default: Date.now,
+  },
 });
 
-// Avoid OverwriteModelError in Next.js hot reload/runtime by reusing the compiled model
 const Chunks = mongoose.models.Chunks || mongoose.model("Chunks", ChunksSchema);
 
-export default Chunks
+export default Chunks;
