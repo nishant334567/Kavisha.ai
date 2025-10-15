@@ -1,84 +1,69 @@
-// app/api/embed/route.js
 import { NextResponse } from "next/server";
-
 import pc from "../../lib/pinecone.js";
 import { generateEmbedding } from "../../lib/embeddings.js";
-
-const getWordCount = (text) => {
-  return text.split(" ").length;
-}
+import Chunks from "@/app/models/Chunks.js";
+import { connectDB } from "@/app/lib/db";
 
 export async function POST(request) {
   try {
     const { text, brand } = await request.json();
-    
+
     if (!text || !text.trim()) {
       return NextResponse.json({ error: "Text is required" }, { status: 400 });
     }
-    
+
     if (!brand) {
       return NextResponse.json({ error: "Brand is required" }, { status: 400 });
     }
 
-    const totalWords = getWordCount(text);
+    await connectDB();
+
     const chunks = text.split(" ");
     const chunkSize = 600;
-    const totalChunks = Math.ceil(chunks.length / chunkSize);
-    
     const results = [];
-    
+
     for (let i = 0; i < chunks.length; i += chunkSize) {
       const chunk = chunks.slice(i, i + chunkSize).join(" ");
-      const chunkIndex = Math.floor(i / chunkSize) + 1;
-      const datapointId = `chunk_${Date.now()}_${brand}_${chunkIndex}`;
-      
+      const datapointId = `chunk_${Date.now()}_${brand}_${i}`;
+
       try {
         const embedding = await generateEmbedding(chunk);
-        
+
         if (embedding === 0) {
-          console.error(`Failed to generate embedding for chunk ${chunkIndex}`);
+          console.error(`Failed to generate embedding for chunk ${i}`);
           continue;
         }
-        
-        const metadata = {
+
+        await pc
+          .index("intelligent-kavisha")
+          .namespace(brand)
+          .upsert([
+            {
+              id: datapointId,
+              values: embedding,
+              metadata: { text: chunk },
+            },
+          ]);
+
+        await Chunks.create({
+          chunkId: datapointId,
+          brand,
           text: chunk,
-          generatedAt: new Date().toISOString(),
-          embeddingModel: 'text-embedding-005',
-          dimensions: embedding.length,
-          brand: brand,
-          chunkIndex: chunkIndex,
-          totalChunks: totalChunks,
-          wordCount: getWordCount(chunk)
-        };
-        
-        await pc.index("intelligent-kavisha").namespace(brand).upsert([{
-          id: datapointId,
-          values: embedding,
-          metadata: metadata
-        }]);
-        
-        results.push({
-          chunkIndex,
-          datapointId,
-          wordCount: getWordCount(chunk)
         });
-        
+
+        results.push(datapointId);
       } catch (chunkError) {
-        console.error(`Error processing chunk ${chunkIndex}:`, chunkError);
-        // Continue with other chunks
+        console.error(`Error processing chunk at ${i}:`, chunkError);
       }
     }
 
-    return NextResponse.json({ 
+    return NextResponse.json({
       success: true,
-      message: `Successfully processed ${results.length} chunks out of ${totalChunks}`,
-      totalWords,
-      totalChunks,
-      processedChunks: results.length,
-      results
+      message: `Successfully processed ${results.length} chunks`,
+      chunkIds: results,
     });
   } catch (error) {
-    console.error('Error in embeddings API:', error);
+    console.error("Error in embeddings API:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }
