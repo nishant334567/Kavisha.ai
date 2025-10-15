@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 const fetchEmbeddings = async (brand, page = 1) => {
   const res = await fetch(
@@ -10,6 +12,9 @@ const fetchEmbeddings = async (brand, page = 1) => {
   return data;
 };
 export default function TrainPage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
+  const brandContext = useBrandContext();
   const [text, setText] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -26,9 +31,30 @@ export default function TrainPage() {
   });
   const [deleting, setDeleting] = useState(false);
   const [expandedChunks, setExpandedChunks] = useState({});
-  const brandContext = useBrandContext();
 
   useEffect(() => {
+    // Check if user is not logged in
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+
+    // Check if session is still loading
+    if (status === "loading") {
+      return;
+    }
+
+    // Check if user is logged in but not an admin
+    if (session && brandContext && brandContext.admins) {
+      if (!brandContext.admins.includes(session.user?.email)) {
+        alert(
+          "You don't have admin privileges to access this. Ask admins for access"
+        );
+        router.push("/login");
+        return;
+      }
+    }
+
     if (!brandContext || !brandContext?.subdomain) return;
 
     const loadEmbeddings = async () => {
@@ -47,7 +73,29 @@ export default function TrainPage() {
     };
 
     loadEmbeddings();
-  }, []);
+  }, [session, status, brandContext, router]);
+
+  // Show loading while checking authentication
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated or not admin
+  if (
+    status === "unauthenticated" ||
+    !session ||
+    !brandContext?.admins ||
+    !brandContext.admins.includes(session.user?.email)
+  ) {
+    return null;
+  }
 
   const nextEmbeddings = async () => {
     if (currentPage === totalPage || embeddingsLoading) return;
@@ -218,7 +266,7 @@ export default function TrainPage() {
         throw new Error(data.error || "Failed to generate embedding");
       }
 
-      setSuccess(`Successfully saved embedding for ${brandContext.subdomain}`);
+      setSuccess(`Your AI avatar is getting smarter!`);
       setText("");
 
       // Refresh embeddings list to show the newly added embedding
@@ -238,12 +286,12 @@ export default function TrainPage() {
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-4xl mx-auto px-4">
         <div className="bg-white rounded-lg shadow-md p-6">
-          <h1 className="text-2xl font-bold mb-6">Train Embeddings</h1>
+          <h1 className="text-2xl font-bold mb-6">Train Your AI Avatar</h1>
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium mb-2">
-                Upload PDF:
+                Upload PDF to train your avatar:
               </label>
               <div className="flex items-center space-x-4">
                 <input
@@ -263,12 +311,12 @@ export default function TrainPage() {
 
             <div>
               <label className="block text-sm font-medium mb-2">
-                Enter training text:
+                Teach your AI about your business:
               </label>
               <textarea
                 value={text}
                 onChange={(e) => setText(e.target.value)}
-                placeholder="Type the training text here..."
+                placeholder="Teach your AI assistant about your business, products, and expertise..."
                 className="w-full h-32 px-3 py-2 border rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                 required
               />
@@ -279,7 +327,7 @@ export default function TrainPage() {
               disabled={loading || !text.trim() || pdfLoading}
               className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Saving..." : "Save Training Data"}
+              {loading ? "Training Avatar..." : "Train My Avatar"}
             </button>
           </form>
 
@@ -296,10 +344,10 @@ export default function TrainPage() {
           )}
         </div>
 
-        {/* Embeddings List Section */}
+        {/* Knowledge Base Section */}
         <div className="bg-white rounded-lg shadow-md p-6 mt-6">
           <div className="flex justify-between items-center mb-6">
-            <h2 className="text-2xl font-bold">All Embeddings</h2>
+            <h2 className="text-2xl font-bold">Your AI's Knowledge</h2>
             {totalPage > 0 && (
               <span className="text-sm text-gray-600">
                 Page {currentPage} of {totalPage}
@@ -370,9 +418,10 @@ export default function TrainPage() {
             </div>
           ) : (
             <div className="text-center py-12 text-gray-500">
-              <p className="text-lg">No embeddings found</p>
+              <p className="text-lg">No knowledge added yet</p>
               <p className="text-sm mt-2">
-                Upload a PDF or enter text above to create your first embedding
+                Upload a PDF or enter text above to start training your AI
+                avatar
               </p>
             </div>
           )}
@@ -429,8 +478,8 @@ export default function TrainPage() {
               </p>
             </div>
             <p className="text-sm text-red-600 mb-6">
-              This action cannot be undone. The chunk will be deleted from both
-              the database and Pinecone.
+              This action cannot be undone. The knowledge will be removed from
+              your AI's training.
             </p>
             <div className="flex gap-3 justify-end">
               <button

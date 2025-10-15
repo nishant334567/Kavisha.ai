@@ -1,8 +1,12 @@
 "use client";
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 
 export default function EditProfilePage() {
+  const { data: session, status } = useSession();
+  const router = useRouter();
   const brandContext = useBrandContext();
   const [brandName, setBrandName] = useState(brandContext.brandName);
   const [subdomain, setSubdomain] = useState(brandContext.subdomain);
@@ -14,6 +18,52 @@ export default function EditProfilePage() {
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [services, setServices] = useState(brandContext.services || []);
+
+  useEffect(() => {
+    // Check if user is not logged in
+    if (status === "unauthenticated") {
+      router.push("/login");
+      return;
+    }
+
+    // Check if session is still loading
+    if (status === "loading") {
+      return;
+    }
+
+    // Check if user is logged in but not an admin
+    if (session && brandContext && brandContext.admins) {
+      if (!brandContext.admins.includes(session.user?.email)) {
+        alert(
+          "You don't have admin privileges to access this. Ask admins for access"
+        );
+        router.push("/login");
+        return;
+      }
+    }
+  }, [session, status, brandContext, router]);
+
+  // Show loading while checking authentication
+  if (status === "loading") {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Loading...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Don't render if not authenticated or not admin
+  if (
+    status === "unauthenticated" ||
+    !session ||
+    !brandContext?.admins ||
+    !brandContext.admins.includes(session.user?.email)
+  ) {
+    return null;
+  }
 
   const handleRemoveAdmin = async (adminEmail) => {
     if (!confirm(`Are you sure you want to remove ${adminEmail}?`)) return;
