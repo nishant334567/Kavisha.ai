@@ -260,63 +260,6 @@ export default function ChatBox({
     }
   };
 
-  const retryMessage = async () => {
-    const lastErrorRemoved = messages.filter((item, index) => {
-      return index !== messages.length - 1;
-    });
-    const resendMessage = lastErrorRemoved[retryIndex];
-    setMessages(lastErrorRemoved);
-    setMessageLoading(true);
-
-    // Use the conversation history up to the retry point, excluding the failed message
-    const historyUpToRetry = lastErrorRemoved.slice(0, retryIndex);
-
-    const response = await fetch("/api/ai", {
-      method: "POST",
-      body: JSON.stringify({
-        history: historyUpToRetry,
-        userMessage: resendMessage?.message,
-        type: currentChatType,
-        sessionId: currentChatId,
-        resume: resumeData.resumeSummary,
-        prompt: getServicePrompt(),
-        userId: session?.user?.id,
-      }),
-    });
-    if (!response.ok) {
-      setMessages([
-        ...lastErrorRemoved,
-        {
-          role: "assistant",
-          message: `${brandContext?.brandName} failed to respond to that. Can you please try again?`,
-        },
-      ]);
-      setRetry(true);
-      setRetryIndex(lastErrorRemoved.length - 1);
-      setMessageLoading(false);
-      return;
-    }
-    const data = await response.json();
-
-    setMessages([
-      ...lastErrorRemoved,
-      { role: "assistant", message: data.reply },
-    ]);
-    setMessageLoading(false);
-
-    setRetry(false);
-    setRetryIndex(undefined);
-    if (
-      data?.matchesWithObjectIds?.length > 0 &&
-      data?.allDataCollected === "true"
-    ) {
-      setMatches(data?.matchesWithObjectIds);
-      setHasDatacollected(true);
-    }
-    if (data?.allDataCollected === "false") {
-      setHasDatacollected(false);
-    }
-  };
 
   // Function to get service-specific prompt based on chat type
   const getServicePrompt = () => {
@@ -329,19 +272,31 @@ export default function ChatBox({
     return service?.prompt || "";
   };
 
-  const handleSubmit = async (voiceText = null) => {
-    // const { history, userMessage, sessionId, resume, type, prompt } = body;
+  const handleSubmit = async (voiceText = null, isRetry = false) => {
     let sessionId = currentChatId;
+    let messageText, updatedMessages, historyToUse;
 
-    const messageText = (voiceText ?? input).trim();
-    if (!messageText) return;
+    if (isRetry) {
+      // Retry logic: remove last error message and get the message to retry
+      const lastErrorRemoved = messages.filter((item, index) => {
+        return index !== messages.length - 1;
+      });
+      const resendMessage = lastErrorRemoved[retryIndex];
+      messageText = resendMessage?.message;
+      updatedMessages = lastErrorRemoved;
+      historyToUse = lastErrorRemoved.slice(0, retryIndex);
+    } else {
+      // Normal submit logic
+      messageText = (voiceText ?? input).trim();
+      if (!messageText) return;
 
-    setInput("");
-    setTranscriptText("");
-    setAudioUrl(null);
-    const newUserMessage = { role: "user", message: messageText };
-
-    const updatedMessages = [...messages, newUserMessage];
+      setInput("");
+      setTranscriptText("");
+      setAudioUrl(null);
+      const newUserMessage = { role: "user", message: messageText };
+      updatedMessages = [...messages, newUserMessage];
+      historyToUse = updatedMessages;
+    }
 
     setMessages(updatedMessages);
     setMessageLoading(true);
@@ -350,7 +305,7 @@ if(currentChatType!=="lead_journey"){
     response = await fetch("/api/ai", {
       method: "POST",
       body: JSON.stringify({
-        history: updatedMessages,
+        history: historyToUse,
         userMessage: messageText || "",
         sessionId,
         resume: resumeData?.resumeSummary || "",
@@ -363,7 +318,7 @@ if(currentChatType!=="lead_journey"){
     response = await fetch("/api/betterresponse", {
       method: "POST",
       body: JSON.stringify({
-        history: updatedMessages,
+        history: historyToUse,
         userMessage: messageText,
         sessionId,
         brand: brandContext.subdomain,
@@ -393,14 +348,24 @@ if(currentChatType!=="lead_journey"){
       { role: "assistant", message: data.reply },
     ]);
     setMessageLoading(false);
-    // if (
-    //   data?.matchesWithObjectIds?.length > 0 &&
-    //   data?.allDataCollected === "true"
-    // ) {
-    //   setMatches(data?.matchesWithObjectIds);
-    //   setHasDatacollected(true);
-    // }
-    if (data?.allDataCollected === "false") {
+    
+    // Reset retry state on success
+    if (isRetry) {
+      setRetry(false);
+      setRetryIndex(undefined);
+    }
+    
+    // Handle matches and data collection status
+    if (
+      data?.matchesWithObjectIds?.length > 0 &&
+      data?.allDataCollected === "true"
+    ) {
+      setMatches(data?.matchesWithObjectIds);
+      setHasDatacollected(true);
+    } else if (data?.allDataCollected === "true") {
+      setMatches([]);
+      setHasDatacollected(true);
+    } else if (data?.allDataCollected === "false") {
       setHasDatacollected(false);
     }
   };
@@ -452,51 +417,6 @@ if(currentChatType!=="lead_journey"){
       <div className="relative w-full flex-1 min-h-0 flex flex-col">
         <div className="rounded-xl w-full p-2 font-light h-full flex flex-col min-h-0">
           <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-white sm:bg-gray-100 z-10">
-            {/* <div className="w-8 h-8 rounded-full bg-sky-700 text-white flex items-center justify-center text-sm font-semibold shadow">
-                {(brandContext?.brandName || "K").charAt(0).toUpperCase()}
-            </div> */}
-            {/* <div className="flex flex-col items-end gap-1">
-              <button
-                // disabled={hasAllData}
-                onClick={() => {
-                  openDetailsPanel(1);
-                }}
-                className="p-1 rounded-sm  text-xs text-slate-700 hover:bg-orange-200 transition-colors"
-              >
-                <img
-                  src="circle.png"
-                  width={20}
-                  height={20}
-                  alt="Show Matches"
-                />
-                <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
-                  Show Matches
-                </span>
-              </button>
-              <button
-                onClick={() => {
-                  openDetailsPanel(2);
-                }}
-                className="p-1 rounded-sm  text-xs  text-slate-700 hover:bg-orange-200 transition-colors"
-              >
-                {/* <img src="arrow.png" width={20} alt="Connection Requests" /> 
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 24 24"
-                  data-supported-dps="24x24"
-                  fill="currentColor"
-                  // class="mercado-match"
-                  width="20"
-                  height="20"
-                  focusable="false"
-                >
-                  <path d="M12 16v6H3v-6a3 3 0 013-3h3a3 3 0 013 3zm5.5-3A3.5 3.5 0 1014 9.5a3.5 3.5 0 003.5 3.5zm1 2h-2a2.5 2.5 0 00-2.5 2.5V22h7v-4.5a2.5 2.5 0 00-2.5-2.5zM7.5 2A4.5 4.5 0 1012 6.5 4.49 4.49 0 007.5 2z"></path>
-                </svg>
-                <span className="absolute left-1/2 -translate-x-1/2 bottom-full mb-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity whitespace-nowrap z-10">
-                  Connection Requests
-                </span>
-              </button>
-            </div> */}
           </div>
 
           <div className="flex-1 min-h-0 h-full overflow-y-scroll pt-1 mt-16 scrollbar-none">
@@ -512,6 +432,14 @@ if(currentChatType!=="lead_journey"){
                         : "flex justify-start"
                     }
                   >
+                  {i===retryIndex && retry && (
+                    <button 
+                      onClick={() => handleSubmit(null, true)}
+                      className="text-xs text-red-500 hover:text-red-700 underline"
+                    >
+                      Retry
+                    </button>
+                  )}
                     <div
                       className={`text-sm leading-relaxed break-words rounded-2xl px-4 py-2  sm:max-w-[60%] shadow-sm ${
                         m.role === "user"
