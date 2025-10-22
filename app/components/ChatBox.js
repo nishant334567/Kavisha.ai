@@ -302,7 +302,7 @@ export default function ChatBox({
     setMessageLoading(true);
 let response;
 if(currentChatType!=="lead_journey"){
-    response = await fetch("/api/bi", {
+    response = await fetch("/api/ai", {
       method: "POST",
       body: JSON.stringify({
         history: historyToUse,
