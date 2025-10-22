@@ -209,7 +209,7 @@ export default function ChatBox({
         setMessages(updatedMessages);
         setInput("");
         setMessageLoading(true);
-        const response = await fetch("/api/bi", {
+        const response = await fetch("/api/ai", {
           method: "POST",
           body: JSON.stringify({
             history: messages,
