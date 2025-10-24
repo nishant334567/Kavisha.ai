@@ -243,12 +243,12 @@ export default function TrainPage() {
           }),
         });
       } else if (type === 'pdf') {
-        const formData = new FormData();
+      const formData = new FormData();
         formData.append("pdf", data);
         response = await fetch("/api/new-extract-pdf", {
-          method: "POST",
-          body: formData,
-        });
+        method: "POST",
+        body: formData,
+      });
       } else if (type === 'youtube') {
         response = await fetch(`https://api.kavisha.ai/save-audio?url=${encodeURIComponent(data)}`, {
           method: 'GET',
@@ -407,9 +407,9 @@ export default function TrainPage() {
               <p className="text-sm text-gray-600 mt-1">Upload and extract text from PDFs</p>
             </div>
             <div className="space-y-3">
-              <input
-                type="file"
-                accept=".pdf"
+                <input
+                  type="file"
+                  accept=".pdf"
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (file && file.type === "application/pdf") {
@@ -485,7 +485,7 @@ export default function TrainPage() {
                 placeholder="Enter your knowledge here..."
                 className="w-full h-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-none"
               />
-              <button
+            <button
                 onClick={() => trainWithData('text', trainingData.text)}
                 disabled={loading.text || !trainingData.text.trim()}
                 className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
@@ -498,7 +498,7 @@ export default function TrainPage() {
                 ) : (
                   "Add to Knowledge"
                 )}
-              </button>
+            </button>
             </div>
           </div>
         </div>
@@ -512,10 +512,10 @@ export default function TrainPage() {
               </svg>
               {success}
             </p>
-          </div>
-        )}
+            </div>
+          )}
 
-        {error && (
+          {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-600 text-sm flex items-center">
               <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
@@ -611,9 +611,9 @@ export default function TrainPage() {
                           ? `${job.transcription.slice(0, 200)}...` 
                           : job.transcription}
                       </p>
-                    </div>
-                  )}
-                </div>
+            </div>
+          )}
+        </div>
               ))}
             </div>
           </div>

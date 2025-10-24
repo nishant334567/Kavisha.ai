@@ -24,7 +24,7 @@ const finalSystemPrompt = (prompt) => {
 };
 export async function POST(request) {
   try {
-    const model = getGeminiModel("gemini-2.5-pro");
+    const model = getGeminiModel("gemini-2.5-flash")
     
     if (!model) {
       return NextResponse.json(
@@ -42,13 +42,6 @@ export async function POST(request) {
 
     await connectDB();
     const resumeText = resume || "";
-
-    await Logs.create({
-      message: userMessage || "",
-      sessionId: sessionId,
-      userId: token.id,
-      role: "user",
-    });
 
     const geminiContents = [];
 
@@ -92,10 +85,12 @@ export async function POST(request) {
     const reParts = responseGemini.response.candidates[0].content.parts[0].text
       .split("////")
       .map((item) => item.trim());
+    
     let reply = "";
     let summary = "";
     let title = "";
     let allDataCollected = "";
+    
     if (reParts.length === 4) {
       reply = reParts[0];
       summary = reParts[1];
@@ -103,7 +98,7 @@ export async function POST(request) {
       allDataCollected = reParts[3];
     } else {
       return NextResponse.json(
-        { error: "something went wrong" },
+        { error: "AI response format invalid" },
         { status: 500 }
       );
     }
@@ -113,24 +108,38 @@ export async function POST(request) {
       matchesLatest = await getMatches(userId, sessionId, type);
     }
 
-    await Logs.create({
-      message: reply,
-      sessionId: sessionId,
-      userId: token.id,
-      role: "assistant",
-    });
+    // Move DB operations to background
+    setImmediate(async () => {
+      try {
+        await Logs.create({
+          message: userMessage || "",
+          sessionId: sessionId,
+          userId: token.id,
+          role: "user",
+        });
 
-    await Session.updateOne(
-      { _id: sessionId },
-      {
-        $set: {
-          chatSummary: summary,
-          title: title,
-          allDataCollected: allDataCollected === "true",
-        },
-      },
-      { upsert: true }
-    );
+        await Logs.create({
+          message: reply,
+          sessionId: sessionId,
+          userId: token.id,
+          role: "assistant",
+        });
+
+        await Session.updateOne(
+          { _id: sessionId },
+          {
+            $set: {
+              chatSummary: summary,
+              title: title,
+              allDataCollected: allDataCollected === "true",
+            },
+          },
+          { upsert: true }
+        );
+      } catch (error) {
+        console.error("Background DB operations failed:", error);
+      }
+    });
 
     return NextResponse.json({
       reply,

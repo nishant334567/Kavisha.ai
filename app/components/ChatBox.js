@@ -315,7 +315,7 @@ if(currentChatType!=="lead_journey"){
       }),
     });
   }else{
-    response = await fetch("/api/betterresponse", {
+    response = await fetch("/api/lead-journey", {
       method: "POST",
       body: JSON.stringify({
         history: historyToUse,
