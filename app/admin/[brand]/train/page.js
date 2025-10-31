@@ -4,9 +4,9 @@ import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-const fetchEmbeddings = async (brand, page = 1) => {
+const fetchEmbeddings = async (brand, page = 1, type = "docs") => {
   const res = await fetch(
-    `/api/admin/fetch-chunks/?brand=${brand}&page=${page}`
+    `/api/admin/fetch-chunks/?brand=${brand}&page=${page}&type=${type}`
   );
   const data = await res.json();
   return data;
@@ -18,29 +18,34 @@ export default function TrainPage() {
   // Training states
   const [trainingData, setTrainingData] = useState({
     text: "",
+    title: "",
+    description: "",
     youtubeUrl: "",
-    pdfFile: null
+    pdfFile: null,
   });
   const [loading, setLoading] = useState({
     text: false,
     youtube: false,
-    pdf: false
+    pdf: false,
   });
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
-  
+
   // Knowledge base states
+  const [activeTab, setActiveTab] = useState("docs"); // "docs" or "chunks"
   const [embeddings, setEmbeddings] = useState([]);
   const [currentPage, setCurrentpage] = useState(0);
   const [totalPage, setTotalPage] = useState(0);
   const [embeddingsLoading, setEmbeddingsLoading] = useState(false);
   const [expandedChunks, setExpandedChunks] = useState({});
-  
+
   // Modals and jobs
   const [deleteModal, setDeleteModal] = useState({
     show: false,
     chunkId: null,
     chunkText: "",
+    title: null,
+    description: null,
   });
   const [deleting, setDeleting] = useState(false);
   const [transcriptionJobs, setTranscriptionJobs] = useState([]);
@@ -49,7 +54,7 @@ export default function TrainPage() {
     show: false,
     transcription: "",
     jobId: null,
-    url: ""
+    url: "",
   });
 
   useEffect(() => {
@@ -80,7 +85,11 @@ export default function TrainPage() {
     const loadEmbeddings = async () => {
       setEmbeddingsLoading(true);
       try {
-        const batchChunks = await fetchEmbeddings(brandContext?.subdomain, 1);
+        const batchChunks = await fetchEmbeddings(
+          brandContext?.subdomain,
+          1,
+          activeTab
+        );
         setEmbeddings(batchChunks.chunks || []);
         setTotalPage(batchChunks.totalPages || 0);
         setCurrentpage(1);
@@ -93,7 +102,7 @@ export default function TrainPage() {
     };
 
     loadEmbeddings();
-  }, [session, status, brandContext, router]);
+  }, [session, status, brandContext, router, activeTab]);
 
   // Show loading while checking authentication
   if (status === "loading") {
@@ -123,7 +132,8 @@ export default function TrainPage() {
     try {
       const data = await fetchEmbeddings(
         brandContext?.subdomain,
-        currentPage + 1
+        currentPage + 1,
+        activeTab
       );
       setEmbeddings(data.chunks || []);
       setCurrentpage((prev) => prev + 1);
@@ -141,7 +151,8 @@ export default function TrainPage() {
     try {
       const data = await fetchEmbeddings(
         brandContext?.subdomain,
-        currentPage - 1
+        currentPage - 1,
+        activeTab
       );
       setEmbeddings(data.chunks || []);
       setCurrentpage((prev) => prev - 1);
@@ -156,8 +167,10 @@ export default function TrainPage() {
   const handleDeleteClick = (chunk) => {
     setDeleteModal({
       show: true,
-      chunkId: chunk.chunkId,
+      chunkId: chunk.docid,
       chunkText: chunk.text?.slice(0, 100) + "...",
+      title: chunk.title || null,
+      description: chunk.description || null,
     });
   };
 
@@ -182,12 +195,19 @@ export default function TrainPage() {
       }
 
       setSuccess("Chunk deleted successfully");
-      setDeleteModal({ show: false, chunkId: null, chunkText: "" });
+      setDeleteModal({
+        show: false,
+        chunkId: null,
+        chunkText: "",
+        title: null,
+        description: null,
+      });
 
       // Refresh the current page
       const refreshedData = await fetchEmbeddings(
         brandContext?.subdomain,
-        currentPage
+        currentPage,
+        activeTab
       );
       setEmbeddings(refreshedData.chunks || []);
       setTotalPage(refreshedData.totalPages || 0);
@@ -201,60 +221,95 @@ export default function TrainPage() {
         setCurrentpage((prev) => prev - 1);
         const prevPageData = await fetchEmbeddings(
           brandContext?.subdomain,
-          currentPage - 1
+          currentPage - 1,
+          activeTab
         );
         setEmbeddings(prevPageData.chunks || []);
       }
     } catch (err) {
       setError(err.message);
-      setDeleteModal({ show: false, chunkId: null, chunkText: "" });
+      setDeleteModal({
+        show: false,
+        chunkId: null,
+        chunkText: "",
+        title: null,
+        description: null,
+      });
     } finally {
       setDeleting(false);
     }
   };
 
   const handleDeleteCancel = () => {
-    setDeleteModal({ show: false, chunkId: null, chunkText: "" });
+    setDeleteModal({
+      show: false,
+      chunkId: null,
+      chunkText: "",
+      title: null,
+      description: null,
+    });
   };
 
-  const toggleReadMore = (chunkId) => {
+  const toggleReadMore = (docid) => {
     setExpandedChunks((prev) => ({
       ...prev,
-      [chunkId]: !prev[chunkId],
+      [docid]: !prev[docid],
     }));
   };
 
   // Unified training function
   const trainWithData = async (type, data) => {
-    setLoading(prev => ({ ...prev, [type]: true }));
+    setLoading((prev) => ({ ...prev, [type]: true }));
     setError(null);
     setSuccess(null);
 
     try {
       let response;
-      
-      if (type === 'text') {
+
+      if (type === "text") {
+        // Client-side validation - quick checks
+        if (!data || !data.trim()) {
+          throw new Error("Text is required");
+        }
+        if (!trainingData.title || !trainingData.title.trim()) {
+          throw new Error("Title is required");
+        }
+        if (trainingData.title.length > 20) {
+          throw new Error("Title must be 20 characters or less");
+        }
+        if (/\s/.test(trainingData.title)) {
+          throw new Error("Title cannot contain whitespace");
+        }
+        if (trainingData.description && trainingData.description.length > 200) {
+          throw new Error("Description must be 200 characters or less");
+        }
+
         response = await fetch("/api/embeddings", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
             text: data.trim(),
+            title: trainingData.title.trim(),
+            description: trainingData.description?.trim() || "",
             brand: brandContext.subdomain,
           }),
         });
-      } else if (type === 'pdf') {
-      const formData = new FormData();
+      } else if (type === "pdf") {
+        const formData = new FormData();
         formData.append("pdf", data);
         response = await fetch("/api/new-extract-pdf", {
-        method: "POST",
-        body: formData,
-      });
-      } else if (type === 'youtube') {
-        response = await fetch(`https://api.kavisha.ai/save-audio?url=${encodeURIComponent(data)}`, {
-          method: 'GET',
-          headers: { 'Accept': 'application/json' },
-          mode: 'cors',
+          method: "POST",
+          body: formData,
         });
+      } else if (type === "youtube") {
+        response = await fetch(
+          `https://api.kavisha.ai/save-audio?url=${encodeURIComponent(data)}`,
+          {
+            method: "GET",
+            headers: { Accept: "application/json" },
+            mode: "cors",
+          }
+        );
       }
 
       const result = await response.json();
@@ -263,84 +318,109 @@ export default function TrainPage() {
         throw new Error(result.error || `Failed to process ${type}`);
       }
 
-      if (type === 'youtube' && result.success) {
+      if (type === "youtube" && result.success) {
         setSuccess("YouTube video uploaded! Transcription job started.");
-        setTranscriptionJobs(prev => [{
-          id: result.jobId,
-          url: data,
-          status: "processing",
-          file: result.file,
-          createdAt: new Date().toISOString()
-        }, ...prev]);
-        setTrainingData(prev => ({ ...prev, youtubeUrl: "" }));
-      } else if (type === 'pdf') {
+        setTranscriptionJobs((prev) => [
+          {
+            id: result.jobId,
+            url: data,
+            status: "processing",
+            file: result.file,
+            createdAt: new Date().toISOString(),
+          },
+          ...prev,
+        ]);
+        setTrainingData((prev) => ({ ...prev, youtubeUrl: "" }));
+      } else if (type === "pdf") {
         setSuccess(`PDF processed: ${data.name}`);
-        setTrainingData(prev => ({ ...prev, text: result.text }));
-      } else if (type === 'text') {
+        setTrainingData((prev) => ({ ...prev, text: result.text }));
+      } else if (type === "text") {
         setSuccess("Text added to knowledge base!");
-        setTrainingData(prev => ({ ...prev, text: "" }));
+        setTrainingData((prev) => ({
+          ...prev,
+          text: "",
+          title: "",
+          description: "",
+        }));
         refreshEmbeddings();
       }
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(prev => ({ ...prev, [type]: false }));
+      setLoading((prev) => ({ ...prev, [type]: false }));
     }
   };
 
   const refreshEmbeddings = async () => {
     if (currentPage === 1) {
-      const refreshedData = await fetchEmbeddings(brandContext?.subdomain, 1);
+      const refreshedData = await fetchEmbeddings(
+        brandContext?.subdomain,
+        1,
+        activeTab
+      );
       setEmbeddings(refreshedData.chunks || []);
       setTotalPage(refreshedData.totalPages || 0);
     }
   };
 
-  const checkTranscriptionStatus = async (jobId) => {
-    setCheckingStatus(prev => ({ ...prev, [jobId]: true }));
-    
-    try {
-      const response = await fetch(`https://api.kavisha.ai/status?jobid=${jobId}`, {
-        method: 'GET',
-        headers: {
-          'Accept': 'application/json',
-        },
-        mode: 'cors',
-      });
+  const handleTabChange = (tab) => {
+    setActiveTab(tab);
+    setCurrentpage(1);
+    setExpandedChunks({});
+  };
 
-      console.log('Status check response status:', response.status);
+  const checkTranscriptionStatus = async (jobId) => {
+    setCheckingStatus((prev) => ({ ...prev, [jobId]: true }));
+
+    try {
+      const response = await fetch(
+        `https://api.kavisha.ai/status?jobid=${jobId}`,
+        {
+          method: "GET",
+          headers: {
+            Accept: "application/json",
+          },
+          mode: "cors",
+        }
+      );
+
+      console.log("Status check response status:", response.status);
 
       if (!response.ok) {
         const errorText = await response.text();
-        console.error('Status check error response:', errorText);
+        console.error("Status check error response:", errorText);
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log('Status check response data:', data);
+      console.log("Status check response data:", data);
 
       if (data.status === "done" && data.transcription) {
         // Update job status
-        setTranscriptionJobs(prev => 
-          prev.map(job => 
-            job.id === jobId 
-              ? { ...job, status: "completed", transcription: data.transcription }
+        setTranscriptionJobs((prev) =>
+          prev.map((job) =>
+            job.id === jobId
+              ? {
+                  ...job,
+                  status: "completed",
+                  transcription: data.transcription,
+                }
               : job
           )
         );
-        
+
         // Show transcription modal instead of auto-processing
-        const job = transcriptionJobs.find(job => job.id === jobId);
+        const job = transcriptionJobs.find((job) => job.id === jobId);
         setTranscriptionModal({
           show: true,
           transcription: data.transcription,
           jobId: jobId,
-          url: job?.url || ""
+          url: job?.url || "",
         });
       } else if (data.status === "error") {
-        setTranscriptionJobs(prev => 
-          prev.map(job => 
-            job.id === jobId 
+        setTranscriptionJobs((prev) =>
+          prev.map((job) =>
+            job.id === jobId
               ? { ...job, status: "error", error: data.error }
               : job
           )
@@ -348,49 +428,61 @@ export default function TrainPage() {
         setError(`Transcription failed: ${data.error}`);
       } else {
         // Still processing, update status
-        setTranscriptionJobs(prev => 
-          prev.map(job => 
-            job.id === jobId 
-              ? { ...job, status: "processing" }
-              : job
+        setTranscriptionJobs((prev) =>
+          prev.map((job) =>
+            job.id === jobId ? { ...job, status: "processing" } : job
           )
         );
       }
     } catch (err) {
-      console.error('Status check error:', err);
+      console.error("Status check error:", err);
       setError(`Failed to check status: ${err.message}`);
     } finally {
-      setCheckingStatus(prev => ({ ...prev, [jobId]: false }));
+      setCheckingStatus((prev) => ({ ...prev, [jobId]: false }));
     }
   };
 
   const handleTrainFromModal = async () => {
     if (!transcriptionModal.transcription.trim()) return;
 
-    setLoading(prev => ({ ...prev, text: true }));
+    setLoading((prev) => ({ ...prev, text: true }));
     setError(null);
     setSuccess(null);
 
     try {
-      await trainWithData('text', transcriptionModal.transcription);
-      setTranscriptionModal({ show: false, transcription: "", jobId: null, url: "" });
+      await trainWithData("text", transcriptionModal.transcription);
+      setTranscriptionModal({
+        show: false,
+        transcription: "",
+        jobId: null,
+        url: "",
+      });
     } catch (err) {
       setError(err.message);
     } finally {
-      setLoading(prev => ({ ...prev, text: false }));
+      setLoading((prev) => ({ ...prev, text: false }));
     }
   };
 
   const handleCloseTranscriptionModal = () => {
-    setTranscriptionModal({ show: false, transcription: "", jobId: null, url: "" });
+    setTranscriptionModal({
+      show: false,
+      transcription: "",
+      jobId: null,
+      url: "",
+    });
   };
 
   return (
     <div className="min-h-screen bg-gray-50 py-8">
       <div className="max-w-6xl mx-auto px-4">
         <div className="text-center mb-8">
-          <h1 className="text-3xl font-bold text-gray-900 mb-2">Train Your AI Avatar</h1>
-          <p className="text-gray-600">Choose how you want to add knowledge to your AI</p>
+          <h1 className="text-3xl font-bold text-gray-900 mb-2">
+            Train Your AI Avatar
+          </h1>
+          <p className="text-gray-600">
+            Choose how you want to add knowledge to your AI
+          </p>
         </div>
 
         {/* Training Cards */}
@@ -399,22 +491,36 @@ export default function TrainPage() {
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow">
             <div className="text-center mb-4">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <svg className="w-6 h-6 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                <svg
+                  className="w-6 h-6 text-blue-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
+                  />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">PDF Document</h3>
-              <p className="text-sm text-gray-600 mt-1">Upload and extract text from PDFs</p>
+              <h3 className="text-lg font-semibold text-gray-900">
+                PDF Document
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Upload and extract text from PDFs
+              </p>
             </div>
             <div className="space-y-3">
-                <input
-                  type="file"
-                  accept=".pdf"
+              <input
+                type="file"
+                accept=".pdf"
                 onChange={(e) => {
                   const file = e.target.files[0];
                   if (file && file.type === "application/pdf") {
-                    setTrainingData(prev => ({ ...prev, pdfFile: file }));
-                    trainWithData('pdf', file);
+                    setTrainingData((prev) => ({ ...prev, pdfFile: file }));
+                    trainWithData("pdf", file);
                   } else if (file) {
                     setError("Please select a PDF file");
                   }
@@ -425,7 +531,9 @@ export default function TrainPage() {
               {loading.pdf && (
                 <div className="flex items-center justify-center py-2">
                   <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600 mr-2"></div>
-                  <span className="text-sm text-blue-600">Processing PDF...</span>
+                  <span className="text-sm text-blue-600">
+                    Processing PDF...
+                  </span>
                 </div>
               )}
             </div>
@@ -435,23 +543,38 @@ export default function TrainPage() {
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow">
             <div className="text-center mb-4">
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <svg className="w-6 h-6 text-red-600" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                <svg
+                  className="w-6 h-6 text-red-600"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">YouTube Video</h3>
-              <p className="text-sm text-gray-600 mt-1">Transcribe and train from videos</p>
+              <h3 className="text-lg font-semibold text-gray-900">
+                YouTube Video
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Transcribe and train from videos
+              </p>
             </div>
             <div className="space-y-3">
               <input
                 type="url"
                 value={trainingData.youtubeUrl}
-                onChange={(e) => setTrainingData(prev => ({ ...prev, youtubeUrl: e.target.value }))}
+                onChange={(e) =>
+                  setTrainingData((prev) => ({
+                    ...prev,
+                    youtubeUrl: e.target.value,
+                  }))
+                }
                 placeholder="https://www.youtube.com/watch?v=..."
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm"
               />
               <button
-                onClick={() => trainWithData('youtube', trainingData.youtubeUrl)}
+                onClick={() =>
+                  trainWithData("youtube", trainingData.youtubeUrl)
+                }
                 disabled={loading.youtube || !trainingData.youtubeUrl.trim()}
                 className="w-full bg-red-600 text-white py-2 px-4 rounded-lg hover:bg-red-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
@@ -471,23 +594,132 @@ export default function TrainPage() {
           <div className="bg-white rounded-xl shadow-lg p-6 border border-gray-200 hover:shadow-xl transition-shadow">
             <div className="text-center mb-4">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-3">
-                <svg className="w-6 h-6 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+                <svg
+                  className="w-6 h-6 text-green-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"
+                  />
                 </svg>
               </div>
-              <h3 className="text-lg font-semibold text-gray-900">Direct Text</h3>
-              <p className="text-sm text-gray-600 mt-1">Type or paste text directly</p>
+              <h3 className="text-lg font-semibold text-gray-900">
+                Direct Text
+              </h3>
+              <p className="text-sm text-gray-600 mt-1">
+                Type or paste text directly
+              </p>
             </div>
             <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Title <span className="text-red-500">*</span> (max 20 chars,
+                  no spaces)
+                </label>
+                <input
+                  type="text"
+                  value={trainingData.title}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Prevent whitespace
+                    if (!/\s/.test(value) && value.length <= 20) {
+                      setTrainingData((prev) => ({ ...prev, title: value }));
+                    } else if (value.length <= 20) {
+                      // Still update but show validation error visually
+                      setTrainingData((prev) => ({ ...prev, title: value }));
+                    }
+                  }}
+                  placeholder="e.g., ProductGuide2024"
+                  maxLength={20}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                />
+                <div className="flex justify-between items-center mt-1">
+                  {trainingData.title && /\s/.test(trainingData.title) && (
+                    <p className="text-xs text-red-600">No spaces allowed</p>
+                  )}
+                  <p
+                    className={`text-xs ml-auto ${
+                      trainingData.title?.length > 20 ||
+                      /\s/.test(trainingData.title || "")
+                        ? "text-red-600"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {trainingData.title?.length || 0}/20
+                  </p>
+                </div>
+                {trainingData.title && trainingData.title.length > 20 && (
+                  <p className="text-xs text-red-600 mt-1">Max 20 characters</p>
+                )}
+              </div>
+              <div>
+                <label className="block text-xs font-medium text-gray-700 mb-1">
+                  Description <span className="text-gray-500">(optional)</span>{" "}
+                  - improves search quality (max 200 chars)
+                </label>
+                <input
+                  type="text"
+                  value={trainingData.description}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    if (value.length <= 200) {
+                      setTrainingData((prev) => ({
+                        ...prev,
+                        description: value,
+                      }));
+                    }
+                  }}
+                  placeholder="e.g., Product features and pricing information"
+                  maxLength={200}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
+                />
+                <div className="flex justify-between items-center mt-1">
+                  {trainingData.description && (
+                    <p className="text-xs text-gray-500">
+                      This helps the AI find relevant content more accurately
+                    </p>
+                  )}
+                  <p
+                    className={`text-xs ml-auto ${
+                      trainingData.description?.length > 200
+                        ? "text-red-600"
+                        : "text-gray-400"
+                    }`}
+                  >
+                    {trainingData.description?.length || 0}/200
+                  </p>
+                </div>
+                {trainingData.description &&
+                  trainingData.description.length > 200 && (
+                    <p className="text-xs text-red-600 mt-1">
+                      Max 200 characters exceeded
+                    </p>
+                  )}
+              </div>
               <textarea
                 value={trainingData.text}
-                onChange={(e) => setTrainingData(prev => ({ ...prev, text: e.target.value }))}
+                onChange={(e) =>
+                  setTrainingData((prev) => ({ ...prev, text: e.target.value }))
+                }
                 placeholder="Enter your knowledge here..."
                 className="w-full h-24 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm resize-none"
               />
-            <button
-                onClick={() => trainWithData('text', trainingData.text)}
-                disabled={loading.text || !trainingData.text.trim()}
+              <button
+                onClick={() => trainWithData("text", trainingData.text)}
+                disabled={
+                  loading.text ||
+                  !trainingData.text.trim() ||
+                  !trainingData.title.trim() ||
+                  /\s/.test(trainingData.title) ||
+                  trainingData.title.length > 20 ||
+                  (trainingData.description &&
+                    trainingData.description.length > 200)
+                }
                 className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
                 {loading.text ? (
@@ -498,7 +730,7 @@ export default function TrainPage() {
                 ) : (
                   "Add to Knowledge"
                 )}
-            </button>
+              </button>
             </div>
           </div>
         </div>
@@ -507,19 +739,35 @@ export default function TrainPage() {
         {success && (
           <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
             <p className="text-green-600 text-sm flex items-center">
-              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z"
+                  clipRule="evenodd"
+                />
               </svg>
               {success}
             </p>
-            </div>
-          )}
+          </div>
+        )}
 
-          {error && (
+        {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
             <p className="text-red-600 text-sm flex items-center">
-              <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 20 20">
-                <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+              <svg
+                className="w-4 h-4 mr-2"
+                fill="currentColor"
+                viewBox="0 0 20 20"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z"
+                  clipRule="evenodd"
+                />
               </svg>
               {error}
             </p>
@@ -539,16 +787,20 @@ export default function TrainPage() {
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
                       <div className="flex items-center gap-2 mb-2">
-                        <span className={`text-xs font-semibold px-2 py-1 rounded ${
-                          job.status === "completed" 
-                            ? "text-green-600 bg-green-50" 
+                        <span
+                          className={`text-xs font-semibold px-2 py-1 rounded ${
+                            job.status === "completed"
+                              ? "text-green-600 bg-green-50"
+                              : job.status === "error"
+                                ? "text-red-600 bg-red-50"
+                                : "text-yellow-600 bg-yellow-50"
+                          }`}
+                        >
+                          {job.status === "completed"
+                            ? "✓ Completed"
                             : job.status === "error"
-                            ? "text-red-600 bg-red-50"
-                            : "text-yellow-600 bg-yellow-50"
-                        }`}>
-                          {job.status === "completed" ? "✓ Completed" : 
-                           job.status === "error" ? "✗ Failed" : 
-                           "⏳ Processing"}
+                              ? "✗ Failed"
+                              : "⏳ Processing"}
                         </span>
                         <span className="text-xs text-gray-500">
                           {new Date(job.createdAt).toLocaleDateString("en-US", {
@@ -588,12 +840,14 @@ export default function TrainPage() {
                       )}
                       {job.status === "completed" && job.transcription && (
                         <button
-                          onClick={() => setTranscriptionModal({
-                            show: true,
-                            transcription: job.transcription,
-                            jobId: job.id,
-                            url: job.url
-                          })}
+                          onClick={() =>
+                            setTranscriptionModal({
+                              show: true,
+                              transcription: job.transcription,
+                              jobId: job.id,
+                              url: job.url,
+                            })
+                          }
                           className="px-3 py-1 text-xs bg-green-600 text-white rounded hover:bg-green-700 flex items-center"
                         >
                           View Transcription
@@ -607,13 +861,13 @@ export default function TrainPage() {
                         <strong>Transcription Preview:</strong>
                       </p>
                       <p className="text-sm text-gray-700">
-                        {job.transcription.length > 200 
-                          ? `${job.transcription.slice(0, 200)}...` 
+                        {job.transcription.length > 200
+                          ? `${job.transcription.slice(0, 200)}...`
                           : job.transcription}
                       </p>
-            </div>
-          )}
-        </div>
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           </div>
@@ -630,6 +884,30 @@ export default function TrainPage() {
             )}
           </div>
 
+          {/* Tabs */}
+          <div className="flex border-b border-gray-200 mb-6">
+            <button
+              onClick={() => handleTabChange("docs")}
+              className={`px-4 py-2 font-medium text-sm transition-colors ${
+                activeTab === "docs"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              📄 Docs (New)
+            </button>
+            <button
+              onClick={() => handleTabChange("chunks")}
+              className={`px-4 py-2 font-medium text-sm transition-colors ${
+                activeTab === "chunks"
+                  ? "text-blue-600 border-b-2 border-blue-600"
+                  : "text-gray-500 hover:text-gray-700"
+              }`}
+            >
+              📦 Chunks (Old)
+            </button>
+          </div>
+
           {embeddingsLoading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -643,10 +921,24 @@ export default function TrainPage() {
                 >
                   <div className="flex justify-between items-start mb-3">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                          ID: {chunk.chunkId}
+                      {/* Title */}
+                      {chunk.title && (
+                        <div className="mb-2">
+                          <span className="text-sm font-semibold text-green-700 bg-green-50 px-3 py-1 rounded-md inline-block">
+                            📄 {chunk.title}
+                          </span>
+                        </div>
+                      )}
+                      {/* DocID and Description Row */}
+                      <div className="flex flex-wrap items-center gap-2 mb-2">
+                        <span className="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">
+                          ID: {chunk.docid}
                         </span>
+                        {activeTab === "docs" && chunk.description && (
+                          <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
+                            📝 {chunk.description}
+                          </span>
+                        )}
                         <span className="text-xs text-gray-500">
                           {new Date(chunk.createdAt).toLocaleDateString(
                             "en-US",
@@ -659,6 +951,11 @@ export default function TrainPage() {
                             }
                           )}
                         </span>
+                        {activeTab === "chunks" && (
+                          <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
+                            ⚠️ Legacy Format
+                          </span>
+                        )}
                       </div>
                     </div>
                     <button
@@ -673,19 +970,20 @@ export default function TrainPage() {
                       />
                     </button>
                   </div>
-                  <p className="text-gray-700 text-sm leading-relaxed">
-                    {chunk?.text?.length > 400 && !expandedChunks[chunk.chunkId]
-                      ? `${chunk.text.slice(0, 400)}...`
-                      : chunk.text}
-                  </p>
+                  {/* Content */}
+                  <div className="mt-3 pt-3 border-t border-gray-100">
+                    <p className="text-gray-700 text-sm leading-relaxed">
+                      {chunk?.text?.length > 400 && !expandedChunks[chunk.docid]
+                        ? `${chunk.text.slice(0, 400)}...`
+                        : chunk.text}
+                    </p>
+                  </div>
                   {chunk?.text?.length > 400 && (
                     <button
-                      onClick={() => toggleReadMore(chunk.chunkId)}
+                      onClick={() => toggleReadMore(chunk.docid)}
                       className="text-blue-600 text-xs mt-2 hover:underline"
                     >
-                      {expandedChunks[chunk.chunkId]
-                        ? "Show less"
-                        : "Show more"}
+                      {expandedChunks[chunk.docid] ? "Show less" : "Show more"}
                     </button>
                   )}
                 </div>
@@ -740,8 +1038,12 @@ export default function TrainPage() {
           <div className="bg-white rounded-lg p-6 max-w-4xl w-full mx-4 max-h-[90vh] overflow-hidden flex flex-col">
             <div className="flex justify-between items-center mb-4">
               <h3 className="text-2xl font-bold text-gray-900 flex items-center">
-                <svg className="w-6 h-6 mr-2 text-red-600" viewBox="0 0 24 24" fill="currentColor">
-                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                <svg
+                  className="w-6 h-6 mr-2 text-red-600"
+                  viewBox="0 0 24 24"
+                  fill="currentColor"
+                >
+                  <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z" />
                 </svg>
                 Transcription Ready
               </h3>
@@ -749,12 +1051,22 @@ export default function TrainPage() {
                 onClick={handleCloseTranscriptionModal}
                 className="text-gray-400 hover:text-gray-600 transition-colors"
               >
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                <svg
+                  className="w-6 h-6"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
                 </svg>
               </button>
             </div>
-            
+
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-2">
                 <strong>Source URL:</strong> {transcriptionModal.url}
@@ -785,7 +1097,9 @@ export default function TrainPage() {
               </button>
               <button
                 onClick={handleTrainFromModal}
-                disabled={loading.text || !transcriptionModal.transcription.trim()}
+                disabled={
+                  loading.text || !transcriptionModal.transcription.trim()
+                }
                 className="px-6 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center"
               >
                 {loading.text ? (
@@ -810,13 +1124,38 @@ export default function TrainPage() {
               Confirm Delete
             </h3>
             <p className="text-gray-600 mb-2">
-              Are you sure you want to delete this chunk?
+              Are you sure you want to delete this knowledge entry?
             </p>
-            <div className="bg-gray-50 p-3 rounded mb-4">
-              <p className="text-sm text-gray-700 italic">
-                "{deleteModal.chunkText}"
-              </p>
-              <p className="text-xs text-gray-500 mt-2">
+            <div className="bg-gray-50 p-3 rounded mb-4 space-y-2">
+              {deleteModal.title && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">
+                    Title:
+                  </p>
+                  <p className="text-sm font-semibold text-green-700">
+                    {deleteModal.title}
+                  </p>
+                </div>
+              )}
+              {deleteModal.description && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-1">
+                    Description:
+                  </p>
+                  <p className="text-sm text-purple-700">
+                    {deleteModal.description}
+                  </p>
+                </div>
+              )}
+              <div>
+                <p className="text-xs font-semibold text-gray-600 mb-1">
+                  Content Preview:
+                </p>
+                <p className="text-sm text-gray-700 italic">
+                  "{deleteModal.chunkText}"
+                </p>
+              </div>
+              <p className="text-xs text-gray-500 mt-2 font-mono">
                 ID: {deleteModal.chunkId}
               </p>
             </div>

@@ -18,11 +18,11 @@ export async function POST(req) {
     : null;
 
   await connectDB();
-  
+
   // Run model loading and embedding generation in parallel
   const [model, userMessageEmbedding] = await Promise.all([
     getGeminiModel("gemini-2.5-flash-lite"),
-    generateEmbedding(userMessage)
+    generateEmbedding(userMessage),
   ]);
 
   if (!model) {
@@ -56,7 +56,13 @@ export async function POST(req) {
 
       if (results.matches && results.matches.length > 0) {
         context = results.matches
-          .map((match) => match.metadata?.text || "")
+          .map((match) => {
+            // Include description in context if available for better context understanding
+            const description = match.metadata?.description
+              ? `[Context: ${match.metadata.description}] `
+              : "";
+            return description + (match.metadata?.text || "");
+          })
           .join(" ");
       }
     } catch (pineconeError) {
@@ -94,23 +100,21 @@ Please provide a helpful response based on the above information:`;
 
     if (reParts.length === 4) {
       setImmediate(async () => {
-      
         try {
-       
           await Logs.create({
             message: userMessage || "",
             sessionId: sessionId,
             userId: token.id,
             role: "user",
           });
-          
+
           await Logs.create({
             message: reParts[0] || "",
             sessionId: sessionId,
             userId: token.id,
             role: "assistant",
           });
-          
+
           await Session.updateOne(
             { _id: sessionId },
             {
@@ -122,8 +126,6 @@ Please provide a helpful response based on the above information:`;
             },
             { upsert: true }
           );
-          
-          
         } catch (error) {
           console.error("Background DB operations failed:", error);
         }

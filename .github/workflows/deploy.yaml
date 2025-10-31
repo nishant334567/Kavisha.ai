@@ -60,3 +60,9 @@ jobs:
 
       - name: Deploy upgrad.kavisha.ai
         run: gcloud run services update web-upgrad --image $IMAGE --region ${{ env.REGION }} --platform managed
+
+      - name: Deploy nithinkamath.kavisha.ai
+        run: gcloud run services update nithinkamath --image $IMAGE --region ${{ env.REGION }} --platform managed
+
+      - name: Deploy jitendrachouksey.kavisha.ai
+        run: gcloud run services update jitendrachouksey --image $IMAGE --region ${{ env.REGION }} --platform managed

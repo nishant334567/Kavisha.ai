@@ -31,7 +31,8 @@
     "sanity": "^4.5.0",
     "socket.io": "^4.8.1",
     "socket.io-client": "^4.8.1",
-    "styled-components": "^6.1.19"
+    "styled-components": "^6.1.19",
+    "uuid": "^13.0.0"
   },
   "devDependencies": {
     "autoprefixer": "^10.4.21",

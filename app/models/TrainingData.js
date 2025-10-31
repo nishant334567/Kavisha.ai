@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 
-const ChunksSchema = new mongoose.Schema({
+const TrainingDataSchema = new mongoose.Schema({
   docid: {
     type: String,
     required: true,
@@ -10,6 +10,11 @@ const ChunksSchema = new mongoose.Schema({
     type: String,
     required: true,
     maxlength: 20,
+  },
+  description: {
+    type: String,
+    required: false,
+    maxlength: 200,
   },
   brand: {
     type: String,
@@ -29,6 +34,8 @@ const ChunksSchema = new mongoose.Schema({
   },
 });
 
-const Chunks = mongoose.models.Chunks || mongoose.model("Chunks", ChunksSchema);
+const TrainingData =
+  mongoose.models.TrainingData ||
+  mongoose.model("TrainingData", TrainingDataSchema);
 
-export default Chunks;
+export default TrainingData;

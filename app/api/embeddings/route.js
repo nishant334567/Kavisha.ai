@@ -1,36 +1,72 @@
 import { NextResponse } from "next/server";
 import pc from "../../lib/pinecone.js";
 import { generateEmbedding } from "../../lib/embeddings.js";
-import Chunks from "@/app/models/Chunks.js";
+import TrainingData from "@/app/models/TrainingData.js";
 import { connectDB } from "@/app/lib/db";
+import { v4 as uuidv4 } from "uuid";
 
 export async function POST(request) {
   try {
-    const { text, brand } = await request.json();
+    const { text, brand, title, description } = await request.json();
 
-    if (!text || !text.trim()) {
-      return NextResponse.json({ error: "Text is required" }, { status: 400 });
-    }
-
-    if (!brand) {
-      return NextResponse.json({ error: "Brand is required" }, { status: 400 });
+    // Minimal server-side validation (security check)
+    if (!text?.trim() || !brand || !title?.trim()) {
+      return NextResponse.json(
+        { error: "Text, brand, and title are required" },
+        { status: 400 }
+      );
     }
 
     await connectDB();
 
-    const chunks = text.split(" ");
+    // Generate a unique document ID with title prefix for readability
+    // Format: title_shortUuid (e.g., ProductGuide2024_a1b2c3d4)
+    const shortUuid = uuidv4().substring(0, 8); // First 8 chars for uniqueness
+    const titleSlug = title.trim().replace(/[^a-zA-Z0-9]/g, ""); // Remove special chars
+    const docId = `${titleSlug}_${shortUuid}`;
+    const words = text.split(" ");
     const chunkSize = 600;
-    const results = [];
 
-    for (let i = 0; i < chunks.length; i += chunkSize) {
-      const chunk = chunks.slice(i, i + chunkSize).join(" ");
-      const datapointId = `chunk_${Date.now()}_${brand}_${i}`;
+    // Calculate total chunks that will be created
+    const totalChunks = Math.ceil(words.length / chunkSize);
+
+    // Create the document record in MongoDB
+    const createdAt = new Date();
+    const titleValue = title.trim();
+    const descriptionValue = description?.trim() || "";
+
+    await TrainingData.create({
+      docid: docId,
+      title: titleValue,
+      description: descriptionValue,
+      brand,
+      text: text,
+      totalChunks: totalChunks,
+      createdAt,
+    });
+
+    const results = [];
+    const createdAtISO = createdAt.toISOString(); // Store as ISO string for Pinecone
+
+    // Prepare description prefix for embedding (improves vector search quality)
+    const descriptionPrefix = descriptionValue
+      ? `[Context: ${descriptionValue}]\n\n`
+      : "";
+
+    // Process each chunk and upload to Pinecone
+    for (let i = 0; i < words.length; i += chunkSize) {
+      const chunk = words.slice(i, i + chunkSize).join(" ");
+      const chunkIndex = Math.floor(i / chunkSize);
+      const datapointId = `chunk_${Date.now()}_${chunkIndex}`;
 
       try {
-        const embedding = await generateEmbedding(chunk);
+        // Prepend description to chunk before embedding (this improves vector search)
+        // The description provides semantic context that influences the embedding
+        const chunkWithContext = descriptionPrefix + chunk;
+        const embedding = await generateEmbedding(chunkWithContext);
 
         if (embedding === 0) {
-          console.error(`Failed to generate embedding for chunk ${i}`);
+          console.error(`Failed to generate embedding for chunk ${chunkIndex}`);
           continue;
         }
 
@@ -41,25 +77,27 @@ export async function POST(request) {
             {
               id: datapointId,
               values: embedding,
-              metadata: { text: chunk },
+              metadata: {
+                text: chunk, // Original chunk without description prefix
+                docid: docId,
+                title: titleValue,
+                description: descriptionValue, // Store for filtering/metadata queries
+                createdAt: createdAtISO,
+                chunkIndex: chunkIndex.toString(),
+              },
             },
           ]);
 
-        await Chunks.create({
-          chunkId: datapointId,
-          brand,
-          text: chunk,
-        });
-
         results.push(datapointId);
       } catch (chunkError) {
-        console.error(`Error processing chunk at ${i}:`, chunkError);
+        console.error(`Error processing chunk at ${chunkIndex}:`, chunkError);
       }
     }
 
     return NextResponse.json({
       success: true,
       message: `Successfully processed ${results.length} chunks`,
+      docid: docId,
       chunkIds: results,
     });
   } catch (error) {

@@ -1,17 +1,17 @@
 import { connectDB } from "@/app/lib/db";
-import Chunks from "@/app/models/Chunks";
+import TrainingData from "@/app/models/TrainingData";
 import { NextResponse } from "next/server";
 import pc from "@/app/lib/pinecone";
 
 export async function DELETE(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const chunkId = searchParams.get("chunkId");
+    const docid = searchParams.get("chunkId"); // Keeping query param name for backward compatibility
     const brand = searchParams.get("brand");
 
-    if (!chunkId) {
+    if (!docid) {
       return NextResponse.json(
-        { error: "Chunk ID is required" },
+        { error: "Document ID is required" },
         { status: 400 }
       );
     }
@@ -22,33 +22,34 @@ export async function DELETE(req) {
 
     await connectDB();
 
-    // Delete from MongoDB
-    const deletedChunk = await Chunks.findOneAndDelete({ chunkId });
+    // Delete from MongoDB by docid
+    const deletedChunk = await TrainingData.findOneAndDelete({ docid });
 
     if (!deletedChunk) {
       return NextResponse.json(
-        { error: "Chunk not found in database" },
+        { error: "Document not found in database" },
         { status: 404 }
       );
     }
 
-    // Delete from Pinecone
+    // Delete all chunks from Pinecone with this docid in metadata
     if (pc) {
       try {
         await pc
           .index("intelligent-kavisha")
           .namespace(brand)
-          .deleteOne(chunkId);
+          .deleteMany({
+            docid: { $eq: docid },
+          });
       } catch (pineconeError) {
         console.error("Error deleting from Pinecone:", pineconeError);
-        // Continue even if Pinecone deletion fails, as MongoDB deletion succeeded
       }
     }
 
     return NextResponse.json({
       success: true,
-      message: "Chunk deleted successfully",
-      deletedChunkId: chunkId,
+      message: "Document deleted successfully",
+      deletedDocid: docid,
     });
   } catch (error) {
     console.error("Error deleting chunk:", error);
