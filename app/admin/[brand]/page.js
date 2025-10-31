@@ -42,6 +42,7 @@ export default function BrandAdminPage() {
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [selectedSessionLogs, setSelectedSessionLogs] = useState(null);
   const [loadingLogs, setLoadingLogs] = useState(false);
+  const [expandedSummaries, setExpandedSummaries] = useState({});
   const brandContext = useBrandContext();
   const statusOptions = [
     "session initiated",
@@ -972,9 +973,33 @@ export default function BrandAdminPage() {
                       Summary
                     </h4>
                     {currentUserSession.chatSummary ? (
-                      <p className="text-sm text-gray-600 line-clamp-3 leading-relaxed">
-                        {currentUserSession.chatSummary}
-                      </p>
+                      <>
+                        <p
+                          className={`text-sm text-gray-600 leading-relaxed ${
+                            !expandedSummaries[currentUserSession._id]
+                              ? "line-clamp-3"
+                              : ""
+                          }`}
+                        >
+                          {currentUserSession.chatSummary}
+                        </p>
+                        {currentUserSession.chatSummary.length > 150 && (
+                          <button
+                            onClick={() =>
+                              setExpandedSummaries((prev) => ({
+                                ...prev,
+                                [currentUserSession._id]:
+                                  !prev[currentUserSession._id],
+                              }))
+                            }
+                            className="text-blue-600 text-xs mt-2 hover:underline font-medium"
+                          >
+                            {expandedSummaries[currentUserSession._id]
+                              ? "Show less"
+                              : "Read more"}
+                          </button>
+                        )}
+                      </>
                     ) : (
                       <p className="text-sm text-gray-400 italic">
                         No chat summary available
