@@ -32,8 +32,6 @@ export default function BrandAdminPage() {
     body: "",
   });
   const [sendingIndividualEmail, setSendingIndividualEmail] = useState(false);
-  const [newAdminEmail, setNewAdminEmail] = useState("");
-  const [addingAdmin, setAddingAdmin] = useState(false);
   const [assigning, setAssigning] = useState({});
   const [openChat, setOpenChat] = useState(false);
   const [userA, setUserA] = useState(null);
@@ -334,59 +332,6 @@ export default function BrandAdminPage() {
     return allSessions.filter((session) => session.status === status).length;
   };
 
-  const isValidEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const handleAddAdmin = async () => {
-    if (!newAdminEmail.trim()) {
-      alert("Please enter an email address");
-      return;
-    }
-
-    if (!isValidEmail(newAdminEmail)) {
-      alert("Please enter a valid email address");
-      return;
-    }
-
-    // Check if admin already exists in brand context
-    const existingAdmins = brandContext.admins || [];
-    if (existingAdmins.includes(newAdminEmail.trim().toLowerCase())) {
-      alert("This admin already exists for this brand");
-      return;
-    }
-
-    setAddingAdmin(true);
-    try {
-      const response = await fetch("/api/admin/add-admin", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email: newAdminEmail.trim(), brand: brand }),
-      });
-
-      const result = await response.json();
-
-      if (result.success) {
-        alert(
-          "Admin added successfully! They will receive an email notification."
-        );
-        setNewAdminEmail("");
-        // Refresh brand context to update admin list
-        if (brandContext.refreshBrandContext) {
-          await brandContext.refreshBrandContext();
-        }
-      } else {
-        alert(result.error || "Failed to add admin");
-      }
-    } catch (error) {
-      console.error("Failed to add admin:", error);
-      alert("Failed to add admin. Please try again.");
-    } finally {
-      setAddingAdmin(false);
-    }
-  };
-
   const openChatSession = (userA, userB) => {
     setUserA(userA);
     setUserB(userB);
@@ -429,13 +374,13 @@ export default function BrandAdminPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="bg-white border-b border-gray-200">
-        <div className="mx-auto max-w-7xl px-6 py-8">
-          <div className="flex justify-between items-start">
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">
+        <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-8">
+          <div className="flex flex-col lg:flex-row lg:justify-between lg:items-start gap-4 lg:gap-0">
+            <div className="flex-shrink-0">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
                 {brand.toUpperCase()} Sessions
               </h1>
-              <p className="mt-2 text-gray-600">
+              <p className="mt-1 sm:mt-2 text-sm sm:text-base text-gray-600">
                 {searchResults
                   ? `Search results (${sessions.length})`
                   : `All sessions (${sessions.length})`}
@@ -443,89 +388,19 @@ export default function BrandAdminPage() {
             </div>
 
             {/* Action Buttons Section */}
-            <div className="flex flex-col gap-4">
-              {/* Add Admin Section */}
-              <div className="flex gap-3 items-center">
-                <input
-                  type="email"
-                  value={newAdminEmail}
-                  onChange={(e) => setNewAdminEmail(e.target.value)}
-                  placeholder="Enter admin email..."
-                  className="px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 text-sm bg-white"
-                />
-                <button
-                  onClick={handleAddAdmin}
-                  disabled={!isValidEmail(newAdminEmail) || addingAdmin}
-                  className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm flex items-center gap-2 transition-colors"
-                >
-                  {addingAdmin ? (
-                    <>
-                      <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                      Adding...
-                    </>
-                  ) : (
-                    <>
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M12 4v16m8-8H4"
-                        />
-                      </svg>
-                      Add Admin
-                    </>
-                  )}
-                </button>
-              </div>
-
-              {/* Action Buttons Section */}
-              <div className="flex gap-3 justify-end">
-                <button
-                  onClick={() => router.push(`/admin/${brand}/edit-profile`)}
-                  className="px-6 py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 focus:ring-4 focus:ring-green-200 transition-all duration-200 text-sm font-medium flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                >
-                  Edit Profile
-                </button>
-                <button
-                  onClick={() => router.push(`/admin/${brand}/train`)}
-                  className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 text-sm font-medium flex items-center gap-3 shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
-                >
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
-                    />
-                  </svg>
-                  Train Chatbot
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Main Content */}
-      <div className="mx-auto max-w-7xl px-6 py-8">
-        {/* Search Box */}
-        <div className="mb-8">
-          <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
+            <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 w-full lg:w-auto">
+              <button
+                onClick={() => router.push(`/admin/${brand}/edit-profile`)}
+                className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-green-600 to-emerald-600 text-white rounded-lg hover:from-green-700 hover:to-emerald-700 focus:ring-4 focus:ring-green-200 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl"
+              >
+                <span>Edit Profile</span>
+              </button>
+              <button
+                onClick={() => router.push(`/admin/${brand}/train`)}
+                className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl"
+              >
                 <svg
-                  className="w-5 h-5 text-blue-600 mt-0.5"
+                  className="w-4 h-4 sm:w-5 sm:h-5"
                   fill="none"
                   stroke="currentColor"
                   viewBox="0 0 24 24"
@@ -534,66 +409,63 @@ export default function BrandAdminPage() {
                     strokeLinecap="round"
                     strokeLinejoin="round"
                     strokeWidth={2}
-                    d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                    d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z"
                   />
                 </svg>
-              </div>
-              <div>
-                <h3 className="text-sm font-medium text-blue-800 mb-1">
-                  Advanced Search Coming Soon
-                </h3>
-                <p className="text-sm text-blue-700">
-                  We're building an intelligent search feature that will help
-                  recruiters and admins find precise results using natural
-                  language queries. This will make it easier to discover the
-                  right candidates and sessions based on specific criteria.
-                </p>
-              </div>
+                <span>Train Chatbot</span>
+              </button>
             </div>
           </div>
         </div>
+      </div>
 
+      {/* Main Content */}
+      <div className="mx-auto max-w-7xl px-4 sm:px-6 py-4 sm:py-8">
         {/* Sort Controls */}
-        <div className="mb-6 flex flex-wrap gap-4 items-center justify-between">
-          <div className="flex gap-3 items-center">
-            <span className="text-sm font-medium text-gray-700">Sort by:</span>
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
-            >
-              <option value="createdAt">Date Created</option>
-              <option value="name">Name</option>
-              <option value="status">Status</option>
-              <option value="email">Email</option>
-            </select>
-            <select
-              value={sortOrder}
-              onChange={(e) => setSortOrder(e.target.value)}
-              className="px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
-            >
-              <option value="desc">
-                {sortBy === "createdAt"
-                  ? "Newest First"
-                  : sortBy === "name" || sortBy === "email"
-                    ? "A-Z"
-                    : "Descending"}
-              </option>
-              <option value="asc">
-                {sortBy === "createdAt"
-                  ? "Oldest First"
-                  : sortBy === "name" || sortBy === "email"
-                    ? "Z-A"
-                    : "Ascending"}
-              </option>
-            </select>
+        <div className="mb-6 flex flex-col sm:flex-row sm:flex-wrap gap-3 sm:gap-4 items-stretch sm:items-center sm:justify-between">
+          <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 items-stretch sm:items-center">
+            <span className="text-xs sm:text-sm font-medium text-gray-700">
+              Sort by:
+            </span>
+            <div className="flex gap-2 sm:gap-3">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="flex-1 sm:flex-none px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
+              >
+                <option value="createdAt">Date Created</option>
+                <option value="name">Name</option>
+                <option value="status">Status</option>
+                <option value="email">Email</option>
+              </select>
+              <select
+                value={sortOrder}
+                onChange={(e) => setSortOrder(e.target.value)}
+                className="flex-1 sm:flex-none px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white text-sm"
+              >
+                <option value="desc">
+                  {sortBy === "createdAt"
+                    ? "Newest First"
+                    : sortBy === "name" || sortBy === "email"
+                      ? "A-Z"
+                      : "Descending"}
+                </option>
+                <option value="asc">
+                  {sortBy === "createdAt"
+                    ? "Oldest First"
+                    : sortBy === "name" || sortBy === "email"
+                      ? "Z-A"
+                      : "Ascending"}
+                </option>
+              </select>
+            </div>
           </div>
 
           {/* Send Email Button */}
           <button
             onClick={() => setShowEmailModal(true)}
             disabled={sessions.length === 0}
-            className="px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2 text-sm font-medium transition-colors"
+            className="w-full sm:w-auto px-4 sm:px-6 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2 text-sm font-medium transition-colors"
           >
             <svg
               className="w-4 h-4"
@@ -608,7 +480,7 @@ export default function BrandAdminPage() {
                 d="M3 8l7.89 4.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"
               />
             </svg>
-            Send Email ({sessions.length})
+            <span>Send Email ({sessions.length})</span>
           </button>
         </div>
 
@@ -692,7 +564,7 @@ export default function BrandAdminPage() {
         </div>
 
         {/* Sessions List */}
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
           {sessions.length === 0 ? (
             <div className="col-span-full text-center py-16">
               <div className="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-4">
@@ -723,31 +595,31 @@ export default function BrandAdminPage() {
                 key={currentUserSession._id || idx}
                 className="group bg-white rounded-xl border border-gray-200 hover:border-gray-300 hover:shadow-lg transition-all duration-200 overflow-hidden"
               >
-                <div className="p-6">
+                <div className="p-4 sm:p-6">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+                      <div className="flex items-center gap-2 sm:gap-3 mb-2">
+                        <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm flex-shrink-0">
                           {(currentUserSession.user?.name || "U")
                             .charAt(0)
                             .toUpperCase()}
                         </div>
                         <div className="flex-1 min-w-0">
-                          <h3 className="text-lg font-semibold text-gray-900 truncate">
+                          <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                             {currentUserSession.user?.name || "Unknown User"}
                           </h3>
-                          <p className="text-sm text-gray-500 truncate">
+                          <p className="text-xs sm:text-sm text-gray-500 truncate">
                             {currentUserSession.user?.email || "No email"}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
+                        <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           {currentUserSession.role || "Unknown Role"}
                         </span>
                         {currentUserSession.assignedTo && (
-                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
+                          <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
                             {currentUserSession.assignedTo}
                           </span>
                         )}
@@ -756,7 +628,7 @@ export default function BrandAdminPage() {
                   </div>
 
                   {/* Action Buttons */}
-                  <div className="flex flex-wrap gap-2 mb-4">
+                  <div className="flex flex-wrap gap-1.5 sm:gap-2 mb-4">
                     {currentUserSession.user?.email && (
                       <button
                         onClick={() => {
@@ -887,10 +759,10 @@ export default function BrandAdminPage() {
                   </div>
 
                   {/* Session Info */}
-                  <div className="bg-gray-50 rounded-lg p-4 mb-4">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4">
+                    <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
                       <svg
-                        className="w-4 h-4 text-gray-500"
+                        className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -904,7 +776,7 @@ export default function BrandAdminPage() {
                       </svg>
                       Session Details
                     </h4>
-                    <div className="grid grid-cols-2 gap-3 text-sm">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
                       <div>
                         <span className="text-gray-500">Status:</span>
                         <span
@@ -956,9 +828,9 @@ export default function BrandAdminPage() {
 
                   {/* Summary */}
                   <div>
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
                       <svg
-                        className="w-4 h-4 text-gray-500"
+                        className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500"
                         fill="none"
                         stroke="currentColor"
                         viewBox="0 0 24 24"
@@ -975,7 +847,7 @@ export default function BrandAdminPage() {
                     {currentUserSession.chatSummary ? (
                       <>
                         <p
-                          className={`text-sm text-gray-600 leading-relaxed ${
+                          className={`text-xs sm:text-sm text-gray-600 leading-relaxed ${
                             !expandedSummaries[currentUserSession._id]
                               ? "line-clamp-3"
                               : ""
@@ -992,7 +864,7 @@ export default function BrandAdminPage() {
                                   !prev[currentUserSession._id],
                               }))
                             }
-                            className="text-blue-600 text-xs mt-2 hover:underline font-medium"
+                            className="text-blue-600 text-xs mt-1.5 sm:mt-2 hover:underline font-medium"
                           >
                             {expandedSummaries[currentUserSession._id]
                               ? "Show less"
@@ -1001,7 +873,7 @@ export default function BrandAdminPage() {
                         )}
                       </>
                     ) : (
-                      <p className="text-sm text-gray-400 italic">
+                      <p className="text-xs sm:text-sm text-gray-400 italic">
                         No chat summary available
                       </p>
                     )}
@@ -1011,7 +883,7 @@ export default function BrandAdminPage() {
                 {/* Resume Info */}
                 {currentUserSession.resumeSummary && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
                       <svg
                         className="w-4 h-4 text-gray-500"
                         fill="none"
@@ -1027,7 +899,7 @@ export default function BrandAdminPage() {
                       </svg>
                       Resume Summary
                     </h4>
-                    <p className="text-sm text-gray-600 leading-relaxed">
+                    <p className="text-xs sm:text-sm text-gray-600 leading-relaxed">
                       {currentUserSession.resumeSummary}
                     </p>
                     {currentUserSession.resumeFilename && (
@@ -1054,7 +926,7 @@ export default function BrandAdminPage() {
                 {/* Title */}
                 {currentUserSession.title && (
                   <div className="mt-4 pt-4 border-t border-gray-200">
-                    <h4 className="text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
+                    <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
                       <svg
                         className="w-4 h-4 text-gray-500"
                         fill="none"
@@ -1070,7 +942,7 @@ export default function BrandAdminPage() {
                       </svg>
                       Title
                     </h4>
-                    <p className="text-sm text-gray-600">
+                    <p className="text-xs sm:text-sm text-gray-600">
                       {currentUserSession.title}
                     </p>
                   </div>
@@ -1078,7 +950,7 @@ export default function BrandAdminPage() {
 
                 {/* Comment Section */}
                 <div className="mt-4 pt-4 border-t border-gray-200">
-                  <h4 className="text-sm font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                  <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
                     <svg
                       className="w-4 h-4 text-gray-500"
                       fill="none"
@@ -1110,9 +982,9 @@ export default function BrandAdminPage() {
                     }}
                     placeholder="Add a comment for this session..."
                     rows={3}
-                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-sm resize-none bg-gray-50"
+                    className="w-full px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 text-xs sm:text-sm resize-none bg-gray-50"
                   />
-                  <div className="flex justify-between items-center mt-3">
+                  <div className="flex justify-between items-center mt-2 sm:mt-3">
                     <button
                       onClick={() =>
                         updateSessionComment(
@@ -1152,9 +1024,9 @@ export default function BrandAdminPage() {
 
         {/* Email Modal */}
         {showEmailModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-              <h3 className="text-lg font-semibold mb-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
                 Send Email to {sessions.length} Users
               </h3>
 
@@ -1215,7 +1087,7 @@ export default function BrandAdminPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
                 <button
                   onClick={handleSendEmail}
                   disabled={
@@ -1223,7 +1095,7 @@ export default function BrandAdminPage() {
                     !emailData.subject.trim() ||
                     !emailData.body.trim()
                   }
-                  className="px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                 >
                   {sendingEmail ? "Sending..." : "Send Email"}
                 </button>
@@ -1233,7 +1105,7 @@ export default function BrandAdminPage() {
                     setEmailData({ subject: "", body: "" });
                     setEmailResults(null);
                   }}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                  className="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -1263,12 +1135,12 @@ export default function BrandAdminPage() {
 
         {/* Individual Email Modal */}
         {showIndividualEmailModal && selectedSession && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-            <div className="bg-white rounded-lg p-6 w-full max-w-2xl mx-4 max-h-[90vh] overflow-y-auto">
-              <h3 className="text-lg font-semibold mb-4">
+          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
+              <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">
                 Send Email to {selectedSession.user?.name || "User"}
               </h3>
-              <p className="text-sm text-gray-600 mb-4">
+              <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">
                 {selectedSession.user?.email}
               </p>
 
@@ -1310,7 +1182,7 @@ export default function BrandAdminPage() {
                 </div>
               </div>
 
-              <div className="flex gap-3 mt-6">
+              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
                 <button
                   onClick={handleSendIndividualEmail}
                   disabled={
@@ -1318,7 +1190,7 @@ export default function BrandAdminPage() {
                     !individualEmailData.subject.trim() ||
                     !individualEmailData.body.trim()
                   }
-                  className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                 >
                   {sendingIndividualEmail ? "Sending..." : "Send Email"}
                 </button>
@@ -1328,7 +1200,7 @@ export default function BrandAdminPage() {
                     setIndividualEmailData({ subject: "", body: "" });
                     setSelectedSession(null);
                   }}
-                  className="px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600"
+                  className="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm font-medium"
                 >
                   Cancel
                 </button>
@@ -1350,20 +1222,20 @@ export default function BrandAdminPage() {
 
       {/* Logs Modal */}
       {showLogsModal && selectedSessionLogs && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
-            <div className="flex justify-between items-center p-6 border-b border-gray-200 bg-gray-50">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-sm">
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+          <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="flex justify-between items-center p-3 sm:p-6 border-b border-gray-200 bg-gray-50">
+              <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+                <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-semibold text-xs sm:text-sm flex-shrink-0">
                   {(selectedSessionLogs.user?.name || "U")
                     .charAt(0)
                     .toUpperCase()}
                 </div>
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900">
+                <div className="min-w-0 flex-1">
+                  <h3 className="text-base sm:text-lg font-semibold text-gray-900 truncate">
                     Chat Logs
                   </h3>
-                  <p className="text-sm text-gray-600">
+                  <p className="text-xs sm:text-sm text-gray-600 truncate">
                     {selectedSessionLogs.user?.name || "Unknown User"}
                   </p>
                 </div>
@@ -1373,7 +1245,7 @@ export default function BrandAdminPage() {
                   setShowLogsModal(false);
                   setSelectedSessionLogs(null);
                 }}
-                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 transition-colors"
+                className="w-8 h-8 flex items-center justify-center rounded-lg hover:bg-gray-200 transition-colors flex-shrink-0 ml-2"
                 aria-label="Close Logs"
               >
                 <svg
@@ -1392,7 +1264,7 @@ export default function BrandAdminPage() {
               </button>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-6 bg-gray-50">
+            <div className="flex-1 overflow-y-auto p-3 sm:p-6 bg-gray-50">
               {loadingLogs ? (
                 <div className="flex items-center justify-center py-12">
                   <div className="flex flex-col items-center gap-4">
@@ -1413,17 +1285,17 @@ export default function BrandAdminPage() {
                       }`}
                     >
                       <div
-                        className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
+                        className={`max-w-[90%] sm:max-w-[85%] rounded-xl sm:rounded-2xl px-3 sm:px-4 py-2 sm:py-3 shadow-sm ${
                           log.role === "user"
                             ? "bg-blue-600 text-white"
                             : "bg-white text-gray-800 border border-gray-200"
                         }`}
                       >
-                        <div className="text-sm whitespace-pre-wrap break-words leading-relaxed">
+                        <div className="text-xs sm:text-sm whitespace-pre-wrap break-words leading-relaxed">
                           {log.message}
                         </div>
                         <div
-                          className={`text-xs mt-2 ${
+                          className={`text-[10px] sm:text-xs mt-1.5 sm:mt-2 ${
                             log.role === "user"
                               ? "text-blue-100"
                               : "text-gray-500"
@@ -1462,15 +1334,17 @@ export default function BrandAdminPage() {
               )}
             </div>
 
-            <div className="p-4 bg-white border-t border-gray-200 flex justify-between items-center text-sm text-gray-600">
-              <div className="flex items-center gap-4">
+            <div className="p-3 sm:p-4 bg-white border-t border-gray-200 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2 sm:gap-0 text-xs sm:text-sm text-gray-600">
+              <div className="flex items-center gap-2 sm:gap-4 flex-wrap">
                 <span className="font-medium">
                   Total Messages: {selectedSessionLogs.logs?.length || 0}
                 </span>
-                <span className="text-gray-400">•</span>
-                <span>Session: {selectedSessionLogs._id}</span>
+                <span className="text-gray-400 hidden sm:inline">•</span>
+                <span className="text-[10px] sm:text-sm truncate max-w-[200px] sm:max-w-none">
+                  Session: {selectedSessionLogs._id}
+                </span>
               </div>
-              <div className="text-xs text-gray-400">
+              <div className="text-[10px] sm:text-xs text-gray-400">
                 {selectedSessionLogs.logs?.length > 0 &&
                   `Last message: ${new Date(selectedSessionLogs.logs[selectedSessionLogs.logs.length - 1]?.createdAt).toLocaleString()}`}
               </div>
