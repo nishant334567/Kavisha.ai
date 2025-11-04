@@ -1,28 +1,30 @@
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
 
-export async function middleware(req) {
-  const host = req.headers.get("host") || "";
-  if (host.startsWith("www.")) {
-    const url = new URL(req.url);
-    const newHost = host.slice(4);
-    url.hostname = newHost;
-    url.port = "";
-    return NextResponse.redirect(url, 308);
-  }
+const ROOT_DOMAIN = "kavisha.ai";
 
-  if (req.nextUrl.pathname.startsWith("/landing")) {
-    return NextResponse.next();
-  }
+export async function middleware(req) {
+  const url = req.nextUrl.clone();
+  const { pathname } = req.nextUrl;
   const token = await getToken({ req, secret: process.env.AUTH_SECRET });
 
-  if (!token && req.nextUrl.pathname === "/") {
+  if (!token && pathname === "/") {
     return NextResponse.redirect(new URL("/login", req.url));
   }
 
-  return NextResponse.next();
+  const host = req.headers.get("host") || "";
+  const subdomain = host.split(".")[0];
+
+  const isNonTenant = host === ROOT_DOMAIN || subdomain === "www";
+
+  if (isNonTenant) {
+    return NextResponse.next();
+  }
+
+  url.searchParams.set("brand", subdomain);
+  return NextResponse.rewrite(url);
 }
 
 export const config = {
-  matcher: ["/:path*"],
+  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
 };

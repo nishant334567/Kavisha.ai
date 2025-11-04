@@ -4,6 +4,16 @@ import GoogleProvider from "next-auth/providers/google";
 import { connectDB } from "@/app/lib/db";
 import User from "@/app/models/Users";
 
+const getCookieDomain = () => {
+  if (process.env?.NODE_ENV === "production") {
+    return ".kavisha.ai";
+  }
+
+  return undefined;
+};
+
+const rootDomain = getCookieDomain();
+
 export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
   session: {
@@ -15,6 +25,33 @@ export const authOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
+  // ===============================================
+  // 👇 THIS IS THE NEW, CRITICAL SECTION YOU MUST ADD
+  // ===============================================
+  cookies: {
+    sessionToken: {
+      name: `__Secure-next-auth.session-token`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: true,
+        domain: rootDomain, // Set to ".kavisha.ai" in production
+      },
+    },
+    callbackUrl: {
+      name: `__Secure-next-auth.callback-url`,
+      options: {
+        sameSite: "lax",
+        path: "/",
+        secure: true,
+        domain: rootDomain, // Set to ".kavisha.ai" in production
+      },
+    },
+  },
+  // ===============================================
+  // END OF NEW SECTION
+  // ===============================================
   callbacks: {
     async redirect({ url, baseUrl }) {
       return new URL(url, baseUrl).toString();

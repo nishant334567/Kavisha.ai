@@ -128,7 +128,9 @@ export default function LoginPage() {
           <button
             onClick={() => {
               !session?.user?.id
-                ? signIn("google", { callbackUrl: "/" })
+                ? signIn("google", {
+                    callbackUrl: `${window.location.origin}${window.location.pathname}`,
+                  })
                 : router.push("/");
             }}
             className="px-6 py-3 bg-sky-700 text-white rounded-md text-lg font-medium"
