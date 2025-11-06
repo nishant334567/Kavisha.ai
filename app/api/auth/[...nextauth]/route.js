@@ -47,16 +47,6 @@ export const authOptions = {
         domain: rootDomain,
       },
     },
-    state: {
-      name: `__Secure-next-auth.state`,
-      options: {
-        httpOnly: true,
-        sameSite: "lax",
-        path: "/",
-        secure: true,
-        domain: rootDomain,
-      },
-    },
     pkceCodeVerifier: {
       name: `__Secure-next-auth.pkce.code_verifier`,
       options: {
