@@ -36,7 +36,9 @@ export default function Navbar() {
           {!session ? (
             <button
               onClick={() => {
-                signIn("google", { callbackUrl: "/" });
+                signIn("google", {
+                  callbackUrl: `${window.location.origin}${window.location.pathname}`,
+                });
               }}
               className="px-3 py-1.5 rounded-md text-sm bg-sky-900 text-white hover:bg-sky-700"
             >

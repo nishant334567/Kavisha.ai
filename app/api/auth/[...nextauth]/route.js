@@ -1,21 +1,20 @@
 import NextAuth from "next-auth";
-// import GitHubProvider from "next-auth/providers/github";
 import GoogleProvider from "next-auth/providers/google";
 import { connectDB } from "@/app/lib/db";
 import User from "@/app/models/Users";
 
+// ... (getCookieDomain and rootDomain)
 const getCookieDomain = () => {
   if (process.env?.NODE_ENV === "production") {
     return ".kavisha.ai";
   }
-
   return undefined;
 };
-
 const rootDomain = getCookieDomain();
 
 export const authOptions = {
   secret: process.env.NEXTAUTH_SECRET,
+  debug: process.env.NODE_ENV !== "production",
   session: {
     strategy: "jwt",
   },
@@ -25,10 +24,9 @@ export const authOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET,
     }),
   ],
-  // ===============================================
-  // 👇 THIS IS THE NEW, CRITICAL SECTION YOU MUST ADD
-  // ===============================================
+
   cookies: {
+    // ... (Your full cookie config from Step 2)
     sessionToken: {
       name: `__Secure-next-auth.session-token`,
       options: {
@@ -36,7 +34,7 @@ export const authOptions = {
         sameSite: "lax",
         path: "/",
         secure: true,
-        domain: rootDomain, // Set to ".kavisha.ai" in production
+        domain: rootDomain,
       },
     },
     callbackUrl: {
@@ -45,12 +43,9 @@ export const authOptions = {
         sameSite: "lax",
         path: "/",
         secure: true,
-        domain: rootDomain, // Set to ".kavisha.ai" in production
+        domain: rootDomain,
       },
     },
-    // ===============================================
-    // 👇 ADD THIS SECTION
-    // ===============================================
     state: {
       name: `__Secure-next-auth.state`,
       options: {
@@ -58,12 +53,9 @@ export const authOptions = {
         sameSite: "lax",
         path: "/",
         secure: true,
-        domain: rootDomain, // <-- The all-important fix
+        domain: rootDomain,
       },
     },
-    // ===============================================
-    // 👇 AND ADD THIS SECTION
-    // ===============================================
     pkceCodeVerifier: {
       name: `__Secure-next-auth.pkce.code_verifier`,
       options: {
@@ -71,33 +63,36 @@ export const authOptions = {
         sameSite: "lax",
         path: "/",
         secure: true,
-        domain: rootDomain, // <-- The all-important fix
+        domain: rootDomain,
       },
     },
   },
-  // ===============================================
-  // END OF NEW SECTION
-  // ===============================================
+
+  // ==== ADD YOUR CALLBACKS BACK IN ====
   callbacks: {
-    async redirect({ url, baseUrl }) {
-      return new URL(url, baseUrl).toString();
-    },
     async jwt({ token, user }) {
+      console.log("Inside JWT");
       if (user) {
-        await connectDB();
-        let dbuser = await User.findOne({ email: user.email });
-        if (!dbuser) {
-          dbuser = await User.create({
-            name: user.name,
-            email: user.email,
-            image: user.image,
-            profileType: null,
-            isAdmin: false,
-          });
+        try {
+          await connectDB();
+          let dbuser = await User.findOne({ email: user.email });
+          if (!dbuser) {
+            dbuser = await User.create({
+              name: user.name,
+              email: user.email,
+              image: user.image,
+              profileType: null,
+              isAdmin: false,
+            });
+          }
+          token.id = dbuser._id.toString();
+          token.profileType = dbuser.profileType;
+          token.isAdmin = dbuser.isAdmin || false;
+        } catch (error) {
+          console.error("Error in JWT callback:", error);
+          // By returning an error, we stop the login
+          return { ...token, error: "DatabaseError" };
         }
-        token.id = dbuser._id.toString();
-        token.profileType = dbuser.profileType;
-        token.isAdmin = dbuser.isAdmin || false;
       }
       return token;
     },
