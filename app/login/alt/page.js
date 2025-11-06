@@ -148,7 +148,11 @@ export default function LoginPage() {
         {shouldShowGoogleLogin && (
           <div className="w-full">
             <button
-              onClick={() => signIn("google")}
+              onClick={() =>
+                signIn("google", {
+                  callbackUrl: `${window.location.origin}${window.location.pathname}`,
+                })
+              }
               className="w-full py-3 px-4 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors font-medium"
             >
               Login with Google
