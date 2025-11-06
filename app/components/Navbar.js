@@ -2,26 +2,12 @@
 import { useSession, signIn, signOut } from "next-auth/react";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { urlFor } from "../lib/sanity";
-import { useRouter, usePathname } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 
 export default function Navbar() {
   const { data: session } = useSession();
   const brand = useBrandContext();
   const router = useRouter();
-  const pathname = usePathname();
-  const [isNavigating, setIsNavigating] = useState(false);
-
-  useEffect(() => {
-    if (pathname === "/make-avatar") {
-      setIsNavigating(false);
-    }
-  }, [pathname]);
-
-  const handleMakeAvatar = () => {
-    setIsNavigating(true);
-    router.push("/make-avatar");
-  };
 
   return (
     <nav className="w-full border-b border-gray-200 bg-white fixed top-0 left-0 z-50">
@@ -47,22 +33,6 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          {session && (
-            <button
-              onClick={handleMakeAvatar}
-              disabled={isNavigating}
-              className="px-3 py-1.5 rounded-md text-sm bg-purple-600 text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-2"
-            >
-              {isNavigating ? (
-                <>
-                  <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Loading...
-                </>
-              ) : (
-                "Make My AI Avatar"
-              )}
-            </button>
-          )}
           {!session ? (
             <button
               onClick={() => {
