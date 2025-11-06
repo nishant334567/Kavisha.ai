@@ -28,13 +28,23 @@ export const authOptions = {
 
   cookies: {
     // ... (Your full cookie config from Step 2)
+    state: {
+      name: `__Secure-next-auth.state`,
+      options: {
+        httpOnly: true,
+        sameSite: "lax",
+        path: "/",
+        secure: false,
+        domain: rootDomain, // <-- The fix
+      },
+    },
     sessionToken: {
       name: `__Secure-next-auth.session-token`,
       options: {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: true,
+        secure: false,
         domain: rootDomain,
       },
     },
@@ -43,7 +53,7 @@ export const authOptions = {
       options: {
         sameSite: "lax",
         path: "/",
-        secure: true,
+        secure: false,
         domain: rootDomain,
       },
     },
@@ -53,7 +63,7 @@ export const authOptions = {
         httpOnly: true,
         sameSite: "lax",
         path: "/",
-        secure: true,
+        secure: false,
         domain: rootDomain,
       },
     },
