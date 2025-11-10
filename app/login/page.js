@@ -129,7 +129,7 @@ export default function LoginPage() {
             onClick={() => {
               !session?.user?.id
                 ? signIn("google", {
-                    callbackUrl: `${window.location.origin}${window.location.pathname}`,
+                    callbackUrl: "/",
                   })
                 : router.push("/");
             }}
