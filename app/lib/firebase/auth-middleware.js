@@ -24,7 +24,6 @@ export function withAuth(request, { onAuthenticated, onUnauthenticated }) {
         : NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     },
     handleError: async (error) => {
-      console.error("Auth error:", error);
       return NextResponse.json(
         { error: "Authentication failed" },
         { status: 500 }

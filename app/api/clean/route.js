@@ -46,7 +46,6 @@ export async function GET(req) {
       });
       deletedMessagesCount = messagesDeleteResult.deletedCount;
 
-
       // Delete orphaned conversations
       const conversationsDeleteResult = await Conversations.deleteMany({
         _id: { $in: orphanedIds },
@@ -74,7 +73,6 @@ export async function GET(req) {
       totalDeleted: deletedConversationsCount + deletedMessagesCount,
     });
   } catch (error) {
-    console.error("Error during cleanup:", error);
     return NextResponse.json(
       {
         success: false,

@@ -11,7 +11,6 @@ export async function isBrandAdmin(email, brand) {
     );
     return Array.isArray(brandDoc?.admins) && brandDoc.admins.includes(email);
   } catch (error) {
-    console.error("Error checking admin status:", error);
     return false;
   }
 }

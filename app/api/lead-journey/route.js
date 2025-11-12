@@ -68,7 +68,6 @@ export async function POST(req) {
               .join(" ");
           }
         } catch (pineconeError) {
-          console.error("Pinecone query failed:", pineconeError);
           context = "";
         }
       }
@@ -128,9 +127,7 @@ Please provide a helpful response based on the above information:`;
                 },
                 { upsert: true }
               );
-            } catch (error) {
-              console.error("Background DB operations failed:", error);
-            }
+            } catch (error) {}
           });
 
           return NextResponse.json({

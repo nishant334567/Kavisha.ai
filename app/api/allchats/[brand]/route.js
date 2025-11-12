@@ -44,7 +44,6 @@ export async function GET(req, { params }) {
           sessions: sessionsMap,
         });
       } catch (err) {
-        console.error("AllChats API error:", err, err?.stack);
         return NextResponse.json(
           { error: err?.message || String(err), stack: err?.stack },
           { status: 500 }

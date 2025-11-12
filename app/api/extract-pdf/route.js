@@ -35,7 +35,7 @@ export async function POST(request) {
       max: 0, // 0 means no page limit
       version: "v1.10.100", // Specify version to avoid auto-detection
     });
-    
+
     const result = await Session.updateOne(
       { _id: sessionId },
       {
@@ -54,7 +54,6 @@ export async function POST(request) {
       }
     );
   } catch (error) {
-    console.error("PDF extraction error:", error);
     return new Response(
       JSON.stringify({
         error: "Failed to extract text from PDF",

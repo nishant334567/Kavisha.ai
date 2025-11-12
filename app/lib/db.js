@@ -30,7 +30,6 @@ async function connectDB() {
       isConnected = true;
     })
     .catch((error) => {
-      console.error("MongoDB connection error:", error.message);
       isConnected = false;
       connectionPromise = null;
       throw error;

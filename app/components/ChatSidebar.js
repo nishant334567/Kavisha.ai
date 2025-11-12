@@ -69,7 +69,6 @@ export default function ChatSidebar({
 
       setInboxChats(data.chats || []);
     } catch (error) {
-      console.error("Error fetching inbox:", error);
       setInboxChats([]);
     } finally {
       setInboxLoading(false);

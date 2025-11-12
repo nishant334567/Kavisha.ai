@@ -84,9 +84,7 @@ app.prepare().then(() => {
           senderUserId: senderUserId,
           connectionId: connectionId,
         });
-      } catch (error) {
-        console.error("Error in send_message:", error);
-      }
+      } catch (error) {}
     });
 
     socket.on("join_room", async (data) => {
@@ -113,12 +111,8 @@ app.prepare().then(() => {
               senderUserId: m.senderId,
             }))
           );
-        } catch (e) {
-          console.error("Failed to load message history:", e);
-        }
-      } catch (error) {
-        console.error("Error in join_room:", error);
-      }
+        } catch (e) {}
+      } catch (error) {}
     });
   });
 

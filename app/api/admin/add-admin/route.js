@@ -7,12 +7,12 @@ export async function POST(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
       try {
-    if (!process.env.SANITY_API_TOKEN) {
-      return NextResponse.json(
-        { success: false, error: "Sanity API token not configured" },
-        { status: 500 }
-      );
-    }
+        if (!process.env.SANITY_API_TOKEN) {
+          return NextResponse.json(
+            { success: false, error: "Sanity API token not configured" },
+            { status: 500 }
+          );
+        }
 
         const { email, brand } = await req.json();
 
@@ -35,8 +35,8 @@ export async function POST(req) {
         const trimmedEmail = email.trim().toLowerCase();
 
         const brandData = await client.fetch(
-      `*[_type=="brand" && subdomain=="${brand}"][0]`
-    );
+          `*[_type=="brand" && subdomain=="${brand}"][0]`
+        );
 
         if (!brandData) {
           return NextResponse.json(
@@ -55,7 +55,10 @@ export async function POST(req) {
 
         const updatedAdmins = [...existingAdmins, trimmedEmail];
 
-        await client.patch(brandData._id).set({ admins: updatedAdmins }).commit();
+        await client
+          .patch(brandData._id)
+          .set({ admins: updatedAdmins })
+          .commit();
 
         // Send welcome email to new admin
         try {
@@ -83,13 +86,10 @@ export async function POST(req) {
               "Failed to send admin notification email, but admin was added successfully"
             );
           }
-        } catch (emailError) {
-          console.warn("Email notification failed:", emailError);
-        }
+        } catch (emailError) {}
 
         return NextResponse.json({ success: true });
       } catch (error) {
-        console.error("Error adding admin:", error);
         return NextResponse.json(
           { success: false, error: "Failed to add admin" },
           { status: 500 }

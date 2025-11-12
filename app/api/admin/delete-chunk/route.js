@@ -41,9 +41,7 @@ export async function DELETE(req) {
           .deleteMany({
             docid: { $eq: docid },
           });
-      } catch (pineconeError) {
-        console.error("Error deleting from Pinecone:", pineconeError);
-      }
+      } catch (pineconeError) {}
     }
 
     return NextResponse.json({
@@ -52,7 +50,6 @@ export async function DELETE(req) {
       deletedDocid: docid,
     });
   } catch (error) {
-    console.error("Error deleting chunk:", error);
     return NextResponse.json(
       { error: "Failed to delete chunk", details: error.message },
       { status: 500 }

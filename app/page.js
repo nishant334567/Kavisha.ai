@@ -113,7 +113,6 @@ export default function HomePage() {
         setCurrentChatId(data.sessionId);
       }
     } catch (e) {
-      console.error("Failed to create session on type select", e);
     } finally {
       setCreatingSession(false);
     }

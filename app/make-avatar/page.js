@@ -47,7 +47,6 @@ export default function MakeAvatarPage() {
     }
     setLoading(true);
     try {
-      console.log("Form submitted:", formData);
       alert("AI Avatar created successfully!");
       router.push("/");
     } catch (err) {

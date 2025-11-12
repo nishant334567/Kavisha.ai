@@ -35,7 +35,6 @@ export default function SessionSection({ totalSessions }) {
         setHasMore(data.data.pagination.hasMore);
       }
     } catch (error) {
-      console.error("Error fetching sessions:", error);
     } finally {
       setLoading(false);
     }

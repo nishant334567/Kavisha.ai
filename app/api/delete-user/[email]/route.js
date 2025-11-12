@@ -40,7 +40,6 @@ export async function GET(req, { params }) {
     const userId = user._id;
     let totalDeleted = 0;
 
-
     // 1. Find all chat sessions for this user
     const userSessions = await ChatSessions.find({ userId });
     const sessionIds = userSessions.map((session) => session._id);
@@ -135,7 +134,6 @@ export async function GET(req, { params }) {
       totalRecordsDeleted: totalDeleted,
     });
   } catch (error) {
-    console.error("Error during user deletion:", error);
     return NextResponse.json(
       {
         success: false,

@@ -57,7 +57,6 @@ export async function GET(req, { params }) {
           total: logs.length,
         });
       } catch (error) {
-        console.error("Session logs API error:", error);
         return NextResponse.json(
           { success: false, message: "Failed to fetch session logs" },
           { status: 500 }

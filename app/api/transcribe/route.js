@@ -43,7 +43,6 @@ export async function POST(req) {
 
     return Response.json({ success: true, text: result.text || "" });
   } catch (err) {
-    console.error("/api/transcribe error:", err);
     const message =
       err?.response?.data?.error?.message ||
       err?.message ||

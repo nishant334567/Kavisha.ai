@@ -49,7 +49,6 @@ export async function POST(request) {
           session: updatedSession,
         });
       } catch (error) {
-        console.error("Error updating session assignment:", error);
         return NextResponse.json(
           { error: "Failed to update session assignment" },
           { status: 500 }

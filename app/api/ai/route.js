@@ -150,9 +150,7 @@ export async function POST(request) {
               },
               { upsert: true }
             );
-          } catch (error) {
-            console.error("Background DB operations failed:", error);
-          }
+          } catch (error) {}
         });
 
         return NextResponse.json({
@@ -163,7 +161,6 @@ export async function POST(request) {
           matchesWithObjectIds: matchesLatest,
         });
       } catch (error) {
-        console.error(error);
         return NextResponse.json(
           { error: "something went wrong", details: error.message },
           { status: 500 }

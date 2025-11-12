@@ -17,7 +17,6 @@ export async function GET(request) {
         await createOrGetUser(decodedToken);
         return NextResponse.json({ status: "success" });
       } catch (error) {
-        console.error("Error saving user:", error);
         return NextResponse.json({ status: "error" }, { status: 500 });
       }
     },
@@ -25,7 +24,6 @@ export async function GET(request) {
       return NextResponse.json({ status: "error", reason }, { status: 401 });
     },
     handleError: async (error) => {
-      console.error("Login error:", error);
       return NextResponse.json({ status: "error" }, { status: 500 });
     },
   });

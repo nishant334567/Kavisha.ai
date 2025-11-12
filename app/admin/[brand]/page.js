@@ -70,7 +70,6 @@ export default function BrandAdminPage() {
         }));
       }
     } catch (error) {
-      console.error("Failed to update status:", error);
     } finally {
       setUpdating((prev) => ({ ...prev, [sessionId]: false }));
     }
@@ -97,7 +96,6 @@ export default function BrandAdminPage() {
         }));
       }
     } catch (error) {
-      console.error("Failed to update comment:", error);
     } finally {
       setCommentUpdating((prev) => ({ ...prev, [sessionId]: false }));
     }
@@ -124,7 +122,6 @@ export default function BrandAdminPage() {
         }));
       }
     } catch (error) {
-      console.error("Failed to assign session:", error);
     } finally {
       setAssigning((prev) => ({ ...prev, [sessionId]: false }));
     }
@@ -169,7 +166,6 @@ export default function BrandAdminPage() {
         setEmailData({ subject: "", body: "" });
       }
     } catch (error) {
-      console.error("Failed to send emails:", error);
       alert("Failed to send emails. Please try again.");
     } finally {
       setSendingEmail(false);
@@ -221,7 +217,6 @@ export default function BrandAdminPage() {
         alert("Failed to send email. Please try again.");
       }
     } catch (error) {
-      console.error("Failed to send email:", error);
       alert("Failed to send email. Please try again.");
     } finally {
       setSendingIndividualEmail(false);
@@ -354,14 +349,12 @@ export default function BrandAdminPage() {
           logs: data.logs,
         });
       } else {
-        console.error("Failed to fetch logs:", data.message);
         setSelectedSessionLogs({
           ...session,
           logs: [],
         });
       }
     } catch (error) {
-      console.error("Error fetching logs:", error);
       setSelectedSessionLogs({
         ...session,
         logs: [],

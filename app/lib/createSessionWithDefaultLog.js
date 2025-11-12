@@ -42,9 +42,7 @@ Tell me a bit about yourself and what you're looking for.`;
     });
 
     return session;
-  } catch (err) {
-    console.error("Failed to create Chat Session", err);
-  }
+  } catch (err) {}
 }
 
 module.exports = { createSessionWithDefaultLog };

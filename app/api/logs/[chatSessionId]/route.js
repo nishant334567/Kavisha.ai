@@ -9,7 +9,6 @@ export async function GET(req, { params }) {
     const logs = await Logs.find({ sessionId: chatSessionId });
     return NextResponse.json(logs);
   } catch (err) {
-    console.error(err);
     return NextResponse.json(
       { error: "Failed to fetch logs" },
       { status: 500 }

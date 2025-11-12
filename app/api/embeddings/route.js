@@ -66,7 +66,6 @@ export async function POST(request) {
         const embedding = await generateEmbedding(chunkWithContext);
 
         if (embedding === 0) {
-          console.error(`Failed to generate embedding for chunk ${chunkIndex}`);
           continue;
         }
 
@@ -89,9 +88,7 @@ export async function POST(request) {
           ]);
 
         results.push(datapointId);
-      } catch (chunkError) {
-        console.error(`Error processing chunk at ${chunkIndex}:`, chunkError);
-      }
+      } catch (chunkError) {}
     }
 
     return NextResponse.json({
@@ -101,7 +98,6 @@ export async function POST(request) {
       chunkIds: results,
     });
   } catch (error) {
-    console.error("Error in embeddings API:", error);
     return NextResponse.json({ error: error.message }, { status: 500 });
   }
 }

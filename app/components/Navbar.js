@@ -19,7 +19,6 @@ export default function Navbar() {
       refresh();
       router.push("/");
     } catch (e) {
-      console.error("Sign in error:", e);
     } finally {
       setSigningIn(false);
     }

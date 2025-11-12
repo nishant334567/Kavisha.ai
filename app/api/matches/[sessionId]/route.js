@@ -120,7 +120,6 @@ export async function getMatches(userId, sessionId, role) {
 
     return matches;
   } catch (error) {
-    console.error("Error parsing matches JSON:", error);
     return [];
   }
 }

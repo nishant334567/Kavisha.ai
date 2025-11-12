@@ -49,7 +49,6 @@ export async function POST(request) {
           session: updatedSession,
         });
       } catch (error) {
-        console.error("Error updating session comment:", error);
         return NextResponse.json(
           { error: "Failed to update session comment" },
           { status: 500 }

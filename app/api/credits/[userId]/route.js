@@ -27,7 +27,6 @@ export async function GET(req, { params }) {
       { status: 200 }
     );
   } catch (error) {
-    console.error("Error fetching user credits:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

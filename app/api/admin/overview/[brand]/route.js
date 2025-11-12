@@ -64,7 +64,6 @@ export async function GET(req, { params }) {
           total: formattedSessions.length,
         });
       } catch (error) {
-        console.error("Brand overview API error:", error);
         return NextResponse.json(
           { success: false, message: "Failed to fetch brand sessions" },
           { status: 500 }

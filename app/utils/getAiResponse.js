@@ -21,7 +21,6 @@ export const createChatCompletion = async (
 
     return chatCompletion;
   } catch (error) {
-    console.error("OpenAI API Error:", error);
     throw error;
   }
 };

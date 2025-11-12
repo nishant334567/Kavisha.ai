@@ -77,9 +77,7 @@ export default function ChatBox({
           filename: data.resumeFilename,
           resumeSummary: data.resumeSummary,
         });
-      } catch (error) {
-        console.error("Error fetching resume data:", error);
-      }
+      } catch (error) {}
     };
     fetchResumeData();
   }, [currentChatId]);
@@ -92,9 +90,7 @@ export default function ChatBox({
         const response = await fetch(`/api/all-data-fetched/${currentChatId}`);
         const data = await response.json();
         setHasDatacollected(data.allDataCollected);
-      } catch (error) {
-        console.error("Error fetching data collection status:", error);
-      }
+      } catch (error) {}
     };
     fetchDataCollectionStatus();
   }, [currentChatId]);
@@ -111,9 +107,7 @@ export default function ChatBox({
         if (Array.isArray(data.matches) && data.matches.length > 0) {
           setMatches(data.matches);
         }
-      } catch (error) {
-        console.error("Error fetching matches:", error);
-      }
+      } catch (error) {}
     };
     fetchMatches();
   }, [currentChatId]);
@@ -325,7 +319,7 @@ export default function ChatBox({
         }),
       });
     }
-    console.log("response", response);
+
     if (!response.ok) {
       setMessages([
         ...updatedMessages,

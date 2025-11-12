@@ -110,7 +110,6 @@ export async function GET(req) {
           });
         }
       } catch (err) {
-        console.error("Admin users API error:", err);
         return NextResponse.json({
           success: false,
           message: "Failed to fetch admin data",

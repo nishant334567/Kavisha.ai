@@ -18,7 +18,6 @@ export async function GET(req, { params }) {
     }
     return NextResponse.json({ allDataCollected: !!session.allDataCollected });
   } catch (error) {
-    console.error("Error in all-data-fetched API:", error);
     return NextResponse.json(
       { error: "Internal server error" },
       { status: 500 }

@@ -53,8 +53,6 @@ export default function BrandContextProvider({ children }) {
               }[0]`
         );
         if (brand) {
-          console.log("Brand data from Sanity:", brand);
-
           // Generate URLs using urlFor helper with proper null checks
           const logoUrl = brand.logo?.asset?._ref
             ? urlFor(brand.logo).url()
@@ -62,9 +60,6 @@ export default function BrandContextProvider({ children }) {
           const brandImageUrl = brand.brandImage?.asset?._ref
             ? urlFor(brand.brandImage).url()
             : null;
-
-          console.log("Generated Logo URL:", logoUrl);
-          console.log("Generated Brand Image URL:", brandImageUrl);
 
           const isAdmin = brand.admins?.includes(user?.email) || false;
           const context = {
@@ -81,11 +76,10 @@ export default function BrandContextProvider({ children }) {
             initialmessage: brand.initialmessage,
             services: brand.services,
           };
-          console.log("Final context:", context);
+
           setBrandContext(context);
         }
       } catch (err) {
-        console.error("Failed to fetch brand context:", err);
       } finally {
         setLoading(false);
       }

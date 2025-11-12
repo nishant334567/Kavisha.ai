@@ -31,7 +31,6 @@ export async function middleware(request) {
       return NextResponse.next();
     },
     handleError: async (error) => {
-      console.error("Auth middleware error:", error);
       return redirectToLogin(request, {
         path: "/login",
         publicPaths: PUBLIC_PATHS,

@@ -31,7 +31,6 @@ export async function POST(request) {
 
     return NextResponse.json({ success: true, text: data.text });
   } catch (error) {
-    console.error("NEW PDF extraction error:", error);
     return NextResponse.json(
       {
         error: "Failed to extract text from PDF",
@@ -41,5 +40,3 @@ export async function POST(request) {
     );
   }
 }
-
-

@@ -94,7 +94,6 @@ export default function TrainPage() {
         setTotalPage(batchChunks.totalPages || 0);
         setCurrentpage(1);
       } catch (error) {
-        console.error("Error loading embeddings:", error);
         setEmbeddings([]);
       } finally {
         setEmbeddingsLoading(false);
@@ -138,7 +137,6 @@ export default function TrainPage() {
       setCurrentpage((prev) => prev + 1);
       setExpandedChunks({});
     } catch (error) {
-      console.error("Error loading next page:", error);
     } finally {
       setEmbeddingsLoading(false);
     }
@@ -157,7 +155,6 @@ export default function TrainPage() {
       setCurrentpage((prev) => prev - 1);
       setExpandedChunks({});
     } catch (error) {
-      console.error("Error loading previous page:", error);
     } finally {
       setEmbeddingsLoading(false);
     }
@@ -383,16 +380,13 @@ export default function TrainPage() {
         }
       );
 
-      console.log("Status check response status:", response.status);
-
       if (!response.ok) {
         const errorText = await response.text();
-        console.error("Status check error response:", errorText);
+
         throw new Error(`HTTP ${response.status}: ${errorText}`);
       }
 
       const data = await response.json();
-      console.log("Status check response data:", data);
 
       if (data.status === "done" && data.transcription) {
         // Update job status
@@ -434,7 +428,6 @@ export default function TrainPage() {
         );
       }
     } catch (err) {
-      console.error("Status check error:", err);
       setError(`Failed to check status: ${err.message}`);
     } finally {
       setCheckingStatus((prev) => ({ ...prev, [jobId]: false }));
