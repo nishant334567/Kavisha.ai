@@ -1,6 +1,7 @@
 "use client";
 
-import { useSession, signOut, signIn } from "next-auth/react";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
+import { signOut } from "../lib/firebase/logout";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
@@ -14,15 +15,13 @@ export default function ChatSidebar({
   onOpenInbox,
   onSidebarWidthChange,
 }) {
-  const { data: session } = useSession();
+  const { user } = useFirebaseSession();
   const [isCollapsed, setIscollapsed] = useState(true);
   const [newChatLoading, setNewChatLoading] = useState(false);
   const [inboxLoading, setInboxLoading] = useState(false);
   const brandContext = useBrandContext();
   const [inboxChats, setInboxChats] = useState([]);
   const router = useRouter();
-  if (session?.user) {
-  }
 
   const getRoleMeta = (role) => {
     if (role === "recruiter") {
@@ -147,10 +146,10 @@ export default function ChatSidebar({
                 </div>
                 <div className="flex flex-col overflow-hidden">
                   <span className="font-semibold text-white truncate text-base">
-                    {session?.user?.name || "User"}
+                    {user?.name || "User"}
                   </span>
                   <span className="text-xs text-white truncate">
-                    {session?.user?.email}
+                    {user?.email}
                   </span>
                 </div>
               </div>
@@ -179,7 +178,7 @@ export default function ChatSidebar({
 
                   <button
                     className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-red-50 hover:border-red-200 transition-all duration-200 text-red-600 border border-slate-200"
-                    onClick={() => signOut({ callbackUrl: "/login" })}
+                    onClick={signOut}
                   >
                     Sign Out
                   </button>

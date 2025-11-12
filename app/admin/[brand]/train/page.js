@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 const fetchEmbeddings = async (brand, page = 1, type = "docs") => {
@@ -12,7 +12,7 @@ const fetchEmbeddings = async (brand, page = 1, type = "docs") => {
   return data;
 };
 export default function TrainPage() {
-  const { data: session, status } = useSession();
+  const { user, loading: authLoading } = useFirebaseSession();
   const router = useRouter();
   const brandContext = useBrandContext();
   // Training states
@@ -59,19 +59,19 @@ export default function TrainPage() {
 
   useEffect(() => {
     // Check if user is not logged in
-    if (status === "unauthenticated") {
+    if (!authLoading && !user) {
       router.push("/login");
       return;
     }
 
     // Check if session is still loading
-    if (status === "loading") {
+    if (authLoading) {
       return;
     }
 
     // Check if user is logged in but not an admin
-    if (session && brandContext && brandContext.admins) {
-      if (!brandContext.admins.includes(session.user?.email)) {
+    if (user && brandContext && brandContext.admins) {
+      if (!brandContext.admins.includes(user?.email)) {
         alert(
           "You don't have admin privileges to access this. Ask admins for access"
         );
@@ -102,10 +102,10 @@ export default function TrainPage() {
     };
 
     loadEmbeddings();
-  }, [session, status, brandContext, router, activeTab]);
+  }, [user, authLoading, brandContext, router, activeTab]);
 
   // Show loading while checking authentication
-  if (status === "loading") {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -118,10 +118,9 @@ export default function TrainPage() {
 
   // Don't render if not authenticated or not admin
   if (
-    status === "unauthenticated" ||
-    !session ||
+    !user ||
     !brandContext?.admins ||
-    !brandContext.admins.includes(session.user?.email)
+    !brandContext.admins.includes(user?.email)
   ) {
     return null;
   }

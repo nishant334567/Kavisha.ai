@@ -1,8 +1,10 @@
 "use client";
-import { signIn, useSession } from "next-auth/react";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
+import { signIn } from "../lib/firebase/sign-in";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
+import Loader from "../components/Loader";
 
 // Constants
 const IN_APP_BROWSER_PATTERNS = [
@@ -77,21 +79,52 @@ const openInChrome = () => {
 };
 
 export default function LoginPage() {
-  const { data: session } = useSession();
+  const { user, loading, refresh } = useFirebaseSession();
   const brand = useBrandContext();
   const router = useRouter();
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
     setIsMobile(isMobileDevice());
-  }, []);
+    if (user) {
+      router.push("/");
+    }
+  }, [user]);
+
+  const handleSignIn = async () => {
+    setSigningIn(true);
+    setError("");
+    try {
+      await signIn();
+      refresh();
+      router.push("/");
+    } catch (e) {
+      setError(e.message || "Sign in failed");
+    } finally {
+      setSigningIn(false);
+    }
+  };
 
   const isBlocked = isInAppBrowser && isMobile;
-  const shouldShowGoogleLogin = !isBlocked && !session?.user;
+  const shouldShowGoogleLogin = !isBlocked && !user && !loading;
+
+  // Show loader while checking session
+  if (loading) {
+    return <Loader loadingMessage="Checking session..." />;
+  }
+
   return (
     <div className="h-full overflow-y-auto mx-auto w-full lg:max-w-[60%] px-8 py-8 space-y-8">
+      {/* Testing Notice */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
+        <p className="text-xs text-yellow-800">
+          ⚠️ Currently in testing - some features may break
+        </p>
+      </div>
       <div className="mt-4 h-48 sm:h-80 w-full  rounded-xl">
         <img
           src={brand?.brandImageUrl}
@@ -108,6 +141,12 @@ export default function LoginPage() {
           {brand?.subtitle}
         </p>
       </div>
+
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg max-w-md mx-auto text-sm text-center">
+          {error}
+        </div>
+      )}
 
       {isBlocked && (
         <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg max-w-md mx-auto">
@@ -126,16 +165,15 @@ export default function LoginPage() {
       <div className="flex justify-center pb-8">
         {shouldShowGoogleLogin && (
           <button
-            onClick={() => {
-              !session?.user?.id
-                ? signIn("google", {
-                    callbackUrl: "/",
-                  })
-                : router.push("/");
-            }}
-            className="px-6 py-3 bg-sky-700 text-white rounded-md text-lg font-medium"
+            onClick={handleSignIn}
+            disabled={signingIn}
+            className="px-6 py-3 bg-sky-700 text-white rounded-md text-lg font-medium disabled:opacity-50 flex items-center gap-2"
           >
-            {session?.user?.id ? "Go to Homepage" : brand?.loginButtonText}
+            {signingIn ? (
+              <span>Signing in...</span>
+            ) : (
+              brand?.loginButtonText || "Talk to Kavisha now"
+            )}
           </button>
         )}
 

@@ -1,6 +1,6 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import Matches from "./Matches";
 import Resume from "./Resume";
 import Livechat from "./LiveChat";
@@ -21,7 +21,7 @@ export default function ChatBox({
   const [input, setInput] = useState("");
   const [messageLoading, setMessageLoading] = useState(false);
   const brandContext = useBrandContext();
-  const { data: session } = useSession();
+  const { user } = useFirebaseSession();
   const [matches, setMatches] = useState([]);
   const [resumeData, setResumedata] = useState({});
   const [hasDatacollected, setHasDatacollected] = useState();
@@ -67,7 +67,7 @@ export default function ChatBox({
 
   useEffect(() => {
     //fetch resume data initially
-    if (!currentChatId || currentChatType==="lead_journey") return;
+    if (!currentChatId || currentChatType === "lead_journey") return;
 
     const fetchResumeData = async () => {
       try {
@@ -85,7 +85,7 @@ export default function ChatBox({
   }, [currentChatId]);
 
   useEffect(() => {
-    if (!currentChatId || currentChatType==="lead_journey") return;
+    if (!currentChatId || currentChatType === "lead_journey") return;
 
     const fetchDataCollectionStatus = async () => {
       try {
@@ -100,7 +100,7 @@ export default function ChatBox({
   }, [currentChatId]);
 
   useEffect(() => {
-    if (!currentChatId || currentChatType==="lead_journey") return;
+    if (!currentChatId || currentChatType === "lead_journey") return;
 
     const fetchMatches = async () => {
       try {
@@ -218,7 +218,7 @@ export default function ChatBox({
             resume: newResumeData,
             type: currentChatType,
             prompt: getServicePrompt(),
-            userId: session?.user?.id,
+            userId: user?.id,
           }),
         });
         if (!response.ok) {
@@ -260,7 +260,6 @@ export default function ChatBox({
     }
   };
 
-
   // Function to get service-specific prompt based on chat type
   const getServicePrompt = () => {
     if (!brandContext?.services || !currentChatType) return "";
@@ -300,32 +299,32 @@ export default function ChatBox({
 
     setMessages(updatedMessages);
     setMessageLoading(true);
-let response;
-if(currentChatType!=="lead_journey"){
-    response = await fetch("/api/ai", {
-      method: "POST",
-      body: JSON.stringify({
-        history: historyToUse,
-        userMessage: messageText || "",
-        sessionId,
-        resume: resumeData?.resumeSummary || "",
-        type: currentChatType,
-        prompt: getServicePrompt() || "",
-        userId: session?.user?.id,
-      }),
-    });
-  }else{
-    response = await fetch("/api/lead-journey", {
-      method: "POST",
-      body: JSON.stringify({
-        history: historyToUse,
-        userMessage: messageText,
-        sessionId,
-        brand: brandContext.subdomain,
-        prompt: getServicePrompt(),
-      }),
-    });
-  }
+    let response;
+    if (currentChatType !== "lead_journey") {
+      response = await fetch("/api/ai", {
+        method: "POST",
+        body: JSON.stringify({
+          history: historyToUse,
+          userMessage: messageText || "",
+          sessionId,
+          resume: resumeData?.resumeSummary || "",
+          type: currentChatType,
+          prompt: getServicePrompt() || "",
+          userId: user?.id,
+        }),
+      });
+    } else {
+      response = await fetch("/api/lead-journey", {
+        method: "POST",
+        body: JSON.stringify({
+          history: historyToUse,
+          userMessage: messageText,
+          sessionId,
+          brand: brandContext.subdomain,
+          prompt: getServicePrompt(),
+        }),
+      });
+    }
     console.log("response", response);
     if (!response.ok) {
       setMessages([
@@ -348,13 +347,13 @@ if(currentChatType!=="lead_journey"){
       { role: "assistant", message: data.reply },
     ]);
     setMessageLoading(false);
-    
+
     // Reset retry state on success
     if (isRetry) {
       setRetry(false);
       setRetryIndex(undefined);
     }
-    
+
     // Handle matches and data collection status
     if (
       data?.matchesWithObjectIds?.length > 0 &&
@@ -416,8 +415,7 @@ if(currentChatType!=="lead_journey"){
     <div className="w-full lg:w-3/5 mx-auto flex bg-white rounded-xl p-4 h-[calc(100vh-56px)]">
       <div className="relative w-full flex-1 min-h-0 flex flex-col">
         <div className="rounded-xl w-full p-2 font-light h-full flex flex-col min-h-0">
-          <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-white sm:bg-gray-100 z-10">
-          </div>
+          <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-white sm:bg-gray-100 z-10"></div>
 
           <div className="flex-1 min-h-0 h-full overflow-y-scroll pt-1 mt-16 scrollbar-none">
             <div className="flex flex-col gap-2 min-h-full justify-end">
@@ -432,14 +430,14 @@ if(currentChatType!=="lead_journey"){
                         : "flex justify-start"
                     }
                   >
-                  {i===retryIndex && retry && (
-                    <button 
-                      onClick={() => handleSubmit(null, true)}
-                      className="text-xs text-red-500 hover:text-red-700 underline"
-                    >
-                      Retry
-                    </button>
-                  )}
+                    {i === retryIndex && retry && (
+                      <button
+                        onClick={() => handleSubmit(null, true)}
+                        className="text-xs text-red-500 hover:text-red-700 underline"
+                      >
+                        Retry
+                      </button>
+                    )}
                     <div
                       className={`text-sm leading-relaxed break-words rounded-2xl px-4 py-2  sm:max-w-[60%] shadow-sm ${
                         m.role === "user"
@@ -640,7 +638,7 @@ if(currentChatType!=="lead_journey"){
         <Livechat
           userA={userA}
           userB={userB}
-          currentUserId={session?.user?.id}
+          currentUserId={user?.id}
           onClose={() => setOpenChat(false)}
           connectionId={connectionId}
         />

@@ -1,25 +1,25 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import Loader from "./Loader";
 
 export default function Inbox({ onOpenChat, onClose }) {
-  const { data: session } = useSession();
+  const { user } = useFirebaseSession();
   const [activeChats, setActiveChats] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    if (!session?.user?.id) return;
+    if (!user?.id) return;
     const fetchActiveChats = async () => {
       setLoading(true);
-      const response = await fetch(`/api/active-chats/${session?.user?.id}`);
+      const response = await fetch(`/api/active-chats/${user.id}`);
       const data = await response.json();
 
       setActiveChats(Array.isArray(data) ? data : []);
       setLoading(false);
     };
     fetchActiveChats();
-  }, [session]);
+  }, [user]);
 
   if (loading) {
     return (

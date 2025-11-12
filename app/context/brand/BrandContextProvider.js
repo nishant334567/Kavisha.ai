@@ -1,13 +1,13 @@
 "use client";
 
 import { useState, useEffect, useContext } from "react";
-import { useSession } from "next-auth/react";
+import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import BrandContext from "./BrandContext";
 import { client, urlFor } from "@/app/lib/sanity";
 import Loader from "@/app/components/Loader";
 
 export default function BrandContextProvider({ children }) {
-  const { data: session } = useSession();
+  const { user } = useFirebaseSession();
   const [brandContext, setBrandContext] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -66,7 +66,7 @@ export default function BrandContextProvider({ children }) {
           console.log("Generated Logo URL:", logoUrl);
           console.log("Generated Brand Image URL:", brandImageUrl);
 
-          const isAdmin = brand.admins?.includes(session?.user?.email) || false;
+          const isAdmin = brand.admins?.includes(user?.email) || false;
           const context = {
             brandId: brand._id,
             brandName: brand.brandName,
@@ -91,7 +91,7 @@ export default function BrandContextProvider({ children }) {
       }
     };
     brandDataFromSanity();
-  }, [session?.user?.email]);
+  }, [user?.email]);
 
   if (loading || !brandContext) {
     return <Loader loadingMessage="Loading..." />;

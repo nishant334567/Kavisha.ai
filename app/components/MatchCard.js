@@ -1,5 +1,5 @@
 "use client";
-import { useSession } from "next-auth/react";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import React, { useEffect, useState } from "react";
 
 export default function MatchCard({
@@ -20,7 +20,7 @@ export default function MatchCard({
   openDetailsPanel,
   openChatSession,
 }) {
-  const { data: session } = useSession();
+  const { user } = useFirebaseSession();
 
   return (
     <div className="relative g-white border border-slate-200 rounded-lg p-4 flex flex-col gap-2 min-h-[120px] w-full relative">
@@ -63,7 +63,7 @@ export default function MatchCard({
       <div className="flex text-xs gap-2">
         <div className="w-full relative">
           <button
-            onClick={() => openChatSession(session?.user?.id, matchedUserId)}
+            onClick={() => openChatSession(user?.id, matchedUserId)}
             className="w-full px-2 py-1 rounded-md flex items-center justify-center 
             bg-orange-600 hover:bg-orange-700 transition-colors"
           >

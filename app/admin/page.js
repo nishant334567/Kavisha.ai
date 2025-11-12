@@ -4,20 +4,20 @@ import SessionSection from "./components/SessionSection";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 
 export default function Admin() {
   const router = useRouter();
-  const { data: session, status } = useSession();
+  const { user, loading } = useFirebaseSession();
   const brand = useBrandContext();
   const [stats, setStats] = useState(null);
-  const [loading, setLoading] = useState(false);
+  const [dataLoading, setDataLoading] = useState(false);
   const [error, setError] = useState("");
 
   // Auth gate (client-side)
   useEffect(() => {
-    if (status === "unauthenticated") router.push("/login");
-  }, [status, router]);
+    if (!loading && !user) router.push("/login");
+  }, [user, loading, router]);
 
   // Brand admin gate: kavisha only
   const brandLoaded = !!brand;
@@ -27,7 +27,7 @@ export default function Admin() {
     brand?.isBrandAdmin;
 
   useEffect(() => {
-    if (status !== "authenticated" || !canView) return;
+    if (!user || !canView) return;
     const load = async () => {
       try {
         const res = await fetch(`/api/admin/overview?countsOnly=true`, {
@@ -57,15 +57,15 @@ export default function Admin() {
       } catch (e) {
         setError(e.message || "Failed to load");
       } finally {
-        setLoading(false);
+        setDataLoading(false);
       }
     };
-    setLoading(true);
+    setDataLoading(true);
     load();
-  }, [canView, status]);
+  }, [canView, user]);
 
   // While auth or brand context is loading
-  if (status === "loading" || !brandLoaded) {
+  if (loading || !brandLoaded) {
     return (
       <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
         <div className="text-gray-600">Loading…</div>
@@ -74,13 +74,13 @@ export default function Admin() {
   }
 
   // If authenticated but not allowed, redirect to login with reason
-  if (status === "authenticated" && !canView) {
+  if (user && !canView) {
     router.replace("/login?reason=unauthorized");
     return null;
   }
 
   // While data is loading after canView
-  if (loading) {
+  if (dataLoading) {
     return (
       <div className="min-h-screen bg-gray-50 p-6 flex items-center justify-center">
         <div className="text-gray-600">Loading…</div>

@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import MatchCard from "./MatchCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
@@ -10,7 +10,7 @@ export default function Matches({
   openDetailsPanel,
   openChatSession,
 }) {
-  const { data: session } = useSession();
+  const { user } = useFirebaseSession();
 
   const scrollRef = useRef();
 
@@ -52,7 +52,7 @@ export default function Matches({
                     matchPercentage={item.matchPercentage}
                     matchingReason={item.matchingReason}
                     mismatchReason={item.mismatchReason}
-                    profileType={session?.user?.profileType}
+                    profileType={user?.profileType}
                     senderSession={currentChatId}
                     matchedUserId={item.matchedUserId}
                     matchedSessionId={

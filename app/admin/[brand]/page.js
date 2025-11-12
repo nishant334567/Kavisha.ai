@@ -4,12 +4,12 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useBrandContext } from "../../context/brand/BrandContextProvider";
 import Livechat from "../../components/LiveChat";
-import { useSession } from "next-auth/react";
+import { useFirebaseSession } from "../../lib/firebase/FirebaseSessionProvider";
 import { useRouter } from "next/navigation";
 export default function BrandAdminPage() {
   const params = useParams();
   const brand = (params?.brand || "").toLowerCase();
-  const { data: session } = useSession();
+  const { user } = useFirebaseSession();
   const router = useRouter();
   const [data, setData] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -657,7 +657,7 @@ export default function BrandAdminPage() {
                       <button
                         onClick={() =>
                           openChatSession(
-                            session?.user?.id,
+                            user?.id,
                             currentUserSession.user?._id
                           )
                         }
@@ -1214,7 +1214,7 @@ export default function BrandAdminPage() {
         <Livechat
           userA={userA}
           userB={userB}
-          currentUserId={session?.user?.id}
+          currentUserId={user?.id}
           onClose={() => setOpenChat(false)}
           connectionId={connectionId}
         />

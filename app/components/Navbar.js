@@ -1,13 +1,29 @@
 "use client";
-import { useSession, signIn, signOut } from "next-auth/react";
+import { useState } from "react";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
+import { signIn } from "../lib/firebase/sign-in";
+import { signOut } from "../lib/firebase/logout";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { urlFor } from "../lib/sanity";
 import { useRouter } from "next/navigation";
 
 export default function Navbar() {
-  const { data: session } = useSession();
+  const { user, loading, refresh } = useFirebaseSession();
   const brand = useBrandContext();
   const router = useRouter();
+  const [signingIn, setSigningIn] = useState(false);
+
+  const handleSignIn = async () => {
+    setSigningIn(true);
+    try {
+      await signIn();
+      refresh();
+      router.push("/");
+    } catch (e) {
+      console.error("Sign in error:", e);
+    } finally {
+      setSigningIn(false);
+    }
+  };
 
   return (
     <nav className="w-full border-b border-gray-200 bg-white fixed top-0 left-0 z-50">
@@ -33,20 +49,19 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          {!session ? (
+          {loading ? (
+            <div className="px-3 py-1.5 text-sm text-gray-500">Loading...</div>
+          ) : !user ? (
             <button
-              onClick={() => {
-                signIn("google", {
-                  callbackUrl: `${window.location.origin}${window.location.pathname}`,
-                });
-              }}
-              className="px-3 py-1.5 rounded-md text-sm bg-sky-900 text-white hover:bg-sky-700"
+              onClick={handleSignIn}
+              disabled={signingIn}
+              className="px-3 py-1.5 rounded-md text-sm bg-sky-900 text-white hover:bg-sky-700 disabled:opacity-50"
             >
-              Sign in
+              {signingIn ? "Signing in..." : "Sign in"}
             </button>
           ) : (
             <button
-              onClick={() => signOut({ callbackUrl: "/login" })}
+              onClick={signOut}
               className="px-3 py-1.5 rounded-md text-sm bg-gray-100 text-gray-800 hover:bg-gray-200 border border-gray-200"
             >
               Sign out

@@ -1,12 +1,15 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
+import { withAuth } from "@/app/lib/firebase/auth-middleware";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
 export async function POST(req) {
-  try {
+  return withAuth(req, {
+    onAuthenticated: async ({ decodedToken }) => {
+      try {
     const { recipients, subject, body, brand } = await req.json();
 
     if (!recipients || !Array.isArray(recipients) || recipients.length === 0) {
@@ -103,5 +106,7 @@ export async function POST(req) {
       },
       { status: 500 }
     );
-  }
+      }
+    },
+  });
 }

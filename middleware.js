@@ -1,30 +1,45 @@
 import { NextResponse } from "next/server";
-import { getToken } from "next-auth/jwt";
+import { authMiddleware, redirectToLogin } from "next-firebase-auth-edge";
+import { serverConfig } from "./app/lib/firebase/config";
+import { getCookieOptions } from "./app/lib/firebase/cookie-config";
 
-const ROOT_DOMAIN = "kavisha.ai";
+const PUBLIC_PATHS = ["/login", "/api/login"];
 
-export async function middleware(req) {
-  const url = req.nextUrl.clone();
-  const { pathname } = req.nextUrl;
-  const token = await getToken({ req, secret: process.env.AUTH_SECRET });
-
-  if (!token && pathname === "/") {
-    return NextResponse.redirect(new URL("/login", req.url));
-  }
-
-  const host = req.headers.get("host") || "";
-  const subdomain = host.split(".")[0];
-
-  const isNonTenant = host === ROOT_DOMAIN || subdomain === "www";
-
-  if (isNonTenant) {
-    return NextResponse.next();
-  }
-
-  url.searchParams.set("brand", subdomain);
-  return NextResponse.rewrite(url);
+export async function middleware(request) {
+  return authMiddleware(request, {
+    loginPath: "/api/login",
+    logoutPath: "/api/logout",
+    apiKey: serverConfig.apiKey,
+    cookieName: serverConfig.cookieName,
+    cookieSignatureKeys: serverConfig.cookieSignatureKeys,
+    cookieSerializeOptions: getCookieOptions(),
+    serviceAccount: serverConfig.serviceAccount,
+    handleValidToken: async ({ token, decodedToken }, headers) => {
+      // Redirect authenticated users from /login to home
+      if (request.nextUrl.pathname === "/login") {
+        return NextResponse.redirect(new URL("/", request.url));
+      }
+      return NextResponse.next({ request: { headers } });
+    },
+    handleInvalidToken: async () => {
+      if (!PUBLIC_PATHS.includes(request.nextUrl.pathname)) {
+        return redirectToLogin(request, {
+          path: "/login",
+          publicPaths: PUBLIC_PATHS,
+        });
+      }
+      return NextResponse.next();
+    },
+    handleError: async (error) => {
+      console.error("Auth middleware error:", error);
+      return redirectToLogin(request, {
+        path: "/login",
+        publicPaths: PUBLIC_PATHS,
+      });
+    },
+  });
 }
 
 export const config = {
-  matcher: ["/((?!api|_next/static|_next/image|favicon.ico).*)"],
+  matcher: ["/", "/((?!_next|favicon.ico|api/login|api/logout|.*\\.).*)"],
 };

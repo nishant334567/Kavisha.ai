@@ -1,16 +1,18 @@
 "use client";
 
-import { redirect } from "next/navigation";
-import { useSession } from "next-auth/react";
+import { useFirebaseSession } from "./lib/firebase/FirebaseSessionProvider";
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
 import { useBrandContext } from "./context/brand/BrandContextProvider";
 import SelectChatType from "./components/SelectType";
 import ChatBox from "./components/ChatBox";
 import ChatSidebar from "./components/ChatSidebar";
 import RightPanel from "./components/Rightpanel";
+import Loader from "./components/Loader";
 
 export default function HomePage() {
-  const { data: session } = useSession();
+  const { user, loading } = useFirebaseSession();
+  const router = useRouter();
   const [currentChatType, setCurrentChatType] = useState(null);
   const brandContext = useBrandContext();
   const [input, setInput] = useState("");
@@ -26,10 +28,10 @@ export default function HomePage() {
   const [sidebarWidth, setSidebarWidth] = useState(256);
   const [servicesProvided, setServicesProvided] = useState({});
   useEffect(() => {
-    if (!session || !brandContext) return;
-    const key = `lastChat:${session.user.id}:${brandContext.brandName}`;
+    if (!user || !brandContext) return;
+    const key = `lastChat:${user.id}:${brandContext.brandName}`;
     const saved = localStorage.getItem(key);
-    const key2 = `lastChatType:${session.user.id}`;
+    const key2 = `lastChatType:${user.id}`;
     const savedType = localStorage.getItem(key2);
     if (savedType && !currentChatType) setCurrentChatType(savedType);
     if (saved && !currentChatId) setCurrentChatId(saved);
@@ -59,7 +61,7 @@ export default function HomePage() {
     setServicesProvided(filteredServices);
   }, [brandContext]);
   useEffect(() => {
-    if (!session || !brandContext) return;
+    if (!user || !brandContext) return;
     const fetchData = async () => {
       const endpoint =
         brandContext.subdomain === "kavisha"
@@ -70,14 +72,15 @@ export default function HomePage() {
       setAllchats(data);
     };
     fetchData();
+  }, [user, brandContext]);
 
-    if (currentChatId) {
-      const key = `lastChat:${session.user.id}:${brandContext.brandName}`;
-      const key2 = `lastChatType:${session.user.id}`;
-      localStorage.setItem(key, currentChatId);
-      localStorage.setItem(key2, currentChatType);
-    }
-  }, [currentChatId, currentChatType]);
+  useEffect(() => {
+    if (!user || !brandContext || !currentChatId) return;
+    const key = `lastChat:${user.id}:${brandContext.brandName}`;
+    const key2 = `lastChatType:${user.id}`;
+    localStorage.setItem(key, currentChatId);
+    localStorage.setItem(key2, currentChatType);
+  }, [currentChatId, currentChatType, user, brandContext]);
 
   const toggleRightPanel = () => {
     setShow((prev) => !prev);
@@ -91,7 +94,7 @@ export default function HomePage() {
 
   const selectChatType = async (type, initialMessage) => {
     setCurrentChatType(type);
-    if (!session || !brandContext) return;
+    if (!user || !brandContext) return;
 
     try {
       setCreatingSession(true);
@@ -99,7 +102,7 @@ export default function HomePage() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          userId: session.user.id,
+          userId: user.id,
           role: type,
           brand: brandContext.subdomain,
           initialmessage: initialMessage,
@@ -116,12 +119,23 @@ export default function HomePage() {
     }
   };
 
-  if (!session) {
-    redirect("/login");
+  if (loading) {
+    return <Loader loadingMessage="Loading..." />;
+  }
+
+  // Middleware handles redirect for unauthenticated users
+  if (!user) {
+    return null;
   }
 
   return (
     <div className="h-[calc(100vh-56px)] overflow-hidden">
+      {/* Testing Notice */}
+      <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-center">
+        <p className="text-xs text-yellow-800">
+          ⚠️ Currently in testing - some features may break
+        </p>
+      </div>
       <div className="flex h-full overflow-hidden">
         <div style={{ width: sidebarWidth }}>
           <ChatSidebar
@@ -167,7 +181,7 @@ export default function HomePage() {
               <RightPanel
                 type={1}
                 matches={matches}
-                session={session}
+                session={user}
                 currentChatId={currentChatId}
                 toggleRightPanel={toggleRightPanel}
               />
@@ -176,7 +190,7 @@ export default function HomePage() {
               <RightPanel
                 type={2}
                 connections={connections}
-                session={session}
+                session={user}
                 currentChatId={currentChatId}
                 toggleRightPanel={toggleRightPanel}
               />
@@ -184,7 +198,7 @@ export default function HomePage() {
             {show && type === 3 && (
               <RightPanel
                 type={3}
-                session={session}
+                session={user}
                 currentChatId={currentChatId}
                 detailsObject={viewData}
                 toggleRightPanel={toggleRightPanel}

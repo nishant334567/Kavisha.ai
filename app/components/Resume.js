@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import shortenFileName from "../utils/shortenfilename";
-import { useSession } from "next-auth/react";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 
 export default function Resume({
   resumeData,
@@ -18,7 +18,7 @@ export default function Resume({
   const [uploadloading, setUploadloading] = useState(false);
   const [isDeleting, setIsdeleting] = useState(false);
   const [fileInputKey, setFileInputKey] = useState(0);
-  const { data: session } = useSession();
+  const { user } = useFirebaseSession();
   // const [resumeSessionData, setResumeSessionData] = useState(resumeData)
   const { filename = "", resumeSummary = "" } = resumeData || {};
 
@@ -102,7 +102,7 @@ export default function Resume({
             <img src="attach.png" width={20} />
             {resume || (filename !== "" && resumeSummary !== "")
               ? "Reselect"
-              : session?.user?.profileType === "recruiter"
+              : user?.profileType === "recruiter"
                 ? "Share JD"
                 : "Upload Resume"}
           </label>

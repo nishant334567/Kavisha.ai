@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useMemo } from "react";
-import { useSession } from "next-auth/react";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import useSocket from "../context/useSocket";
 
 export default function Livechat({
@@ -11,7 +11,7 @@ export default function Livechat({
   connectionId,
 }) {
   const [message, setMessage] = useState("");
-  const { data: session } = useSession();
+  const { user } = useFirebaseSession();
   const [messages, setMessages] = useState([]);
   const listRef = useRef(null);
   const [chatInfo, setChatInfo] = useState({
@@ -132,7 +132,7 @@ export default function Livechat({
       const payload = {
         text: message,
         connectionId: chatInfo.connectionId,
-        senderUserId: session?.user?.id,
+        senderUserId: user?.id,
         // timestamp: new Date().toISOString(),
       };
       socket.emit("send_message", payload);
@@ -188,7 +188,7 @@ export default function Livechat({
           ) : (
             <div className="flex flex-col gap-2">
               {messages.map((m, i) => {
-                const isMe = m.senderUserId === session?.user?.id;
+                const isMe = m.senderUserId === user?.id;
                 const text = typeof m === "string" ? m : m.text;
                 return (
                   <div

@@ -1,11 +1,11 @@
 "use client";
 import { useEffect, useState } from "react";
-import { useSession } from "next-auth/react";
+import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 
 export default function EditProfilePage() {
-  const { data: session, status } = useSession();
+  const { user, loading: authLoading } = useFirebaseSession();
   const router = useRouter();
   const brandContext = useBrandContext();
   const [brandName, setBrandName] = useState(brandContext.brandName);
@@ -21,19 +21,19 @@ export default function EditProfilePage() {
 
   useEffect(() => {
     // Check if user is not logged in
-    if (status === "unauthenticated") {
+    if (!authLoading && !user) {
       router.push("/login");
       return;
     }
 
     // Check if session is still loading
-    if (status === "loading") {
+    if (authLoading) {
       return;
     }
 
     // Check if user is logged in but not an admin
-    if (session && brandContext && brandContext.admins) {
-      if (!brandContext.admins.includes(session.user?.email)) {
+    if (user && brandContext && brandContext.admins) {
+      if (!brandContext.admins.includes(user?.email)) {
         alert(
           "You don't have admin privileges to access this. Ask admins for access"
         );
@@ -41,10 +41,10 @@ export default function EditProfilePage() {
         return;
       }
     }
-  }, [session, status, brandContext, router]);
+  }, [user, authLoading, brandContext, router]);
 
   // Show loading while checking authentication
-  if (status === "loading") {
+  if (authLoading) {
     return (
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
@@ -57,10 +57,9 @@ export default function EditProfilePage() {
 
   // Don't render if not authenticated or not admin
   if (
-    status === "unauthenticated" ||
-    !session ||
+    !user ||
     !brandContext?.admins ||
-    !brandContext.admins.includes(session.user?.email)
+    !brandContext.admins.includes(user?.email)
   ) {
     return null;
   }

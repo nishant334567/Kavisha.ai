@@ -1,10 +1,13 @@
 "use client";
 import "./globals.css";
-import { SessionProvider } from "next-auth/react";
 import SocketProvider from "./context/SocketProvider";
-import { useSession } from "next-auth/react";
+import {
+  FirebaseSessionProvider,
+  useFirebaseSession,
+} from "./lib/firebase/FirebaseSessionProvider";
 import BrandContextProvider from "./context/brand/BrandContextProvider";
 import Navbar from "@/app/components/Navbar";
+import Loader from "./components/Loader";
 
 export default function RootLayout({ children }) {
   return (
@@ -18,23 +21,23 @@ export default function RootLayout({ children }) {
         suppressHydrationWarning={true}
         suppressContentEditableWarning={true}
       >
-        <SessionProvider>
+        <FirebaseSessionProvider>
           <BrandContextProvider>
             <SocketSessionWrapper>
               <Navbar />
               <div className="mt-12 min-h-[calc(100vh-56px)]">{children}</div>
             </SocketSessionWrapper>
           </BrandContextProvider>
-        </SessionProvider>
+        </FirebaseSessionProvider>
       </body>
     </html>
   );
 
   function SocketSessionWrapper({ children }) {
-    const { data: session, status } = useSession();
-    if (status === "loading") return null;
-    return (
-      <SocketProvider userId={session?.user?.id}>{children}</SocketProvider>
-    );
+    const { user, loading } = useFirebaseSession();
+    if (loading) {
+      return <Loader loadingMessage="Loading session..." />;
+    }
+    return <SocketProvider userId={user?.id}>{children}</SocketProvider>;
   }
 }

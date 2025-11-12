@@ -1,30 +1,25 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import Events from "@/app/models/Events";
-import { getToken } from "next-auth/jwt";
+import { withAuth } from "@/app/lib/firebase/auth-middleware";
 
 export async function GET(request, { params }) {
-  const { brandName } = await params;
-  try {
-    const token = await getToken({
-      req: request,
-      secret: process.env.NEXTAUTH_SECRET,
-    });
+  return withAuth(request, {
+    onAuthenticated: async () => {
+      try {
+        const { brandName } = await params;
+        await connectDB();
 
-    if (!token) {
-      return NextResponse.json({ error: "Please login" }, { status: 401 });
-    }
+        const events = await Events.find({
+          brandName: brandName.toLowerCase(),
+        }).sort({
+          createdAt: -1,
+        });
 
-    await connectDB();
-
-    const events = await Events.find({
-      brandName: brandName.toLowerCase(),
-    }).sort({
-      createdAt: -1,
-    });
-
-    return NextResponse.json({ events });
-  } catch (error) {
-    return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
-  }
+        return NextResponse.json({ events });
+      } catch (error) {
+        return NextResponse.json({ error: "Failed to fetch" }, { status: 500 });
+      }
+    },
+  });
 }
