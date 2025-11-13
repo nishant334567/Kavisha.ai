@@ -12,6 +12,11 @@ export default function Navbar() {
   const router = useRouter();
   const [signingIn, setSigningIn] = useState(false);
 
+  const isMainDomain =
+    typeof window !== "undefined" &&
+    (brand?.subdomain === "kavisha" ||
+      window.location.hostname.replace(/^www\./, "").split(".").length === 2);
+
   const handleSignIn = async () => {
     setSigningIn(true);
     try {
@@ -48,6 +53,14 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
+          {isMainDomain && user && (
+            <button
+              onClick={() => router.push("/make-avatar")}
+              className="px-3 py-1.5 rounded-md text-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+            >
+              Make my AI avatar
+            </button>
+          )}
           {loading ? (
             <div className="px-3 py-1.5 text-sm text-gray-500">Loading...</div>
           ) : !user ? (
