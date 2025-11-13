@@ -1,143 +1,194 @@
 "use client";
 
 import { useState } from "react";
-import { useRouter } from "next/navigation";
 
-const fields = [
-  {
-    id: "subdomain",
-    label: "Subdomain Name",
-    type: "text",
-    placeholder: "e.g., mybrand",
-    hint: "Unique subdomain identifier",
-  },
-  {
-    id: "name",
-    label: "Name of the Person",
-    type: "text",
-    placeholder: "e.g., John Doe",
-    hint: "Person this AI avatar represents",
-  },
-  {
-    id: "personality",
-    label: "Personality",
-    type: "textarea",
-    placeholder: "e.g., Friendly, professional, helpful...",
-    hint: "Personality traits and characteristics",
-  },
-];
+const placeholderText = `You are Nithin Kamath, the co-founder of Zerodha, India's pioneering broking platform, and Rainmatter, a startup investment fund.
 
-export default function MakeAvatarPage() {
-  const router = useRouter();
+Your voice is energetic, candid, and down-to-earth. You explain things with simplicity, persistence, and honesty, always weaving in stories from your entrepreneurial journey. You are not a flashy visionary — you are a grounded builder who believes in persistence, customer insight, and frugality. 
+
+VOICE & STYLE:
+- Very short replies: crisp, punchy, direct. But drawing from personal stories and experiences. 
+- Never summarise what the user has said. 
+- Speak with clarity, energy, and conviction. 
+
+- Inspirational yet practical: persistence, frugality, deep customer insight. 
+- Stay humble; credit luck, timing, and your team.
+- Ask probing questions to continue the conversation and learn about the person, but not always.
+
+- Never sound robotic; always sound like a mentor-entrepreneur chatting casually. 
+`;
+export default function CreateAvatar() {
   const [formData, setFormData] = useState({
     subdomain: "",
-    name: "",
-    personality: "",
+    brandName: "",
+    loginButtonText: "",
+    title: "",
+    subtitle: "",
+    email: "",
+    chatbotPersonality: "",
   });
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setFormData({ ...formData, [e.target.name]: e.target.value });
+  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setError("");
-    const missing = Object.entries(formData).find(([_, v]) => !v.trim());
-    if (missing) {
-      setError(`${missing[0]} is required`);
+    if (!formData.subdomain.trim()) {
+      alert("Subdomain is required");
       return;
     }
+
     setLoading(true);
+
     try {
-      alert("AI Avatar created successfully!");
-      router.push("/");
+      const response = await fetch("/api/create-avatar", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: formData.subdomain.trim(),
+          brandName: formData.brandName.trim() || undefined,
+          loginButtonText: formData.loginButtonText.trim() || undefined,
+          title: formData.title.trim() || undefined,
+          subtitle: formData.subtitle.trim() || undefined,
+          email: formData.email.trim() || undefined,
+          chatbotPersonality: formData.chatbotPersonality.trim() || undefined,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (response.ok && data.success) {
+        window.location.href = "/";
+      } else {
+        alert(
+          "Failed to create avatar. Please try again and refresh the form."
+        );
+        window.location.reload();
+      }
     } catch (err) {
-      setError(err.message || "Failed to create AI Avatar");
-    } finally {
-      setLoading(false);
+      alert("An error occurred. Please try again and refresh the form.");
+      window.location.reload();
     }
   };
 
   return (
-    <div className="min-h-[calc(100vh-56px)] bg-gray-50 py-8 px-4">
-      <div className="max-w-2xl mx-auto bg-white rounded-lg shadow-md p-6 sm:p-8">
-        <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
-          Make My AI Avatar
+    <div className="min-h-screen flex items-center justify-center bg-gray-50 px-4">
+      <div className="w-full max-w-md bg-white rounded-lg shadow-lg p-8">
+        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+          Create AI Avatar
         </h1>
-        <p className="text-gray-600 text-sm sm:text-base mb-6">
-          Create your personalized AI avatar
-        </p>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {error && (
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <p className="text-red-700 text-sm">{error}</p>
-            </div>
-          )}
-
-          {fields.map(({ id, label, type, placeholder, hint }) => (
-            <div key={id}>
-              <label
-                htmlFor={id}
-                className="block text-sm font-medium text-gray-700 mb-2"
-              >
-                {label} <span className="text-red-500">*</span>
-              </label>
-              {type === "textarea" ? (
-                <textarea
-                  id={id}
-                  name={id}
-                  value={formData[id]}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, [id]: e.target.value }))
-                  }
-                  placeholder={placeholder}
-                  rows={6}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm sm:text-base resize-none"
-                  required
-                  disabled={loading}
-                />
-              ) : (
-                <input
-                  type={type}
-                  id={id}
-                  name={id}
-                  value={formData[id]}
-                  onChange={(e) =>
-                    setFormData((prev) => ({ ...prev, [id]: e.target.value }))
-                  }
-                  placeholder={placeholder}
-                  className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500 outline-none text-sm sm:text-base"
-                  required
-                  disabled={loading}
-                />
-              )}
-              <p className="mt-1 text-xs text-gray-500">{hint}</p>
-            </div>
-          ))}
-
-          <div className="flex flex-col sm:flex-row gap-3 pt-4">
-            <button
-              type="submit"
-              disabled={loading}
-              className="flex-1 px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm sm:text-base transition-colors flex items-center justify-center gap-2"
-            >
-              {loading ? (
-                <>
-                  <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
-                  Creating...
-                </>
-              ) : (
-                "Create AI Avatar"
-              )}
-            </button>
-            <button
-              type="button"
-              onClick={() => router.push("/")}
-              disabled={loading}
-              className="px-6 py-3 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed font-medium text-sm sm:text-base transition-colors"
-            >
-              Cancel
-            </button>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Subdomain <span className="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              name="subdomain"
+              value={formData.subdomain}
+              onChange={handleChange}
+              placeholder="mybrand"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              required
+            />
+            <p className="text-xs text-gray-500 mt-1">
+              Your domain will be: {formData.subdomain || "subdomain"}
+              .kavisha.ai
+            </p>
           </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Brand Name
+            </label>
+            <input
+              type="text"
+              name="brandName"
+              value={formData.brandName}
+              onChange={handleChange}
+              placeholder="My Brand"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Login Button Text
+            </label>
+            <input
+              type="text"
+              name="loginButtonText"
+              value={formData.loginButtonText}
+              onChange={handleChange}
+              placeholder="Talk to me now"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Title
+            </label>
+            <input
+              type="text"
+              name="title"
+              value={formData.title}
+              onChange={handleChange}
+              placeholder="Welcome to My Brand"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Subtitle
+            </label>
+            <textarea
+              name="subtitle"
+              value={formData.subtitle}
+              onChange={handleChange}
+              placeholder="Your brand description"
+              rows="3"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Admin Email
+            </label>
+            <input
+              type="email"
+              name="email"
+              value={formData.email}
+              onChange={handleChange}
+              placeholder="admin@example.com"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+          </div>
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">
+              Chatbot Personality
+            </label>
+            <textarea
+              rows={10}
+              name="chatbotPersonality"
+              value={formData.chatbotPersonality}
+              onChange={handleChange}
+              placeholder={placeholderText}
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+            />
+          </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="w-full bg-blue-600 text-white py-2 px-4 rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+          >
+            {loading ? "Deploying..." : "Deploy Avatar"}
+          </button>
         </form>
       </div>
     </div>

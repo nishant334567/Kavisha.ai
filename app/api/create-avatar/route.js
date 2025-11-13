@@ -1,0 +1,163 @@
+import { NextResponse } from "next/server";
+import { GoogleAuth } from "google-auth-library";
+import path from "path";
+import { client as sanityClient } from "@/app/lib/sanity";
+import { Resend } from "resend";
+
+const resend = process.env.RESEND_API_KEY
+  ? new Resend(process.env.RESEND_API_KEY)
+  : null;
+
+const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
+const SERVICE_NAME = "kavisha-ai";
+const REGION = "us-central1";
+const ROOT_DOMAIN = "kavisha.ai";
+
+const auth = new GoogleAuth({
+  ...(process.env.GCP_CLIENT_EMAIL && process.env.GCP_PRIVATE_KEY
+    ? {
+        credentials: {
+          client_email: process.env.GCP_CLIENT_EMAIL,
+          private_key: process.env.GCP_PRIVATE_KEY.replace(/\\n/g, "\n"),
+        },
+      }
+    : {
+        keyFile: path.join(
+          process.cwd(),
+          "app/secrets/service-account-key.json"
+        ),
+      }),
+  scopes: "https://www.googleapis.com/auth/cloud-platform",
+});
+
+const deleteBrand = async (brandId) => {
+  if (!brandId) return;
+  try {
+    await sanityClient.delete(brandId);
+  } catch (error) {
+    console.error("Failed to delete brand:", error);
+  }
+};
+
+export async function POST(request) {
+  let brandId = null;
+
+  try {
+    const {
+      subdomain,
+      brandName,
+      loginButtonText,
+      title,
+      subtitle,
+      email,
+      chatbotPersonality,
+    } = await request.json();
+
+    if (!subdomain) {
+      return NextResponse.json(
+        { message: "Subdomain is required" },
+        { status: 400 }
+      );
+    }
+
+    const existingBrand = await sanityClient.fetch(
+      `*[_type == "brand" && subdomain == "${subdomain}"][0]`
+    );
+
+    if (existingBrand) {
+      return NextResponse.json(
+        { error: "Brand with this subdomain already exists" },
+        { status: 400 }
+      );
+    }
+
+    // Create lead_journey service if chatbotPersonality is provided
+    const services = [];
+    if (chatbotPersonality?.trim()) {
+      services.push({
+        _key: `lead_journey_${Date.now()}`,
+        name: "lead_journey",
+        title: "Talk to me",
+        initialMessage: "Hello, How can I assist you today?",
+        prompt: chatbotPersonality.trim(),
+      });
+    }
+
+    const brand = await sanityClient.create({
+      _type: "brand",
+      brandName: brandName || subdomain,
+      loginButtonText: loginButtonText || "Talk to me now",
+      title: title || `Welcome to ${subdomain}`,
+      subtitle: subtitle || "",
+      subdomain,
+      admins: email?.trim() ? [email] : [],
+      services: services,
+    });
+
+    brandId = brand._id;
+
+    const domainName = `${subdomain}.${ROOT_DOMAIN}`;
+    const gcpClient = await auth.getClient();
+    const token = (await gcpClient.getAccessToken()).token;
+
+    const response = await fetch(
+      `https://${REGION}-run.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/domainmappings`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({
+          apiVersion: "domains.cloudrun.com/v1",
+          kind: "DomainMapping",
+          metadata: { name: domainName, namespace: PROJECT_ID },
+          spec: { routeName: SERVICE_NAME },
+        }),
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+      await deleteBrand(brandId);
+      return NextResponse.json(
+        {
+          error: data.error?.message || "Failed to create domain mapping.",
+        },
+        { status: 400 }
+      );
+    }
+
+    // Send email notification if email provided
+    if (email?.trim() && resend) {
+      try {
+        await resend.emails.send({
+          from: "hello@kavisha.ai",
+          to: email.trim(),
+          subject: `AI Avatar Created for ${brandName || subdomain}`,
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h2>Hello!</h2>
+              <p>Your AI avatar for <strong>${brandName || subdomain}</strong> has been created successfully!</p>
+              <p>Domain mapping is currently in progress. You can check your domain after 30 minutes at:</p>
+              <p><a href="https://${domainName}" style="color: #2563eb;">https://${domainName}</a></p>
+              <p>Thank you for using Kavisha.ai!</p>
+            </div>
+          `,
+        });
+      } catch (emailError) {
+        console.warn("Email notification error:", emailError);
+      }
+    }
+
+    return NextResponse.json({ success: true, domainName }, { status: 201 });
+  } catch (error) {
+    console.error("Failed to create domain mapping:", error);
+    await deleteBrand(brandId);
+    return NextResponse.json(
+      { error: error.message || "Failed to create avatar" },
+      { status: 500 }
+    );
+  }
+}
