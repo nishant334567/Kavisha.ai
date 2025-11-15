@@ -1,15 +1,22 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
-import { getUserFromDB } from "@/app/lib/firebase/get-user";
+import { createOrGetUser } from "@/app/lib/firebase/create-user";
 
 export async function GET(request) {
   return withAuth(request, {
     onAuthenticated: async ({ decodedToken }) => {
-      const user = await getUserFromDB(decodedToken.email);
+      // Create user if they don't exist (same as login flow)
+      const dbUser = await createOrGetUser(decodedToken);
 
-      if (!user) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-      }
+      console.log("user check in db in api/user", dbUser);
+      const user = {
+        id: dbUser._id.toString(),
+        email: dbUser.email,
+        name: dbUser.name,
+        image: dbUser.image,
+        profileType: dbUser.profileType,
+        isAdmin: dbUser.isAdmin || false,
+      };
 
       return NextResponse.json({ user });
     },
