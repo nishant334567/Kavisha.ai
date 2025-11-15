@@ -14,11 +14,14 @@ export async function signIn() {
   const res = await fetch("/api/login", {
     method: "GET",
     headers: { Authorization: `Bearer ${idToken}` },
+    credentials: "include",
   });
 
   if (!res.ok) {
     throw new Error("Failed to create session");
   }
+
+  await new Promise((resolve) => setTimeout(resolve, 100));
 
   return res.json();
 }

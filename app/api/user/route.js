@@ -13,5 +13,8 @@ export async function GET(request) {
 
       return NextResponse.json({ user });
     },
+    onUnauthenticated: async () => {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    },
   });
 }
