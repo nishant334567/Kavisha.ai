@@ -34,9 +34,7 @@ const deleteBrand = async (brandId) => {
   if (!brandId) return;
   try {
     await sanityClient.delete(brandId);
-  } catch (error) {
-    console.error("Failed to delete brand:", error);
-  }
+  } catch (error) {}
 };
 
 export async function POST(request) {
@@ -129,9 +127,11 @@ export async function POST(request) {
       );
     }
 
-    // Send email notification if email provided
     if (email?.trim() && resend) {
       try {
+        const editProfileUrl = `https://${domainName}/admin/${subdomain}/edit-profile`;
+        const trainUrl = `https://${domainName}/admin/${subdomain}/train`;
+
         await resend.emails.send({
           from: "hello@kavisha.ai",
           to: email.trim(),
@@ -141,19 +141,41 @@ export async function POST(request) {
               <h2>Hello!</h2>
               <p>Your AI avatar for <strong>${brandName || subdomain}</strong> has been created successfully!</p>
               <p>Domain mapping is currently in progress. You can check your domain after 30 minutes at:</p>
-              <p><a href="https://${domainName}" style="color: #2563eb;">https://${domainName}</a></p>
-              <p>Thank you for using Kavisha.ai!</p>
+              <p><a href="https://${domainName}" style="color: #2563eb; text-decoration: none;">https://${domainName}</a></p>
+              
+              <div style="margin-top: 30px; padding: 20px; background-color: #f3f4f6; border-radius: 8px;">
+                <h3 style="margin-top: 0; color: #111827;">Admin Access</h3>
+                <p>You can login and manage your avatar using your admin email:</p>
+                <p style="font-weight: bold; color: #2563eb;">${email.trim()}</p>
+                
+                <p style="margin-top: 20px;">Manage your avatar:</p>
+                <ul style="list-style: none; padding: 0;">
+                  <li style="margin-bottom: 10px;">
+                    <a href="${editProfileUrl}" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                      ✏️ Edit Profile & Personality
+                    </a>
+                    <br>
+                    <span style="color: #6b7280; font-size: 14px;">${editProfileUrl}</span>
+                  </li>
+                  <li style="margin-bottom: 10px;">
+                    <a href="${trainUrl}" style="color: #2563eb; text-decoration: none; font-weight: 500;">
+                      🎓 Train Your Avatar
+                    </a>
+                    <br>
+                    <span style="color: #6b7280; font-size: 14px;">${trainUrl}</span>
+                  </li>
+                </ul>
+              </div>
+              
+              <p style="margin-top: 30px;">Thank you for using Kavisha.ai!</p>
             </div>
           `,
         });
-      } catch (emailError) {
-        console.warn("Email notification error:", emailError);
-      }
+      } catch (emailError) {}
     }
 
     return NextResponse.json({ success: true, domainName }, { status: 201 });
   } catch (error) {
-    console.error("Failed to create domain mapping:", error);
     await deleteBrand(brandId);
     return NextResponse.json(
       { error: error.message || "Failed to create avatar" },
