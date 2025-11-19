@@ -6,6 +6,13 @@ import { getCookieOptions } from "./app/lib/firebase/cookie-config";
 const PUBLIC_PATHS = ["/login", "/api/login"];
 
 export async function middleware(request) {
+  if (process.env.MAINTENANCE === "true") {
+    if (request.nextUrl.pathname === "/maintenance") {
+      return NextResponse.next();
+    }
+    return NextResponse.redirect(new URL("/maintenance", request.url));
+  }
+
   return authMiddleware(request, {
     loginPath: "/api/login",
     logoutPath: "/api/logout",
