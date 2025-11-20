@@ -20,10 +20,9 @@ export async function POST(req) {
       }
 
       await connectDB();
-
       // Run model loading and embedding generation in parallel
       const [model, userMessageEmbedding] = await Promise.all([
-        getGeminiModel("gemini-2.5-flash-lite"),
+        getGeminiModel("gemini-2.5-flash"),
         generateEmbedding(userMessage),
       ]);
 
@@ -37,39 +36,40 @@ export async function POST(req) {
         .map((h) => `${h.role}: ${h.message || h.text || ""}`)
         .join("\n");
 
-      if (userMessageEmbedding === 0) {
+      if (userMessageEmbedding === 0 || !Array.isArray(userMessageEmbedding)) {
         return NextResponse.json(
           { error: "Failed to generate embedding" },
           { status: 500 }
         );
       }
 
+      // Validate embedding is a proper array with values
+      if (userMessageEmbedding.length === 0) {
+        return NextResponse.json(
+          { error: "Invalid embedding generated" },
+          { status: 500 }
+        );
+      }
+
       let context = "";
 
-      if (userMessage.length > 10) {
-        try {
-          const index = pc.index("intelligent-kavisha").namespace(brand);
-          const results = await index.query({
-            vector: userMessageEmbedding,
-            topK: 2,
-            includeMetadata: true,
-            includeValues: false,
-          });
-
-          if (results.matches && results.matches.length > 0) {
-            context = results.matches
-              .map((match) => {
-                // Include description in context if available for better context understanding
-                const description = match.metadata?.description
-                  ? `[Context: ${match.metadata.description}] `
-                  : "";
-                return description + (match.metadata?.text || "");
-              })
-              .join(" ");
-          }
-        } catch (pineconeError) {
-          context = "";
+      try {
+        const index = pc.index("intelligent-kavisha").namespace(brand);
+        const results = await index.query({
+          vector: userMessageEmbedding,
+          topK: 3,
+          includeMetadata: true,
+          includeValues: false,
+        });
+        if (results.matches && results.matches.length > 0) {
+          context = results.matches
+            .map((match) => {
+              return match.metadata?.text || "";
+            })
+            .join(" ");
         }
+      } catch (pineconeError) {
+        context = "";
       }
 
       const finalPrompt = `${prompt}

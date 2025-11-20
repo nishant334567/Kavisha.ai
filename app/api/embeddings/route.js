@@ -25,7 +25,7 @@ export async function POST(request) {
     const titleSlug = title.trim().replace(/[^a-zA-Z0-9]/g, ""); // Remove special chars
     const docId = `${titleSlug}_${shortUuid}`;
     const words = text.split(" ");
-    const chunkSize = 600;
+    const chunkSize = 300;
 
     // Calculate total chunks that will be created
     const totalChunks = Math.ceil(words.length / chunkSize);
@@ -57,13 +57,10 @@ export async function POST(request) {
     for (let i = 0; i < words.length; i += chunkSize) {
       const chunk = words.slice(i, i + chunkSize).join(" ");
       const chunkIndex = Math.floor(i / chunkSize);
-      const datapointId = `chunk_${Date.now()}_${chunkIndex}`;
+      const datapointId = `chunk_${Date.now()}_${chunkIndex}_${i}`;
 
       try {
-        // Prepend description to chunk before embedding (this improves vector search)
-        // The description provides semantic context that influences the embedding
-        const chunkWithContext = descriptionPrefix + chunk;
-        const embedding = await generateEmbedding(chunkWithContext);
+        const embedding = await generateEmbedding(chunk);
 
         if (embedding === 0) {
           continue;
@@ -88,7 +85,9 @@ export async function POST(request) {
           ]);
 
         results.push(datapointId);
-      } catch (chunkError) {}
+      } catch (chunkError) {
+        // Silently continue on chunk error
+      }
     }
 
     return NextResponse.json({
