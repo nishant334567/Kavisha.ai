@@ -8,7 +8,6 @@ export async function GET(request) {
       // Create user if they don't exist (same as login flow)
       const dbUser = await createOrGetUser(decodedToken);
 
-      console.log("user check in db in api/user", dbUser);
       const user = {
         id: dbUser._id.toString(),
         email: dbUser.email,

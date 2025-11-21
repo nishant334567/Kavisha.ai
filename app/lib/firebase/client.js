@@ -27,7 +27,7 @@ export function getFirebaseAuth() {
         projectId: !!process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID,
       },
     };
-    console.error("Firebase config debug:", debugInfo);
+
     throw new Error(
       `Firebase API key is missing or invalid. ` +
         `API Key: ${clientConfig.apiKey?.substring(0, 10)}... (length: ${clientConfig.apiKey?.length || 0}). ` +

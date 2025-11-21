@@ -11,7 +11,7 @@ const auth =
       })
     : null;
 
-export async function generateEmbedding(text) {
+export async function generateEmbedding(text, type) {
   try {
     const client = await auth.getClient();
     const accessToken = await client.getAccessToken();
@@ -25,7 +25,7 @@ export async function generateEmbedding(text) {
           "Content-Type": "application/json",
         },
         body: JSON.stringify({
-          instances: [{ content: text }],
+          instances: [{ content: text, task_type: type }],
           parameters: {},
         }),
       }

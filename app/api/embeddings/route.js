@@ -25,7 +25,7 @@ export async function POST(request) {
     const titleSlug = title.trim().replace(/[^a-zA-Z0-9]/g, ""); // Remove special chars
     const docId = `${titleSlug}_${shortUuid}`;
     const words = text.split(" ");
-    const chunkSize = 300;
+    const chunkSize = 400;
 
     // Calculate total chunks that will be created
     const totalChunks = Math.ceil(words.length / chunkSize);
@@ -60,7 +60,7 @@ export async function POST(request) {
       const datapointId = `chunk_${Date.now()}_${chunkIndex}_${i}`;
 
       try {
-        const embedding = await generateEmbedding(chunk);
+        const embedding = await generateEmbedding(chunk, "RETRIEVAL_DOCUMENT");
 
         if (embedding === 0) {
           continue;
@@ -84,10 +84,13 @@ export async function POST(request) {
             },
           ]);
 
+        await pc
+          .index("kavisha-sparse")
+          .namespace(brand)
+          .upsertRecords([{ id: datapointId, text: chunk }]);
+
         results.push(datapointId);
-      } catch (chunkError) {
-        // Silently continue on chunk error
-      }
+      } catch (chunkError) {}
     }
 
     return NextResponse.json({

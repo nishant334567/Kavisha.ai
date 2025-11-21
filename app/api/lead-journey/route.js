@@ -22,10 +22,10 @@ export async function POST(req) {
       await connectDB();
       // Run model loading and embedding generation in parallel
       const [model, userMessageEmbedding] = await Promise.all([
-        getGeminiModel("gemini-2.5-flash"),
-        generateEmbedding(userMessage),
+        getGeminiModel("gemini-2.5-flash-lite"),
+        generateEmbedding(userMessage, "RETRIEVAL_QUERY"),
       ]);
-
+      //
       if (!model) {
         return NextResponse.json(
           { error: "AI model not available" },
@@ -51,8 +51,8 @@ export async function POST(req) {
         );
       }
 
+      const uniqueContext = new Map();
       let context = "";
-
       try {
         const index = pc.index("intelligent-kavisha").namespace(brand);
         const results = await index.query({
@@ -61,13 +61,28 @@ export async function POST(req) {
           includeMetadata: true,
           includeValues: false,
         });
-        if (results.matches && results.matches.length > 0) {
-          context = results.matches
-            .map((match) => {
-              return match.metadata?.text || "";
-            })
-            .join(" ");
-        }
+
+        const results2 = await pc
+          .index("kavisha-sparse")
+          .namespace(brand)
+          .searchRecords({
+            query: {
+              topK: 3,
+              inputs: { text: userMessage },
+            },
+          });
+        results?.matches.map((match) => {
+          uniqueContext.set(match.id, match.metadata?.text);
+        });
+
+        results2?.result?.hits?.map((hit) => {
+          if (!uniqueContext.has(hit._id)) {
+            uniqueContext.set(hit._id, hit.fields.text);
+          }
+        });
+
+        //
+        context = [...uniqueContext.values()];
       } catch (pineconeError) {
         context = "";
       }
