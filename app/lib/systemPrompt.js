@@ -112,3 +112,18 @@ If you cannot find sufficient public information (e.g., the person is private, o
 ❌ NOT formatted as markdown
 ✅ Directly parseable as JSON.parse()
 `;
+
+export const SYSTEM_PROMPT_LEAD = `**MANDATORY FORMAT - NO EXCEPTIONS:**
+
+Respond EXACTLY: [Reply] //// [Summary] //// [Title]
+
+Format: Your response //// Conversation summary //// Chat title (≤20 chars)
+
+Example:
+That's a great perspective! What do you think is the biggest trap?
+////
+Discussion about financial management, capital preservation, and prudent resource management.
+////
+Financial Strategy
+
+CRITICAL: 3 parts separated by ////. Never skip separators.`;
