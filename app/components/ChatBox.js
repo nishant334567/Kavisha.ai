@@ -45,6 +45,7 @@ export default function ChatBox({
   const [isTranscribing, setIsTranscribing] = useState(false);
 
   const [chatLoading, setChatLoading] = useState(false);
+  const [summaryUptilnow, setSummaryUptilnow] = useState("");
 
   //voice effects
 
@@ -316,6 +317,7 @@ export default function ChatBox({
           sessionId,
           brand: brandContext.subdomain,
           prompt: getServicePrompt(),
+          summary: summaryUptilnow,
         }),
       });
     }
@@ -332,10 +334,11 @@ export default function ChatBox({
       setRetry(true);
       setRetryIndex(updatedMessages.length - 1);
       setMessageLoading(false);
+
       return;
     }
     const data = await response.json();
-
+    setSummaryUptilnow(data?.summary);
     setMessages([
       ...updatedMessages,
       { role: "assistant", message: data.reply },
@@ -410,7 +413,7 @@ export default function ChatBox({
       <div className="relative w-full flex-1 min-h-0 flex flex-col">
         <div className="rounded-xl w-full p-2 font-light h-full flex flex-col min-h-0">
           <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-white sm:bg-gray-100 z-10"></div>
-
+          {/* <p>Summary: {summaryUptilnow ?? ""}</p> */}
           <div className="flex-1 min-h-0 h-full overflow-y-scroll pt-1 mt-16 scrollbar-none">
             <div className="flex flex-col gap-2 min-h-full justify-end">
               {currentChatId &&

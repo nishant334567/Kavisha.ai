@@ -12,7 +12,7 @@ import { connectDB } from "../../lib/db.js";
 export async function POST(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
-      const { userMessage, history, sessionId, brand, prompt } =
+      const { userMessage, history, sessionId, brand, prompt, summary } =
         await req.json();
       const user = await getUserFromDB(decodedToken.email);
       if (!user) {
@@ -20,12 +20,8 @@ export async function POST(req) {
       }
 
       await connectDB();
-      // Run model loading and embedding generation in parallel
-      const [model, userMessageEmbedding] = await Promise.all([
-        getGeminiModel("gemini-2.5-flash-lite"),
-        generateEmbedding(userMessage, "RETRIEVAL_QUERY"),
-      ]);
-      //
+      const model = await getGeminiModel("gemini-2.5-flash");
+
       if (!model) {
         return NextResponse.json(
           { error: "AI model not available" },
@@ -36,6 +32,58 @@ export async function POST(req) {
         .map((h) => `${h.role}: ${h.message || h.text || ""}`)
         .join("\n");
 
+      const lastTwoMessages = {
+        lastUserQuery:
+          history.length >= 3 ? history[history.length - 3]?.message : null,
+        lastChatbotResponse:
+          history.length >= 2 ? history[history.length - 2]?.message : null,
+      };
+
+      const rewriteQueryPrompt = `You are a query rewriter. Your task is to convert user messages into explicit search queries for document retrieval.
+
+CONVERSATION  UPTIL NOW:
+${formattedHistory}
+
+CURRENT USER MESSAGE: "${userMessage}"
+
+INSTRUCTIONS:
+1. If the user's message is short, ambiguous, or a follow-up (like "should i try?", "tell me more", "what about that?"), you MUST expand it using the conversation context to make it a complete, explicit query.
+2. Extract the main topic/subject from the conversation history and incorporate it into the query.
+3. If the user's message is already complete and explicit, return it as-is.
+4. Remove conversational phrases and make it search-friendly.
+
+EXAMPLES:
+- User says "should i try?" in a conversation about investing → "should i try investing in stock market?"
+- User says "tell me more" after discussing student assessment → "student assessment methods best practices"
+- User says "what is machine learning?" → "what is machine learning?" (already complete)
+
+CRITICAL RULES:
+- Use the conversation history to understand what the user is referring to
+- Expand incomplete queries by adding the relevant topic from the conversation
+- ALWAYS return the COMPLETE query - never truncate or cut off mid-word
+- If the user mentions a person's name, use the FULL name from context
+- If the user mentions a company/topic, use the COMPLETE name/topic
+- Output ONLY the complete rewritten query, nothing else. No explanations, no prefixes, no truncation.`;
+
+      const responseQuery = await model.generateContent({
+        contents: [
+          {
+            role: "user",
+            parts: [{ text: rewriteQueryPrompt }],
+          },
+        ],
+        generationConfig: {
+          temperature: 0.2,
+        },
+      });
+
+      const betterQuery =
+        responseQuery.response.candidates[0].content.parts[0].text;
+
+      const userMessageEmbedding = await generateEmbedding(
+        betterQuery,
+        "RETRIEVAL_QUERY"
+      );
       if (userMessageEmbedding === 0 || !Array.isArray(userMessageEmbedding)) {
         return NextResponse.json(
           { error: "Failed to generate embedding" },
@@ -57,7 +105,7 @@ export async function POST(req) {
         const index = pc.index("intelligent-kavisha").namespace(brand);
         const results = await index.query({
           vector: userMessageEmbedding,
-          topK: 3,
+          topK: 2,
           includeMetadata: true,
           includeValues: false,
         });
@@ -67,22 +115,21 @@ export async function POST(req) {
           .namespace(brand)
           .searchRecords({
             query: {
-              topK: 3,
-              inputs: { text: userMessage },
+              topK: 2,
+              inputs: { text: betterQuery },
             },
           });
-        results?.matches.map((match) => {
+        results?.matches?.forEach((match) => {
           uniqueContext.set(match.id, match.metadata?.text);
         });
 
-        results2?.result?.hits?.map((hit) => {
+        results2?.result?.hits?.forEach((hit) => {
           if (!uniqueContext.has(hit._id)) {
-            uniqueContext.set(hit._id, hit.fields.text);
+            uniqueContext.set(hit._id, hit.fields?.text);
           }
         });
 
-        //
-        context = [...uniqueContext.values()];
+        context = [...uniqueContext.values()].join(" ");
       } catch (pineconeError) {
         context = "";
       }
@@ -94,7 +141,7 @@ ${formattedHistory}
 RELEVANT CONTEXT:
 ${context}
 
-USER QUESTION: ${userMessage}
+USER QUESTION: ${betterQuery}
 
 Please provide a helpful response based on the above information:`;
 
