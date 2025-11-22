@@ -20,7 +20,7 @@ export async function POST(req) {
       }
 
       await connectDB();
-      const model = await getGeminiModel("gemini-2.5-flash");
+      const model = await getGeminiModel("gemini-2.5-flash-lite");
 
       if (!model) {
         return NextResponse.json(
