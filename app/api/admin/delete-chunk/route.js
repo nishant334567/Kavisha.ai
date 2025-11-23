@@ -32,16 +32,27 @@ export async function DELETE(req) {
       );
     }
 
-    // Delete all chunks from Pinecone with this docid in metadata
+    // Delete all chunks from both Pinecone indexes with this docid
     if (pc) {
       try {
+        // Delete from dense vector index
         await pc
           .index("intelligent-kavisha")
           .namespace(brand)
           .deleteMany({
             docid: { $eq: docid },
           });
-      } catch (pineconeError) {}
+
+        // Delete from sparse vector index
+        await pc
+          .index("kavisha-sparse")
+          .namespace(brand)
+          .deleteMany({
+            docid: { $eq: docid },
+          });
+      } catch (pineconeError) {
+        console.error("Pinecone delete error:", pineconeError);
+      }
     }
 
     return NextResponse.json({

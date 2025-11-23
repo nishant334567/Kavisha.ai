@@ -46,9 +46,12 @@ export async function POST(req) {
         "Last 2 pairs (excluding current message): ",
         formattedHistory
       );
-      const rewriteQueryPrompt = `If user is asking/questioning: rewrite to search query 
-      (expand if unclear, return as-is if clear). if it just If closing/satisfied/not
-       interested: return "".
+      const rewriteQueryPrompt = `Rewrite to search query keeping the EXACT same question/intent. Only expand context if needed. If clear, return as-is. For follow-ups, use MOST RECENT topic. If closing/satisfied: return "".
+
+Examples:
+"why didn't you become as big as linkedin?" → "why didn't Naukri become as big as LinkedIn"
+"tell me more" → expand using recent topic
+"thanks bye" → ""
 
 Context: ${formattedHistory}
 User: "${userMessage}"
@@ -99,10 +102,10 @@ Query or "":`;
         const uniqueContext = new Map();
         try {
           // Parallelize both Pinecone queries for better performance
-          const [results, results2] = await Promise.all([
+          const [results, results2 = []] = await Promise.all([
             pc.index("intelligent-kavisha").namespace(brand).query({
               vector: userMessageEmbedding,
-              topK: 2,
+              topK: 10,
               includeMetadata: true,
               includeValues: false,
             }),
@@ -111,24 +114,83 @@ Query or "":`;
               .namespace(brand)
               .searchRecords({
                 query: {
-                  topK: 2,
+                  topK: 10,
                   inputs: { text: betterQuery },
                 },
               })
               .catch(() => ({ result: { hits: [] } })), // Fallback if sparse fails
           ]);
           results?.matches?.forEach((match) => {
+            // console.log("\n Match:", match);
             uniqueContext.set(match.id, match.metadata?.text);
           });
 
           results2?.result?.hits?.forEach((hit) => {
+            // console.log("\n sparse match:", hit);
             if (!uniqueContext.has(hit._id)) {
+              // console.log("\n sparse match:", hit);
               uniqueContext.set(hit._id, hit.fields?.text);
             }
           });
 
-          context = [...uniqueContext.values()].join(" ");
-          console.log("Context: ", context);
+          // Prepare documents for reranking (convert Map values to document objects)
+          // Use 'text' field to match what we stored in Pinecone
+          const documentsForRerank = Array.from(uniqueContext.entries()).map(
+            ([id, text]) => ({
+              id,
+              text: text || "",
+            })
+          );
+
+          // Rerank if we have documents
+          if (documentsForRerank.length > 0) {
+            try {
+              const rerankOptions = {
+                topN: 2,
+                rankFields: ["text"],
+                returnDocuments: true,
+              };
+
+              const reranked = await pc.inference.rerank(
+                "bge-reranker-v2-m3",
+                betterQuery,
+                documentsForRerank,
+                rerankOptions
+              );
+
+              console.log("Reranked: ", reranked);
+
+              // Extract text from reranked documents
+              if (
+                reranked &&
+                reranked.data &&
+                Array.isArray(reranked.data) &&
+                reranked.data.length > 0
+              ) {
+                context = reranked.data
+                  .map((item) => {
+                    // Handle different response structures
+                    if (item.document && item.document.text)
+                      return item.document.text;
+                    if (item.text) return item.text;
+                    return "";
+                  })
+                  .filter(Boolean)
+                  .join(" ");
+                console.log("Reranked context: ", context);
+              } else {
+                // Fallback to original context if rerank fails
+                context = [...uniqueContext.values()].join(" ");
+              }
+            } catch (rerankError) {
+              console.error("Rerank error:", rerankError);
+              // Fallback to original context
+              context = [...uniqueContext.values()].join(" ");
+            }
+          } else {
+            context = "";
+          }
+          console.log("Final context: ", context);
         } catch (pineconeError) {
           context = "";
         }
@@ -147,7 +209,7 @@ CONVERSATION HISTORY:
 ${fullFormattedHistory}
 
 RELEVANT CONTEXT:
-${context}
+${betterQuery === "" ? userMessage : context}
 
 USER QUESTION: ${betterQuery}
 
