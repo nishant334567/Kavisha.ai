@@ -119,13 +119,14 @@ export async function POST(request) {
           .upsert(denseBatches[i])
           .catch((err) => console.error(`Dense batch ${i} error:`, err))
       );
-      upsertPromises.push(
-        pc
-          .index("kavisha-sparse")
-          .namespace(brand)
-          .upsertRecords(sparseBatches[i])
-          .catch((err) => console.error(`Sparse batch ${i} error:`, err))
-      );
+      // Sparse index upsert commented out - not using sparse for responses
+      // upsertPromises.push(
+      //   pc
+      //     .index("kavisha-sparse")
+      //     .namespace(brand)
+      //     .upsertRecords(sparseBatches[i])
+      //     .catch((err) => console.error(`Sparse batch ${i} error:`, err))
+      // );
     }
 
     // Wait for all upserts to complete
@@ -146,14 +147,15 @@ export async function PATCH(request) {
   try {
     const { docid, text, brand, chunkSize = 200, title } = await request.json();
     await connectDB();
-    const sparseIndexNamespace = pc.index("kavisha-sparse").namespace(brand);
+    // const sparseIndexNamespace = pc.index("kavisha-sparse").namespace(brand);
     const denseIndexNamespace = pc
       .index("intelligent-kavisha")
       .namespace(brand);
 
     await Promise.all([
       denseIndexNamespace.deleteMany({ docid: docid }),
-      sparseIndexNamespace.deleteMany({ docid: docid }),
+      // Sparse index deletion commented out - not using sparse for responses
+      // sparseIndexNamespace.deleteMany({ docid: docid }),
     ]);
 
     const arrayOfWords = text.split(" ");
@@ -224,11 +226,12 @@ export async function PATCH(request) {
           .upsert(denseBatches[i])
           .catch((err) => console.error(`Dense batch ${i} error:`, err))
       );
-      upsertPromises.push(
-        sparseIndexNamespace
-          .upsertRecords(sparseBatches[i])
-          .catch((err) => console.error(`Sparse batch ${i} error:`, err))
-      );
+      // Sparse index upsert commented out - not using sparse for responses
+      // upsertPromises.push(
+      //   sparseIndexNamespace
+      //     .upsertRecords(sparseBatches[i])
+      //     .catch((err) => console.error(`Sparse batch ${i} error:`, err))
+      // );
     }
     await Promise.all(upsertPromises);
     await TrainingData.updateOne(

@@ -19,15 +19,16 @@ export async function GET(req) {
     .fetch([chunkId]);
 
   let chunk = result.records?.[chunkId];
-  if (!chunk) {
-    try {
-      const sparseResult = await pc
-        .index("kavisha-sparse")
-        .namespace(brand)
-        .fetch([chunkId]);
-      chunk = sparseResult.records?.[chunkId];
-    } catch (err) {}
-  }
+  // Sparse index fetch commented out - not using sparse for responses
+  // if (!chunk) {
+  //   try {
+  //     const sparseResult = await pc
+  //       .index("kavisha-sparse")
+  //       .namespace(brand)
+  //       .fetch([chunkId]);
+  //     chunk = sparseResult.records?.[chunkId];
+  //   } catch (err) {}
+  // }
 
   if (!chunk) {
     return NextResponse.json({ error: "Chunk not found" }, { status: 404 });

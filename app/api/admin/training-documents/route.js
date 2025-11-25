@@ -71,12 +71,12 @@ export async function DELETE(req) {
           docid: { $eq: docid },
         });
 
-      await pc
-        .index("kavisha-sparse")
-        .namespace(brand)
-        .deleteMany({
-          docid: { $eq: docid },
-        });
+      // await pc
+      //   .index("kavisha-sparse")
+      //   .namespace(brand)
+      //   .deleteMany({
+      //     docid: { $eq: docid },
+      //   });
     } catch (pineconeError) {
       return NextResponse.json(
         { error: "Failed to delete chunk", details: pineconeError.message },

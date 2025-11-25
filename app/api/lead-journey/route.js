@@ -104,37 +104,46 @@ Query or "":`;
 
         const uniqueContext = new Map();
         try {
-          // Parallelize both Pinecone queries for better performance
-          const [results, results2 = []] = await Promise.all([
-            pc.index("intelligent-kavisha").namespace(brand).query({
+          const results = await pc
+            .index("intelligent-kavisha")
+            .namespace(brand)
+            .query({
               vector: userMessageEmbedding,
               topK: 10,
               includeMetadata: true,
               includeValues: false,
-            }),
-            pc
-              .index("kavisha-sparse")
-              .namespace(brand)
-              .searchRecords({
-                query: {
-                  topK: 10,
-                  inputs: { text: betterQuery },
-                },
-              })
-              .catch(() => ({ result: { hits: [] } })), // Fallback if sparse fails
-          ]);
+            });
+          // Parallelize both Pinecone queries for better performance
+          // const [results, results2 = []] = await Promise.all([
+          //   pc.index("intelligent-kavisha").namespace(brand).query({
+          //     vector: userMessageEmbedding,
+          //     topK: 10,
+          //     includeMetadata: true,
+          //     includeValues: false,
+          //   }),
+          //   pc
+          //     .index("kavisha-sparse")
+          //     .namespace(brand)
+          //     .searchRecords({
+          //       query: {
+          //         topK: 10,
+          //         inputs: { text: betterQuery },
+          //       },
+          //     })
+          //     .catch(() => ({ result: { hits: [] } })), // Fallback if sparse fails
+          // ]);
           results?.matches?.forEach((match) => {
             //
             uniqueContext.set(match.id, match.metadata?.text);
           });
 
-          results2?.result?.hits?.forEach((hit) => {
-            //
-            if (!uniqueContext.has(hit._id)) {
-              //
-              uniqueContext.set(hit._id, hit.fields?.text);
-            }
-          });
+          // results2?.result?.hits?.forEach((hit) => {
+          //   //
+          //   if (!uniqueContext.has(hit._id)) {
+          //     //
+          //     uniqueContext.set(hit._id, hit.fields?.text);
+          //   }
+          // });
 
           // Prepare documents for reranking (convert Map values to document objects)
           // Use 'text' field to match what we stored in Pinecone
