@@ -20,6 +20,7 @@ export async function POST(req) {
       }
 
       await connectDB();
+      let sourceChunkIds = [];
       const model = await getGeminiModel("gemini-2.5-flash-lite");
 
       if (!model) {
@@ -46,7 +47,9 @@ export async function POST(req) {
         "Last 2 pairs (excluding current message): ",
         formattedHistory
       );
-      const rewriteQueryPrompt = `Rewrite to search query keeping the EXACT same question/intent. Only expand context if needed. If clear, return as-is. For follow-ups, use MOST RECENT topic. If closing/satisfied: return "".
+      const rewriteQueryPrompt = `Rewrite to search query keeping the EXACT same
+       question/intent. Only expand context if needed. If clear, return as-is.
+        For follow-ups, use MOST RECENT topic. If closing/satisfied: return "".
 
 Examples:
 "why didn't you become as big as linkedin?" → "why didn't Naukri become as big as LinkedIn"
@@ -74,7 +77,6 @@ Query or "":`;
         responseQuery.response.candidates[0].content.parts[0].text.trim();
       console.log("betterQuery query prompt: ", betterQuery);
 
-      // If empty string, skip embedding/search - conversation history is enough
       let context = "";
       if (betterQuery && betterQuery !== '""' && betterQuery !== "''") {
         const userMessageEmbedding = await generateEmbedding(
@@ -167,25 +169,39 @@ Query or "":`;
                 Array.isArray(reranked.data) &&
                 reranked.data.length > 0
               ) {
-                context = reranked.data
-                  .map((item) => {
-                    // Handle different response structures
-                    if (item.document && item.document.text)
-                      return item.document.text;
-                    if (item.text) return item.text;
-                    return "";
-                  })
+                const rerankedItems = reranked.data.map((item) => {
+                  let text = "";
+                  let id = "";
+
+                  // Try different possible structures for rerank response
+                  if (item.document) {
+                    text = item.document.text || "";
+                    id = item.document.id || item.id || "";
+                  } else if (item.text) {
+                    text = item.text;
+                    id = item.id || "";
+                  }
+
+                  return { text, id };
+                });
+                context = rerankedItems
+                  .map((item) => item.text)
                   .filter(Boolean)
                   .join(" ");
-                console.log("Reranked context: ", context);
+                sourceChunkIds = rerankedItems
+                  .map((item) => item.id)
+                  .filter(Boolean);
               } else {
-                // Fallback to original context if rerank fails
+                // Fallback to original context if rerank returns empty
                 context = [...uniqueContext.values()].join(" ");
+                sourceChunkIds = Array.from(uniqueContext.keys());
               }
             } catch (rerankError) {
               console.error("Rerank error:", rerankError);
-              // Fallback to original context
+
+              // Fallback to original context if rerank fails
               context = [...uniqueContext.values()].join(" ");
+              sourceChunkIds = Array.from(uniqueContext.keys());
             }
           } else {
             context = "";
@@ -259,6 +275,7 @@ Please provide a helpful response based on the above information:`;
             try {
               await Logs.create({
                 message: userMessage || "",
+                altMessage: betterQuery || "",
                 sessionId: sessionId,
                 userId: user.id,
                 role: "user",
@@ -269,6 +286,9 @@ Please provide a helpful response based on the above information:`;
                 sessionId: sessionId,
                 userId: user.id,
                 role: "assistant",
+                sourceChunk: Array.isArray(sourceChunkIds)
+                  ? sourceChunkIds
+                  : [],
               });
 
               await Session.updateOne(
@@ -288,6 +308,8 @@ Please provide a helpful response based on the above information:`;
             reply: reParts[0],
             summary: reParts[1],
             title: reParts[2],
+            requery: betterQuery,
+            sources: sourceChunkIds,
           });
         } else {
           return NextResponse.json(

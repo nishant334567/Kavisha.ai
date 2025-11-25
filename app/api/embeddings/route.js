@@ -7,7 +7,13 @@ import { v4 as uuidv4 } from "uuid";
 
 export async function POST(request) {
   try {
-    const { text, brand, title, description } = await request.json();
+    const {
+      text,
+      brand,
+      title,
+      description,
+      chunkSize = 200,
+    } = await request.json();
 
     // Minimal server-side validation (security check)
     if (!text?.trim() || !brand || !title?.trim()) {
@@ -25,7 +31,7 @@ export async function POST(request) {
     const titleSlug = title.trim().replace(/[^a-zA-Z0-9]/g, ""); // Remove special chars
     const docId = `${titleSlug}_${shortUuid}`;
     const words = text.split(" ");
-    const chunkSize = 200;
+    // const chunkSize = 200;
 
     // Calculate total chunks that will be created
     const totalChunks = Math.ceil(words.length / chunkSize);
@@ -136,5 +142,113 @@ export async function POST(request) {
     });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
+  }
+}
+
+export async function PATCH(request) {
+  try {
+    const { docid, text, brand, chunkSize = 200, title } = await request.json();
+    await connectDB();
+    const sparseIndexNamespace = pc.index("kavisha-sparse").namespace(brand);
+    const denseIndexNamespace = pc
+      .index("intelligent-kavisha")
+      .namespace(brand);
+
+    await Promise.all([
+      denseIndexNamespace.deleteMany({ docid: docid }),
+      sparseIndexNamespace.deleteMany({ docid: docid }),
+    ]);
+
+    const arrayOfWords = text.split(" ");
+    const totalWordCount = arrayOfWords.length;
+    const totalNumberOfChunks = Math.ceil(totalWordCount / chunkSize);
+    const batchArray = [];
+    for (let i = 0; i < totalNumberOfChunks; i++) {
+      const chunkText = arrayOfWords
+        .slice(chunkSize * i, chunkSize * (i + 1))
+        .join(" ");
+
+      batchArray.push(chunkText);
+    }
+
+    const embeddingPromises = batchArray.map((chunk) =>
+      generateEmbedding(chunk, "RETRIEVAL_DOCUMENT")
+    );
+
+    const embeddings = await Promise.all(embeddingPromises);
+
+    const denseVectors = [];
+    const sparseRecords = [];
+
+    for (let i = 0; i < batchArray.length; i++) {
+      const chunk = batchArray[i];
+      const embedding = embeddings[i];
+
+      if (!Array.isArray(embedding) || embedding === 0) {
+        continue;
+      }
+
+      const datapointId = `${docid}_${i}`;
+      const metadata = {
+        docid: docid,
+        text: chunk,
+        createdAt: new Date().toISOString(),
+        chunkIndex: i.toString(),
+        title: title || "",
+      };
+
+      denseVectors.push({
+        id: datapointId,
+        values: embedding,
+        metadata: metadata,
+      });
+
+      // For sparse records with integrated embedding, fields are at top level
+      sparseRecords.push({
+        id: datapointId,
+        text: chunk,
+        ...metadata, // Spread metadata fields at top level
+      });
+    }
+
+    const batchSize = 90;
+    const denseBatches = [];
+    const sparseBatches = [];
+
+    for (let i = 0; i < denseVectors.length; i += batchSize) {
+      denseBatches.push(denseVectors.slice(i, i + batchSize));
+      sparseBatches.push(sparseRecords.slice(i, i + batchSize));
+    }
+
+    const upsertPromises = [];
+    for (let i = 0; i < denseBatches.length; i++) {
+      upsertPromises.push(
+        denseIndexNamespace
+          .upsert(denseBatches[i])
+          .catch((err) => console.error(`Dense batch ${i} error:`, err))
+      );
+      upsertPromises.push(
+        sparseIndexNamespace
+          .upsertRecords(sparseBatches[i])
+          .catch((err) => console.error(`Sparse batch ${i} error:`, err))
+      );
+    }
+    await Promise.all(upsertPromises);
+    await TrainingData.updateOne(
+      { docid: docid },
+      {
+        $set: {
+          text: text,
+          totalChunks: totalNumberOfChunks,
+          chunkSize: chunkSize,
+        },
+      }
+    );
+    return NextResponse.json(
+      { message: "Succesfully updated docs" },
+      { status: 200 }
+    );
+  } catch (err) {
+    return NextResponse.json({ message: err }, { status: 500 });
   }
 }

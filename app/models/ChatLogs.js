@@ -6,6 +6,13 @@ const LogsSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    altMessage: {
+      type: String,
+      default: "",
+    },
+    sourceChunk: {
+      type: [String],
+    },
     sessionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ChatSessions",

@@ -4,9 +4,10 @@ import { useState, useEffect } from "react";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
+import DocumentUploadCard from "../../components/Documents";
 const fetchEmbeddings = async (brand, page = 1, type = "docs") => {
   const res = await fetch(
-    `/api/admin/fetch-chunks/?brand=${brand}&page=${page}&type=${type}`
+    `/api/admin/training-documents/?brand=${brand}&page=${page}`
   );
   const data = await res.json();
   return data;
@@ -19,9 +20,9 @@ export default function TrainPage() {
   const [trainingData, setTrainingData] = useState({
     text: "",
     title: "",
-    description: "",
     youtubeUrl: "",
     pdfFile: null,
+    chunkSize: 200,
   });
   const [loading, setLoading] = useState({
     text: false,
@@ -31,19 +32,17 @@ export default function TrainPage() {
   const [error, setError] = useState(null);
   const [success, setSuccess] = useState(null);
 
-  // Knowledge base states
-  const [activeTab, setActiveTab] = useState("docs"); // "docs" or "chunks"
   const [embeddings, setEmbeddings] = useState([]);
   const [currentPage, setCurrentpage] = useState(0);
   const [totalPage, setTotalPage] = useState(0);
   const [embeddingsLoading, setEmbeddingsLoading] = useState(false);
-  const [expandedChunks, setExpandedChunks] = useState({});
+  const [expandedDocs, setExpandedDocs] = useState({});
 
   // Modals and jobs
   const [deleteModal, setDeleteModal] = useState({
     show: false,
-    chunkId: null,
-    chunkText: "",
+    docid: null,
+    docText: "",
     title: null,
     description: null,
   });
@@ -85,12 +84,8 @@ export default function TrainPage() {
     const loadEmbeddings = async () => {
       setEmbeddingsLoading(true);
       try {
-        const batchChunks = await fetchEmbeddings(
-          brandContext?.subdomain,
-          1,
-          activeTab
-        );
-        setEmbeddings(batchChunks.chunks || []);
+        const batchChunks = await fetchEmbeddings(brandContext?.subdomain, 1);
+        setEmbeddings(batchChunks.documents || []);
         setTotalPage(batchChunks.totalPages || 0);
         setCurrentpage(1);
       } catch (error) {
@@ -101,7 +96,7 @@ export default function TrainPage() {
     };
 
     loadEmbeddings();
-  }, [user, authLoading, brandContext, router, activeTab]);
+  }, [user, authLoading, brandContext, router]);
 
   // Show loading while checking authentication
   if (authLoading) {
@@ -130,12 +125,11 @@ export default function TrainPage() {
     try {
       const data = await fetchEmbeddings(
         brandContext?.subdomain,
-        currentPage + 1,
-        activeTab
+        currentPage + 1
       );
-      setEmbeddings(data.chunks || []);
+      setEmbeddings(data.documents || []);
       setCurrentpage((prev) => prev + 1);
-      setExpandedChunks({});
+      setExpandedDocs({});
     } catch (error) {
     } finally {
       setEmbeddingsLoading(false);
@@ -148,12 +142,11 @@ export default function TrainPage() {
     try {
       const data = await fetchEmbeddings(
         brandContext?.subdomain,
-        currentPage - 1,
-        activeTab
+        currentPage - 1
       );
-      setEmbeddings(data.chunks || []);
+      setEmbeddings(data.documents || []);
       setCurrentpage((prev) => prev - 1);
-      setExpandedChunks({});
+      setExpandedDocs({});
     } catch (error) {
     } finally {
       setEmbeddingsLoading(false);
@@ -163,22 +156,22 @@ export default function TrainPage() {
   const handleDeleteClick = (chunk) => {
     setDeleteModal({
       show: true,
-      chunkId: chunk.docid,
-      chunkText: chunk.text?.slice(0, 100) + "...",
+      docid: chunk.docid,
+      docText: chunk.text?.slice(0, 100) + "...",
       title: chunk.title || null,
       description: chunk.description || null,
     });
   };
 
   const handleDeleteConfirm = async () => {
-    if (!deleteModal.chunkId) return;
+    if (!deleteModal.docid) return;
 
     setDeleting(true);
     setError(null);
 
     try {
       const response = await fetch(
-        `/api/admin/delete-chunk?chunkId=${deleteModal.chunkId}&brand=${brandContext.subdomain}`,
+        `/api/admin/training-documents?docid=${deleteModal.docid}&brand=${brandContext.subdomain}`,
         {
           method: "DELETE",
         }
@@ -193,8 +186,8 @@ export default function TrainPage() {
       setSuccess("Chunk deleted successfully");
       setDeleteModal({
         show: false,
-        chunkId: null,
-        chunkText: "",
+        docid: null,
+        docText: "",
         title: null,
         description: null,
       });
@@ -202,32 +195,30 @@ export default function TrainPage() {
       // Refresh the current page
       const refreshedData = await fetchEmbeddings(
         brandContext?.subdomain,
-        currentPage,
-        activeTab
+        currentPage
       );
-      setEmbeddings(refreshedData.chunks || []);
+      setEmbeddings(refreshedData.documents || []);
       setTotalPage(refreshedData.totalPages || 0);
 
       // If current page is now empty and it's not page 1, go to previous page
       if (
-        refreshedData.chunks.length === 0 &&
+        refreshedData.documents.length === 0 &&
         currentPage > 1 &&
         currentPage > refreshedData.totalPages
       ) {
         setCurrentpage((prev) => prev - 1);
         const prevPageData = await fetchEmbeddings(
           brandContext?.subdomain,
-          currentPage - 1,
-          activeTab
+          currentPage - 1
         );
-        setEmbeddings(prevPageData.chunks || []);
+        setEmbeddings(prevPageData.documents || []);
       }
     } catch (err) {
       setError(err.message);
       setDeleteModal({
         show: false,
-        chunkId: null,
-        chunkText: "",
+        docid: null,
+        docText: "",
         title: null,
         description: null,
       });
@@ -239,15 +230,15 @@ export default function TrainPage() {
   const handleDeleteCancel = () => {
     setDeleteModal({
       show: false,
-      chunkId: null,
-      chunkText: "",
+      docid: null,
+      docText: "",
       title: null,
       description: null,
     });
   };
 
   const toggleReadMore = (docid) => {
-    setExpandedChunks((prev) => ({
+    setExpandedDocs((prev) => ({
       ...prev,
       [docid]: !prev[docid],
     }));
@@ -276,9 +267,6 @@ export default function TrainPage() {
         if (/\s/.test(trainingData.title)) {
           throw new Error("Title cannot contain whitespace");
         }
-        if (trainingData.description && trainingData.description.length > 200) {
-          throw new Error("Description must be 200 characters or less");
-        }
 
         response = await fetch("/api/embeddings", {
           method: "POST",
@@ -286,8 +274,9 @@ export default function TrainPage() {
           body: JSON.stringify({
             text: data.trim(),
             title: trainingData.title.trim(),
-            description: trainingData.description?.trim() || "",
+            description: "",
             brand: brandContext.subdomain,
+            chunkSize: trainingData.chunkSize,
           }),
         });
       } else if (type === "pdf") {
@@ -336,7 +325,6 @@ export default function TrainPage() {
           ...prev,
           text: "",
           title: "",
-          description: "",
         }));
         refreshEmbeddings();
       }
@@ -349,20 +337,10 @@ export default function TrainPage() {
 
   const refreshEmbeddings = async () => {
     if (currentPage === 1) {
-      const refreshedData = await fetchEmbeddings(
-        brandContext?.subdomain,
-        1,
-        activeTab
-      );
-      setEmbeddings(refreshedData.chunks || []);
+      const refreshedData = await fetchEmbeddings(brandContext?.subdomain, 1);
+      setEmbeddings(refreshedData.documents || []);
       setTotalPage(refreshedData.totalPages || 0);
     }
-  };
-
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-    setCurrentpage(1);
-    setExpandedChunks({});
   };
 
   const checkTranscriptionStatus = async (jobId) => {
@@ -651,47 +629,30 @@ export default function TrainPage() {
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
-                  Description <span className="text-gray-500">(optional)</span>{" "}
-                  - improves search quality (max 200 chars)
+                  Chunk Size{" "}
+                  <span className="text-gray-500">(words per chunk)</span>
                 </label>
-                <input
-                  type="text"
-                  value={trainingData.description}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    if (value.length <= 200) {
-                      setTrainingData((prev) => ({
-                        ...prev,
-                        description: value,
-                      }));
-                    }
-                  }}
-                  placeholder="e.g., Product features and pricing information"
-                  maxLength={200}
+                <select
+                  value={trainingData.chunkSize}
+                  onChange={(e) =>
+                    setTrainingData((prev) => ({
+                      ...prev,
+                      chunkSize: parseInt(e.target.value),
+                    }))
+                  }
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 text-sm"
-                />
-                <div className="flex justify-between items-center mt-1">
-                  {trainingData.description && (
-                    <p className="text-xs text-gray-500">
-                      This helps the AI find relevant content more accurately
-                    </p>
+                >
+                  {[150, 200, 250, 300, 350, 400, 450, 500, 550, 600].map(
+                    (size) => (
+                      <option key={size} value={size}>
+                        {size} words
+                      </option>
+                    )
                   )}
-                  <p
-                    className={`text-xs ml-auto ${
-                      trainingData.description?.length > 200
-                        ? "text-red-600"
-                        : "text-gray-400"
-                    }`}
-                  >
-                    {trainingData.description?.length || 0}/200
-                  </p>
-                </div>
-                {trainingData.description &&
-                  trainingData.description.length > 200 && (
-                    <p className="text-xs text-red-600 mt-1">
-                      Max 200 characters exceeded
-                    </p>
-                  )}
+                </select>
+                <p className="text-xs text-gray-500 mt-1">
+                  Larger chunks provide more context but may be less precise
+                </p>
               </div>
               <textarea
                 value={trainingData.text}
@@ -708,9 +669,7 @@ export default function TrainPage() {
                   !trainingData.text.trim() ||
                   !trainingData.title.trim() ||
                   /\s/.test(trainingData.title) ||
-                  trainingData.title.length > 20 ||
-                  (trainingData.description &&
-                    trainingData.description.length > 200)
+                  trainingData.title.length > 20
                 }
                 className="w-full bg-green-600 text-white py-2 px-4 rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
               >
@@ -876,30 +835,6 @@ export default function TrainPage() {
             )}
           </div>
 
-          {/* Tabs */}
-          <div className="flex border-b border-gray-200 mb-6">
-            <button
-              onClick={() => handleTabChange("docs")}
-              className={`px-4 py-2 font-medium text-sm transition-colors ${
-                activeTab === "docs"
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              📄 Docs (New)
-            </button>
-            <button
-              onClick={() => handleTabChange("chunks")}
-              className={`px-4 py-2 font-medium text-sm transition-colors ${
-                activeTab === "chunks"
-                  ? "text-blue-600 border-b-2 border-blue-600"
-                  : "text-gray-500 hover:text-gray-700"
-              }`}
-            >
-              📦 Chunks (Old)
-            </button>
-          </div>
-
           {embeddingsLoading ? (
             <div className="flex justify-center items-center py-12">
               <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600"></div>
@@ -907,78 +842,13 @@ export default function TrainPage() {
           ) : embeddings && embeddings.length > 0 ? (
             <div className="space-y-4">
               {embeddings.map((chunk, index) => (
-                <div
+                <DocumentUploadCard
                   key={chunk._id || index}
-                  className="border border-gray-200 rounded-lg p-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex justify-between items-start mb-3">
-                    <div className="flex-1">
-                      {/* Title */}
-                      {chunk.title && (
-                        <div className="mb-2">
-                          <span className="text-sm font-semibold text-green-700 bg-green-50 px-3 py-1 rounded-md inline-block">
-                            📄 {chunk.title}
-                          </span>
-                        </div>
-                      )}
-                      {/* DocID and Description Row */}
-                      <div className="flex flex-wrap items-center gap-2 mb-2">
-                        <span className="text-xs font-mono text-blue-600 bg-blue-50 px-2 py-1 rounded">
-                          ID: {chunk.docid}
-                        </span>
-                        {activeTab === "docs" && chunk.description && (
-                          <span className="text-xs text-purple-600 bg-purple-50 px-2 py-1 rounded">
-                            📝 {chunk.description}
-                          </span>
-                        )}
-                        <span className="text-xs text-gray-500">
-                          {new Date(chunk.createdAt).toLocaleDateString(
-                            "en-US",
-                            {
-                              year: "numeric",
-                              month: "short",
-                              day: "numeric",
-                              hour: "2-digit",
-                              minute: "2-digit",
-                            }
-                          )}
-                        </span>
-                        {activeTab === "chunks" && (
-                          <span className="text-xs text-orange-600 bg-orange-50 px-2 py-1 rounded">
-                            ⚠️ Legacy Format
-                          </span>
-                        )}
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleDeleteClick(chunk)}
-                      className="ml-2 p-2 hover:bg-red-50 rounded-full transition-colors"
-                      title="Delete chunk"
-                    >
-                      <img
-                        src="/delete_2.png"
-                        alt="Delete"
-                        className="w-5 h-5"
-                      />
-                    </button>
-                  </div>
-                  {/* Content */}
-                  <div className="mt-3 pt-3 border-t border-gray-100">
-                    <p className="text-gray-700 text-sm leading-relaxed">
-                      {chunk?.text?.length > 400 && !expandedChunks[chunk.docid]
-                        ? `${chunk.text.slice(0, 400)}...`
-                        : chunk.text}
-                    </p>
-                  </div>
-                  {chunk?.text?.length > 400 && (
-                    <button
-                      onClick={() => toggleReadMore(chunk.docid)}
-                      className="text-blue-600 text-xs mt-2 hover:underline"
-                    >
-                      {expandedChunks[chunk.docid] ? "Show less" : "Show more"}
-                    </button>
-                  )}
-                </div>
+                  doc={chunk}
+                  toggleReadMore={toggleReadMore}
+                  expandedDocs={expandedDocs}
+                  onDelete={handleDeleteClick}
+                />
               ))}
             </div>
           ) : (
@@ -1144,11 +1014,11 @@ export default function TrainPage() {
                   Content Preview:
                 </p>
                 <p className="text-sm text-gray-700 italic">
-                  "{deleteModal.chunkText}"
+                  "{deleteModal.docText}"
                 </p>
               </div>
               <p className="text-xs text-gray-500 mt-2 font-mono">
-                ID: {deleteModal.chunkId}
+                ID: {deleteModal.docid}
               </p>
             </div>
             <p className="text-sm text-red-600 mb-6">

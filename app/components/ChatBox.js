@@ -5,6 +5,7 @@ import Matches from "./Matches";
 import Resume from "./Resume";
 import Livechat from "./LiveChat";
 import Inbox from "./Inbox";
+import ChunkModal from "./ChunkModal";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 
 export default function ChatBox({
@@ -46,6 +47,9 @@ export default function ChatBox({
 
   const [chatLoading, setChatLoading] = useState(false);
   const [summaryUptilnow, setSummaryUptilnow] = useState("");
+  const [answerSources, setAnswerSources] = useState([]);
+  const [openChunkModal, setOpenChunkModal] = useState(false);
+  const [chunkData, setChunkData] = useState(null);
 
   //voice effects
 
@@ -146,7 +150,26 @@ export default function ChatBox({
       setIsTranscribing(false);
     }
   };
-  // Voice recording state
+  const fetchChunkById = async (chunkId) => {
+    if (!chunkId || !brandContext?.subdomain) return;
+
+    try {
+      const response = await fetch(
+        `/api/admin/fetch-chunk?chunkId=${chunkId}&brand=${brandContext.subdomain}`
+      );
+      const data = await response.json();
+
+      if (response.ok && data.chunk) {
+        setChunkData(data.chunk);
+        setOpenChunkModal(true);
+      } else {
+        alert("Failed to load chunk content");
+      }
+    } catch (error) {
+      console.error("Failed to fetch chunk:", error);
+      alert("Error loading chunk");
+    }
+  };
   const startRecording = async () => {
     // reset previous artifacts for a fresh capture
     setAudioUrl(null);
@@ -287,7 +310,11 @@ export default function ChatBox({
       setInput("");
       setTranscriptText("");
       setAudioUrl(null);
-      const newUserMessage = { role: "user", message: messageText };
+      const newUserMessage = {
+        role: "user",
+        message: messageText,
+        requery: null,
+      }; // Will be updated after API response
       updatedMessages = [...messages, newUserMessage];
       historyToUse = updatedMessages;
     }
@@ -339,12 +366,21 @@ export default function ChatBox({
     }
     const data = await response.json();
     setSummaryUptilnow(data?.summary);
+
+    // Update the last user message with requery if available
+    const updatedMessagesWithRequery = updatedMessages.map((msg, idx) => {
+      if (idx === updatedMessages.length - 1 && msg.role === "user") {
+        return { ...msg, requery: data?.requery || null };
+      }
+      return msg;
+    });
+
     setMessages([
-      ...updatedMessages,
-      { role: "assistant", message: data.reply },
+      ...updatedMessagesWithRequery,
+      { role: "assistant", message: data.reply, sources: data?.sources || [] },
     ]);
     setMessageLoading(false);
-
+    setAnswerSources(data?.sources);
     // Reset retry state on success
     if (isRetry) {
       setRetry(false);
@@ -421,22 +457,22 @@ export default function ChatBox({
                 messages.map((m, i) => (
                   <div
                     key={i}
-                    className={
+                    className={`mb-4 ${
                       m.role === "user"
-                        ? "flex justify-end"
-                        : "flex justify-start"
-                    }
+                        ? "flex flex-col items-end"
+                        : "flex flex-col items-start"
+                    }`}
                   >
                     {i === retryIndex && retry && (
                       <button
                         onClick={() => handleSubmit(null, true)}
-                        className="text-xs text-red-500 hover:text-red-700 underline"
+                        className="text-xs text-red-500 hover:text-red-700 underline mb-1"
                       >
                         Retry
                       </button>
                     )}
                     <div
-                      className={`text-sm leading-relaxed break-words rounded-2xl px-4 py-2  sm:max-w-[60%] shadow-sm ${
+                      className={`text-sm leading-relaxed break-words rounded-2xl px-4 py-2 sm:max-w-[60%] shadow-sm ${
                         m.role === "user"
                           ? "bg-sky-700 text-white"
                           : "bg-gray-50 text-slate-800 border border-slate-200"
@@ -444,6 +480,35 @@ export default function ChatBox({
                     >
                       {m.message}
                     </div>
+                    {/* Show requery for user messages */}
+                    {m.role === "user" && m.requery && (
+                      <div className="mt-1.5 max-w-[60%]">
+                        <p className="text-xs text-gray-500 italic">
+                          🔍 {m.requery}
+                        </p>
+                      </div>
+                    )}
+                    {/* Show sources for assistant messages */}
+                    {m.role === "assistant" &&
+                      m.sources &&
+                      m.sources.length > 0 && (
+                        <div className="mt-1.5 max-w-[60%] flex flex-wrap gap-1.5">
+                          <span className="text-xs text-gray-500">
+                            📚 Sources:
+                          </span>
+                          {m.sources.map((sourceId, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => fetchChunkById(sourceId)}
+                              className="text-xs text-blue-600 hover:text-blue-800 hover:underline px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors"
+                            >
+                              {sourceId.length > 10
+                                ? `${sourceId.slice(0, 10)}...`
+                                : sourceId}
+                            </button>
+                          ))}
+                        </div>
+                      )}
                   </div>
                 ))}
               {messageLoading && (
@@ -640,6 +705,15 @@ export default function ChatBox({
           connectionId={connectionId}
         />
       )}
+
+      <ChunkModal
+        isOpen={openChunkModal}
+        onClose={() => {
+          setOpenChunkModal(false);
+          setChunkData(null);
+        }}
+        chunk={chunkData}
+      />
     </div>
   );
 }
