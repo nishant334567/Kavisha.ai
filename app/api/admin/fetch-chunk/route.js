@@ -18,16 +18,25 @@ export async function GET(req) {
     .namespace(brand)
     .fetch([chunkId]);
 
-  const chunk = result.records?.[chunkId];
+  let chunk = result.records?.[chunkId];
+  if (!chunk) {
+    try {
+      const sparseResult = await pc
+        .index("kavisha-sparse")
+        .namespace(brand)
+        .fetch([chunkId]);
+      chunk = sparseResult.records?.[chunkId];
+    } catch (err) {}
+  }
+
   if (!chunk) {
     return NextResponse.json({ error: "Chunk not found" }, { status: 404 });
   }
-
   return NextResponse.json({
     chunk: {
       id: chunk.id,
-      text: chunk.metadata?.text || "",
-      title: chunk.metadata?.title || "",
+      text: chunk.metadata?.text || chunk.text || "",
+      title: chunk.metadata?.title || chunk.title || "",
     },
   });
 }

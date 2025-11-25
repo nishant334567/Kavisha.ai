@@ -33,7 +33,9 @@ export async function POST(req) {
       const messagesExcludingCurrent =
         history.length > 1 ? history.slice(0, -1) : [];
 
-      // If 4+ messages available, take last 4; if 2-3 available, take last 2; otherwise take all
+      const fullFormattedHistory = history
+        .map((h) => `${h.role}: ${h.message || h.text || ""}`)
+        .join("\n");
       const lastTwoPairs =
         messagesExcludingCurrent.length >= 4
           ? messagesExcludingCurrent.slice(-4) // Last 4 messages
@@ -56,7 +58,7 @@ Examples:
 "tell me more" → expand using recent topic
 "thanks bye" → ""
 
-Context: ${formattedHistory}
+Context: ${fullFormattedHistory}
 User: "${userMessage}"
 
 Query or "":`;
@@ -75,7 +77,6 @@ Query or "":`;
 
       let betterQuery =
         responseQuery.response.candidates[0].content.parts[0].text.trim();
-      console.log("betterQuery query prompt: ", betterQuery);
 
       let context = "";
       if (betterQuery && betterQuery !== '""' && betterQuery !== "''") {
@@ -123,14 +124,14 @@ Query or "":`;
               .catch(() => ({ result: { hits: [] } })), // Fallback if sparse fails
           ]);
           results?.matches?.forEach((match) => {
-            // console.log("\n Match:", match);
+            //
             uniqueContext.set(match.id, match.metadata?.text);
           });
 
           results2?.result?.hits?.forEach((hit) => {
-            // console.log("\n sparse match:", hit);
+            //
             if (!uniqueContext.has(hit._id)) {
-              // console.log("\n sparse match:", hit);
+              //
               uniqueContext.set(hit._id, hit.fields?.text);
             }
           });
@@ -148,7 +149,7 @@ Query or "":`;
           if (documentsForRerank.length > 0) {
             try {
               const rerankOptions = {
-                topN: 2,
+                topN: 4,
                 rankFields: ["text"],
                 returnDocuments: true,
               };
@@ -159,8 +160,6 @@ Query or "":`;
                 documentsForRerank,
                 rerankOptions
               );
-
-              console.log("Reranked: ", reranked);
 
               // Extract text from reranked documents
               if (
@@ -206,7 +205,6 @@ Query or "":`;
           } else {
             context = "";
           }
-          console.log("Final context: ", context);
         } catch (pineconeError) {
           context = "";
         }
@@ -216,9 +214,6 @@ Query or "":`;
       }
 
       // Use full history for final response (needs full context for quality)
-      const fullFormattedHistory = history
-        .map((h) => `${h.role}: ${h.message || h.text || ""}`)
-        .join("\n");
 
       const finalPrompt = `${prompt}
 CONVERSATION HISTORY:

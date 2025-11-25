@@ -59,17 +59,15 @@ export async function POST(request) {
     for (let i = 0; i < words.length; i += chunkSize) {
       const chunk = words.slice(i, i + chunkSize).join(" ");
       const chunkIndex = Math.floor(i / chunkSize);
-      const datapointId = `chunk_${Date.now()}_${chunkIndex}_${i}`;
+      const datapointId = `${docId}_${chunkIndex}`;
       chunks.push({ chunk, chunkIndex, datapointId });
     }
 
-    // Generate all embeddings in parallel (batch processing)
     const embeddingPromises = chunks.map(({ chunk }) =>
       generateEmbedding(chunk, "RETRIEVAL_DOCUMENT")
     );
     const embeddings = await Promise.all(embeddingPromises);
 
-    // Prepare vectors for batch upsert (max 1000 records per batch)
     const denseVectors = [];
     const sparseRecords = [];
 
@@ -102,7 +100,6 @@ export async function POST(request) {
       results.push(datapointId);
     }
 
-    // Batch upsert to Pinecone (process in batches of 100 for optimal performance)
     const batchSize = 100;
     const denseBatches = [];
     const sparseBatches = [];
