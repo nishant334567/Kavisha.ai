@@ -6,6 +6,7 @@ import Session from "../../models/ChatSessions.js";
 import { withAuth } from "../../lib/firebase/auth-middleware";
 import { getUserFromDB } from "../../lib/firebase/get-user";
 import { SYSTEM_PROMPT_LEAD } from "../../lib/systemPrompt.js";
+import { buildLeadRewritePrompt } from "../../lib/rewriteLeadQueryPrompt.js";
 import getGeminiModel from "../../lib/getAiModel.js";
 import { connectDB } from "../../lib/db.js";
 
@@ -49,20 +50,10 @@ export async function POST(req) {
         "Last 2 pairs (excluding current message): ",
         formattedHistory
       );
-      const rewriteQueryPrompt = `Rewrite to search query keeping the EXACT same
-       question/intent. Only expand context if needed. If clear, return as-is.
-        For follow-ups, use MOST RECENT topic. If closing/satisfied: return "".
-
-Examples:
-"why didn't you become as big as linkedin?" → "why didn't Naukri become as big as LinkedIn"
-"tell me more" → expand using recent topic
-"thanks bye" → ""
-
-Context: ${fullFormattedHistory}
-User: "${userMessage}"
-
-Query or "":`;
-
+      const rewriteQueryPrompt = buildLeadRewritePrompt(
+        formattedHistory,
+        userMessage
+      );
       const responseQuery = await model.generateContent({
         contents: [
           {

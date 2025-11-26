@@ -22,7 +22,7 @@ export default function TrainPage() {
     title: "",
     youtubeUrl: "",
     pdfFile: null,
-    chunkSize: 200,
+    // chunkSize: 200,
   });
   const [loading, setLoading] = useState({
     text: false,
@@ -276,7 +276,7 @@ export default function TrainPage() {
             title: trainingData.title.trim(),
             description: "",
             brand: brandContext.subdomain,
-            chunkSize: trainingData.chunkSize,
+            // chunkSize: trainingData.chunkSize,
           }),
         });
       } else if (type === "pdf") {
@@ -627,7 +627,7 @@ export default function TrainPage() {
                   <p className="text-xs text-red-600 mt-1">Max 20 characters</p>
                 )}
               </div>
-              <div>
+              {/* <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">
                   Chunk Size{" "}
                   <span className="text-gray-500">(words per chunk)</span>
@@ -653,7 +653,7 @@ export default function TrainPage() {
                 <p className="text-xs text-gray-500 mt-1">
                   Larger chunks provide more context but may be less precise
                 </p>
-              </div>
+              </div> */}
               <textarea
                 value={trainingData.text}
                 onChange={(e) =>

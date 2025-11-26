@@ -10,7 +10,7 @@ export default function DocumentUploadCard({
 }) {
   const [editedDoctext, setEditedDoctext] = useState("");
   const [isEditing, setIsEditing] = useState(false);
-  const [chunkSize, setChunksize] = useState();
+  //   const [chunkSize, setChunksize] = useState();
   const [saving, setSaving] = useState(false);
   const [documentData, setDocumentData] = useState({});
 
@@ -22,7 +22,7 @@ export default function DocumentUploadCard({
 
   const handleEditDoc = (id) => {
     setEditedDoctext(documentData?.text || "");
-    setChunksize(documentData?.chunkSize || 200);
+    // setChunksize(documentData?.chunkSize || 200);
     setIsEditing(true);
   };
 
@@ -49,7 +49,7 @@ export default function DocumentUploadCard({
           docid: documentData?.docid,
           text: editedDoctext.trim(),
           brand: brandContext?.subdomain,
-          chunkSize: chunkSize || documentData?.chunkSize || 200,
+          //   chunkSize: chunkSize || documentData?.chunkSize || 200,
           title: documentData.title || "",
         }),
       });
@@ -91,6 +91,7 @@ export default function DocumentUploadCard({
             </span>
 
             <span className="text-xs text-gray-500">
+              Created:&nbsp;
               {new Date(documentData.createdAt).toLocaleDateString("en-US", {
                 year: "numeric",
                 month: "short",
@@ -99,11 +100,23 @@ export default function DocumentUploadCard({
                 minute: "2-digit",
               })}
             </span>
+            {documentData.updatedAt && (
+              <span className="text-xs text-gray-500">
+                &nbsp;•&nbsp;Updated:&nbsp;
+                {new Date(documentData.updatedAt).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "short",
+                  day: "numeric",
+                  hour: "2-digit",
+                  minute: "2-digit",
+                })}
+              </span>
+            )}
           </div>
         </div>
         {isEditing ? (
           <div className="flex flex-col sm:flex-row items-end sm:items-center gap-2">
-            <select
+            {/* <select
               value={chunkSize || documentData?.chunkSize || 200}
               onChange={(e) => setChunksize(parseInt(e.target.value))}
               className="px-3 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
@@ -115,7 +128,7 @@ export default function DocumentUploadCard({
                   </option>
                 )
               )}
-            </select>
+            </select> */}
             <div className="flex gap-2">
               <button
                 onClick={handleSaveDoc}
@@ -170,7 +183,7 @@ export default function DocumentUploadCard({
                 onClick={() => {
                   setIsEditing(false);
                   setEditedDoctext(documentData.text);
-                  setChunksize(documentData?.chunkSize);
+                  //   setChunksize(documentData?.chunkSize);
                 }}
                 disabled={saving}
                 className="px-4 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
@@ -182,11 +195,11 @@ export default function DocumentUploadCard({
           </div>
         ) : (
           <div className="flex items-center gap-2">
-            {documentData.chunkSize && (
+            {/* {documentData.chunkSize && (
               <span className="text-xs text-gray-500 hidden sm:inline">
                 {documentData.chunkSize} words
               </span>
-            )}
+            )} */}
             <div className="flex gap-1.5">
               <button
                 onClick={() => onDelete && onDelete(doc)}
