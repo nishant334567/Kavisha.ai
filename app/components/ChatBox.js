@@ -166,7 +166,6 @@ export default function ChatBox({
         alert("Failed to load chunk content");
       }
     } catch (error) {
-      console.error("Failed to fetch chunk:", error);
       alert("Error loading chunk");
     }
   };

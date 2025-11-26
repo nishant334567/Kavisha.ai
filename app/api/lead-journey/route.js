@@ -95,49 +95,34 @@ export async function POST(req) {
 
         const uniqueContext = new Map();
         try {
-          const results = await pc
-            .index("intelligent-kavisha")
-            .namespace(brand)
-            .query({
+          const [results, results2] = await Promise.all([
+            pc.index("intelligent-kavisha").namespace(brand).query({
               vector: userMessageEmbedding,
               topK: 10,
               includeMetadata: true,
               includeValues: false,
-            });
-          // Parallelize both Pinecone queries for better performance
-          // const [results, results2 = []] = await Promise.all([
-          //   pc.index("intelligent-kavisha").namespace(brand).query({
-          //     vector: userMessageEmbedding,
-          //     topK: 10,
-          //     includeMetadata: true,
-          //     includeValues: false,
-          //   }),
-          //   pc
-          //     .index("kavisha-sparse")
-          //     .namespace(brand)
-          //     .searchRecords({
-          //       query: {
-          //         topK: 10,
-          //         inputs: { text: betterQuery },
-          //       },
-          //     })
-          //     .catch(() => ({ result: { hits: [] } })), // Fallback if sparse fails
-          // ]);
+            }),
+            pc
+              .index("kavisha-sparse")
+              .namespace(brand)
+              .searchRecords({
+                query: {
+                  topK: 10,
+                  inputs: { text: betterQuery },
+                },
+              })
+              .catch(() => ({ result: { hits: [] } })),
+          ]);
           results?.matches?.forEach((match) => {
-            //
             uniqueContext.set(match.id, match.metadata?.text);
           });
 
-          // results2?.result?.hits?.forEach((hit) => {
-          //   //
-          //   if (!uniqueContext.has(hit._id)) {
-          //     //
-          //     uniqueContext.set(hit._id, hit.fields?.text);
-          //   }
-          // });
+          results2?.result?.hits?.forEach((hit) => {
+            if (!uniqueContext.has(hit._id)) {
+              uniqueContext.set(hit._id, hit.fields?.text);
+            }
+          });
 
-          // Prepare documents for reranking (convert Map values to document objects)
-          // Use 'text' field to match what we stored in Pinecone
           const documentsForRerank = Array.from(uniqueContext.entries()).map(
             ([id, text]) => ({
               id,
@@ -145,7 +130,6 @@ export async function POST(req) {
             })
           );
 
-          // Rerank if we have documents
           if (documentsForRerank.length > 0) {
             try {
               const rerankOptions = {
@@ -161,7 +145,8 @@ export async function POST(req) {
                 rerankOptions
               );
 
-              // Extract text from reranked documents
+              console.log("Reranked : ", reranked);
+
               if (
                 reranked &&
                 reranked.data &&
@@ -172,13 +157,9 @@ export async function POST(req) {
                   let text = "";
                   let id = "";
 
-                  // Try different possible structures for rerank response
                   if (item.document) {
                     text = item.document.text || "";
                     id = item.document.id || item.id || "";
-                  } else if (item.text) {
-                    text = item.text;
-                    id = item.id || "";
                   }
 
                   return { text, id };
@@ -191,14 +172,10 @@ export async function POST(req) {
                   .map((item) => item.id)
                   .filter(Boolean);
               } else {
-                // Fallback to original context if rerank returns empty
                 context = [...uniqueContext.values()].join(" ");
                 sourceChunkIds = Array.from(uniqueContext.keys());
               }
             } catch (rerankError) {
-              console.error("Rerank error:", rerankError);
-
-              // Fallback to original context if rerank fails
               context = [...uniqueContext.values()].join(" ");
               sourceChunkIds = Array.from(uniqueContext.keys());
             }
@@ -209,18 +186,15 @@ export async function POST(req) {
           context = "";
         }
       } else {
-        // Empty query means no lookup needed - use original message for final prompt
         betterQuery = userMessage;
       }
-
-      // Use full history for final response (needs full context for quality)
 
       const finalPrompt = `${prompt}
 CONVERSATION HISTORY:
 ${fullFormattedHistory}
 
 RELEVANT CONTEXT:
-${betterQuery === "" ? userMessage : context}
+${context}
 
 USER QUESTION: ${betterQuery}
 
@@ -242,7 +216,6 @@ Please provide a helpful response based on the above information:`;
           responseGemini.response.candidates[0].content.parts[0].text;
         let reParts = responseText.split("////").map((item) => item.trim());
 
-        // Retry with stricter prompt if format is wrong
         if (reParts.length !== 3) {
           const strictPrompt = `CRITICAL: You MUST respond in EXACT format: [Your reply] //// [Summary] //// [Title]\n\nPrevious response was invalid. Retry with EXACT format - 3 parts separated by //// only.`;
 

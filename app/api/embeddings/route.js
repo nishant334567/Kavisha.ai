@@ -88,21 +88,21 @@ export async function POST(request) {
         },
       });
 
-      // sparseRecords.push({
-      //   id: datapointId,
-      //   text: chunk,
-      // });
+      sparseRecords.push({
+        id: datapointId,
+        text: chunk,
+      });
 
       results.push(datapointId);
     }
 
-    const batchSize = 50;
+    const batchSize = 40;
     const denseBatches = [];
     const sparseBatches = [];
 
     for (let i = 0; i < denseVectors.length; i += batchSize) {
       denseBatches.push(denseVectors.slice(i, i + batchSize));
-      // sparseBatches.push(sparseRecords.slice(i, i + batchSize));
+      sparseBatches.push(sparseRecords.slice(i, i + batchSize));
     }
 
     // Parallelize batch upserts to both indexes
@@ -115,17 +115,16 @@ export async function POST(request) {
           .upsert(denseBatches[i])
           .catch((err) => console.error(`Dense batch ${i} error:`, err))
       );
-      // Sparse index upsert commented out - not using sparse for responses
-      // upsertPromises.push(
-      //   pc
-      //     .index("kavisha-sparse")
-      //     .namespace(brand)
-      //     .upsertRecords(sparseBatches[i])
-      //     .catch((err) => console.error(`Sparse batch ${i} error:`, err))
-      // );
+
+      upsertPromises.push(
+        pc
+          .index("kavisha-sparse")
+          .namespace(brand)
+          .upsertRecords(sparseBatches[i])
+          .catch((err) => console.error(`Sparse batch ${i} error:`, err))
+      );
     }
 
-    // Wait for all upserts to complete
     await Promise.all(upsertPromises);
 
     return NextResponse.json({
@@ -143,20 +142,15 @@ export async function PATCH(request) {
   try {
     const { docid, text, brand, title } = await request.json();
     await connectDB();
-    // const sparseIndexNamespace = pc.index("kavisha-sparse").namespace(brand);
+    const sparseIndexNamespace = pc.index("kavisha-sparse").namespace(brand);
     const denseIndexNamespace = pc
       .index("intelligent-kavisha")
       .namespace(brand);
 
     await Promise.all([
       denseIndexNamespace.deleteMany({ docid: docid }),
-      // Sparse index deletion commented out - not using sparse for responses
-      // sparseIndexNamespace.deleteMany({ docid: docid }),
+      sparseIndexNamespace.deleteMany({ docid: docid }),
     ]);
-
-    // const shortUuid = uuidv4().substring(0, 8); // First 8 chars for uniqueness
-    // const titleSlug = title.trim().replace(/[^a-zA-Z0-9]/g, ""); // Remove special chars
-    // const docId = `${titleSlug}_${shortUuid}`;
 
     let paragraphs = text
       .split(/\n\s*\n+/)
@@ -205,21 +199,21 @@ export async function PATCH(request) {
         },
       });
 
-      // sparseRecords.push({
-      //   id: datapointId,
-      //   text: chunk,
-      // });
+      sparseRecords.push({
+        id: datapointId,
+        text: chunk,
+      });
 
       results.push(datapointId);
     }
 
-    const batchSize = 50;
+    const batchSize = 40;
     const denseBatches = [];
     const sparseBatches = [];
 
     for (let i = 0; i < denseVectors.length; i += batchSize) {
       denseBatches.push(denseVectors.slice(i, i + batchSize));
-      // sparseBatches.push(sparseRecords.slice(i, i + batchSize));
+      sparseBatches.push(sparseRecords.slice(i, i + batchSize));
     }
 
     // Parallelize batch upserts to both indexes
@@ -233,16 +227,15 @@ export async function PATCH(request) {
           .catch((err) => console.error(`Dense batch ${i} error:`, err))
       );
       // Sparse index upsert commented out - not using sparse for responses
-      // upsertPromises.push(
-      //   pc
-      //     .index("kavisha-sparse")
-      //     .namespace(brand)
-      //     .upsertRecords(sparseBatches[i])
-      //     .catch((err) => console.error(`Sparse batch ${i} error:`, err))
-      // );
+      upsertPromises.push(
+        pc
+          .index("kavisha-sparse")
+          .namespace(brand)
+          .upsertRecords(sparseBatches[i])
+          .catch((err) => console.error(`Sparse batch ${i} error:`, err))
+      );
     }
 
-    // Wait for all upserts to complete
     await Promise.all(upsertPromises);
 
     await TrainingData.updateOne(

@@ -47,7 +47,7 @@ export async function GET(req) {
 export async function DELETE(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const docid = searchParams.get("docid"); // Keeping query param name for backward compatibility
+    const docid = searchParams.get("docid");
     const brand = searchParams.get("brand");
 
     if (!docid) {
@@ -71,12 +71,12 @@ export async function DELETE(req) {
           docid: { $eq: docid },
         });
 
-      // await pc
-      //   .index("kavisha-sparse")
-      //   .namespace(brand)
-      //   .deleteMany({
-      //     docid: { $eq: docid },
-      //   });
+      await pc
+        .index("kavisha-sparse")
+        .namespace(brand)
+        .deleteMany({
+          docid: { $eq: docid },
+        });
     } catch (pineconeError) {
       return NextResponse.json(
         { error: "Failed to delete chunk", details: pineconeError.message },
