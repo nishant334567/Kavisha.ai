@@ -22,7 +22,7 @@ export async function POST(req) {
 
       await connectDB();
       let sourceChunkIds = [];
-      const model = await getGeminiModel("gemini-2.5-flash-lite");
+      const model = getGeminiModel(process.env.AI_MODEL ?? "gemini-2.5-flash");
 
       if (!model) {
         return NextResponse.json(
