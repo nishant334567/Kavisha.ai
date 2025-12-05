@@ -7,86 +7,67 @@ import mongoose from "mongoose";
 import { createChatCompletion } from "@/app/utils/getAiResponse";
 import generateMatchingPrompt from "@/app/utils/matchingPromptGenerator";
 import { matchmakingPromptGenerator } from "@/app/utils/matchingPromptGenerator";
-const openai = process.env.OPENAI_API_KEY
-  ? new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    })
-  : null;
+import getGeminiModel from "@/app/lib/getAiModel";
 
 export async function getMatches(userId, sessionId, role) {
-  if (role === "lead_journey") {
-    return [];
-  }
-  if (!openai) {
-    throw new Error("OpenAI API key not configured");
-  }
-
   await connectDB();
-  const session = await Session.findById({ _id: sessionId });
-
+  const session = await Session.findById(sessionId);
+  const model = getGeminiModel("gemini-2.5-flash");
+  // console.log(model);
   let oppositeRole =
-    role === "dating"
-      ? "dating" // Dating matches with dating
+    role === "friends"
+      ? "friends"
       : role === "job_seeker"
-        ? "recruiter" // Job seeker matches with recruiter
-        : "job_seeker"; // Recruiter matches with job seeker
+        ? "recruiter"
+        : "job_seeker";
 
   const allProviders = await Session.find({
     role: oppositeRole,
     allDataCollected: true,
     chatSummary: { $exists: true, $ne: "" },
-    _id: { $ne: sessionId }, // Exclude current session
-    userId: { $ne: userId }, // Exclude current user
+    _id: { $ne: sessionId },
+    userId: { $ne: userId },
     ...(session.brand !== "kavisha" && { brand: session.brand }),
   }).populate("userId", "name email");
 
+  // console.log("All Providers: ", allProviders);
   const allProvidersList = allProviders
     .map(
-      (s, i) => `
-[B${i + 1}]
-"userId": "${s.userId?._id}"
-"name": "${s.userId?.name}"
-"email": "${s.userId?.email}"
-"sessionId": "${s._id}"
-"title": "${s.title}"
-"chatSummary": "${s.chatSummary}"
-"brand": "${s.brand}"`
+      (s, i) =>
+        `[B${i + 1}]"sessionId": "${s._id}""chatSummary": "${s.chatSummary}"`
     )
     .join("\n");
   let prompt = "";
-  if (role === "dating") {
+
+  if (role === "friends") {
     prompt = matchmakingPromptGenerator({
-      sessionId,
       sessionSummary: session.chatSummary,
       allProvidersList,
     });
   } else {
     prompt = generateMatchingPrompt({
-      sessionId,
       sessionSummary: session.chatSummary,
       allProvidersList,
     });
   }
-
-  const completion = await createChatCompletion(
-    "gpt-4o-mini",
-    [
-      { role: "system", content: "You are a smart matching assistant." },
-      { role: "user", content: prompt },
-    ],
-    0.7,
-    800
-  );
-  const responseText = completion.choices[0].message.content;
-
-  // Extract JSON from markdown code blocks if present
+  console.log("Prompt: ", prompt);
+  let responseGemini = await model.generateContent({
+    contents: [{ role: "user", parts: [{ text: prompt }] }],
+  });
+  let responseText =
+    responseGemini.response.candidates[0].content.parts[0].text;
+  console.log("gemini content: ", responseText);
   let jsonText = responseText;
   if (responseText.includes("```json")) {
+    console.log(":in json");
     const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
-    if (jsonMatch) {
+    console.log("match json:", jsonMatch);
+    if (jsonMatch && jsonMatch[1]) {
       jsonText = jsonMatch[1].trim();
     }
   }
+
+  // console.log("Response matches: ", jsonText);
 
   // Parse the JSON response and return the array
   try {
@@ -100,25 +81,52 @@ export async function getMatches(userId, sessionId, role) {
       sessionId: new mongoose.Types.ObjectId(sessionId),
     });
 
-    // Insert new matches into the database
-    if (matches.length > 0) {
-      const matchesToInsert = matches.map((match) => ({
-        sessionId: new mongoose.Types.ObjectId(sessionId),
-        matchedUserId: new mongoose.Types.ObjectId(match.matchedUserId),
-        matchedSessionId: new mongoose.Types.ObjectId(match.matchedSessionId),
-        title: match.title,
-        chatSummary: match.chatSummary,
-        matchingReason: match.matchingReason,
-        matchPercentage: match.matchPercentage,
-        mismatchReason: match.mismatchReason,
-        matchedUserName: match.matchedUserName || "",
-        matchedUserEmail: match.matchedUserEmail || "",
-      }));
+    // Populate matched sessions with user data
+    const populatedSessions = await Promise.all(
+      matches.map(async (item) => {
+        const sessionDetail = await Session.findById(
+          item.matchedSessionId
+        ).populate("userId", "name email");
+        return { match: item, session: sessionDetail };
+      })
+    );
 
-      await Matches.insertMany(matchesToInsert);
+    // Insert new matches into the database with populated data
+    if (populatedSessions.length > 0) {
+      const matchesToInsert = populatedSessions
+        .filter(({ session }) => session !== null)
+        .map(({ match, session }) => ({
+          sessionId: new mongoose.Types.ObjectId(sessionId),
+          matchedUserId: session.userId?._id,
+          matchedSessionId: new mongoose.Types.ObjectId(match.matchedSessionId),
+          title: session.title || "",
+          chatSummary: session.chatSummary || "",
+          matchingReason: match.matchingReason || "",
+          matchPercentage: match.matchPercentage || "",
+          mismatchReason: match.mismatchReason || "",
+          matchedUserName: session.userId?.name || "",
+          matchedUserEmail: session.userId?.email || "",
+        }));
+
+      if (matchesToInsert.length > 0) {
+        await Matches.insertMany(matchesToInsert);
+      }
     }
 
-    return matches;
+    // Return populated matches with all data
+    return populatedSessions
+      .filter(({ session }) => session !== null)
+      .map(({ match, session }) => ({
+        matchedSessionId: match.matchedSessionId,
+        matchedUserId: session.userId?._id,
+        matchedUserName: session.userId?.name || "",
+        matchedUserEmail: session.userId?.email || "",
+        title: session.title || "",
+        chatSummary: session.chatSummary || "",
+        matchingReason: match.matchingReason || "",
+        matchPercentage: match.matchPercentage || "",
+        mismatchReason: match.mismatchReason || "",
+      }));
   } catch (error) {
     return [];
   }

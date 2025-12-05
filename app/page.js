@@ -155,6 +155,9 @@ export default function HomePage() {
               selectedType={currentChatType}
               selectChatType={selectChatType}
               isCreating={creatingSession}
+              enableCommunityOnboarding={
+                brandContext?.enableCommunityOnboarding || false
+              }
             />
           )}
 

@@ -18,7 +18,10 @@ export async function GET(req, { params }) {
           );
         }
         await connectDB();
-        const sessions = await Session.find({ userId: user.id, brand: brand });
+        const sessions = await Session.find({
+          userId: user.id,
+          brand: brand,
+        }).sort({ updatedAt: -1 });
         const sessionIds = sessions.map((session) => session._id);
 
         // Fetch logs for each session and build a map
@@ -35,6 +38,7 @@ export async function GET(req, { params }) {
               matchesLatest: s.matches,
               role: s.role,
               updatedAt: s.updatedAt,
+              chatType: s.role,
             };
           })
         );

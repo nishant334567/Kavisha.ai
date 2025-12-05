@@ -62,7 +62,14 @@ export default {
       description: "The subdomain this brand is for (e.g., spyne, kavisha)",
       validation: (Rule) => Rule.required(),
     },
-
+    {
+      name: "enableCommunityOnboarding",
+      title: "Enable Community Onboarding",
+      type: "boolean",
+      description:
+        "Toggle to enable community onboarding options (job seeker, recruiter, friends)",
+      initialValue: false,
+    },
     {
       name: "services",
       title: "Services",

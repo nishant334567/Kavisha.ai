@@ -6,7 +6,12 @@ import { getUserFromDB } from "@/app/lib/firebase/get-user";
 import Session from "@/app/models/ChatSessions";
 import { getMatches } from "../matches/[sessionId]/route";
 import { generateResumeContext } from "@/app/utils/resumeContextGenerator";
-import { SYSTEM_PROMPT } from "@/app/lib/systemPrompt";
+import {
+  JOB_SEEKER_PROMPT,
+  MAKE_FRIENDS_PROMPT,
+  RECRUITER_PROMPT,
+  SYSTEM_PROMPT,
+} from "@/app/lib/systemPrompt";
 import getGeminiModel from "@/app/lib/getAiModel";
 
 export async function GET(request) {
@@ -20,7 +25,19 @@ export async function GET(request) {
   return NextResponse.json({ logs });
 }
 
-const finalSystemPrompt = (prompt) => {
+const finalSystemPrompt = (prompt, type) => {
+  if (prompt === "") {
+    if (type === "job_seeker" || type === "JOB_SEEKER") {
+      return SYSTEM_PROMPT + JOB_SEEKER_PROMPT;
+    }
+    if (type === "recruiter" || type === "RECRUITER") {
+      return SYSTEM_PROMPT + RECRUITER_PROMPT;
+    }
+    if (type === "friends") {
+      return SYSTEM_PROMPT + MAKE_FRIENDS_PROMPT;
+    }
+  }
+
   return prompt + SYSTEM_PROMPT;
 };
 export async function POST(request) {
@@ -56,12 +73,24 @@ export async function POST(request) {
         await connectDB();
         const resumeText = resume || "";
 
+        // Check if data is already collected - if so, preserve existing summary
+        const existingSession = await Session.findById(sessionId);
+        const isDataAlreadyCollected =
+          existingSession?.allDataCollected === true;
+        const existingSummary = existingSession?.chatSummary || "";
+
         const geminiContents = [];
 
-        if (finalSystemPrompt(prompt, type)) {
+        let systemPromptText = finalSystemPrompt(prompt, type);
+        // If data is already collected, instruct AI to preserve the existing summary
+        if (isDataAlreadyCollected && existingSummary) {
+          systemPromptText += `\n\nCRITICAL: All required data has already been collected. In your response, you MUST return the EXACT same summary: "${existingSummary}". Do not modify, update, or change this summary in any way. This summary is used for matching and must remain unchanged. Only update your reply message (part 1), but keep the summary (part 2) exactly as shown above.`;
+        }
+
+        if (systemPromptText) {
           geminiContents.push({
             role: "user",
-            parts: [{ text: `System: ${finalSystemPrompt(prompt, type)}` }],
+            parts: [{ text: `System: ${systemPromptText}` }],
           });
         }
 
@@ -91,14 +120,32 @@ export async function POST(request) {
           parts: [{ text: userMessage || "" }],
         });
 
-        const responseGemini = await model.generateContent({
+        let responseGemini = await model.generateContent({
           contents: geminiContents,
         });
 
-        const reParts =
-          responseGemini.response.candidates[0].content.parts[0].text
-            .split("////")
-            .map((item) => item.trim());
+        let responseText =
+          responseGemini.response.candidates[0].content.parts[0].text;
+        let reParts = responseText.split("////").map((item) => item.trim());
+
+        // Retry once if format is invalid
+        if (reParts.length !== 4) {
+          const retryContents = [...geminiContents];
+          retryContents.push({
+            role: "user",
+            parts: [
+              {
+                text: `CRITICAL: Your response must have EXACTLY 4 parts separated by ////. You returned ${reParts.length} parts. Format: [reply] //// [summary] //// [title] //// [true/false]. Return ONLY these 4 parts, nothing else.`,
+              },
+            ],
+          });
+          responseGemini = await model.generateContent({
+            contents: retryContents,
+          });
+          responseText =
+            responseGemini.response.candidates[0].content.parts[0].text;
+          reParts = responseText.split("////").map((item) => item.trim());
+        }
 
         let reply = "";
         let summary = "";
@@ -112,14 +159,23 @@ export async function POST(request) {
           allDataCollected = reParts[3];
         } else {
           return NextResponse.json(
-            { error: "AI response format invalid" },
+            {
+              error: "AI response format invalid",
+              details: `Expected 4 parts, got ${reParts.length}`,
+            },
             { status: 500 }
           );
         }
 
         let matchesLatest = [];
         if (allDataCollected === "true") {
-          matchesLatest = await getMatches(userId, sessionId, type);
+          try {
+            matchesLatest = await getMatches(userId, sessionId, type);
+          } catch (error) {
+            // console.error("Error fetching matches:", error.message);
+            // Continue without matches if OpenAI is not configured
+            matchesLatest = [];
+          }
         }
 
         // Move DB operations to background

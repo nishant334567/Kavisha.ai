@@ -39,22 +39,22 @@ async function generateAvatarResponse(name, bio, isRetry = false) {
     contents: geminiContents,
     tools: [{ google_search: {} }],
     generationConfig: {
-      responseMimeType: "application/json",
+      temperature: 0.3,
     },
   });
 
-  // Validate response structure
   if (!responseGemini?.response?.candidates?.[0]?.content?.parts?.[0]?.text) {
-    return { error: "Invalid response from AI model", responseText: null };
+    return {
+      success: false,
+      error: "Invalid response from AI model",
+    };
   }
 
   let responseText =
     responseGemini.response.candidates[0].content.parts[0].text.trim();
 
-  // Extract JSON - handle both raw JSON and markdown-wrapped JSON (fallback)
   let jsonString = responseText;
 
-  // If wrapped in markdown code blocks, extract the JSON
   if (jsonString.startsWith("```")) {
     jsonString = jsonString.replace(/^```(?:json)?\s*/i, "");
     jsonString = jsonString.replace(/\s*```$/i, "");
@@ -64,9 +64,9 @@ async function generateAvatarResponse(name, bio, isRetry = false) {
   // Try to parse the JSON
   try {
     const parsedData = JSON.parse(jsonString);
-    return { success: true, data: parsedData, responseText };
+    return { success: true, data: parsedData };
   } catch (parseError) {
-    return { error: "Failed to parse JSON", responseText };
+    return { success: false, error: "Failed to parse JSON" };
   }
 }
 
@@ -81,35 +81,37 @@ export async function POST(request) {
       );
     }
 
-    // First attempt
     let result = await generateAvatarResponse(name, bio, false);
 
-    // If first attempt failed, retry once with stricter prompt
     if (!result.success) {
       result = await generateAvatarResponse(name, bio, true);
     }
 
-    // If retry also failed, return error
     if (!result.success) {
       return NextResponse.json(
         {
           error:
-            "Failed to parse AI response as JSON after retry. Please try again.",
+            "We couldn't automatically fetch your information. Please continue filling out the form manually to create your avatar.",
           success: false,
-          rawResponse: result.responseText,
         },
         { status: 500 }
       );
     }
 
-    // Success - return parsed data
-    return NextResponse.json({
-      success: true,
-      ...result.data,
-    });
+    return NextResponse.json(
+      {
+        ...result.data,
+        success: true,
+      },
+      { status: 200 }
+    );
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to create avatar", success: false },
+      {
+        error:
+          "We couldn't automatically fetch your information. Please continue filling out the form manually to create your avatar.",
+        success: false,
+      },
       { status: 500 }
     );
   }

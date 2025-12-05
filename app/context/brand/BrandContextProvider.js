@@ -49,6 +49,7 @@ export default function BrandContextProvider({ children }) {
                   subtitle,
                   admins,
                   initialmessage,
+                  enableCommunityOnboarding,
                   services
               }[0]`
         );
@@ -74,6 +75,7 @@ export default function BrandContextProvider({ children }) {
             isBrandAdmin: isAdmin,
             subdomain,
             initialmessage: brand.initialmessage,
+            enableCommunityOnboarding: brand.enableCommunityOnboarding || false,
             services: brand.services,
           };
 

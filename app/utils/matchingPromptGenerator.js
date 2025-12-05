@@ -1,6 +1,5 @@
 // app/utils/matchingPromptGenerator.js
 export default function generateMatchingPrompt({
-  sessionId,
   sessionSummary,
   allProvidersList,
 }) {
@@ -48,11 +47,8 @@ OUTPUT FORMAT:
 Return a JSON array of matches. Each match must include:
 
 {
-  "sessionId": "${sessionId}",
-  "matchedUserId": "user_id_from_providers_list",
+
   "matchedSessionId": "session_id_from_providers_list", 
-  "title": "Job Title or Role",
-  "chatSummary": "Brief summary of their profile",
   "matchingReason": "Detailed explanation of why this is a good match",
   "matchPercentage": "85%",
   "mismatchReason": "Any concerns or gaps to address"
@@ -61,21 +57,13 @@ Return a JSON array of matches. Each match must include:
 SAMPLE OUTPUT:
 [
   {
-    "sessionId": "${sessionId}",
-    "matchedUserId": "user123",
     "matchedSessionId": "session456",
-    "title": "Senior React Developer",
-    "chatSummary": "Looking for a senior React developer with 5+ years experience, TypeScript, and team lead experience. Budget: $120k-150k, Remote work preferred.",
     "matchingReason": "Perfect match! User has 6 years React experience, strong TypeScript skills, and previous team lead experience. Salary expectations align well with budget range. Remote work preference matches perfectly.",
     "matchPercentage": "95%",
     "mismatchReason": "None - this is an excellent match"
   },
   {
-    "sessionId": "${sessionId}",
-    "matchedUserId": "user789",
     "matchedSessionId": "session101",
-    "title": "Full Stack Developer",
-    "chatSummary": "Seeking a full-stack developer with React and Node.js experience. 3-4 years experience required. Budget: $80k-100k, Hybrid work.",
     "matchingReason": "Good match with strong technical alignment. User has solid React and Node.js experience. Experience level is appropriate for the role.",
     "matchPercentage": "78%",
     "mismatchReason": "Salary expectations are slightly below user's range, and user prefers remote work while role is hybrid"
@@ -91,13 +79,10 @@ CRITICAL IMPORTANT RULES:
 - Address the user as "you" in explanations
 - Focus on concrete, actionable insights
 - Return only valid JSON array, no additional text
-- If no relevant matches exist, return an empty array []
-
-CRITICAL: Use the EXACT userId and sessionId values from the POTENTIAL MATCHES [B] list above. DO NOT use the same sessionId for both current and matched sessions. The sessionId should remain "${sessionId}" but matchedUserId and matchedSessionId must come from the providers list.`;
+- If no relevant matches exist, return an empty array []`;
 }
 
 export function matchmakingPromptGenerator({
-  sessionId,
   sessionSummary,
   allProvidersList,
 }) {
@@ -138,11 +123,8 @@ OUTPUT FORMAT:
 Return a JSON array of matches. Each match must include:
 
 {
-  "sessionId": "${sessionId}",
-  "matchedUserId": "user_id_from_providers_list",
+
   "matchedSessionId": "session_id_from_providers_list", 
-  "title": "Potential Match",
-  "chatSummary": "Brief summary of their dating profile and preferences",
   "matchingReason": "Detailed explanation of why this is a good romantic match",
   "matchPercentage": "85%",
   "mismatchReason": "Any concerns or areas that might need work"
@@ -151,21 +133,14 @@ Return a JSON array of matches. Each match must include:
 SAMPLE OUTPUT:
 [
   {
-    "sessionId": "${sessionId}",
-    "matchedUserId": "user123",
+ 
     "matchedSessionId": "session456",
-    "title": "Potential Match",
-    "chatSummary": "Looking for a serious relationship, enjoys hiking and outdoor activities, values family, works in tech, age 28, lives in downtown area",
     "matchingReason": "Excellent match! Both seeking serious relationships, share love for outdoor activities and nature. Similar values around family and career. Age and location are compatible. Both have stable careers and similar life stages.",
     "matchPercentage": "92%",
     "mismatchReason": "Minor difference in work schedules, but both are flexible"
   },
   {
-    "sessionId": "${sessionId}",
-    "matchedUserId": "user789",
     "matchedSessionId": "session101",
-    "title": "Potential Match",
-    "chatSummary": "Interested in casual dating initially, loves art and music, creative professional, age 26, enjoys city life and cultural events",
     "matchingReason": "Good potential match with shared interests in arts and culture. Both are creative and enjoy city life. Age is compatible and both are open to seeing where things go.",
     "matchPercentage": "78%",
     "mismatchReason": "Different relationship goals initially - one wants serious, other wants casual to start"
@@ -181,5 +156,5 @@ SIMPLE RULES:
 - Return only valid JSON array, no additional text
 - If no relevant matches exist, return an empty array []
 
-CRITICAL: Use the EXACT userId and sessionId values from the POTENTIAL MATCHES [B] list above. DO NOT use the same sessionId for both current and matched sessions. The sessionId should remain "${sessionId}" but matchedUserId and matchedSessionId must come from the providers list.`;
+CRITICAL: Use the EXACT sessionId values from the POTENTIAL MATCHES [B] list above.`;
 }

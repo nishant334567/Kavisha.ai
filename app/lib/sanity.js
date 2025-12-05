@@ -11,11 +11,17 @@ const getClient = () => {
     return null;
   }
 
+  // Determine dataset based on environment
+  // Use 'production' dataset in production, 'development' otherwise
+  const dataset =
+    process.env.NEXT_PUBLIC_SANITY_DATASET ||
+    (process.env.NODE_ENV === "production" ? "development" : "test-dataset");
+
   return createClient({
     projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "wkgir1xd",
-    dataset: process.env.NEXT_PUBLIC_SANITY_DATASET || "development",
+    dataset,
     apiVersion: "2025-01-01",
-    useCdn: false,
+    useCdn: process.env.NODE_ENV === "production", // Use CDN in production
     token: process.env.SANITY_API_TOKEN, // Add token for mutations
   });
 };

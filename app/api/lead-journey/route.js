@@ -46,19 +46,17 @@ export async function POST(req) {
       const formattedHistory = lastTwoPairs
         .map((h) => `${h.role}: ${h.message || h.text || ""}`)
         .join("\n");
-      console.log(
-        "Last 2 pairs (excluding current message): ",
-        formattedHistory
-      );
-      const rewriteQueryPrompt = buildLeadRewritePrompt(
+
+      const rewritePrompt = buildLeadRewritePrompt(
         formattedHistory,
         userMessage
       );
+
       const responseQuery = await model.generateContent({
         contents: [
           {
             role: "user",
-            parts: [{ text: rewriteQueryPrompt }],
+            parts: [{ text: rewritePrompt }],
           },
         ],
         generationConfig: {
@@ -66,8 +64,63 @@ export async function POST(req) {
         },
       });
 
-      let betterQuery =
+      let responseText =
         responseQuery.response.candidates[0].content.parts[0].text.trim();
+
+      // Extract JSON if wrapped in markdown
+      let jsonText = responseText;
+      if (jsonText.includes("```")) {
+        const match = jsonText.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+        if (match) jsonText = match[1];
+      }
+
+      let parsedResponse;
+      try {
+        parsedResponse = JSON.parse(jsonText);
+      } catch (error) {
+        console.error("Error parsing intent response:", error);
+
+        parsedResponse = {
+          changeIntent: false,
+          requery: userMessage,
+        };
+      }
+
+      const { changeIntent, requery } = parsedResponse;
+      console.log("Parsed requery: ", parsedResponse);
+
+      // If user wants to change intent (join community, find jobs, etc.), redirect them
+      if (changeIntent === true) {
+        const redirectMessage = `For more information about joining the community, interacting with members, finding jobs, hiring talent, or finding friends in the community, please talk to our community chatbot by creating a new chat session.`;
+
+        // Save the assistant message to logs
+        setImmediate(async () => {
+          try {
+            await Logs.create({
+              message: userMessage || "",
+              sessionId: sessionId,
+              userId: user.id,
+              role: "user",
+            });
+            await Logs.create({
+              message: redirectMessage,
+              sessionId: sessionId,
+              userId: user.id,
+              role: "assistant",
+            });
+          } catch (error) {
+            console.error("Error saving logs:", error);
+          }
+        });
+
+        return NextResponse.json({
+          reply: redirectMessage,
+          summary: summary || "",
+          title: "Community Chat",
+        });
+      }
+
+      let betterQuery = requery || userMessage;
 
       let context = "";
       if (betterQuery && betterQuery !== '""' && betterQuery !== "''") {
@@ -133,7 +186,7 @@ export async function POST(req) {
           if (documentsForRerank.length > 0) {
             try {
               const rerankOptions = {
-                topN: 4,
+                topN: 10,
                 rankFields: ["text"],
                 returnDocuments: true,
               };

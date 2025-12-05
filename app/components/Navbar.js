@@ -53,9 +53,15 @@ export default function Navbar() {
         </div>
 
         <div className="flex items-center gap-2">
-          {isMainDomain && user && (
+          {isMainDomain && (
             <button
-              onClick={() => router.push("/make-avatar/v2")}
+              onClick={() => {
+                if (user) {
+                  router.push("/make-avatar/v2");
+                } else {
+                  handleSignIn();
+                }
+              }}
               className="px-3 py-1.5 rounded-md text-sm bg-blue-600 text-white hover:bg-blue-700 transition-colors"
             >
               Make my AI avatar

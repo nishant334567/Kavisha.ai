@@ -140,17 +140,9 @@ export default function MakeAvatar() {
 
       const data = await response.json();
 
-      if (data.success && data.status === "success") {
-        const titles =
-          data.titles && Array.isArray(data.titles) && data.titles.length > 0
-            ? data.titles
-            : getFallbackTitles(aboutUser.name);
-        const subtitles =
-          data.subtitles &&
-          Array.isArray(data.subtitles) &&
-          data.subtitles.length > 0
-            ? data.subtitles
-            : getFallbackSubtitles(aboutUser.name);
+      if (data.success && data?.fetchedpersonality) {
+        const titles = data.titles || [];
+        const subtitles = data.subtitles || [];
 
         setSuggestedSubdomains(data.subdomains || []);
         setSuggestedTitles(titles);
@@ -166,60 +158,31 @@ export default function MakeAvatar() {
           bio_subtitle: subtitles[0] || "",
         });
 
+        // Move to next step only on success
         setCurrentStep(stages.AI_ANALYSIS);
-      } else if (data.success && data.status === "failure") {
+      } else if (data.success && !data.fetchedpersonality) {
         alert(
           data.message ||
-            "We couldn't find enough public information. Please fill in all the details manually in the next step."
+            "We couldn't find enough information. Please fill in the details manually."
         );
-
-        setSuggestedSubdomains([]);
-        setSuggestedTitles([]);
-        setSuggestedSubtitles([]);
-
-        setAvatarData({
-          name: aboutUser.name,
-          admin_email: "",
-          subdomain: "",
-          personality: "",
-          knowledge_base: "",
-          bio_title: "",
-          bio_subtitle: "",
-        });
-
+        // Still move to next step so user can fill manually
         setCurrentStep(stages.AI_ANALYSIS);
       } else {
-        alert(data.error || data.message || "Failed to generate suggestions");
+        alert(
+          data.error ||
+            "We couldn't automatically fetch your information. Please continue filling out the form manually to create your avatar."
+        );
+        // Still move to next step so user can fill manually
+        setCurrentStep(stages.AI_ANALYSIS);
       }
     } catch (error) {
       alert("An error occurred. Please try again.");
+      // Still move to next step so user can fill manually
+      setCurrentStep(stages.AI_ANALYSIS);
     } finally {
       setLoading(false);
     }
   };
-
-  const Spinner = () => (
-    <svg
-      className="animate-spin -ml-1 mr-3 h-5 w-5 text-white"
-      xmlns="http://www.w3.org/2000/svg"
-      fill="none"
-      viewBox="0 0 24 24"
-    >
-      <circle
-        className="opacity-25"
-        cx="12"
-        cy="12"
-        r="10"
-        stroke="currentColor"
-        strokeWidth="4"
-      />
-      <path
-        className="opacity-75"
-        fill="currentColor"
-        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"
-      />
-    </svg>
-  );
 
   const StepIndicator = ({ step, label, isActive, isCompleted }) => (
     <div
@@ -317,7 +280,7 @@ export default function MakeAvatar() {
                   value={aboutUser.bio}
                   onChange={(e) => handleAboutUserChange("bio", e.target.value)}
                   rows={6}
-                  placeholder="I am Nishant Kumar, independent singer songwriter. I've been creating music for over 10 years and love connecting with my audience..."
+                  placeholder="I am a business analyst at JPMC..."
                   className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent outline-none transition-all resize-none"
                 />
                 <p className="mt-2 text-sm text-gray-500">
@@ -334,7 +297,6 @@ export default function MakeAvatar() {
               >
                 {loading ? (
                   <span className="flex items-center justify-center">
-                    <Spinner />
                     Generating suggestions...
                   </span>
                 ) : (
@@ -656,7 +618,6 @@ export default function MakeAvatar() {
                 >
                   {submitting ? (
                     <span className="flex items-center justify-center">
-                      <Spinner />
                       Creating Avatar...
                     </span>
                   ) : (
