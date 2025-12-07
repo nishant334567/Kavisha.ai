@@ -203,6 +203,9 @@ export default function ChatBox({
     setIsRecording(false);
   };
 
+  const formatMessage = (message) => {
+    return message.split("*").join(" ");
+  };
   const updateResume = (filename, summary) => {
     setResumedata({ filename: filename, resumeSummary: summary });
   };
@@ -477,7 +480,7 @@ export default function ChatBox({
                           : "bg-gray-50 text-slate-800 border border-slate-200"
                       }`}
                     >
-                      {m.message}
+                      {m.role === "user" ? m.message : formatMessage(m.message)}
                     </div>
                     {/* Show requery for user messages */}
                     {m.role === "user" && m.requery && (
