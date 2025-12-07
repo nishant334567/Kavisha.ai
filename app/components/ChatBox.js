@@ -519,6 +519,7 @@ export default function ChatBox({
                     {/* Show payment QR code for personal_call intent */}
                     {m.role === "assistant" &&
                       m.intent === "personal_call" &&
+                      brandContext?.acceptPayment &&
                       brandContext?.paymentQrUrl && (
                         <div className="mt-3 max-w-[60%]">
                           <img

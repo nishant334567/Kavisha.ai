@@ -9,6 +9,7 @@ import { SYSTEM_PROMPT_LEAD } from "../../lib/systemPrompt.js";
 import { buildLeadRewritePrompt } from "../../lib/rewriteLeadQueryPrompt.js";
 import getGeminiModel from "../../lib/getAiModel.js";
 import { connectDB } from "../../lib/db.js";
+import { client } from "../../lib/sanity.js";
 
 export async function POST(req) {
   return withAuth(req, {
@@ -94,7 +95,24 @@ export async function POST(req) {
           redirectMessage = `I'd be happy to help you with that! To join our community, connect with members, explore job opportunities, hire talent, or find friends, please start a new chat session with our community chatbot. They'll guide you through everything you need to know.`;
         }
         if (intent === "personal_call") {
-          redirectMessage = `I'd love to have a one-on-one conversation with you! To schedule a personal call with me, please complete a payment of ₹500 using the QR code below. Once the payment is confirmed, we can set up a time that works for both of us. Looking forward to our conversation!`;
+          // Fetch acceptPayment setting from Sanity
+          let acceptPayment = false;
+          try {
+            const brandData = await client.fetch(
+              `*[_type == "brand" && subdomain == "${brand}"]{
+                acceptPayment
+              }[0]`
+            );
+            acceptPayment = brandData?.acceptPayment || false;
+          } catch (error) {
+            console.error("Error fetching acceptPayment:", error);
+          }
+
+          if (acceptPayment) {
+            redirectMessage = `I'd love to have a one-on-one conversation with you! To schedule a personal call with me, please complete a payment of ₹500 using the QR code below. Once the payment is confirmed, we can set up a time that works for both of us. Looking forward to our conversation!`;
+          } else {
+            redirectMessage = `I appreciate your interest in having a one-on-one call with me! However, my current schedule doesn't allow for personal calls right now. But don't worry - my avatar is here to help you with any questions or assistance you need. Feel free to continue our conversation, and I'll do my best to support you!`;
+          }
         }
 
         setImmediate(async () => {

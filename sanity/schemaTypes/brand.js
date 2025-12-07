@@ -39,6 +39,14 @@ export default {
       },
     },
     {
+      name: "acceptPayment",
+      title: "Accept Payment for Personal Calls",
+      type: "boolean",
+      description:
+        "Toggle to enable payment requirement for personal one-on-one calls. When enabled, users will be asked to pay before scheduling a call.",
+      initialValue: false,
+    },
+    {
       name: "paymentQr",
       title: "QR to receive payment",
       type: "image",
@@ -47,6 +55,7 @@ export default {
       options: {
         hotspot: true,
       },
+      hidden: ({ parent }) => !parent?.acceptPayment,
     },
     {
       name: "title",
