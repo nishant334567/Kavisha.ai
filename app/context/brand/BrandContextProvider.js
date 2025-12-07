@@ -45,6 +45,7 @@ export default function BrandContextProvider({ children }) {
                   subdomain,
                   logo,
                   brandImage,
+                  paymentQr,
                   title,
                   subtitle,
                   admins,
@@ -61,6 +62,9 @@ export default function BrandContextProvider({ children }) {
           const brandImageUrl = brand.brandImage?.asset?._ref
             ? urlFor(brand.brandImage).url()
             : null;
+          const paymentQrUrl = brand.paymentQr?.asset?._ref
+            ? urlFor(brand.paymentQr).url()
+            : null;
 
           const isAdmin = brand.admins?.includes(user?.email) || false;
           const context = {
@@ -69,6 +73,7 @@ export default function BrandContextProvider({ children }) {
             loginButtonText: brand.loginButtonText,
             logoUrl: logoUrl,
             brandImageUrl: brandImageUrl,
+            paymentQrUrl: paymentQrUrl,
             title: brand.title,
             subtitle: brand.subtitle,
             admins: brand.admins || [],

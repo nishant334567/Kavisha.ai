@@ -39,6 +39,16 @@ export default {
       },
     },
     {
+      name: "paymentQr",
+      title: "QR to receive payment",
+      type: "image",
+      description:
+        "Upload the QR where you can receive payment in you bank account",
+      options: {
+        hotspot: true,
+      },
+    },
+    {
       name: "title",
       title: "Main Title",
       type: "string",

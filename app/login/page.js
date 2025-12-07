@@ -119,12 +119,6 @@ export default function LoginPage() {
 
   return (
     <div className="h-full overflow-y-auto mx-auto w-full lg:max-w-[60%] px-8 py-8 space-y-8">
-      {/* Testing Notice */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-3 text-center">
-        <p className="text-xs text-yellow-800">
-          ⚠️ Currently in testing - some features may break
-        </p>
-      </div>
       <div className="mt-4 h-48 sm:h-80 w-full  rounded-xl">
         <img
           src={brand?.brandImageUrl}

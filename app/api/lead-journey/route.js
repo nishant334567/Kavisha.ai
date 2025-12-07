@@ -86,14 +86,17 @@ export async function POST(req) {
         };
       }
 
-      const { changeIntent, requery } = parsedResponse;
-      console.log("Parsed requery: ", parsedResponse);
+      const { changeIntent, requery, intent } = parsedResponse;
 
-      // If user wants to change intent (join community, find jobs, etc.), redirect them
       if (changeIntent === true) {
-        const redirectMessage = `For more information about joining the community, interacting with members, finding jobs, hiring talent, or finding friends in the community, please talk to our community chatbot by creating a new chat session.`;
+        let redirectMessage;
+        if (intent === "community_onboarding") {
+          redirectMessage = `I'd be happy to help you with that! To join our community, connect with members, explore job opportunities, hire talent, or find friends, please start a new chat session with our community chatbot. They'll guide you through everything you need to know.`;
+        }
+        if (intent === "personal_call") {
+          redirectMessage = `I'd love to have a one-on-one conversation with you! To schedule a personal call with me, please complete a payment of ₹500 using the QR code below. Once the payment is confirmed, we can set up a time that works for both of us. Looking forward to our conversation!`;
+        }
 
-        // Save the assistant message to logs
         setImmediate(async () => {
           try {
             await Logs.create({
@@ -117,6 +120,7 @@ export async function POST(req) {
           reply: redirectMessage,
           summary: summary || "",
           title: "Community Chat",
+          intent: intent,
         });
       }
 

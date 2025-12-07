@@ -379,7 +379,12 @@ export default function ChatBox({
 
     setMessages([
       ...updatedMessagesWithRequery,
-      { role: "assistant", message: data.reply, sources: data?.sources || [] },
+      {
+        role: "assistant",
+        message: data.reply,
+        sources: data?.sources || [],
+        intent: data?.intent,
+      },
     ]);
     setMessageLoading(false);
     setAnswerSources(data?.sources);
@@ -509,6 +514,18 @@ export default function ChatBox({
                                 : sourceId}
                             </button>
                           ))}
+                        </div>
+                      )}
+                    {/* Show payment QR code for personal_call intent */}
+                    {m.role === "assistant" &&
+                      m.intent === "personal_call" &&
+                      brandContext?.paymentQrUrl && (
+                        <div className="mt-3 max-w-[60%]">
+                          <img
+                            src={brandContext.paymentQrUrl}
+                            alt="Payment QR Code"
+                            className="w-48 h-48 object-contain border border-gray-300 rounded-lg shadow-sm bg-white p-2"
+                          />
                         </div>
                       )}
                   </div>

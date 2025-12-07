@@ -168,12 +168,10 @@ export async function POST(request) {
         }
 
         let matchesLatest = [];
-        if (allDataCollected === "true") {
+        if (allDataCollected === "true" && type !== "pitch_to_investor") {
           try {
             matchesLatest = await getMatches(userId, sessionId, type);
           } catch (error) {
-            // console.error("Error fetching matches:", error.message);
-            // Continue without matches if OpenAI is not configured
             matchesLatest = [];
           }
         }
