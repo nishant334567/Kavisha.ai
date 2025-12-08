@@ -12,7 +12,9 @@ export async function GET(req) {
       const limit = 20;
       await connectDB();
       const sessions = await Session.find({})
-        .select("title role chatSummary updatedAt allDataCollected userId _id")
+        .select(
+          "title role chatSummary updatedAt allDataCollected userId _id totalInputTokens totalOutputTokens"
+        )
         .populate("userId", "name email") // Add username and email
         .sort({ createdAt: -1 })
         .skip((page - 1) * limit)
@@ -26,9 +28,17 @@ export async function GET(req) {
             .sort({ createdAt: 1 })
             .limit(50); // Limit to last 50 logs for performance
 
+          const inputTokens = session.totalInputTokens || 0;
+          const outputTokens = session.totalOutputTokens || 0;
+          // Calculate cost in INR: Input $0.30/1M, Output $2.50/1M, 1 USD = 88 INR
+          const totalCostUSD =
+            (inputTokens / 1000000) * 0.3 + (outputTokens / 1000000) * 2.5;
+          const totalCost = totalCostUSD * 88;
+
           return {
             ...session.toObject(),
             logs: logs,
+            totalCost: totalCost,
           };
         })
       );

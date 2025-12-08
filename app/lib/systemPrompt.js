@@ -119,9 +119,8 @@ If you cannot find sufficient public information (e.g., the person is private, o
 
 export const SYSTEM_PROMPT_LEAD = `**MANDATORY FORMAT - NO EXCEPTIONS:**
 
-Respond EXACTLY: [Reply] //// [Summary] //// [Title]
-
-Format: Your response //// Conversation summary //// Chat title (≤20 chars)
+Respond EXACTLY in this format (replace placeholders with your actual content):
+Your actual response message //// Conversation summary //// Chat title (≤20 chars)
 
 Example:
 That's a great perspective! What do you think is the biggest trap?

@@ -38,24 +38,36 @@ export async function GET(req, { params }) {
           .lean();
 
         // Format sessions data
-        const formattedSessions = sessions.map((session) => ({
-          _id: session._id,
-          brand: session.brand,
-          role: session.role,
-          status: session.status,
-          title: session.title,
-          chatSummary: session.chatSummary || "",
-          allDataCollected: !!session.allDataCollected,
-          createdAt: session.createdAt,
-          updatedAt: session.updatedAt,
-          assignedTo: session.assignedTo,
-          comment: session.comment || "",
-          user: {
-            name: session.userId?.name || "",
-            email: session.userId?.email || "",
-            _id: session.userId?._id || "",
-          },
-        }));
+        const formattedSessions = sessions.map((session) => {
+          const inputTokens = session.totalInputTokens || 0;
+          const outputTokens = session.totalOutputTokens || 0;
+          // Calculate cost in INR: Input $0.30/1M, Output $2.50/1M, 1 USD = 88 INR
+          const totalCostUSD =
+            (inputTokens / 1000000) * 0.3 + (outputTokens / 1000000) * 2.5;
+          const totalCost = totalCostUSD * 88;
+
+          return {
+            _id: session._id,
+            brand: session.brand,
+            role: session.role,
+            status: session.status,
+            title: session.title,
+            chatSummary: session.chatSummary || "",
+            allDataCollected: !!session.allDataCollected,
+            createdAt: session.createdAt,
+            updatedAt: session.updatedAt,
+            assignedTo: session.assignedTo,
+            comment: session.comment || "",
+            totalInputTokens: inputTokens,
+            totalOutputTokens: outputTokens,
+            totalCost: totalCost,
+            user: {
+              name: session.userId?.name || "",
+              email: session.userId?.email || "",
+              _id: session.userId?._id || "",
+            },
+          };
+        });
 
         return NextResponse.json({
           success: true,

@@ -351,6 +351,20 @@ export default function SessionSection({ totalSessions }) {
                     <span className="font-medium">Updated:</span>{" "}
                     {new Date(session.updatedAt).toLocaleString()}
                   </p>
+                  <p>
+                    <span className="font-medium">Input Tokens:</span>{" "}
+                    {session.totalInputTokens || 0}
+                  </p>
+                  <p>
+                    <span className="font-medium">Output Tokens:</span>{" "}
+                    {session.totalOutputTokens || 0}
+                  </p>
+                  <p>
+                    <span className="font-medium">Total Cost:</span>{" "}
+                    <span className="text-green-600 font-semibold">
+                      ₹{(session.totalCost || 0).toFixed(2)}
+                    </span>
+                  </p>
                 </div>
 
                 {session.chatSummary && (

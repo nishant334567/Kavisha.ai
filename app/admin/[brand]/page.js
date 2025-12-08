@@ -816,6 +816,24 @@ export default function BrandAdminPage() {
                           ).toLocaleDateString()}
                         </span>
                       </div>
+                      <div>
+                        <span className="text-gray-500">Input Tokens:</span>
+                        <span className="ml-1 font-medium text-gray-900">
+                          {currentUserSession.totalInputTokens || 0}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Output Tokens:</span>
+                        <span className="ml-1 font-medium text-gray-900">
+                          {currentUserSession.totalOutputTokens || 0}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-gray-500">Total Cost:</span>
+                        <span className="ml-1 font-medium text-green-600">
+                          ₹{(currentUserSession.totalCost || 0).toFixed(2)}
+                        </span>
+                      </div>
                     </div>
                   </div>
 

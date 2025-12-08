@@ -11,6 +11,13 @@ import getGeminiModel from "../../lib/getAiModel.js";
 import { connectDB } from "../../lib/db.js";
 import { client } from "../../lib/sanity.js";
 
+// Simple token estimation: words * 1.33
+function estimateTokens(text) {
+  if (!text || typeof text !== "string") return 0;
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  return Math.ceil(words.length * 1.33);
+}
+
 export async function POST(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
@@ -20,7 +27,8 @@ export async function POST(req) {
       if (!user) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
-
+      let inputToken = 0;
+      let outputToken = 0;
       await connectDB();
       let sourceChunkIds = [];
       const model = getGeminiModel(process.env.AI_MODEL ?? "gemini-2.5-flash");
@@ -52,7 +60,7 @@ export async function POST(req) {
         formattedHistory,
         userMessage
       );
-
+      inputToken += estimateTokens(rewritePrompt);
       const responseQuery = await model.generateContent({
         contents: [
           {
@@ -67,6 +75,7 @@ export async function POST(req) {
 
       let responseText =
         responseQuery.response.candidates[0].content.parts[0].text.trim();
+      outputToken += estimateTokens(responseText);
 
       // Extract JSON if wrapped in markdown
       let jsonText = responseText;
@@ -129,6 +138,16 @@ export async function POST(req) {
               userId: user.id,
               role: "assistant",
             });
+            // Update session with token counts
+            await Session.updateOne(
+              { _id: sessionId },
+              {
+                $inc: {
+                  totalInputTokens: inputToken,
+                  totalOutputTokens: outputToken,
+                },
+              }
+            );
           } catch (error) {
             console.error("Error saving logs:", error);
           }
@@ -139,6 +158,9 @@ export async function POST(req) {
           summary: summary || "",
           title: "Community Chat",
           intent: intent,
+          inputTokens: inputToken,
+          outputTokens: outputToken,
+          totalTokens: inputToken + outputToken,
         });
       }
 
@@ -275,10 +297,13 @@ USER QUESTION: ${betterQuery}
 
 Please provide a helpful response based on the above information:`;
 
+      const mainPrompt = finalPrompt + SYSTEM_PROMPT_LEAD;
+      inputToken += estimateTokens(mainPrompt);
+
       let geminiContents = [
         {
           role: "user",
-          parts: [{ text: finalPrompt + SYSTEM_PROMPT_LEAD }],
+          parts: [{ text: mainPrompt }],
         },
       ];
 
@@ -289,19 +314,21 @@ Please provide a helpful response based on the above information:`;
 
         let responseText =
           responseGemini.response.candidates[0].content.parts[0].text;
+        outputToken += estimateTokens(responseText);
+
         let reParts = responseText.split("////").map((item) => item.trim());
 
         if (reParts.length !== 3) {
           const strictPrompt = `CRITICAL: You MUST respond in EXACT format: [Your reply] //// [Summary] //// [Title]\n\nPrevious response was invalid. Retry with EXACT format - 3 parts separated by //// only.`;
 
+          inputToken += estimateTokens(strictPrompt);
           responseGemini = await model.generateContent({
             contents: [
               {
                 role: "user",
                 parts: [
                   {
-                    text:
-                      finalPrompt + SYSTEM_PROMPT_LEAD + "\n\n" + strictPrompt,
+                    text: mainPrompt + "\n\n" + strictPrompt,
                   },
                 ],
               },
@@ -310,6 +337,7 @@ Please provide a helpful response based on the above information:`;
 
           responseText =
             responseGemini.response.candidates[0].content.parts[0].text;
+          outputToken = estimateTokens(responseText); // Replace with retry count
           reParts = responseText.split("////").map((item) => item.trim());
         }
 
@@ -341,6 +369,10 @@ Please provide a helpful response based on the above information:`;
                     chatSummary: reParts[1],
                     title: reParts[2],
                   },
+                  $inc: {
+                    totalInputTokens: inputToken,
+                    totalOutputTokens: outputToken,
+                  },
                 },
                 { upsert: true }
               );
@@ -353,6 +385,9 @@ Please provide a helpful response based on the above information:`;
             title: reParts[2],
             requery: betterQuery,
             sources: sourceChunkIds,
+            inputTokens: inputToken,
+            outputTokens: outputToken,
+            totalTokens: inputToken + outputToken,
           });
         } else {
           return NextResponse.json(

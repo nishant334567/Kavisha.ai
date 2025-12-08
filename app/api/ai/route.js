@@ -14,6 +14,13 @@ import {
 } from "@/app/lib/systemPrompt";
 import getGeminiModel from "@/app/lib/getAiModel";
 
+// Simple token estimation: words * 1.33
+function estimateTokens(text) {
+  if (!text || typeof text !== "string") return 0;
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  return Math.ceil(words.length * 1.33);
+}
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const sessionId = searchParams.get("sessionId");
@@ -72,6 +79,8 @@ export async function POST(request) {
 
         await connectDB();
         const resumeText = resume || "";
+        let inputToken = 0;
+        let outputToken = 0;
 
         // Check if data is already collected - if so, preserve existing summary
         const existingSession = await Session.findById(sessionId);
@@ -88,21 +97,25 @@ export async function POST(request) {
         }
 
         if (systemPromptText) {
+          inputToken += estimateTokens(systemPromptText);
           geminiContents.push({
             role: "user",
             parts: [{ text: `System: ${systemPromptText}` }],
           });
         }
 
-        if (generateResumeContext(resumeText, type)) {
+        const resumeContext = generateResumeContext(resumeText, type);
+        if (resumeContext) {
+          inputToken += estimateTokens(resumeContext);
           geminiContents.push({
             role: "user",
-            parts: [{ text: generateResumeContext(resumeText, type) }],
+            parts: [{ text: resumeContext }],
           });
         }
 
         history.forEach((m) => {
           if (m.role === "user") {
+            inputToken += estimateTokens(m.message || "");
             geminiContents.push({
               role: "user",
               parts: [{ text: m.message || "" }],
@@ -115,6 +128,7 @@ export async function POST(request) {
           }
         });
 
+        inputToken += estimateTokens(userMessage || "");
         geminiContents.push({
           role: "user",
           parts: [{ text: userMessage || "" }],
@@ -126,24 +140,27 @@ export async function POST(request) {
 
         let responseText =
           responseGemini.response.candidates[0].content.parts[0].text;
+        outputToken += estimateTokens(responseText);
+
         let reParts = responseText.split("////").map((item) => item.trim());
 
         // Retry once if format is invalid
         if (reParts.length !== 4) {
+          const retryPrompt = `CRITICAL: Your response must have EXACTLY 4 parts separated by ////. You returned ${reParts.length} parts. Format: [reply] //// [summary] //// [title] //// [true/false]. Return ONLY these 4 parts, nothing else.`;
+          inputToken += estimateTokens(retryPrompt);
+
           const retryContents = [...geminiContents];
           retryContents.push({
             role: "user",
-            parts: [
-              {
-                text: `CRITICAL: Your response must have EXACTLY 4 parts separated by ////. You returned ${reParts.length} parts. Format: [reply] //// [summary] //// [title] //// [true/false]. Return ONLY these 4 parts, nothing else.`,
-              },
-            ],
+            parts: [{ text: retryPrompt }],
           });
+
           responseGemini = await model.generateContent({
             contents: retryContents,
           });
           responseText =
             responseGemini.response.candidates[0].content.parts[0].text;
+          outputToken = estimateTokens(responseText); // Replace with retry count
           reParts = responseText.split("////").map((item) => item.trim());
         }
 
@@ -201,6 +218,10 @@ export async function POST(request) {
                   title: title,
                   allDataCollected: allDataCollected === "true",
                 },
+                $inc: {
+                  totalInputTokens: inputToken,
+                  totalOutputTokens: outputToken,
+                },
               },
               { upsert: true }
             );
@@ -213,6 +234,9 @@ export async function POST(request) {
           title,
           allDataCollected,
           matchesWithObjectIds: matchesLatest,
+          inputTokens: inputToken,
+          outputTokens: outputToken,
+          totalTokens: inputToken + outputToken,
         });
       } catch (error) {
         return NextResponse.json(
