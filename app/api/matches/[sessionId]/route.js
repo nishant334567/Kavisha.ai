@@ -13,7 +13,7 @@ export async function getMatches(userId, sessionId, role) {
   await connectDB();
   const session = await Session.findById(sessionId);
   const model = getGeminiModel("gemini-2.5-flash");
-  // console.log(model);
+  //
   let oppositeRole =
     role === "friends"
       ? "friends"
@@ -30,7 +30,7 @@ export async function getMatches(userId, sessionId, role) {
     ...(session.brand !== "kavisha" && { brand: session.brand }),
   }).populate("userId", "name email");
 
-  // console.log("All Providers: ", allProviders);
+  //
   const allProvidersList = allProviders
     .map(
       (s, i) =>
@@ -50,24 +50,23 @@ export async function getMatches(userId, sessionId, role) {
       allProvidersList,
     });
   }
-  console.log("Prompt: ", prompt);
+
   let responseGemini = await model.generateContent({
     contents: [{ role: "user", parts: [{ text: prompt }] }],
   });
   let responseText =
     responseGemini.response.candidates[0].content.parts[0].text;
-  console.log("gemini content: ", responseText);
+
   let jsonText = responseText;
   if (responseText.includes("```json")) {
-    console.log(":in json");
     const jsonMatch = responseText.match(/```json\s*([\s\S]*?)\s*```/);
-    console.log("match json:", jsonMatch);
+
     if (jsonMatch && jsonMatch[1]) {
       jsonText = jsonMatch[1].trim();
     }
   }
 
-  // console.log("Response matches: ", jsonText);
+  //
 
   // Parse the JSON response and return the array
   try {

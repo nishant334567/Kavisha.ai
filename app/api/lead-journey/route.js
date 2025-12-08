@@ -88,8 +88,6 @@ export async function POST(req) {
       try {
         parsedResponse = JSON.parse(jsonText);
       } catch (error) {
-        console.error("Error parsing intent response:", error);
-
         parsedResponse = {
           changeIntent: false,
           requery: userMessage,
@@ -113,9 +111,7 @@ export async function POST(req) {
               }[0]`
             );
             acceptPayment = brandData?.acceptPayment || false;
-          } catch (error) {
-            console.error("Error fetching acceptPayment:", error);
-          }
+          } catch (error) {}
 
           if (acceptPayment) {
             redirectMessage = `I'd love to have a one-on-one conversation with you! To schedule a personal call with me, please complete a payment of ₹500 using the QR code below. Once the payment is confirmed, we can set up a time that works for both of us. Looking forward to our conversation!`;
@@ -148,9 +144,7 @@ export async function POST(req) {
                 },
               }
             );
-          } catch (error) {
-            console.error("Error saving logs:", error);
-          }
+          } catch (error) {}
         });
 
         return NextResponse.json({
@@ -241,8 +235,6 @@ export async function POST(req) {
                 documentsForRerank,
                 rerankOptions
               );
-
-              console.log("Reranked : ", reranked);
 
               if (
                 reranked &&

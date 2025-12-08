@@ -9,9 +9,7 @@ export default function SelectChatType({
   enableCommunityOnboarding = false,
 }) {
   const [showType, setShowtype] = useState(false);
-  useEffect(() => {
-    console.log("Show Type: ", showType);
-  }, [showType]);
+  useEffect(() => {}, [showType]);
   const typeOfConnection = [
     {
       name: "job_seeker",

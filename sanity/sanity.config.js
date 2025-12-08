@@ -14,8 +14,6 @@ const dataset =
   "development";
 
 // Log which dataset is being used (helpful for debugging)
-console.log(`🔍 Sanity Studio connecting to dataset: "${dataset}"`);
-console.log(`🔍 Using projectId: "${projectId}"`);
 
 export default defineConfig({
   name: "default",
