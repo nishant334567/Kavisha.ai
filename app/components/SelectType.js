@@ -13,21 +13,21 @@ export default function SelectChatType({
   const typeOfConnection = [
     {
       name: "job_seeker",
-      title: "Looking for a job?",
+      title: "I am looking for work",
       initialMessage:
-        "Hello! Looking for your next job or just career advice? Beautiful! Tell me all about it and I’ll help you find the perfect opportunity. :)",
+        "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can done. :)",
     },
     {
       name: "recruiter",
-      title: "Are you hiring?",
+      title: "I am looking at hiring",
       initialMessage:
-        "Hello! Are you looking at hiring people? Great! Tell me exactly what you’re looking for, and I’ll find you the perfect candidate. :)",
+        "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can done. :)",
     },
     {
       name: "friends",
-      title: "Looking for a friend?",
+      title: "I am looking for a friend",
       initialMessage:
-        "Hello! Looking for a friend, date, relationship, or something like that? Great! Tell me what you want and I’ll help you find your perfect match. :)",
+        "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can done. :)",
     },
   ];
   const base =
@@ -50,7 +50,7 @@ export default function SelectChatType({
               ← Go Back
             </button>
             <p className="text-lg font-semibold mb-4">
-              Why do you want to join our community?
+              Why do you want to connect with my community?
             </p>
             {typeOfConnection.map((item) => (
               <button
@@ -98,7 +98,9 @@ export default function SelectChatType({
                 disabled={isCreating}
               >
                 <div className="flex items-center justify-center">
-                  <span className="text-sm font-medium">Join Community</span>
+                  <span className="text-sm font-medium">
+                    Connect with the community
+                  </span>
                 </div>
               </button>
             )}
