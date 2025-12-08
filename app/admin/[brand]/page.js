@@ -6,6 +6,7 @@ import { useBrandContext } from "../../context/brand/BrandContextProvider";
 import Livechat from "../../components/LiveChat";
 import { useFirebaseSession } from "../../lib/firebase/FirebaseSessionProvider";
 import { useRouter } from "next/navigation";
+import UserSessionDetail from "../components/UserSessionDetail";
 export default function BrandAdminPage() {
   const params = useParams();
   const brand = (params?.brand || "").toLowerCase();
@@ -488,8 +489,9 @@ export default function BrandAdminPage() {
                   "all",
                   "job_seeker",
                   "recruiter",
-                  brandContext.subdomain === "kavisha" ? "dating" : null,
+                  "friends",
                   "lead_journey",
+                  "pitch_to_investor",
                 ]
                   .filter(Boolean)
                   .map((role) => (
@@ -752,143 +754,11 @@ export default function BrandAdminPage() {
                   </div>
 
                   {/* Session Info */}
-                  <div className="bg-gray-50 rounded-lg p-3 sm:p-4 mb-4">
-                    <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 sm:mb-3 flex items-center gap-2">
-                      <svg
-                        className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                        />
-                      </svg>
-                      Session Details
-                    </h4>
-                    <div className="grid grid-cols-2 gap-2 sm:gap-3 text-xs sm:text-sm">
-                      <div>
-                        <span className="text-gray-500">Status:</span>
-                        <span
-                          className={`ml-1 font-medium ${
-                            currentUserSession.status === "completed"
-                              ? "text-green-600"
-                              : currentUserSession.status === "in-progress"
-                                ? "text-blue-600"
-                                : currentUserSession.status === "on hold"
-                                  ? "text-yellow-600"
-                                  : currentUserSession.status === "rejected"
-                                    ? "text-red-600"
-                                    : "text-gray-600"
-                          }`}
-                        >
-                          {currentUserSession.status || "Unknown"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Data:</span>
-                        <span
-                          className={`ml-1 font-medium ${
-                            currentUserSession.allDataCollected
-                              ? "text-green-600"
-                              : "text-orange-600"
-                          }`}
-                        >
-                          {currentUserSession.allDataCollected
-                            ? "Complete"
-                            : "Incomplete"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Brand:</span>
-                        <span className="ml-1 font-medium text-gray-900">
-                          {currentUserSession.brand || "Unknown"}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Created:</span>
-                        <span className="ml-1 font-medium text-gray-900">
-                          {new Date(
-                            currentUserSession.createdAt
-                          ).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Input Tokens:</span>
-                        <span className="ml-1 font-medium text-gray-900">
-                          {currentUserSession.totalInputTokens || 0}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Output Tokens:</span>
-                        <span className="ml-1 font-medium text-gray-900">
-                          {currentUserSession.totalOutputTokens || 0}
-                        </span>
-                      </div>
-                      <div>
-                        <span className="text-gray-500">Total Cost:</span>
-                        <span className="ml-1 font-medium text-green-600">
-                          ₹{(currentUserSession.totalCost || 0).toFixed(2)}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Summary */}
-                  <div>
-                    <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                      <svg
-                        className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-gray-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"
-                        />
-                      </svg>
-                      Summary
-                    </h4>
-                    {currentUserSession.chatSummary ? (
-                      <>
-                        <p
-                          className={`text-xs sm:text-sm text-gray-600 leading-relaxed ${
-                            !expandedSummaries[currentUserSession._id]
-                              ? "line-clamp-3"
-                              : ""
-                          }`}
-                        >
-                          {currentUserSession.chatSummary}
-                        </p>
-                        {currentUserSession.chatSummary.length > 150 && (
-                          <button
-                            onClick={() =>
-                              setExpandedSummaries((prev) => ({
-                                ...prev,
-                                [currentUserSession._id]:
-                                  !prev[currentUserSession._id],
-                              }))
-                            }
-                            className="text-blue-600 text-xs mt-1.5 sm:mt-2 hover:underline font-medium"
-                          >
-                            {expandedSummaries[currentUserSession._id]
-                              ? "Show less"
-                              : "Read more"}
-                          </button>
-                        )}
-                      </>
-                    ) : (
-                      <p className="text-xs sm:text-sm text-gray-400 italic">
-                        No chat summary available
-                      </p>
-                    )}
-                  </div>
+                  <UserSessionDetail
+                    expandSummaries={expandedSummaries}
+                    setExpandedSummaries={setExpandedSummaries}
+                    currentUserSession={currentUserSession}
+                  />
                 </div>
 
                 {/* Resume Info */}
@@ -931,31 +801,6 @@ export default function BrandAdminPage() {
                         {currentUserSession.resumeFilename}
                       </p>
                     )}
-                  </div>
-                )}
-
-                {/* Title */}
-                {currentUserSession.title && (
-                  <div className="mt-4 pt-4 border-t border-gray-200">
-                    <h4 className="text-xs sm:text-sm font-semibold text-gray-900 mb-2 flex items-center gap-2">
-                      <svg
-                        className="w-4 h-4 text-gray-500"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z"
-                        />
-                      </svg>
-                      Title
-                    </h4>
-                    <p className="text-xs sm:text-sm text-gray-600">
-                      {currentUserSession.title}
-                    </p>
                   </div>
                 )}
 

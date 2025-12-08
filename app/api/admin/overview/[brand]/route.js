@@ -4,8 +4,6 @@ import Session from "@/app/models/ChatSessions";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 
-// GET /api/admin/overview/[brand]
-// Returns all sessions for the specified brand (admin only)
 export async function GET(req, { params }) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
