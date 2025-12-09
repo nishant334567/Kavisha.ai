@@ -5,6 +5,7 @@ import { signOut } from "../lib/firebase/logout";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
+import { Menu, Plus, MessageSquare, X, AlignLeft } from "lucide-react";
 
 export default function ChatSidebar({
   allChats,
@@ -126,17 +127,7 @@ export default function ChatSidebar({
                 className="sm:hidden absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-white hover:bg-slate-200 transition-colors"
                 title="Close sidebar"
               >
-                <svg
-                  width="16"
-                  height="16"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <line x1="18" y1="6" x2="6" y2="18"></line>
-                  <line x1="6" y1="6" x2="18" y2="18"></line>
-                </svg>
+                <X className="w-4 h-4" />
               </button>
               {/* User Info Section */}
               <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-sky-700 ">
@@ -155,7 +146,7 @@ export default function ChatSidebar({
               <div className="flex justify-between mb-2">
                 <p className="font-semibold">Your Chats</p>
                 <button className="p-1" onClick={() => toggleLeftSideBar()}>
-                  <img src="close-sidebar.png" width={20} />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
               {/* End User Info Section */}
@@ -238,18 +229,7 @@ export default function ChatSidebar({
                 className="w-10 h-10 flex items-center justify-center rounded-full  text-sky-700 shadow-xl hover:bg-sky-600 transition-colors"
                 title="Open sidebar"
               >
-                <svg
-                  width="20"
-                  height="20"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                >
-                  <line x1="3" y1="6" x2="21" y2="6"></line>
-                  <line x1="3" y1="12" x2="21" y2="12"></line>
-                  <line x1="3" y1="18" x2="21" y2="18"></line>
-                </svg>
+                <AlignLeft className="w-5 h-5" />
               </button>
             </div>
 
@@ -263,21 +243,21 @@ export default function ChatSidebar({
                 className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100"
                 title="Open sidebar"
               >
-                <img src="close-sidebar.png" width={20} height={20} />
+                <Menu className="w-5 h-5" />
               </button>
               <button
                 onClick={() => newChat()}
                 className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100"
                 title="New chat"
               >
-                <img src="add.png" width={20} height={20} />
+                <Plus className="w-5 h-5" />
               </button>
               <button
                 onClick={() => onOpenInbox && onOpenInbox()}
                 className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100"
                 title="All messages"
               >
-                <img src="chat.png" width={20} height={20} />
+                <MessageSquare className="w-5 h-5" />
               </button>
             </div>
           </>

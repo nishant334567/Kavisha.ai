@@ -2,6 +2,7 @@
 import { useState } from "react";
 import shortenFileName from "../utils/shortenfilename";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
+import { Paperclip } from "lucide-react";
 
 export default function Resume({
   resumeData,
@@ -99,7 +100,7 @@ export default function Resume({
               key={fileInputKey + currentChatId}
               className="hidden"
             />
-            <img src="attach.png" width={20} />
+            <Paperclip className="w-5 h-5" />
             {resume || (filename !== "" && resumeSummary !== "")
               ? "Reselect"
               : user?.profileType === "recruiter"

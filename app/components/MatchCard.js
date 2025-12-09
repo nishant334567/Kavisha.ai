@@ -1,6 +1,7 @@
 "use client";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import React, { useEffect, useState } from "react";
+import { MessageSquare } from "lucide-react";
 
 export default function MatchCard({
   type = 0,
@@ -68,7 +69,7 @@ export default function MatchCard({
             bg-orange-600 hover:bg-orange-700 transition-colors"
           >
             <span className="text-white text-sm mr-2">Chat Now</span>
-            <img src="chat.png" width={15} height={15} />
+            <MessageSquare className="w-4 h-4" />
           </button>
         </div>
         {type != 1 && (

@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
+import { Trash2 } from "lucide-react";
 
 export default function EditProfilePage() {
   const { user, loading: authLoading } = useFirebaseSession();
@@ -232,11 +233,7 @@ export default function EditProfilePage() {
                         className="opacity-0 group-hover:opacity-100 transition-opacity p-1 hover:bg-red-100 rounded"
                         title="Remove admin"
                       >
-                        <img
-                          src="/delete_2.png"
-                          alt="Remove"
-                          className="w-4 h-4"
-                        />
+                        <Trash2 className="w-4 h-4 text-red-600" />
                       </button>
                     </div>
                   ))}

@@ -2,6 +2,7 @@
 import { useEffect, useRef, useState, useMemo } from "react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import useSocket from "../context/useSocket";
+import { X } from "lucide-react";
 
 export default function Livechat({
   userA,
@@ -164,19 +165,7 @@ export default function Livechat({
             className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors"
             aria-label="Close Chat"
           >
-            <svg
-              className="w-4 h-4 text-slate-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="w-4 h-4 text-slate-600" />
           </button>
         </div>
         {/* Messages Area */}

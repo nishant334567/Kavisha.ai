@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import Loader from "./Loader";
+import { X } from "lucide-react";
 
 export default function Inbox({ onOpenChat, onClose }) {
   const { user } = useFirebaseSession();
@@ -43,19 +44,7 @@ export default function Inbox({ onOpenChat, onClose }) {
             className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors"
             aria-label="Close Inbox"
           >
-            <svg
-              className="w-4 h-4 text-slate-600"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M6 18L18 6M6 6l12 12"
-              />
-            </svg>
+            <X className="w-4 h-4 text-slate-600" />
           </button>
         )}
       </div>

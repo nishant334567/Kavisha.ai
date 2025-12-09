@@ -7,6 +7,7 @@ import Livechat from "./LiveChat";
 import Inbox from "./Inbox";
 import ChunkModal from "./ChunkModal";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
+import { Mic, MicOff, Send, Paperclip } from "lucide-react";
 
 export default function ChatBox({
   currentChatId,
@@ -611,7 +612,7 @@ export default function ChatBox({
                       : "Upload Resume"
                 }
               >
-                <img src="attach.png" width={20} height={20} />
+                <Paperclip className="w-5 h-5" />
               </span>
             </label>
 
@@ -672,12 +673,11 @@ export default function ChatBox({
                   className="py-1 rounded-md hover:bg-slate-100"
                   title={isRecording ? "Stop recording" : "Start recording"}
                 >
-                  <img
-                    src={isRecording ? "mic-on.png" : "mic-black.png"}
-                    width={20}
-                    height={20}
-                    alt="Mic"
-                  />
+                  {isRecording ? (
+                    <Mic className="w-5 h-5 text-red-600" />
+                  ) : (
+                    <MicOff className="w-5 h-5" />
+                  )}
                 </button>
               </div>
               <button
@@ -689,7 +689,7 @@ export default function ChatBox({
                     : ""
                 }`}
               >
-                <img src="message.png" width={20} height={20} alt="Send" />
+                <Send className="w-5 h-5" />
               </button>
             </div>
           </form>
