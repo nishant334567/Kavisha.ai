@@ -2,7 +2,7 @@
 
 import { useFirebaseSession } from "./lib/firebase/FirebaseSessionProvider";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { redirect, useRouter } from "next/navigation";
 import { useBrandContext } from "./context/brand/BrandContextProvider";
 import SelectChatType from "./components/SelectType";
 import ChatBox from "./components/ChatBox";
@@ -92,7 +92,11 @@ export default function HomePage() {
     toggleRightPanel();
   };
 
-  const selectChatType = async (type, initialMessage) => {
+  const selectChatType = async (
+    type,
+    initialMessage,
+    isCommunityChat = false
+  ) => {
     setCurrentChatType(type);
     if (!user || !brandContext) return;
 
@@ -106,6 +110,7 @@ export default function HomePage() {
           role: type,
           brand: brandContext.subdomain,
           initialmessage: initialMessage,
+          isCommunityChat: isCommunityChat,
         }),
       });
       const data = await res.json();

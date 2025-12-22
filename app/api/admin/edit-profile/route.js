@@ -6,16 +6,8 @@ import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 export async function POST(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
-      const {
-    brandName,
-    loginButtonText,
-    title,
-    subtitle,
-    email,
-    removeAdmin,
-    subdomain,
-        services,
-      } = await req.json();
+      const { brandName, loginButtonText, title, subtitle, subdomain } =
+        await req.json();
 
       // Check if requester is admin for this brand
       const isAdmin = await isBrandAdmin(decodedToken.email, subdomain);
@@ -40,24 +32,6 @@ export async function POST(req) {
         title,
         subtitle,
       };
-
-      // Handle admin operations
-      if (removeAdmin) {
-        // Remove admin from the array
-        updateData.admins =
-          brandData.admins?.filter((admin) => admin !== removeAdmin) || [];
-      } else if (email && email.trim()) {
-        // Add new admin (only if email is provided and not empty)
-        const currentAdmins = brandData.admins || [];
-        if (!currentAdmins.includes(email)) {
-          updateData.admins = [...currentAdmins, email];
-        }
-      }
-
-      // Handle services update
-      if (services) {
-        updateData.services = services;
-      }
 
       const updatedBrandData = await client
         .patch(brandData._id)

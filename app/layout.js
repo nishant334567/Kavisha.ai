@@ -9,10 +9,12 @@ import BrandContextProvider from "./context/brand/BrandContextProvider";
 import Navbar from "@/app/components/Navbar";
 import Loader from "./components/Loader";
 import { usePathname } from "next/navigation";
+import AdminNavbar from "./admin/components/AdminNavbar";
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
   const isMaintenancePage = pathname === "/maintenance";
+  const isAdmin = pathname?.startsWith("/admin");
 
   return (
     <html lang="en">
@@ -28,16 +30,9 @@ export default function RootLayout({ children }) {
         <FirebaseSessionProvider>
           <BrandContextProvider>
             <SocketSessionWrapper>
-              {!isMaintenancePage && <Navbar />}
-              <div
-                className={
-                  isMaintenancePage
-                    ? "min-h-screen"
-                    : "mt-12 min-h-[calc(100vh-56px)]"
-                }
-              >
-                {children}
-              </div>
+              {!isMaintenancePage && !isAdmin && <Navbar />}
+              {!isMaintenancePage && isAdmin && <AdminNavbar />}
+              <div className={isAdmin ? "pt-14" : ""}>{children}</div>
             </SocketSessionWrapper>
           </BrandContextProvider>
         </FirebaseSessionProvider>

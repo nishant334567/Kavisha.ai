@@ -289,7 +289,14 @@ export default function ChatBox({
       (s) => s.name?.toLowerCase() === currentChatType?.toLowerCase()
     );
 
-    return service?.prompt || "";
+    if (!service) return "";
+
+    const parts = [];
+    if (service.intro) parts.push(`Introduction: ${service.intro}`);
+    if (service.voice) parts.push(`Voice and Style: ${service.voice}`);
+    if (service.behaviour) parts.push(`Behaviour: ${service.behaviour}`);
+
+    return parts.length > 0 ? parts.join(". ") + " " : "";
   };
 
   const handleSubmit = async (voiceText = null, isRetry = false) => {

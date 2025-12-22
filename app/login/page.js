@@ -90,9 +90,9 @@ export default function LoginPage() {
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
     setIsMobile(isMobileDevice());
-    if (user) {
-      router.push("/");
-    }
+    // if (user) {
+    //   router.push("/");
+    // }
   }, [user]);
 
   const handleSignIn = async () => {

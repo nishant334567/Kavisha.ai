@@ -55,7 +55,9 @@ export default function SelectChatType({
             {typeOfConnection.map((item) => (
               <button
                 key={item.name}
-                onClick={() => selectChatType(item.name, item.initialMessage)}
+                onClick={() =>
+                  selectChatType(item.name, item.initialMessage, true)
+                }
                 className={`${base} ${cls(item)}`}
                 disabled={isCreating}
               >

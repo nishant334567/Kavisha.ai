@@ -11,6 +11,10 @@ const ChatSessionsSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    isCommunityChat: {
+      type: Boolean,
+      default: false,
+    },
     brand: {
       type: String,
       required: true,
