@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft, User, Settings } from "lucide-react";
+import { ArrowLeft, User, Settings, X } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
@@ -115,7 +115,52 @@ export default function ServiceModal({
   ];
 
   const allServicesAvailed = availedServices.length >= availableServices.length;
-
+  if (allServicesAvailed && addNewservice) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+        <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 relative">
+          <button
+            onClick={onClose}
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+          <div className="p-6">
+            <div className="flex items-center gap-3 mb-4">
+              <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+                <svg
+                  className="w-6 h-6 text-yellow-600"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                  />
+                </svg>
+              </div>
+              <h3 className="text-lg font-semibold text-gray-900">
+                All Services Availed
+              </h3>
+            </div>
+            <p className="text-gray-600 mb-6">
+              You have availed all the available services. No additional
+              services can be added at this time.
+            </p>
+            <button
+              onClick={onClose}
+              className="w-full px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors"
+            >
+              Close
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen">
       <div className="flex-1 overflow-y-auto bg-white">
@@ -128,158 +173,141 @@ export default function ServiceModal({
             <ArrowLeft className="w-6 h-6" />
           </button>
 
-          {/* Title */}
-          {allServicesAvailed && (
-            <div>
-              {" "}
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded">
-                <p className="text-yellow-800 text-sm">
-                  You have availed all the services.
-                </p>
-              </div>
-            </div>
-          )}
-          {!allServicesAvailed && (
-            <div>
-              <h1 className="text-4xl md:text-5xl font-black text-purple-900 mb-12 text-center leading-tight tracking-tight normal-case font-mono">
-                {addNewservice ? "Add a service" : serviceName}
-              </h1>
+          <div>
+            <h1 className="text-4xl md:text-5xl font-black text-purple-900 mb-12 text-center leading-tight tracking-tight normal-case font-mono">
+              {addNewservice ? "Add a service" : serviceName}
+            </h1>
 
-              {/* Form */}
-              <div className="space-y-8">
-                {/* Service title */}
+            {/* Form */}
+            <div className="space-y-8">
+              {/* Service title */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Service title
+                </label>
+                <input
+                  type="text"
+                  value={formData.serviceTitle}
+                  onChange={(e) => handleChange("serviceTitle", e.target.value)}
+                  className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  placeholder="Enter service title"
+                />
+              </div>
+
+              {/* Service type dropdown - only show when adding new service */}
+              {addNewservice && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Service title
+                    Service Type
                   </label>
-                  <input
-                    type="text"
-                    value={formData.serviceTitle}
-                    onChange={(e) =>
-                      handleChange("serviceTitle", e.target.value)
-                    }
+                  <select
+                    value={formData.serviceName || ""}
+                    onChange={(e) => {
+                      const selectedService = availableServices.find(
+                        (item) => item.serviceName === e.target.value
+                      );
+                      setFormData((prev) => ({
+                        ...prev, // Preserve existing fields
+                        serviceName: e.target.value,
+                        serviceTitle: selectedService?.serviceTitle || "",
+                      }));
+                    }}
                     className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500"
-                    placeholder="Enter service title"
-                  />
+                  >
+                    <option value="">Select a service type</option>
+                    {availableServices.map((item, index) => {
+                      return (
+                        <option
+                          key={index}
+                          value={item.serviceName}
+                          disabled={availedServices?.includes(item.serviceName)}
+                        >
+                          {item.serviceTitle}
+                        </option>
+                      );
+                    })}
+                  </select>
                 </div>
+              )}
 
-                {/* Service type dropdown - only show when adding new service */}
-                {addNewservice && (
+              {/* Welcoming message */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Welcoming message
+                </label>
+                <textarea
+                  rows="4"
+                  value={formData.welcomingMessage}
+                  onChange={(e) =>
+                    handleChange("welcomingMessage", e.target.value)
+                  }
+                  className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
+                  placeholder="Enter welcoming message"
+                />
+              </div>
+
+              {/* Personality core */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-4">
+                  Personality core
+                </label>
+                <div className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Service Type
+                      Intro
                     </label>
-                    <select
-                      value={formData.serviceName || ""}
-                      onChange={(e) => {
-                        const selectedService = availableServices.find(
-                          (item) => item.serviceName === e.target.value
-                        );
-                        setFormData((prev) => ({
-                          ...prev, // Preserve existing fields
-                          serviceName: e.target.value,
-                          serviceTitle: selectedService?.serviceTitle || "",
-                        }));
-                      }}
-                      className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500"
-                    >
-                      <option value="">Select a service type</option>
-                      {availableServices.map((item, index) => {
-                        return (
-                          <option
-                            key={index}
-                            value={item.serviceName}
-                            disabled={availedServices?.includes(
-                              item.serviceName
-                            )}
-                          >
-                            {item.serviceTitle}
-                          </option>
-                        );
-                      })}
-                    </select>
+                    <textarea
+                      rows="4"
+                      value={formData.intro}
+                      onChange={(e) => handleChange("intro", e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
+                      placeholder="Enter intro"
+                    />
                   </div>
-                )}
-
-                {/* Welcoming message */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Welcoming message
-                  </label>
-                  <textarea
-                    rows="4"
-                    value={formData.welcomingMessage}
-                    onChange={(e) =>
-                      handleChange("welcomingMessage", e.target.value)
-                    }
-                    className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
-                    placeholder="Enter welcoming message"
-                  />
-                </div>
-
-                {/* Personality core */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-4">
-                    Personality core
-                  </label>
-                  <div className="space-y-6">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Intro
-                      </label>
-                      <textarea
-                        rows="4"
-                        value={formData.intro}
-                        onChange={(e) => handleChange("intro", e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
-                        placeholder="Enter intro"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Voice
-                      </label>
-                      <textarea
-                        rows="4"
-                        value={formData.voice}
-                        onChange={(e) => handleChange("voice", e.target.value)}
-                        className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
-                        placeholder="Enter voice"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-2">
-                        Behaviour
-                      </label>
-                      <textarea
-                        rows="4"
-                        value={formData.behaviour}
-                        onChange={(e) =>
-                          handleChange("behaviour", e.target.value)
-                        }
-                        className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
-                        placeholder="Enter behaviour"
-                      />
-                    </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Voice
+                    </label>
+                    <textarea
+                      rows="4"
+                      value={formData.voice}
+                      onChange={(e) => handleChange("voice", e.target.value)}
+                      className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
+                      placeholder="Enter voice"
+                    />
                   </div>
-                </div>
-
-                {/* Error message */}
-                {error && <div className="text-red-600 text-sm">{error}</div>}
-
-                {/* Save/Update button */}
-                <div className="flex justify-end pt-4">
-                  <button
-                    onClick={handleSave}
-                    disabled={loading}
-                    className="px-8 py-2 bg-blue-300 text-white uppercase font-medium hover:bg-blue-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    {loading ? "SAVING..." : service?.name ? "UPDATE" : "SAVE"}
-                  </button>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Behaviour
+                    </label>
+                    <textarea
+                      rows="4"
+                      value={formData.behaviour}
+                      onChange={(e) =>
+                        handleChange("behaviour", e.target.value)
+                      }
+                      className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
+                      placeholder="Enter behaviour"
+                    />
+                  </div>
                 </div>
               </div>
+
+              {/* Error message */}
+              {error && <div className="text-red-600 text-sm">{error}</div>}
+
+              {/* Save/Update button */}
+              <div className="flex justify-end pt-4">
+                <button
+                  onClick={handleSave}
+                  disabled={loading}
+                  className="px-8 py-2 bg-blue-300 text-white uppercase font-medium hover:bg-blue-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {loading ? "SAVING..." : service?.name ? "UPDATE" : "SAVE"}
+                </button>
+              </div>
             </div>
-          )}
+          </div>
         </div>
       </div>
       {/* Footer */}
