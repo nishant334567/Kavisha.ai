@@ -3,6 +3,7 @@ import { ArrowLeft, User, Settings, X } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
+import ProductModal from "./ProductModal";
 
 export default function ServiceModal({
   isOpen,
@@ -13,6 +14,7 @@ export default function ServiceModal({
   const router = useRouter();
   const brand = useBrandContext();
   const availedServices = brand?.services?.map((item) => item.name) || [];
+  const [showProductModal, setShowProductModal] = useState(false);
   const [formData, setFormData] = useState({
     serviceTitle: "",
     serviceName: "",
@@ -111,7 +113,7 @@ export default function ServiceModal({
     { serviceName: "lead_journey", serviceTitle: "Talk to me" },
     { serviceName: "pitch_to_me", serviceTitle: "Pitch to me" },
     { serviceName: "job_seeker", serviceTitle: "Work with me" },
-    // { serviceName: "buy_my_product", serviceTitle: "Buy my product" },
+    { serviceName: "buy_my_product", serviceTitle: "Buy my product" },
   ];
 
   const allServicesAvailed = availedServices.length >= availableServices.length;
@@ -297,7 +299,16 @@ export default function ServiceModal({
               {error && <div className="text-red-600 text-sm">{error}</div>}
 
               {/* Save/Update button */}
-              <div className="flex justify-end pt-4">
+              <div className="flex justify-between pt-4">
+                {(service?.name === "buy_my_product" ||
+                  formData.serviceName === "buy_my_product") && (
+                  <button
+                    onClick={() => setShowProductModal(true)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                  >
+                    My Products
+                  </button>
+                )}
                 <button
                   onClick={handleSave}
                   disabled={loading}
@@ -306,6 +317,12 @@ export default function ServiceModal({
                   {loading ? "SAVING..." : service?.name ? "UPDATE" : "SAVE"}
                 </button>
               </div>
+              {showProductModal && (
+                <ProductModal
+                  isOpen={showProductModal}
+                  onClose={() => setShowProductModal(false)}
+                />
+              )}
             </div>
           </div>
         </div>

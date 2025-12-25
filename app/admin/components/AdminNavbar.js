@@ -57,7 +57,7 @@ export default function AdminNavbar() {
               className={`cursor-pointer text-[#FFEED8] uppercase tracking-wide ${
                 pathname?.includes("/train") ? "font-semibold" : ""
               }`}
-              onClick={() => go(`/admin/${brand?.subdomain}/train`)}
+              onClick={() => go(`/admin/${brand?.subdomain}/train/v2`)}
             >
               TRAIN MY AVATAAR
             </li>
