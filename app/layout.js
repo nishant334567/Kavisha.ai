@@ -10,6 +10,31 @@ import Navbar from "@/app/components/Navbar";
 import Loader from "./components/Loader";
 import { usePathname } from "next/navigation";
 import AdminNavbar from "./admin/components/AdminNavbar";
+import { Zen_Dots, Akshar, Baloo_2, Commissioner } from "next/font/google";
+
+const zenDots = Zen_Dots({
+  subsets: ["latin"],
+  weight: "400", // Zen Dots has ONLY one weight
+  variable: "--font-zen-dots",
+});
+
+const akshar = Akshar({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-akshar",
+});
+
+const baloo = Baloo_2({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700", "800"],
+  variable: "--font-baloo",
+});
+
+const commissioner = Commissioner({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700"],
+  variable: "--font-commissioner",
+});
 
 export default function RootLayout({ children }) {
   const pathname = usePathname();
@@ -17,7 +42,10 @@ export default function RootLayout({ children }) {
   const isAdmin = pathname?.startsWith("/admin");
 
   return (
-    <html lang="en">
+    <html
+      lang="en"
+      className={`${zenDots.variable} ${akshar.variable} ${baloo.variable}`}
+    >
       <head>
         <title>Kavisha.ai</title>
         <link rel="icon" href="data:," />

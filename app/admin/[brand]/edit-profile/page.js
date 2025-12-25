@@ -1,10 +1,12 @@
 "use client";
 import { useState, useEffect } from "react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { Check, X } from "lucide-react";
+import { Check, X, ArrowLeft, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 export default function EditProfile() {
   const brand = useBrandContext();
+  const router = useRouter();
   const [formData, setFormData] = useState({
     title: "",
     subtitle: "",
@@ -124,12 +126,25 @@ export default function EditProfile() {
 
   return (
     <>
-      {error && <div className="text-red-600 text-sm">{error}</div>}
-      <div className="w-[80%] mx-auto">
-        <div className="flex items-center gap-3">
-          <div className="relative group">
-            <img src={brand?.logoUrl} className="w-12 h-12 rounded" />
-            <label className="absolute inset-0 cursor-pointer opacity-0 group-hover:opacity-100 bg-black bg-opacity-50 rounded flex items-center justify-center transition-opacity">
+      {error && (
+        <div className="text-red-600 text-sm p-4 bg-red-50">{error}</div>
+      )}
+      <div className="max-w-6xl mx-auto px-4 py-6">
+        {/* Back Button and Profile Picture and Name */}
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => router.back()}
+            className="text-black hover:opacity-70 transition-opacity"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <div className="relative">
+            <img
+              src={brand?.logoUrl}
+              alt={brand?.brandName || "Profile"}
+              className="w-12 h-12 rounded-full object-cover"
+            />
+            <label className="absolute inset-0 cursor-pointer opacity-0 group-hover:opacity-100 bg-black bg-opacity-50 rounded-full flex items-center justify-center transition-opacity">
               <input
                 type="file"
                 accept="image/*"
@@ -151,7 +166,7 @@ export default function EditProfile() {
                 type="text"
                 value={formData.brandName}
                 onChange={(e) => handleChange("brandName", e.target.value)}
-                className="px-2 py-1 border border-gray-300 rounded flex-1"
+                className="px-3 py-2 border border-gray-300 rounded-lg flex-1 text-lg font-semibold"
                 disabled={loading}
               />
               <button
@@ -159,19 +174,21 @@ export default function EditProfile() {
                 disabled={loading}
                 className="text-green-600 hover:text-green-700"
               >
-                <Check className="w-4 h-4" />
+                <Check className="w-5 h-5" />
               </button>
               <button
                 onClick={() => handleCancel("brandName")}
                 disabled={loading}
                 className="text-red-600 hover:text-red-700"
               >
-                <X className="w-4 h-4" />
+                <X className="w-5 h-5" />
               </button>
             </div>
           ) : (
             <>
-              <p>{formData.brandName || brand?.brandName}</p>
+              <h2 className="text-lg font-semibold text-black">
+                {formData.brandName || brand?.brandName}
+              </h2>
               <button
                 onClick={() => handleEdit("brandName")}
                 className="px-3 py-1 bg-gray-100 text-black text-sm rounded hover:bg-gray-200 transition-colors"
@@ -182,13 +199,14 @@ export default function EditProfile() {
           )}
         </div>
 
-        <div className="mt-4 h-48 sm:h-80 w-full rounded-xl relative group">
+        {/* Cover Photo */}
+        <div className="mb-8 h-64 sm:h-96 w-full relative overflow-hidden">
           <img
             src={brand?.brandImageUrl}
-            alt={brand?.brandName || "Brand"}
-            className="w-full h-full object-cover rounded-xl"
+            alt={brand?.brandName || "Cover"}
+            className="w-full h-full object-cover"
           />
-          <label className="absolute inset-0 cursor-pointer opacity-0 group-hover:opacity-100 bg-black bg-opacity-50 rounded-xl flex items-center justify-center transition-opacity">
+          <label className="absolute bottom-4 right-4 cursor-pointer">
             <input
               type="file"
               accept="image/*"
@@ -199,20 +217,21 @@ export default function EditProfile() {
               className="hidden"
               disabled={uploading.brandImage}
             />
-            <span className="px-4 py-2 bg-gray-100 text-black rounded">
-              {uploading.brandImage ? "Uploading..." : "Upload Image"}
+            <span className="px-4 py-2 bg-gray-800 text-white text-sm rounded hover:bg-gray-700 transition-colors">
+              {uploading.brandImage ? "Uploading..." : "Edit cover photo"}
             </span>
           </label>
         </div>
 
-        <div className="text-center mx-auto max-w-4xl">
+        {/* Title/Headline */}
+        <div className="mb-6">
           {editing.title ? (
-            <div className="flex items-center justify-center gap-2 my-2">
+            <div className="flex items-center gap-3">
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => handleChange("title", e.target.value)}
-                className="text-2xl sm:text-4xl lg:text-6xl font-bold px-2 py-1 border border-gray-300 rounded w-full"
+                className="text-3xl sm:text-4xl lg:text-5xl font-bold px-3 py-2 border border-gray-300 rounded-lg w-full"
                 disabled={loading}
               />
               <button
@@ -231,26 +250,29 @@ export default function EditProfile() {
               </button>
             </div>
           ) : (
-            <div className="relative">
-              <p className="text-2xl sm:text-4xl lg:text-6xl font-bold my-2">
+            <div className="flex items-start justify-between gap-4">
+              <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-black">
                 {formData.title || brand?.title}
               </p>
               <button
                 onClick={() => handleEdit("title")}
-                className="absolute right-0 top-0 px-3 py-1 bg-gray-100 text-black text-sm rounded hover:bg-gray-200 transition-colors"
+                className="px-3 py-1 bg-gray-100 text-black text-sm rounded hover:bg-gray-200 transition-colors whitespace-nowrap"
               >
                 Edit
               </button>
             </div>
           )}
+        </div>
 
+        {/* Biography/Subtitle */}
+        <div className="mb-8">
           {editing.subtitle ? (
-            <div className="flex items-start justify-center gap-2 px-4">
+            <div className="flex items-start gap-3">
               <textarea
                 value={formData.subtitle}
                 onChange={(e) => handleChange("subtitle", e.target.value)}
-                className="text-gray-500 text-sm sm:text-base leading-relaxed px-2 py-1 border border-gray-300 rounded w-full resize-none"
-                rows="3"
+                className="text-black text-base leading-relaxed px-3 py-2 border border-gray-300 rounded-lg w-full resize-none"
+                rows="4"
                 disabled={loading}
               />
               <div className="flex flex-col gap-2">
@@ -259,75 +281,76 @@ export default function EditProfile() {
                   disabled={loading}
                   className="text-green-600 hover:text-green-700"
                 >
-                  <Check className="w-4 h-4" />
+                  <Check className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => handleCancel("subtitle")}
                   disabled={loading}
                   className="text-red-600 hover:text-red-700"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
             </div>
           ) : (
-            <div className="relative px-4">
-              <p className="text-gray-500 text-sm sm:text-base leading-relaxed">
+            <div className="flex items-start justify-between gap-4">
+              <p className="text-black text-base leading-relaxed flex-1">
                 {formData.subtitle || brand?.subtitle}
               </p>
               <button
                 onClick={() => handleEdit("subtitle")}
-                className="mt-2 px-3 py-1 bg-gray-100 text-black text-sm rounded hover:bg-gray-200 transition-colors"
+                className="px-3 py-1 bg-gray-100 text-black text-sm rounded hover:bg-gray-200 transition-colors whitespace-nowrap"
               >
                 Edit
               </button>
             </div>
           )}
+        </div>
 
-          {/* Login Button */}
-          <div className="mt-6 flex justify-center">
-            {editing.loginButtonText ? (
-              <div className="flex items-center gap-2">
-                <input
-                  type="text"
-                  value={formData.loginButtonText}
-                  onChange={(e) =>
-                    handleChange("loginButtonText", e.target.value)
-                  }
-                  className="px-4 py-2 border border-gray-300 rounded"
-                  disabled={loading}
-                />
-                <button
-                  onClick={() => handleSave("loginButtonText")}
-                  disabled={loading}
-                  className="text-green-600 hover:text-green-700"
-                >
-                  <Check className="w-4 h-4" />
-                </button>
-                <button
-                  onClick={() => handleCancel("loginButtonText")}
-                  disabled={loading}
-                  className="text-red-600 hover:text-red-700"
-                >
-                  <X className="w-4 h-4" />
-                </button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <button className="px-6 py-3 bg-purple-200 text-black rounded-lg font-medium hover:bg-purple-300 transition-colors">
-                  {formData.loginButtonText ||
-                    brand?.loginButtonText ||
-                    "Talk to me now"}
-                </button>
-                <button
-                  onClick={() => handleEdit("loginButtonText")}
-                  className="px-3 py-1 bg-gray-100 text-black text-sm rounded hover:bg-gray-200 transition-colors"
-                >
-                  Edit
-                </button>
-              </div>
-            )}
-          </div>
+        {/* Login Button */}
+        <div className="mb-12 flex flex-col items-center gap-3">
+          {editing.loginButtonText ? (
+            <div className="flex items-center gap-3">
+              <input
+                type="text"
+                value={formData.loginButtonText}
+                onChange={(e) =>
+                  handleChange("loginButtonText", e.target.value)
+                }
+                className="px-4 py-2 border border-gray-300 rounded-lg"
+                disabled={loading}
+              />
+              <button
+                onClick={() => handleSave("loginButtonText")}
+                disabled={loading}
+                className="text-green-600 hover:text-green-700"
+              >
+                <Check className="w-5 h-5" />
+              </button>
+              <button
+                onClick={() => handleCancel("loginButtonText")}
+                disabled={loading}
+                className="text-red-600 hover:text-red-700"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => handleEdit("loginButtonText")}
+              className="px-6 py-2 bg-purple-100 text-indigo-800 rounded-full font-medium hover:bg-purple-200 transition-colors flex items-center gap-2 shadow-md cursor-pointer"
+            >
+              {formData.loginButtonText ||
+                brand?.loginButtonText ||
+                "Talk to me now"}
+              <Pencil className="w-4 h-4 text-indigo-800" />
+            </button>
+          )}
+        </div>
+
+        {/* Footer */}
+        <div className="text-center text-sm text-gray-600">
+          Powered by KAVISHA
         </div>
       </div>
     </>

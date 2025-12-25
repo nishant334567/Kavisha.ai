@@ -12,13 +12,13 @@ export async function POST(request) {
       brand,
       title,
       description,
+      gcsPath,
       // chunkSize = 200,
     } = await request.json();
 
-    // Minimal server-side validation (security check)
-    if (!text?.trim() || !brand || !title?.trim()) {
+    if (!text?.trim() || !brand || !title?.trim() || !gcsPath) {
       return NextResponse.json(
-        { error: "Text, brand, and title are required" },
+        { error: "Text, brand, title, and gcsPath are required" },
         { status: 400 }
       );
     }
@@ -53,6 +53,7 @@ export async function POST(request) {
       brand,
       text: text,
       totalChunks: totalChunks,
+      gcsPath: gcsPath,
       createdAt,
     });
 

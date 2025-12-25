@@ -2,6 +2,8 @@
 import { useState, useEffect } from "react";
 import { formatToIST } from "@/app/utils/formatToIST";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
+import Dropdown from "./AdminDropdown";
+import { ChevronDown } from "lucide-react";
 
 export default function UserCard({
   user,
@@ -13,6 +15,8 @@ export default function UserCard({
   const [assigning, setAssigning] = useState({});
   const [commentUpdating, setCommentUpdating] = useState({});
   const [comment, setComment] = useState("");
+  const [showAdminDropdown, setShowAdminDropdown] = useState(false);
+  const [showSessionDropdown, setShowSessionDropdown] = useState(false);
 
   useEffect(() => {
     setSelectedChatSession(user?.sessions[0]);
@@ -118,98 +122,133 @@ export default function UserCard({
   };
   return (
     <>
-      <div className="p-4 m-4 flex justify-evenly h-[150px] shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] bg-white mx-auto rounded-md">
-        <div className="w-[50%] flex">
-          <div className="flex w-[70%] gap-2">
-            <div className="w-[40%]">
-              <p className="font-semibold text-sm">{user.name}</p>
-              <p className="text-[10px] text-gray-500">{user?.email}</p>
+      <div className="p-4 m-4 flex flex-col md:flex-row justify-between h-full md:max-h-[200px] shadow-md bg-white mx-auto rounded-lg border border-gray-200">
+        <div className="w-full md:w-[50%] flex gap-4">
+          <div className="w-[50%] md:w-[35%] flex-shrink-0">
+            <p className="font-baloo text-[#42476D] mb-1 text-2xl">
+              {user.name}
+            </p>
+            <p className="text-xs text-[#898989] mb-2">{user?.email}</p>
+            <button className="w-full px-3 py-1.5 rounded-lg bg-[#7981C2] text-white text-xs font-medium hover:bg-purple-700 transition-colors mb-3">
+              Contact
+            </button>
+            <div className="space-y-0.5 font-medium">
+              <p className="font-baloo ">Total Messages:</p>
+              <p className="font-baloo">Total Cost:</p>
             </div>
-            <div className="w-[60%]">
-              <p className="text-sm font-bold">Assign To: </p>
-              <select
-                value={selectedChatSession?.assignedTo || ""}
-                onChange={(e) =>
-                  assignSession(selectedChatSession?._id, e.target.value)
-                }
-                disabled={assigning[selectedChatSession?._id]}
-                className="w-full text-sm px-2 py-1 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <option value="">Unassigned</option>
-                {brandContext.admins?.map((admin) => (
-                  <option key={admin} value={admin}>
-                    {admin}
-                  </option>
-                ))}
-              </select>
-              <div className="flex justify-between my-2">
-                <p className="text-sm font-semibold">Comment</p>
+          </div>
+          {/* <div className="w-[1px] h-full bg-gray-300 mx-2"></div> */}
+          <div className="w-[50%] md:w-[35%] flex-shrink-0 relative">
+            <button
+              className="w-full bg-[#EEF0FE] border border-[#BFC4E5] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
+              onClick={() => setShowAdminDropdown((prev) => !prev)}
+            >
+              <span>{selectedChatSession?.assignedTo || "Assign to"}</span>
+              <ChevronDown />
+            </button>
+            {showAdminDropdown && (
+              <div className="absolute top-full left-0 right-0 mt-1 z-50">
+                <Dropdown selectedValue={selectedChatSession?.assignTo} />
+              </div>
+            )}
+            <div className="bg-[#EEF0FE] p-1 rounded-md flex flex-col mt-4">
+              <textarea
+                rows={2}
+                value={comment}
+                onChange={(e) => setComment(e.target.value)}
+                placeholder="Write a comment..."
+                className="w-full border outline-none resize-none p-2 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-purple-500 text-sm bg-white"
+              />
+              <div className="flex justify-end mt-1">
                 <button
                   onClick={() =>
                     updateSessionComment(selectedChatSession?._id, comment)
                   }
                   disabled={commentUpdating[selectedChatSession?._id]}
-                  className="px-1 rounded-sm bg-slate-500 text-[10px] text-white disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-3 py-1 rounded-lg bg-white text-gray-700 text-xs font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
                 >
                   {commentUpdating[selectedChatSession?._id]
                     ? "Saving..."
-                    : "Save Comment"}
+                    : "Comment"}
                 </button>
               </div>
-              <textarea
-                rows={2}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                className="w-full border-0 outline-none resize-none p-2 rounded shadow-[inset_0_2px_4px_rgba(0,0,0,0.1)] focus:shadow-[inset_0_2px_4px_rgba(0,0,0,0.15)] focus:ring-0"
-              />
             </div>
           </div>
-          <div className="w-[1px] h-full bg-gray-300 mx-4"></div>
-          <div className="flex-[1] flex flex-col gap-1 overflow-y-auto scrollbar-none items-start">
+          {/* <div className="w-[1px] h-full bg-gray-300 mx-2"></div> */}
+          <div className="hidden md:flex md:w-[30%] flex-col gap-1.5 overflow-y-auto scrollbar-none min-w-0">
             {user.sessions.map((item, index) => {
               const isSelected = selectedChatSession?._id === item._id;
               return (
-                <div key={index} className="w-full">
-                  <button
-                    className={`w-full text-left px-3 py-1 rounded border transition ${
-                      isSelected
-                        ? "bg-gray-600 text-gray-50"
-                        : "bg-white text-gray-600 hover:bg-gray-50"
-                    }`}
-                    onClick={() => setSelectedChatSession(item)}
-                  >
-                    <div className="text-sm">
-                      {item?.title?.length > 15
-                        ? item.title?.slice(0, 15) + `...`
-                        : item?.title || `Session ${index + 1}`}
-                    </div>
-                    <div
-                      className={`text-[10px] mt-0.5 ${isSelected ? "text-gray-50" : "text-gray-600"} `}
-                    >
-                      {formatToIST(item.updatedAt)}
-                    </div>
-                  </button>
-                </div>
+                <button
+                  key={index}
+                  className={`text-xs w-full text-left px-2.5 py-1.5 rounded transition ${
+                    isSelected
+                      ? "bg-gray-700 text-white font-extrabold shadow-lg"
+                      : "bg-white text-gray-700 font-light border border-gray-300 shadow-sm"
+                  }`}
+                  onClick={() => setSelectedChatSession(item)}
+                >
+                  {item?.title || `Chat ${index + 1}`}
+                </button>
               );
             })}
           </div>
         </div>
-        <div className="w-[1px] h-full bg-gray-300 mx-4"></div>
         {selectedChatSession && (
-          <div className="relative w-[50%]">
-            <div className="absolute top-0 -right-0">
+          <div className="w-full md:w-[50%]  flex flex-col min-w-0">
+            {/* Mobile Session Dropdown */}
+
+            <div className="md:hidden relative">
+              <p className="font-bold text-[#1D008F] mb-2">Chat Session:</p>
               <button
-                className="text-xs underline"
-                onClick={() => showLogs(selectedChatSession?._id)}
+                className="w-full rounded-2xl bg-[#EEF0FE] border border-[#BFC4E5]  p-2 text-sm text-gray-900 flex items-center justify-between shadow-sm"
+                onClick={() => setShowSessionDropdown((prev) => !prev)}
               >
-                View Chat
+                <span>
+                  {selectedChatSession?.title ||
+                    `Chat ${user.sessions.findIndex((s) => s._id === selectedChatSession?._id) + 1 || 1}`}
+                </span>
+                <ChevronDown className="w-4 h-4" />
               </button>
+              {showSessionDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
+                  {user.sessions.map((item, index) => {
+                    const isSelected = selectedChatSession?._id === item._id;
+                    return (
+                      <button
+                        key={index}
+                        className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 last:border-b-0 transition ${
+                          isSelected
+                            ? "bg-gray-100 text-gray-900 font-semibold"
+                            : "text-gray-700 hover:bg-gray-50"
+                        }`}
+                        onClick={() => {
+                          setSelectedChatSession(item);
+                          setShowSessionDropdown(false);
+                        }}
+                      >
+                        {item?.title || `Chat ${index + 1}`}
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
             </div>
-            <p className="font-bold">Chat Summary: </p>
-            <div className="h-[80%] overflow-y-auto scrollbar-none">
-              <p className="text-xs text-gray-700  ">
-                {selectedChatSession.chatSummary || "Summary Not Available"}
-              </p>
+            <div className="md:px-4">
+              <p className="font-bold text-[#1D008F] mb-2 mt-1">Summary</p>
+              <div className="flex-1 overflow-y-auto scrollbar-none pr-2">
+                <p className="font-commissioner text-xs font-extralight  leading-relaxed">
+                  {selectedChatSession.chatSummary || "Summary Not Available"}
+                </p>
+              </div>
+              <div className="flex justify-end">
+                <button
+                  className="text-xs"
+                  onClick={() => showLogs(selectedChatSession?._id)}
+                >
+                  View chat
+                </button>
+              </div>
             </div>
           </div>
         )}

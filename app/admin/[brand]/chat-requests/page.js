@@ -2,11 +2,13 @@
 
 import { useEffect, useState } from "react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
 import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
 
 export default function ChatRequests() {
+  const router = useRouter();
   const [sessionData, setSessionData] = useState([]);
   const [allSessions, setAllSessions] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
@@ -66,68 +68,81 @@ export default function ChatRequests() {
   };
 
   return (
-    <div className="mt-4 px-6">
-      <h1 className="text-2xl font-semibold text-blue-900 mb-6 border-b-2 border-blue-300 pb-2 inline-block">
-        All Chat Requests
-      </h1>
-
-      <div className="flex items-center gap-4 mb-8">
-        {brandContext?.services?.map((item, index) => {
-          const count = getSessionCount(item?.name);
-          const isLast = index === brandContext.services.length - 1;
-          return (
-            <div key={index} className="flex items-center gap-4">
-              <button
-                onClick={() => filterSessions(item?.name)}
-                className={`uppercase text-sm font-medium tracking-wide hover:text-blue-600 transition-colors relative ${
-                  selectedService === item?.name
-                    ? "text-blue-600"
-                    : "text-gray-900"
-                }`}
-              >
-                {item?.title}
-                {count > 0 && (
-                  <span className="absolute -top-2 -right-5 text-red-600 text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                    {count}
-                  </span>
-                )}
-              </button>
-              {!isLast && <div className="w-px h-6 bg-gray-300"></div>}
-            </div>
-          );
-        })}
-        <button className="ml-auto w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center hover:bg-gray-300 transition">
-          <ChevronRight className="w-4 h-4 text-gray-600" />
+    <div>
+      <div className="px-4 mt-4 gap-2">
+        <button
+          onClick={() => router.back()}
+          className="text-black hover:opacity-70 transition-opacity"
+        >
+          <ArrowLeft className="w-6 h-6" />
         </button>
+        <div className="flex items-center gap-3 justify-center md:justify-start">
+          <h1 className=" text-3xl md:text-4xl font-zen text-[#000A67] mb-6 pb-2 inline-block">
+            All Chat Requests
+          </h1>
+        </div>
       </div>
-
-      <div>
-        {sessionData.length > 0 ? (
-          sessionData.map((item, index) => {
+      <div className="w-full sm:w-[85%] mx-auto">
+        {/* <div className="flex items-center justify-between mb-8"> */}
+        {/* <div className="flex-1"></div> */}
+        <div className="grid grid-cols-2 md:flex items-center justify-center gap-4">
+          {brandContext?.services?.map((item, index) => {
+            const count = getSessionCount(item?.name);
+            const isLast = index === brandContext.services.length - 1;
             return (
-              <UserCard
-                key={index}
-                user={item}
-                setSelectedSessionLogs={setSelectedSessionLogs}
-                setShowLogsModal={setShowLogsModal}
-              />
+              <div key={index} className="flex items-center gap-4">
+                <button
+                  onClick={() => filterSessions(item?.name)}
+                  className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${
+                    selectedService === item?.name
+                      ? "text-blue-600"
+                      : "text-black"
+                  }`}
+                >
+                  {item?.title}
+                  {count > 0 && (
+                    <span className="absolute -top-2 -right-6 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                      {count}
+                    </span>
+                  )}
+                </button>
+                {!isLast && (
+                  <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300"></div>
+                )}
+              </div>
             );
-          })
-        ) : (
-          <div className="col-span-full text-center text-gray-500 py-8">
-            No sessions found
-          </div>
+          })}
+        </div>
+        {/* </div> */}
+
+        <div>
+          {sessionData.length > 0 ? (
+            sessionData.map((item, index) => {
+              return (
+                <UserCard
+                  key={index}
+                  user={item}
+                  setSelectedSessionLogs={setSelectedSessionLogs}
+                  setShowLogsModal={setShowLogsModal}
+                />
+              );
+            })
+          ) : (
+            <div className="col-span-full text-center text-gray-500 py-8">
+              No sessions found
+            </div>
+          )}
+        </div>
+
+        {showLogsModal && selectedSessionLogs && (
+          <AdminLogsModal
+            selectedSessionLogs={selectedSessionLogs}
+            setShowLogsModal={setShowLogsModal}
+            setSelectedSessionLogs={setSelectedSessionLogs}
+            //   loadingLogs={loadingLogs}
+          />
         )}
       </div>
-
-      {showLogsModal && selectedSessionLogs && (
-        <AdminLogsModal
-          selectedSessionLogs={selectedSessionLogs}
-          setShowLogsModal={setShowLogsModal}
-          setSelectedSessionLogs={setSelectedSessionLogs}
-          //   loadingLogs={loadingLogs}
-        />
-      )}
     </div>
   );
 }

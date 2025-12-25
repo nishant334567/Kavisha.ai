@@ -36,12 +36,16 @@ export async function POST(request) {
       version: "v1.10.100", // Specify version to avoid auto-detection
     });
 
-    const result = await Session.updateOne(
-      { _id: sessionId },
-      {
-        $set: { resumeSummary: data.text, resumeFilename: file.name },
-      }
-    );
+    // If sessionId is provided, save to DB; otherwise just return extracted text
+    if (sessionId) {
+      await connectDB();
+      await Session.updateOne(
+        { _id: sessionId },
+        {
+          $set: { resumeSummary: data.text, resumeFilename: file.name },
+        }
+      );
+    }
 
     return new Response(
       JSON.stringify({

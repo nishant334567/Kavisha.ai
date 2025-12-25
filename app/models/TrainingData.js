@@ -32,6 +32,7 @@ const TrainingDataSchema = new mongoose.Schema(
     chunkSize: {
       type: Number,
     },
+    gcsPath: { type: String, required: true },
   },
   { timestamps: true }
 );
