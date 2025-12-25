@@ -14,4 +14,5 @@ const storage = new Storage(
 const bucketName =
   process.env.GCS_KNOWLEDGE_BASE || process.env.GCS_BUCKET_NAME;
 
-export const bucket = storage.bucket(bucketName);
+// Only create bucket if bucketName is defined (prevents build-time errors)
+export const bucket = bucketName ? storage.bucket(bucketName) : null;

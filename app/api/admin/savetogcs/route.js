@@ -13,6 +13,13 @@ export async function POST(request) {
       );
     }
 
+    if (!bucket) {
+      return NextResponse.json(
+        { error: "Cloud Storage bucket is not configured" },
+        { status: 500 }
+      );
+    }
+
     // Save to GCS
     const fileId = uuidv4();
     const gcsFileName = `training/${brand}/${fileId}_${title.replace(/[^a-zA-Z0-9]/g, "_")}.txt`;
