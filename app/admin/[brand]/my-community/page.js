@@ -41,18 +41,50 @@ export default function MyCommunity() {
       fetchChatRequests();
     }
   }, [brandContext?.subdomain]);
+  const getTabCount = (tab) => {
+    // These tabs are display-only (not filterable)
+    if (tab === "MEMBERS") return allUsers.length;
+    if (tab === "MATCHES") return 0; // TODO: Implement actual matches count
+    if (tab === "CONNECTIONS") return 0; // TODO: Implement actual connections count
+    return 0;
+  };
+
   return (
     <div className="mt-4 px-6">
-      <button
-        onClick={() => router.back()}
-        className="flex items-center gap-2 mb-6 text-gray-600 hover:text-gray-900 transition"
-      >
-        <ArrowLeft className="w-5 h-5" />
-        <span>Back</span>
-      </button>
-      <h1 className="text-2xl font-semibold text-blue-900 mb-6 border-b-2 border-blue-300 pb-2 inline-block">
-        My Community
+      <div className="flex items-center gap-2 mb-4">
+        <button
+          onClick={() => router.back()}
+          className="text-black hover:opacity-70 transition-opacity"
+        >
+          <ArrowLeft className="w-6 h-6" />
+        </button>
+      </div>
+      <h1 className="font-zen text-3xl md:text-4xl font-black text-[#000A67] mb-6 leading-tight tracking-tight">
+        Community
       </h1>
+
+      {/* Navigation Tabs - Display only (not clickable/filterable) */}
+      <div className="flex items-center justify-center gap-4 mb-8">
+        {["MEMBERS", "MATCHES", "CONNECTIONS"].map((tab, index) => {
+          const isLast = index === 2;
+          const count = getTabCount(tab);
+          return (
+            <div key={tab} className="flex items-center">
+              <div className="uppercase font-medium tracking-wide text-gray-900 relative font-akshar text-xl">
+                {tab}
+                {count > 0 && (
+                  <span className="absolute -top-2 -right-6 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                    {count}
+                  </span>
+                )}
+              </div>
+              {!isLast && (
+                <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-16"></div>
+              )}
+            </div>
+          );
+        })}
+      </div>
       <div>
         {usersData.length > 0 ? (
           usersData.map((item, index) => {
@@ -71,6 +103,14 @@ export default function MyCommunity() {
           </div>
         )}
       </div>
+
+      {showLogsModal && selectedSessionLogs && (
+        <AdminLogsModal
+          selectedSessionLogs={selectedSessionLogs}
+          setShowLogsModal={setShowLogsModal}
+          setSelectedSessionLogs={setSelectedSessionLogs}
+        />
+      )}
     </div>
   );
 }

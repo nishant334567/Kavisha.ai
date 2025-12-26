@@ -332,7 +332,24 @@ export default function ChatBox({
     setMessages(updatedMessages);
     setMessageLoading(true);
     let response;
-    if (currentChatType !== "lead_journey") {
+
+    if (currentChatType === "buy_my_product") {
+      response = await fetch("/api/buy-my-product", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          history: historyToUse,
+          userMessage: messageText || "",
+          sessionId,
+          // resume: resumeData?.resumeSummary || "",
+          type: currentChatType,
+          prompt: getServicePrompt() || "",
+          userId: user?.id,
+        }),
+      });
+    } else if (currentChatType !== "lead_journey") {
       response = await fetch("/api/ai", {
         method: "POST",
         body: JSON.stringify({
@@ -391,7 +408,7 @@ export default function ChatBox({
         role: "assistant",
         message: data.reply,
         sources: data?.sources || [],
-        intent: data?.intent,
+        intent: data?.intent || "",
       },
     ]);
     setMessageLoading(false);
@@ -402,18 +419,20 @@ export default function ChatBox({
       setRetryIndex(undefined);
     }
 
-    // Handle matches and data collection status
-    if (
-      data?.matchesWithObjectIds?.length > 0 &&
-      data?.allDataCollected === "true"
-    ) {
-      setMatches(data?.matchesWithObjectIds);
-      setHasDatacollected(true);
-    } else if (data?.allDataCollected === "true") {
-      setMatches([]);
-      setHasDatacollected(true);
-    } else if (data?.allDataCollected === "false") {
-      setHasDatacollected(false);
+    // Handle matches and data collection status (skip for buy_my_product)
+    if (currentChatType !== "buy_my_product") {
+      if (
+        data?.matchesWithObjectIds?.length > 0 &&
+        data?.allDataCollected === "true"
+      ) {
+        setMatches(data?.matchesWithObjectIds);
+        setHasDatacollected(true);
+      } else if (data?.allDataCollected === "true") {
+        setMatches([]);
+        setHasDatacollected(true);
+      } else if (data?.allDataCollected === "false") {
+        setHasDatacollected(false);
+      }
     }
   };
   useEffect(() => {

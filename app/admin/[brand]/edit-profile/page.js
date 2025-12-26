@@ -129,7 +129,7 @@ export default function EditProfile() {
       {error && (
         <div className="text-red-600 text-sm p-4 bg-red-50">{error}</div>
       )}
-      <div className="max-w-6xl mx-auto px-4 py-6">
+      <div className="w-full md:max-w-6xl mx-auto md:px-4 py-6">
         {/* Back Button and Profile Picture and Name */}
         <div className="flex items-center gap-3 mb-6">
           <button
@@ -166,7 +166,7 @@ export default function EditProfile() {
                 type="text"
                 value={formData.brandName}
                 onChange={(e) => handleChange("brandName", e.target.value)}
-                className="px-3 py-2 border border-gray-300 rounded-lg flex-1 text-lg font-semibold"
+                className="font-akshar px-3 py-2 border border-gray-300 rounded-lg flex-1 text-lg font-semibold"
                 disabled={loading}
               />
               <button
@@ -186,12 +186,12 @@ export default function EditProfile() {
             </div>
           ) : (
             <>
-              <h2 className="text-lg font-semibold text-black">
+              <h2 className="font-akshar text-lg font-semibold text-black">
                 {formData.brandName || brand?.brandName}
               </h2>
               <button
                 onClick={() => handleEdit("brandName")}
-                className="px-3 py-1 bg-gray-100 text-black text-sm rounded hover:bg-gray-200 transition-colors"
+                className="font-akshar px-3 py-1 shadow-md text-black text-sm rounded-full hover:bg-gray-200 transition-colors"
               >
                 Edit
               </button>
@@ -200,11 +200,11 @@ export default function EditProfile() {
         </div>
 
         {/* Cover Photo */}
-        <div className="mb-8 h-64 sm:h-96 w-full relative overflow-hidden">
+        <div className="mb-8 w-full relative overflow-hidden flex items-center justify-center bg-gray-100">
           <img
             src={brand?.brandImageUrl}
             alt={brand?.brandName || "Cover"}
-            className="w-full h-full object-cover"
+            className="w-full h-auto max-h-96 object-contain"
           />
           <label className="absolute bottom-4 right-4 cursor-pointer">
             <input
@@ -217,7 +217,7 @@ export default function EditProfile() {
               className="hidden"
               disabled={uploading.brandImage}
             />
-            <span className="px-4 py-2 bg-gray-800 text-white text-sm rounded hover:bg-gray-700 transition-colors">
+            <span className="font-akshar px-4 py-2 shadow-md  text-sm rounded-full bg-white  transition-colors">
               {uploading.brandImage ? "Uploading..." : "Edit cover photo"}
             </span>
           </label>
@@ -226,40 +226,44 @@ export default function EditProfile() {
         {/* Title/Headline */}
         <div className="mb-6">
           {editing.title ? (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 justify-center relative">
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => handleChange("title", e.target.value)}
-                className="text-3xl sm:text-4xl lg:text-5xl font-bold px-3 py-2 border border-gray-300 rounded-lg w-full"
+                className="font-fredoka text-3xl sm:text-4xl px-3 py-2 border border-gray-300 rounded-lg w-full text-center"
                 disabled={loading}
               />
-              <button
-                onClick={() => handleSave("title")}
-                disabled={loading}
-                className="text-green-600 hover:text-green-700"
-              >
-                <Check className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => handleCancel("title")}
-                disabled={loading}
-                className="text-red-600 hover:text-red-700"
-              >
-                <X className="w-5 h-5" />
-              </button>
+              <div className="flex flex-col gap-2 absolute right-0">
+                <button
+                  onClick={() => handleSave("title")}
+                  disabled={loading}
+                  className="text-green-600 hover:text-green-700"
+                >
+                  <Check className="w-5 h-5" />
+                </button>
+                <button
+                  onClick={() => handleCancel("title")}
+                  disabled={loading}
+                  className="text-red-600 hover:text-red-700"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </div>
             </div>
           ) : (
-            <div className="flex items-start justify-between gap-4">
-              <p className="text-3xl sm:text-4xl lg:text-5xl font-bold text-black">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <div className="flex justify-end">
+                <button
+                  onClick={() => handleEdit("title")}
+                  className="font-akshar px-3 py-1 shadow-md text-black text-sm rounded-full  transition-colors whitespace-nowrap"
+                >
+                  Edit
+                </button>
+              </div>
+              <p className="font-fredoka text-3xl sm:text-4xl text-black text-center">
                 {formData.title || brand?.title}
               </p>
-              <button
-                onClick={() => handleEdit("title")}
-                className="px-3 py-1 bg-gray-100 text-black text-sm rounded hover:bg-gray-200 transition-colors whitespace-nowrap"
-              >
-                Edit
-              </button>
             </div>
           )}
         </div>
@@ -267,11 +271,11 @@ export default function EditProfile() {
         {/* Biography/Subtitle */}
         <div className="mb-8">
           {editing.subtitle ? (
-            <div className="flex items-start gap-3">
+            <div className="flex items-start gap-3 justify-center">
               <textarea
                 value={formData.subtitle}
                 onChange={(e) => handleChange("subtitle", e.target.value)}
-                className="text-black text-base leading-relaxed px-3 py-2 border border-gray-300 rounded-lg w-full resize-none"
+                className="font-fredoka text-black text-base leading-relaxed px-3 py-2 border border-gray-300 rounded-lg w-full resize-none text-center"
                 rows="4"
                 disabled={loading}
               />
@@ -293,13 +297,13 @@ export default function EditProfile() {
               </div>
             </div>
           ) : (
-            <div className="flex items-start justify-between gap-4">
-              <p className="text-black text-base leading-relaxed flex-1">
+            <div className="flex flex-col items-center justify-center gap-4">
+              <p className="font-fredoka text-black text-base leading-relaxed text-center">
                 {formData.subtitle || brand?.subtitle}
               </p>
               <button
                 onClick={() => handleEdit("subtitle")}
-                className="px-3 py-1 bg-gray-100 text-black text-sm rounded hover:bg-gray-200 transition-colors whitespace-nowrap"
+                className="font-akshar px-3 py-1 shadow-md text-black text-sm rounded-full hover:bg-gray-200 transition-colors whitespace-nowrap"
               >
                 Edit
               </button>
@@ -308,7 +312,7 @@ export default function EditProfile() {
         </div>
 
         {/* Login Button */}
-        <div className="mb-12 flex flex-col items-center gap-3">
+        <div className="font-akshar mb-12 flex flex-col items-center gap-3">
           {editing.loginButtonText ? (
             <div className="flex items-center gap-3">
               <input

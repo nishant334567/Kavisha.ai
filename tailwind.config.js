@@ -11,6 +11,7 @@ module.exports = {
         akshar: ["var(--font-akshar)"],
         baloo: ["var(--font-baloo)"],
         commissioner: ["var(--font-commissioner)"],
+        fredoka: ["var(--font-fredoka)"],
       },
     },
   },

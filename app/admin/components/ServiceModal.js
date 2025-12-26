@@ -13,7 +13,7 @@ export default function ServiceModal({
 }) {
   const router = useRouter();
   const brand = useBrandContext();
-  const availedServices = brand?.services?.map((item) => item.name) || [];
+
   const [showProductModal, setShowProductModal] = useState(false);
   const [formData, setFormData] = useState({
     serviceTitle: "",
@@ -29,16 +29,27 @@ export default function ServiceModal({
   // Populate form when service is provided
   useEffect(() => {
     if (service) {
-      // Parse prompt to extract personality parts if needed
-      // For now, we'll use the service data directly
-      setFormData({
-        serviceTitle: service.title || "",
-        serviceName: service.name || "",
-        welcomingMessage: service.initialMessage || "",
-        intro: service.intro || "",
-        voice: service.voice || "",
-        behaviour: service.behaviour || "",
-      });
+      if (addNewservice) {
+        // For new service, pre-populate only title and name, leave rest blank
+        setFormData({
+          serviceTitle: service.title || "",
+          serviceName: service.name || "",
+          welcomingMessage: "",
+          intro: "",
+          voice: "",
+          behaviour: "",
+        });
+      } else {
+        // For editing existing service, populate all fields
+        setFormData({
+          serviceTitle: service.title || "",
+          serviceName: service.name || "",
+          welcomingMessage: service.initialMessage || "",
+          intro: service.intro || "",
+          voice: service.voice || "",
+          behaviour: service.behaviour || "",
+        });
+      }
     } else {
       // Reset form for new service
       setFormData({
@@ -50,7 +61,7 @@ export default function ServiceModal({
         behaviour: "",
       });
     }
-  }, [service]);
+  }, [service, addNewservice]);
 
   if (!isOpen) return null;
 
@@ -73,12 +84,13 @@ export default function ServiceModal({
         serviceData,
       };
 
-      // If editing existing service, add serviceName to payload
-      if (service?.name) {
+      // If editing existing service (not adding new), add serviceName to payload
+      // When adding new service, service.name exists but we should use POST
+      if (service?.name && !addNewservice) {
         payload.serviceName = service.name;
       }
 
-      const method = service?.name ? "PATCH" : "POST";
+      const method = service?.name && !addNewservice ? "PATCH" : "POST";
       const response = await fetch("/api/admin/edit-services", {
         method,
         headers: { "Content-Type": "application/json" },
@@ -109,60 +121,52 @@ export default function ServiceModal({
 
   const serviceName = service?.title || "";
 
-  const availableServices = [
-    { serviceName: "lead_journey", serviceTitle: "Talk to me" },
-    { serviceName: "pitch_to_me", serviceTitle: "Pitch to me" },
-    { serviceName: "job_seeker", serviceTitle: "Work with me" },
-    { serviceName: "buy_my_product", serviceTitle: "Buy my product" },
-  ];
-
-  const allServicesAvailed = availedServices.length >= availableServices.length;
-  if (allServicesAvailed && addNewservice) {
-    return (
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-        <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 relative">
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-          <div className="p-6">
-            <div className="flex items-center gap-3 mb-4">
-              <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-                <svg
-                  className="w-6 h-6 text-yellow-600"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                  />
-                </svg>
-              </div>
-              <h3 className="text-lg font-semibold text-gray-900">
-                All Services Availed
-              </h3>
-            </div>
-            <p className="text-gray-600 mb-6">
-              You have availed all the available services. No additional
-              services can be added at this time.
-            </p>
-            <button
-              onClick={onClose}
-              className="w-full px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors"
-            >
-              Close
-            </button>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  // if (allServicesAvailed && addNewservice) {
+  //   return (
+  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
+  //       <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 relative">
+  //         <button
+  //           onClick={onClose}
+  //           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+  //         >
+  //           <X className="w-5 h-5" />
+  //         </button>
+  //         <div className="p-6">
+  //           <div className="flex items-center gap-3 mb-4">
+  //             <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
+  //               <svg
+  //                 className="w-6 h-6 text-yellow-600"
+  //                 fill="none"
+  //                 stroke="currentColor"
+  //                 viewBox="0 0 24 24"
+  //               >
+  //                 <path
+  //                   strokeLinecap="round"
+  //                   strokeLinejoin="round"
+  //                   strokeWidth={2}
+  //                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+  //                 />
+  //               </svg>
+  //             </div>
+  //             <h3 className="text-lg font-semibold text-gray-900">
+  //               All Services Availed
+  //             </h3>
+  //           </div>
+  //           <p className="text-gray-600 mb-6">
+  //             You have availed all the available services. No additional
+  //             services can be added at this time.
+  //           </p>
+  //           <button
+  //             onClick={onClose}
+  //             className="w-full px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors"
+  //           >
+  //             Close
+  //           </button>
+  //         </div>
+  //       </div>
+  //     </div>
+  //   );
+  // }
   return (
     <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen">
       <div className="flex-1 overflow-y-auto bg-white">
@@ -197,7 +201,7 @@ export default function ServiceModal({
               </div>
 
               {/* Service type dropdown - only show when adding new service */}
-              {addNewservice && (
+              {/* {addNewservice && (
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Service Type
@@ -230,7 +234,7 @@ export default function ServiceModal({
                     })}
                   </select>
                 </div>
-              )}
+              )} */}
 
               {/* Welcoming message */}
               <div>

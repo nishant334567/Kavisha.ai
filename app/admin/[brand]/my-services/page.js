@@ -1,6 +1,6 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { ArrowLeft } from "lucide-react";
 import ServiceModal from "@/app/admin/components/ServiceModal";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
@@ -12,38 +12,77 @@ export default function MyServices() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [selectedService, setSelectedService] = useState(null);
   const [addNewservice, setAddnewservice] = useState(false);
+  const [showAddserviceoptions, setshowAddserviceoptions] = useState(false);
 
   const services = brandContext?.services || [];
+  const availedServices = services.map((item) => item.name) || [];
 
+  const availableServices = [
+    { serviceName: "lead_journey", serviceTitle: "Talk to me" },
+    { serviceName: "pitch_to_me", serviceTitle: "Pitch to me" },
+    { serviceName: "job_seeker", serviceTitle: "Work with me" },
+    { serviceName: "buy_my_product", serviceTitle: "Buy my product" },
+  ];
+  const allServicesAvailed = availedServices.length >= availableServices.length;
   const handleEdit = (service) => {
     setSelectedService(service);
+    setAddnewservice(false);
     setIsModalOpen(true);
   };
 
-  const addService = () => {
-    setSelectedService(null);
-    setIsModalOpen(true);
+  const addService = (service) => {
+    setSelectedService({
+      name: service.serviceName,
+      title: service.serviceTitle,
+    });
     setAddnewservice(true);
+    setshowAddserviceoptions(false);
+    setIsModalOpen(true);
   };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedService(null);
+    setAddnewservice(false);
+  };
+
+  const dropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setshowAddserviceoptions(false);
+      }
+    };
+
+    if (showAddserviceoptions) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showAddserviceoptions]);
 
   return (
     <>
-      <div className="bg-white h-screen overflow-y-scroll flex flex-col scrollbar-hidden">
-        <div className=" px-6 flex-1 flex flex-col">
-          <div className="mt-16">
+      <div className="bg-white h-screen overflow-hidden flex flex-col">
+        <div className="px-6 flex-1 flex flex-col">
+          <div className="mt-4">
             <button
               onClick={() => router.back()}
-              className=" text-black hover:opacity-70 transition-opacity"
+              className="text-black hover:opacity-70 transition-opacity"
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
-
-            <h1 className="ml-4 text-3xl md:text-4xl font-black text-purple-900 mb-8 leading-tight tracking-tight normal-case">
-              My services
-            </h1>
+            <div className="text-center md:text-left">
+              <h1 className="font-zen md:ml-4 text-3xl md:text-4xl font-black text-[#000A67] leading-tight tracking-tight mb-4">
+                My services
+              </h1>
+            </div>
           </div>
           {/* Service options */}
-          <div className="flex flex-col items-center gap-6 flex-1 justify-center">
+          <div className="flex flex-col items-center gap-4 font-akshar flex-1 justify-center">
             {services.map((service, index) => (
               <button
                 key={index}
@@ -53,19 +92,40 @@ export default function MyServices() {
                 {service?.title || service?.name || "Untitled Service"}
               </button>
             ))}
-            <button
-              onClick={() => addService()}
-              className="text-black uppercase text-base tracking-wider font-normal relative pb-1 border-b border-black hover:opacity-60 transition-opacity"
-            >
-              ADD SERVICES
-            </button>
+            {!allServicesAvailed && (
+              <div className="relative" ref={dropdownRef}>
+                <button
+                  onClick={() => setshowAddserviceoptions((prev) => !prev)}
+                  className="text-black uppercase text-base tracking-wider font-normal relative pb-1 border-b border-black hover:opacity-60 transition-opacity"
+                >
+                  ADD SERVICES
+                </button>
+                {showAddserviceoptions && (
+                  <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[200px]">
+                    {availableServices
+                      .filter(
+                        (item) => !availedServices.includes(item.serviceName)
+                      )
+                      .map((item, index) => (
+                        <button
+                          key={index}
+                          onClick={() => addService(item)}
+                          className="w-full text-left px-4 py-2 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg text-sm"
+                        >
+                          {item.serviceTitle}
+                        </button>
+                      ))}
+                  </div>
+                )}
+              </div>
+            )}
           </div>
         </div>
       </div>
 
       <ServiceModal
         isOpen={isModalOpen}
-        onClose={() => setIsModalOpen(false)}
+        onClose={handleCloseModal}
         service={selectedService}
         addNewservice={addNewservice}
       />

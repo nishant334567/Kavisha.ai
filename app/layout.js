@@ -10,7 +10,13 @@ import Navbar from "@/app/components/Navbar";
 import Loader from "./components/Loader";
 import { usePathname } from "next/navigation";
 import AdminNavbar from "./admin/components/AdminNavbar";
-import { Zen_Dots, Akshar, Baloo_2, Commissioner } from "next/font/google";
+import {
+  Zen_Dots,
+  Akshar,
+  Baloo_2,
+  Commissioner,
+  Fredoka,
+} from "next/font/google";
 
 const zenDots = Zen_Dots({
   subsets: ["latin"],
@@ -36,6 +42,12 @@ const commissioner = Commissioner({
   variable: "--font-commissioner",
 });
 
+const fredoka = Fredoka({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-fredoka",
+});
+
 export default function RootLayout({ children }) {
   const pathname = usePathname();
   const isMaintenancePage = pathname === "/maintenance";
@@ -44,7 +56,7 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${zenDots.variable} ${akshar.variable} ${baloo.variable}`}
+      className={`${zenDots.variable} ${akshar.variable} ${baloo.variable} ${commissioner.variable} ${fredoka.variable}`}
     >
       <head>
         <title>Kavisha.ai</title>
