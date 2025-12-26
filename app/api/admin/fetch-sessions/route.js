@@ -8,7 +8,53 @@ export async function GET(request) {
     const { searchParams } = new URL(request.url);
     const brand = searchParams.get("brand");
     const type = searchParams.get("type");
+    const countOnly = searchParams.get("count") === "true";
+
     await connectDB();
+
+    // If count=true, return counts instead of full data
+    if (countOnly) {
+      // Count users for community chats
+      const communitySessions = await Session.find({
+        brand,
+        isCommunityChat: true,
+      })
+        .populate("userId", "_id")
+        .select("userId")
+        .lean();
+
+      // Count users for chat requests (normal chats)
+      const normalSessions = await Session.find({
+        brand,
+        isCommunityChat: { $ne: true },
+      })
+        .populate("userId", "_id")
+        .select("userId")
+        .lean();
+
+      // Get unique user IDs for each type
+      const communityUserIds = new Set();
+      communitySessions.forEach((session) => {
+        if (session?.userId?._id) {
+          communityUserIds.add(session.userId._id.toString());
+        }
+      });
+
+      const normalUserIds = new Set();
+      normalSessions.forEach((session) => {
+        if (session?.userId?._id) {
+          normalUserIds.add(session.userId._id.toString());
+        }
+      });
+
+      return NextResponse.json({
+        success: true,
+        communityCount: communityUserIds.size,
+        chatRequestCount: normalUserIds.size,
+      });
+    }
+
+    // Original logic for fetching full user data
     const filter = { brand };
     if (type === "community") {
       filter.isCommunityChat = true;

@@ -82,7 +82,7 @@ export default function ChatRequests() {
           </h1>
         </div>
       </div>
-      <div className="w-full sm:w-[85%] mx-auto">
+      <div className="w-full sm:w-[85%] mx-auto px-6">
         {/* <div className="flex items-center justify-between mb-8"> */}
         {/* <div className="flex-1"></div> */}
         <div className="grid grid-cols-2 md:flex items-center justify-center gap-4">

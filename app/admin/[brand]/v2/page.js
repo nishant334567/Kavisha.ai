@@ -3,7 +3,7 @@ import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
 import { ChevronDown, User, MessageCircleMore } from "lucide-react";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Inbox from "@/app/components/Inbox";
 import Livechat from "@/app/components/LiveChat";
 
@@ -15,8 +15,30 @@ export default function AdminHome() {
   const [userA, setUserA] = useState(null);
   const [userB, setUserB] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
+  const [chatRequestCount, setChatRequestCount] = useState(0);
+  const [communityCount, setCommunityCount] = useState(0);
   const go = (path) => router.push(path);
   const { user } = useFirebaseSession();
+
+  useEffect(() => {
+    const fetchCounts = async () => {
+      if (brand?.subdomain) {
+        try {
+          const response = await fetch(
+            `/api/admin/fetch-sessions?brand=${brand.subdomain}&count=true`
+          );
+          const data = await response.json();
+          if (data.success) {
+            setChatRequestCount(data.chatRequestCount || 0);
+            setCommunityCount(data.communityCount || 0);
+          }
+        } catch (error) {
+          console.error("Failed to fetch counts:", error);
+        }
+      }
+    };
+    fetchCounts();
+  }, [brand?.subdomain]);
   const openChatSession = (userA, userB) => {
     setUserA(userA);
     setUserB(userB);
@@ -34,16 +56,26 @@ export default function AdminHome() {
         <div className="mt-8 flex items-center justify-center gap-4 font-akshar">
           <button
             onClick={() => go(`/admin/${brand?.subdomain}/chat-requests`)}
-            className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl"
+            className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl relative"
           >
             Chat Requests
+            {chatRequestCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                {chatRequestCount}
+              </span>
+            )}
           </button>
           <div className="w-px h-6 bg-gray-300 self-center"></div>
           <button
             onClick={() => go(`/admin/${brand?.subdomain}/my-community`)}
-            className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl"
+            className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl relative"
           >
-            Your Community
+            Community
+            {communityCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                {communityCount}
+              </span>
+            )}
           </button>
         </div>
       </div>
