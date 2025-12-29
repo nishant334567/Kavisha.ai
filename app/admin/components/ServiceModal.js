@@ -1,7 +1,6 @@
 "use client";
-import { ArrowLeft, User, Settings, X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import ProductModal from "./ProductModal";
 
@@ -11,10 +10,10 @@ export default function ServiceModal({
   service,
   addNewservice = false,
 }) {
-  const router = useRouter();
   const brand = useBrandContext();
 
   const [showProductModal, setShowProductModal] = useState(false);
+  const [personalitytype, setPersonalitytype] = useState("intro");
   const [formData, setFormData] = useState({
     serviceTitle: "",
     serviceName: "",
@@ -121,52 +120,6 @@ export default function ServiceModal({
 
   const serviceName = service?.title || "";
 
-  // if (allServicesAvailed && addNewservice) {
-  //   return (
-  //     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-  //       <div className="bg-white rounded-lg shadow-xl max-w-md w-full mx-4 relative">
-  //         <button
-  //           onClick={onClose}
-  //           className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
-  //         >
-  //           <X className="w-5 h-5" />
-  //         </button>
-  //         <div className="p-6">
-  //           <div className="flex items-center gap-3 mb-4">
-  //             <div className="flex-shrink-0 w-10 h-10 bg-yellow-100 rounded-full flex items-center justify-center">
-  //               <svg
-  //                 className="w-6 h-6 text-yellow-600"
-  //                 fill="none"
-  //                 stroke="currentColor"
-  //                 viewBox="0 0 24 24"
-  //               >
-  //                 <path
-  //                   strokeLinecap="round"
-  //                   strokeLinejoin="round"
-  //                   strokeWidth={2}
-  //                   d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-  //                 />
-  //               </svg>
-  //             </div>
-  //             <h3 className="text-lg font-semibold text-gray-900">
-  //               All Services Availed
-  //             </h3>
-  //           </div>
-  //           <p className="text-gray-600 mb-6">
-  //             You have availed all the available services. No additional
-  //             services can be added at this time.
-  //           </p>
-  //           <button
-  //             onClick={onClose}
-  //             className="w-full px-4 py-2 bg-gray-800 text-white rounded hover:bg-gray-700 transition-colors"
-  //           >
-  //             Close
-  //           </button>
-  //         </div>
-  //       </div>
-  //     </div>
-  //   );
-  // }
   return (
     <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen">
       <div className="flex-1 overflow-y-auto bg-white">
@@ -200,42 +153,6 @@ export default function ServiceModal({
                 />
               </div>
 
-              {/* Service type dropdown - only show when adding new service */}
-              {/* {addNewservice && (
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Service Type
-                  </label>
-                  <select
-                    value={formData.serviceName || ""}
-                    onChange={(e) => {
-                      const selectedService = availableServices.find(
-                        (item) => item.serviceName === e.target.value
-                      );
-                      setFormData((prev) => ({
-                        ...prev, // Preserve existing fields
-                        serviceName: e.target.value,
-                        serviceTitle: selectedService?.serviceTitle || "",
-                      }));
-                    }}
-                    className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500"
-                  >
-                    <option value="">Select a service type</option>
-                    {availableServices.map((item, index) => {
-                      return (
-                        <option
-                          key={index}
-                          value={item.serviceName}
-                          disabled={availedServices?.includes(item.serviceName)}
-                        >
-                          {item.serviceTitle}
-                        </option>
-                      );
-                    })}
-                  </select>
-                </div>
-              )} */}
-
               {/* Welcoming message */}
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">
@@ -254,51 +171,49 @@ export default function ServiceModal({
 
               {/* Personality core */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-4">
-                  Personality core
-                </label>
-                <div className="space-y-6">
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Intro
-                    </label>
-                    <textarea
-                      rows="4"
-                      value={formData.intro}
-                      onChange={(e) => handleChange("intro", e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
-                      placeholder="Enter intro"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Voice
-                    </label>
-                    <textarea
-                      rows="4"
-                      value={formData.voice}
-                      onChange={(e) => handleChange("voice", e.target.value)}
-                      className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
-                      placeholder="Enter voice"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm font-medium text-gray-700 mb-2">
-                      Behaviour
-                    </label>
-                    <textarea
-                      rows="4"
-                      value={formData.behaviour}
-                      onChange={(e) =>
-                        handleChange("behaviour", e.target.value)
-                      }
-                      className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
-                      placeholder="Enter behaviour"
-                    />
-                  </div>
+                <p className="mb-3 text-sm font-medium text-gray-700">
+                  Personality Core
+                </p>
+                <div className="flex gap-2 mb-4">
+                  <button
+                    onClick={() => setPersonalitytype("intro")}
+                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${
+                      personalitytype === "intro"
+                        ? "bg-purple-900 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Intro
+                  </button>
+                  <button
+                    onClick={() => setPersonalitytype("voice")}
+                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${
+                      personalitytype === "voice"
+                        ? "bg-purple-900 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Voice
+                  </button>
+                  <button
+                    onClick={() => setPersonalitytype("behaviour")}
+                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${
+                      personalitytype === "behaviour"
+                        ? "bg-purple-900 text-white shadow-md"
+                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                    }`}
+                  >
+                    Behaviour
+                  </button>
                 </div>
               </div>
-
+              <textarea
+                className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none bg-white shadow-sm"
+                value={formData[personalitytype] || ""}
+                onChange={(e) => handleChange(personalitytype, e.target.value)}
+                rows={10}
+                placeholder={`Enter ${personalitytype}...`}
+              />
               {/* Error message */}
               {error && <div className="text-red-600 text-sm">{error}</div>}
 
@@ -316,7 +231,7 @@ export default function ServiceModal({
                 <button
                   onClick={handleSave}
                   disabled={loading}
-                  className="px-8 py-2 bg-blue-300 text-white uppercase font-medium hover:bg-blue-400 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-8 py-3 bg-purple-900 text-white uppercase font-semibold rounded-lg hover:bg-purple-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-600"
                 >
                   {loading ? "SAVING..." : service?.name ? "UPDATE" : "SAVE"}
                 </button>
