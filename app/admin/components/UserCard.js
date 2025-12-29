@@ -287,7 +287,10 @@ export default function UserCard({
               {user.name}
             </p>
             <p className="text-xs text-[#898989] mb-2">{user?.email}</p>
-            <button className="w-full px-3 py-1.5 rounded-lg bg-[#7981C2] text-white text-xs font-medium hover:bg-purple-700 transition-colors mb-3">
+            <button
+              onClick={() => openChatSession(adminUser?.id, user?.userId)}
+              className="w-full px-3 py-1.5 rounded-lg bg-[#7981C2] text-white text-xs font-medium hover:bg-purple-700 transition-colors mb-3"
+            >
               Contact
             </button>
             <div className="space-y-0.5 font-medium">
