@@ -7,14 +7,21 @@ import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
 import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
+import Livechat from "@/app/components/LiveChat";
 
 export default function MyCommunity() {
   const router = useRouter();
+  const { user } = useFirebaseSession();
   const [allUsers, setAllUsers] = useState([]);
   const [usersData, setUsersData] = useState([]);
   const brandContext = useBrandContext();
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [selectedSessionLogs, setSelectedSessionLogs] = useState(null);
+  const [openChat, setOpenChat] = useState(false);
+  const [userA, setUserA] = useState(null);
+  const [userB, setUserB] = useState(null);
+  const [connectionId, setConnectionId] = useState(null);
 
   useEffect(() => {
     const fetchChatRequests = async () => {
@@ -47,6 +54,13 @@ export default function MyCommunity() {
     if (tab === "MATCHES") return 0; // TODO: Implement actual matches count
     if (tab === "CONNECTIONS") return 0; // TODO: Implement actual connections count
     return 0;
+  };
+
+  const openChatSession = (userA, userB) => {
+    setUserA(userA);
+    setUserB(userB);
+    setConnectionId([userA, userB].sort().join("_"));
+    setOpenChat((prev) => !prev);
   };
 
   return (
@@ -94,6 +108,7 @@ export default function MyCommunity() {
                 user={item}
                 setSelectedSessionLogs={setSelectedSessionLogs}
                 setShowLogsModal={setShowLogsModal}
+                openChatSession={openChatSession}
               />
             );
           })
@@ -109,6 +124,16 @@ export default function MyCommunity() {
           selectedSessionLogs={selectedSessionLogs}
           setShowLogsModal={setShowLogsModal}
           setSelectedSessionLogs={setSelectedSessionLogs}
+        />
+      )}
+
+      {openChat && userA && userB && (
+        <Livechat
+          userA={userA}
+          userB={userB}
+          currentUserId={user?.id}
+          onClose={() => setOpenChat(false)}
+          connectionId={connectionId}
         />
       )}
     </div>

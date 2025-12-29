@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
+import Logs from "@/app/models/ChatLogs";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 
 export async function GET(request) {
@@ -64,8 +65,21 @@ export async function GET(request) {
     // If type is not specified, don't filter by isCommunityChat
     const sessions = await Session.find(filter)
       .populate("userId", "name email _id")
+      .select(
+        "userId role title chatSummary status allDataCollected createdAt updatedAt comment totalInputTokens totalOutputTokens assignedTo"
+      )
       .sort({ createdAt: -1 })
       .lean();
+
+    // Get message counts for all sessions
+    const sessionIds = sessions.map((s) => s._id);
+    const messageCounts = await Logs.aggregate([
+      { $match: { sessionId: { $in: sessionIds } } },
+      { $group: { _id: "$sessionId", count: { $sum: 1 } } },
+    ]);
+    const messageCountMap = new Map(
+      messageCounts.map((item) => [item._id.toString(), item.count])
+    );
 
     const usersMap = new Map();
 
@@ -88,6 +102,13 @@ export async function GET(request) {
         });
       }
 
+      const messageCount = messageCountMap.get(session._id.toString()) || 0;
+      const inputTokens = session.totalInputTokens || 0;
+      const outputTokens = session.totalOutputTokens || 0;
+      const totalCostUSD =
+        (inputTokens / 1000000) * 0.3 + (outputTokens / 1000000) * 2.5;
+      const totalCost = totalCostUSD * 88;
+
       usersMap.get(userId).sessions.push({
         _id: session._id,
         role: session.role,
@@ -98,6 +119,11 @@ export async function GET(request) {
         createdAt: session.createdAt,
         updatedAt: session.updatedAt,
         comment: session.comment,
+        assignedTo: session.assignedTo || "",
+        messageCount: messageCount,
+        totalInputTokens: inputTokens,
+        totalOutputTokens: outputTokens,
+        totalCost: totalCost,
       });
     });
     const users = Array.from(usersMap.values());

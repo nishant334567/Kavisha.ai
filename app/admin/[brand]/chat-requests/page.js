@@ -6,15 +6,21 @@ import { ChevronRight, ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
-
+import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
+import Livechat from "@/app/components/LiveChat";
 export default function ChatRequests() {
   const router = useRouter();
+  const { user } = useFirebaseSession();
   const [sessionData, setSessionData] = useState([]);
   const [allSessions, setAllSessions] = useState([]);
   const [selectedService, setSelectedService] = useState(null);
   const brandContext = useBrandContext();
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [selectedSessionLogs, setSelectedSessionLogs] = useState(null);
+  const [openChat, setOpenChat] = useState(false);
+  const [userA, setUserA] = useState(null);
+  const [userB, setUserB] = useState(null);
+  const [connectionId, setConnectionId] = useState(null);
 
   useEffect(() => {
     const fetchChatRequests = async () => {
@@ -67,6 +73,13 @@ export default function ChatRequests() {
     setSessionData(filtered);
   };
 
+  const openChatSession = (userA, userB) => {
+    setUserA(userA);
+    setUserB(userB);
+    setConnectionId([userA, userB].sort().join("_"));
+    setOpenChat((prev) => !prev);
+  };
+
   return (
     <div>
       <div className="px-4 mt-4 gap-2">
@@ -82,10 +95,10 @@ export default function ChatRequests() {
           </h1>
         </div>
       </div>
-      <div className="w-full sm:w-[85%] mx-auto px-6">
+      <div className="w-full sm:w-[85%] mx-auto md:px-6">
         {/* <div className="flex items-center justify-between mb-8"> */}
         {/* <div className="flex-1"></div> */}
-        <div className="grid grid-cols-2 md:flex items-center justify-center gap-4">
+        <div className="grid grid-cols-2 md:flex items-center justify-center gap-4 px-6">
           {brandContext?.services?.map((item, index) => {
             const count = getSessionCount(item?.name);
             const isLast = index === brandContext.services.length - 1;
@@ -124,6 +137,7 @@ export default function ChatRequests() {
                   user={item}
                   setSelectedSessionLogs={setSelectedSessionLogs}
                   setShowLogsModal={setShowLogsModal}
+                  openChatSession={openChatSession}
                 />
               );
             })
@@ -140,6 +154,16 @@ export default function ChatRequests() {
             setShowLogsModal={setShowLogsModal}
             setSelectedSessionLogs={setSelectedSessionLogs}
             //   loadingLogs={loadingLogs}
+          />
+        )}
+
+        {openChat && userA && userB && (
+          <Livechat
+            userA={userA}
+            userB={userB}
+            currentUserId={user?.id}
+            onClose={() => setOpenChat(false)}
+            connectionId={connectionId}
           />
         )}
       </div>

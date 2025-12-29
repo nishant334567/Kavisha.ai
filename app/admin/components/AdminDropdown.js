@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 export default function Dropdown({
   options = ["abc@gmail.com"],
@@ -8,6 +8,16 @@ export default function Dropdown({
   onProceed,
 }) {
   const [selected, setSelected] = useState(selectedValue || "");
+
+  useEffect(() => {
+    // If selectedValue is empty, set to "Unassigned" for display
+    // Otherwise use the actual value
+    if (!selectedValue || selectedValue === "") {
+      setSelected("Unassigned");
+    } else {
+      setSelected(selectedValue);
+    }
+  }, [selectedValue]);
 
   const handleSelect = (value) => {
     setSelected(value);
@@ -32,6 +42,13 @@ export default function Dropdown({
           const isUnassigned =
             value === "" || value === "Unassigned" || label === "Unassigned";
 
+          // Check if this option is selected
+          const isSelected = isUnassigned
+            ? selected === "Unassigned" ||
+              selected === "" ||
+              (!selectedValue && value === "Unassigned")
+            : selected === value || selectedValue === value;
+
           return (
             <div
               key={index}
@@ -42,14 +59,17 @@ export default function Dropdown({
             >
               <span className="text-sm text-gray-900">{label}</span>
               {!isUnassigned && (
-                <input
-                  type="radio"
-                  name="assign-option"
-                  value={value}
-                  checked={selected === value}
-                  onChange={() => handleSelect(value)}
-                  className="w-4 h-4 text-purple-600 border-gray-300 focus:ring-purple-500"
-                />
+                <div
+                  className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
+                    isSelected
+                      ? "border-purple-600 bg-purple-600"
+                      : "border-gray-300 bg-white"
+                  }`}
+                >
+                  {isSelected && (
+                    <div className="w-2 h-2 rounded-full bg-white"></div>
+                  )}
+                </div>
               )}
             </div>
           );
