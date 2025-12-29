@@ -8,6 +8,7 @@ import {
 import BrandContextProvider from "./context/brand/BrandContextProvider";
 import Navbar from "@/app/components/Navbar";
 import Loader from "./components/Loader";
+import DynamicMetaTags from "./components/DynamicMetaTags";
 import { usePathname } from "next/navigation";
 import AdminNavbar from "./admin/components/AdminNavbar";
 import {
@@ -69,6 +70,7 @@ export default function RootLayout({ children }) {
       >
         <FirebaseSessionProvider>
           <BrandContextProvider>
+            <DynamicMetaTags />
             <SocketSessionWrapper>
               {!isMaintenancePage && !isAdmin && <Navbar />}
               {!isMaintenancePage && isAdmin && <AdminNavbar />}
