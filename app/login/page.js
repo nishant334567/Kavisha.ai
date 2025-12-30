@@ -118,11 +118,23 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="mt-8 h-full overflow-y-auto mx-auto w-full lg:max-w-[60%] md:px-8 py-8 space-y-8">
+    <div className="pr-8 mt-8 h-full overflow-y-auto mx-auto w-full lg:max-w-[60%] md:px-8 py-8">
       {/* <div className="mt-8 w-full aspect-[3/1] rounded-lg shadow-lg overflow-hidden"> */}
+
+      <div className="flex gap-4 px-4 my-2">
+        <img
+          src={brand?.logoUrl}
+          className="rounded-full w-10 h-10 object-cover"
+        />
+        <div className="flex justify-center items-center">
+          <p className="font-akshar font-medium">
+            {brand.brandName?.toUpperCase()}
+          </p>
+        </div>
+      </div>
       <img
         src={brand?.brandImageUrl}
-        alt={brand?.brandName || "Brand"}
+        alt={brand?.brandName?.toUpperCase() || "Brand"}
         className="w-full h-full object-cover p-0"
       />
       {/* </div> */}
@@ -157,7 +169,7 @@ export default function LoginPage() {
           <button
             onClick={handleSignIn}
             disabled={signingIn}
-            className=" font-akshar px-6 py-3 rounded-full bg-[#EBE9FF] text-md  disabled:opacity-50 flex items-center gap-2 text-[#041873]"
+            className=" font-akshar px-6 py-3 rounded-full bg-[#EBE9FF] text-md  disabled:opacity-50 flex items-center gap-2 text-[#041873] my-4"
           >
             {signingIn ? (
               <span>Signing in...</span>
