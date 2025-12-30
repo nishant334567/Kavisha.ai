@@ -118,10 +118,10 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="pr-8 mt-8 h-full overflow-y-auto mx-auto w-full lg:max-w-[60%] md:px-8 py-8">
+    <div className="pr-4 mt-1 md:mt-8 h-full overflow-y-auto mx-auto w-full md:max-w-[60%] md:px-8 py-8">
       {/* <div className="mt-8 w-full aspect-[3/1] rounded-lg shadow-lg overflow-hidden"> */}
 
-      <div className="flex gap-4 px-4 my-2">
+      <div className="md:hidden flex gap-4 px-4 my-2">
         <img
           src={brand?.logoUrl}
           className="rounded-full w-10 h-10 object-cover"

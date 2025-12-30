@@ -484,10 +484,10 @@ export default function ChatBox({
         <div className="rounded-xl w-full p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
           <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-white sm:bg-gray-100 z-10"></div>
           {/* Logo Section - flex-1 */}
-          <div className="flex-2 flex flex-col justify-center items-center min-h-0 mt-12">
+          <div className="flex-2 flex flex-col justify-center items-center min-h-0 mt-4 md:mt-12">
             <img
               src={brandContext?.logoUrl}
-              className="rounded-full w-[100px] h-[100px] object-cover"
+              className="rounded-full w-[80px] h-[80px] object-cover"
             />
             <p className="font-akshar font-medium mt-2">
               {brandContext?.brandName.toUpperCase() || ""}

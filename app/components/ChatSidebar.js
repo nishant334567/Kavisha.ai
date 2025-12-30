@@ -5,7 +5,14 @@ import { signOut } from "../lib/firebase/logout";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { Menu, Plus, MessageSquare, X, AlignLeft } from "lucide-react";
+import {
+  Menu,
+  Plus,
+  MessageSquare,
+  X,
+  ArrowRightFromLine,
+  AlignLeft,
+} from "lucide-react";
 
 export default function ChatSidebar({
   allChats,
@@ -121,7 +128,7 @@ export default function ChatSidebar({
               onClick={() => toggleLeftSideBar()}
             ></div>
 
-            <div className="mt-12 fixed top-0 left-0 z-40 flex flex-col w-64 h-[calc(100vh-56px)] p-4 border-r border-slate-200 bg-white shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div className="h-full mt-12 fixed top-0 left-0 z-40 flex flex-col w-64 p-4 border-r border-slate-200 bg-white shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
               <button
                 onClick={() => toggleLeftSideBar()}
                 className="sm:hidden absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-white hover:bg-slate-200 transition-colors"
@@ -130,9 +137,9 @@ export default function ChatSidebar({
                 <X className="w-4 h-4" />
               </button>
               {/* User Info Section */}
-              <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-sky-700 ">
+              <div className="flex items-center gap-3 mb-6 p-3 rounded-xl bg-[#666FC2] ">
                 <div className="w-8 h-8 rounded-full bg-white/20 text-white flex items-center justify-center text-sm font-semibold">
-                  {(brandContext?.brandName || "K").charAt(0).toUpperCase()}
+                  {(user?.name || "K").charAt(0).toUpperCase()}
                 </div>
                 <div className="flex flex-col overflow-hidden">
                   <span className="font-semibold text-white truncate text-base">
@@ -153,25 +160,18 @@ export default function ChatSidebar({
               <div>
                 <div className="py-4 gap-2">
                   <button
-                    className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
-                    onClick={() => onOpenInbox && onOpenInbox()}
-                  >
-                    All Messages
-                  </button>
-
-                  <button
-                    className="flex gap-2 justify-center text-xs bg-sky-700 hover:bg-sky-600 text-white w-full p-2 mt-2 rounded-md font-medium transition-colors"
+                    className="flex gap-2 justify-center text-xs bg-[#E6E9FF] hover:bg-sky-600  w-full p-2 rounded-md font-medium transition-colors"
                     onClick={() => newChat()}
                   >
                     {!newChatLoading ? "New Chat" : "Creating New Chat..."}
                   </button>
 
-                  <button
-                    className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-red-50 hover:border-red-200 transition-all duration-200 text-red-600 border border-slate-200"
+                  {/* <button
+                    className="flex items-center gap-2 justify-center text-xs  w-full p-2 rounded-md hover:bg-red-50 hover:border-red-200 transition-all duration-200 text-red-600 border border-slate-200 mt-2"
                     onClick={signOut}
                   >
                     Sign Out
-                  </button>
+                  </button> */}
                   {brandContext?.isBrandAdmin && (
                     <button
                       className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
@@ -185,7 +185,19 @@ export default function ChatSidebar({
                   )}
                 </div>
                 <div className="h-[45vh] overflow-y-auto space-y-4 scrollbar-none">
-                  {allChats?.sessionIds?.length > 0 &&
+                  {!allChats ? (
+                    <div className="flex items-center justify-center h-full">
+                      <div className="flex flex-col items-center gap-3">
+                        <div className="relative">
+                          <div className="w-6 h-6 border-2 border-gray-200 rounded-full"></div>
+                          <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-t-sky-600 rounded-full animate-spin"></div>
+                        </div>
+                        <div className="text-sky-700 text-xs font-medium">
+                          Loading chats...
+                        </div>
+                      </div>
+                    </div>
+                  ) : allChats?.sessionIds?.length > 0 ? (
                     allChats.sessionIds.map((id, idx) => (
                       <div className="flex w-full min-h-8 gap-2" key={id}>
                         <button
@@ -214,7 +226,14 @@ export default function ChatSidebar({
                           </div>
                         </button>
                       </div>
-                    ))}
+                    ))
+                  ) : (
+                    <div className="flex items-center justify-center h-full">
+                      <span className="text-xs text-slate-500">
+                        No chats yet
+                      </span>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
@@ -223,7 +242,7 @@ export default function ChatSidebar({
         {isCollapsed && (
           <>
             {/* Mobile: Small toggle button */}
-            <div className="sm:hidden fixed top-16 left-4 z-50">
+            <div className=" fixed top-16 left-4 z-40">
               <button
                 onClick={() => toggleLeftSideBar()}
                 className="w-10 h-10 flex items-center justify-center rounded-full  text-sky-700 shadow-xl hover:bg-sky-600 transition-colors"
@@ -234,7 +253,7 @@ export default function ChatSidebar({
             </div>
 
             {/* Desktop: Full collapsed sidebar */}
-            <div className="hidden sm:flex fixed top-0 left-0 z-40 w-16 h-full py-4 flex-col items-center gap-4 border-r border-slate-200 bg-white/90 backdrop-blur">
+            {/* <div className="hidden sm:flex fixed top-0 left-0 z-40 w-16 h-full py-4 flex-col items-center gap-4 border-r border-slate-200 bg-white/90 backdrop-blur">
               <div className="w-8 h-8 rounded-full bg-sky-700 text-white flex items-center justify-center text-sm font-semibold">
                 {(brandContext?.brandName || "K").charAt(0).toUpperCase()}
               </div>
@@ -259,7 +278,7 @@ export default function ChatSidebar({
               >
                 <MessageSquare className="w-5 h-5" />
               </button>
-            </div>
+            </div> */}
           </>
         )}
       </div>
