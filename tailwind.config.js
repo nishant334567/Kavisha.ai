@@ -12,6 +12,7 @@ module.exports = {
         baloo: ["var(--font-baloo)"],
         commissioner: ["var(--font-commissioner)"],
         fredoka: ["var(--font-fredoka)"],
+        figtree: ["var(--font-figtree)"],
       },
     },
   },

@@ -133,13 +133,7 @@ export default function HomePage() {
   }
 
   return (
-    <div className="h-[calc(100vh-56px)] overflow-hidden">
-      {/* Testing Notice */}
-      <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-2 text-center">
-        <p className="text-xs text-yellow-800">
-          ⚠️ Currently in testing - some features may break
-        </p>
-      </div>
+    <div className="h-[calc(100vh-64px)] overflow-hidden pr-6">
       <div className="flex h-full overflow-hidden">
         <div style={{ width: sidebarWidth }}>
           <ChatSidebar
@@ -153,7 +147,7 @@ export default function HomePage() {
           />
         </div>
 
-        <div className="w-full h-full flex flex-col">
+        <div className="w-full h-full flex flex-col overflow-hidden">
           {!currentChatType && !currentChatId && (
             <SelectChatType
               servicesProvided={servicesProvided}
@@ -167,21 +161,23 @@ export default function HomePage() {
           )}
 
           {currentChatId && (
-            <ChatBox
-              currentChatId={currentChatId}
-              currentChatType={currentChatType}
-              updateChatId={setCurrentChatId}
-              openDetailsPanel={openDetailsPanel}
-              toggleRightPanel={toggleRightPanel}
-              showInbox={showInbox}
-              setShowInbox={setShowInbox}
-            />
+            <div className="flex-1 min-h-0 overflow-hidden">
+              <ChatBox
+                currentChatId={currentChatId}
+                currentChatType={currentChatType}
+                updateChatId={setCurrentChatId}
+                openDetailsPanel={openDetailsPanel}
+                toggleRightPanel={toggleRightPanel}
+                showInbox={showInbox}
+                setShowInbox={setShowInbox}
+              />
+            </div>
           )}
         </div>
       </div>
 
       {show && (
-        <div className="fixed top-0 right-0 z-40 w-72 bg-orange-50 h-screen h-full overflow-y-auto scroll-auto scrollbar-none">
+        <div className="fixed top-0 right-0 z-40 w-72 bg-orange-50  overflow-y-auto scroll-auto scrollbar-none">
           {/* <p>Right Panel</p> */}
           <div>
             {show && type === 1 && (

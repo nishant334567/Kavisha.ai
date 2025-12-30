@@ -31,7 +31,7 @@ export default function SelectChatType({
     },
   ];
   const base =
-    "group relative px-6 py-3 text-center rounded-lg border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 disabled:opacity-60 disabled:cursor-not-allowed w-full";
+    "group relative px-6 py-3 text-center rounded-lg border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 disabled:opacity-60 disabled:cursor-not-allowed w-full flex items-center justify-center";
 
   const cls = (item) =>
     selectedType === item.name
@@ -45,7 +45,7 @@ export default function SelectChatType({
           <div className="flex flex-col gap-3">
             <button
               onClick={() => setShowtype(false)}
-              className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 flex items-center gap-2"
+              className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 flex items-center justify-center gap-2"
             >
               ← Go Back
             </button>
@@ -67,46 +67,53 @@ export default function SelectChatType({
           </div>
         )}
         {!showType && (
-          <>
+          <div className="px-4">
             {servicesProvided.length > 0 &&
               servicesProvided.map((item) => (
-                <button
+                <div
                   key={item.name}
-                  onClick={() => {
-                    !isCreating &&
-                      selectChatType(item.name, item.initialMessage);
-                  }}
-                  className={`${base} ${cls(item)}`}
-                  disabled={isCreating}
+                  className="flex flex-col justify-center items-center"
                 >
-                  {isCreating && selectedType === item.name ? (
-                    <div className="flex flex-col items-center justify-center h-full space-y-3">
-                      <span className="inline-block h-6 w-6 rounded-full border-2 border-white/70 border-t-transparent animate-spin"></span>
-                      <span className="text-sm font-semibold">Starting…</span>
-                    </div>
-                  ) : (
-                    <div className="flex items-center justify-center">
-                      <span className="text-sm font-medium">
-                        {item.title || item.name}
-                      </span>
-                    </div>
-                  )}
-                </button>
+                  <button
+                    onClick={() => {
+                      !isCreating &&
+                        selectChatType(item.name, item.initialMessage);
+                    }}
+                    className="font-akshar uppercase text-lg flex items-center justify-center w-full"
+                    disabled={isCreating}
+                  >
+                    {isCreating && selectedType === item.name ? (
+                      <div className="flex flex-col items-center justify-center h-full">
+                        <span className="inline-block h-6 w-6 rounded-full border-2 border-white/70 border-t-transparent animate-spin"></span>
+                        <span className="font-akshar uppercase text-lg">
+                          Starting…
+                        </span>
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-center">
+                        <span className="font-akshar uppercase text-lg">
+                          {item.title || item.name}
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                  <div className="h-[0.5px] w-[30%] mx-auto bg-slate-400 my-4"></div>
+                </div>
               ))}
             {enableCommunityOnboarding && (
               <button
                 onClick={() => setShowtype(true)}
-                className={`${base} ${cls({ name: "join_community" })}`}
+                className="flex items-center justify-center w-full"
                 disabled={isCreating}
               >
                 <div className="flex items-center justify-center">
-                  <span className="text-sm font-medium">
+                  <span className="font-akshar uppercase text-lg">
                     Connect with the community
                   </span>
                 </div>
               </button>
             )}
-          </>
+          </div>
         )}
       </div>
     </div>

@@ -17,6 +17,7 @@ import {
   Baloo_2,
   Commissioner,
   Fredoka,
+  Figtree,
 } from "next/font/google";
 
 const zenDots = Zen_Dots({
@@ -25,6 +26,11 @@ const zenDots = Zen_Dots({
   variable: "--font-zen-dots",
 });
 
+const figtree = Figtree({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-figtree",
+});
 const akshar = Akshar({
   subsets: ["latin"],
   weight: ["300", "400", "500", "600", "700"],
@@ -57,7 +63,10 @@ export default function RootLayout({ children }) {
   return (
     <html
       lang="en"
-      className={`${zenDots.variable} ${akshar.variable} ${baloo.variable} ${commissioner.variable} ${fredoka.variable}`}
+      className={`${zenDots.variable} 
+      ${akshar.variable} ${baloo.variable}
+       ${commissioner.variable} 
+       ${fredoka.variable} ${figtree.variable}`}
     >
       <head>
         <title>Kavisha.ai</title>
