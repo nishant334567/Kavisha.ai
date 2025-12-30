@@ -118,22 +118,18 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="h-full overflow-y-auto mx-auto w-full lg:max-w-[60%] px-8 py-8 space-y-8">
-      <div className="mt-4 h-48 sm:h-80 w-full  rounded-xl">
-        <img
-          src={brand?.brandImageUrl}
-          alt={brand?.brandName || "Brand"}
-          className="w-full h-full object-cover"
-        />
-      </div>
+    <div className="mt-8 h-full overflow-y-auto mx-auto w-full lg:max-w-[60%] md:px-8 py-8 space-y-8">
+      {/* <div className="mt-8 w-full aspect-[3/1] rounded-lg shadow-lg overflow-hidden"> */}
+      <img
+        src={brand?.brandImageUrl}
+        alt={brand?.brandName || "Brand"}
+        className="w-full h-full object-cover p-0"
+      />
+      {/* </div> */}
 
       <div className="text-center mx-auto max-w-4xl">
-        <p className="text-2xl sm:text-4xl lg:text-6xl font-bold my-2">
-          {brand?.title}
-        </p>
-        <p className="text-gray-500 text-sm sm:text-base leading-relaxed px-4">
-          {brand?.subtitle}
-        </p>
+        <p className="font-fredoka font-normal text-3xl my-2">{brand?.title}</p>
+        <p className="font-fredoka leading-relaxed px-4">{brand?.subtitle}</p>
       </div>
 
       {error && (
@@ -161,7 +157,7 @@ export default function LoginPage() {
           <button
             onClick={handleSignIn}
             disabled={signingIn}
-            className="px-6 py-3 bg-sky-700 text-white rounded-md text-lg font-medium disabled:opacity-50 flex items-center gap-2"
+            className=" font-akshar px-6 py-3 rounded-full bg-[#EBE9FF] text-md  disabled:opacity-50 flex items-center gap-2 text-[#041873]"
           >
             {signingIn ? (
               <span>Signing in...</span>
