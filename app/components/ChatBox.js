@@ -487,22 +487,51 @@ export default function ChatBox({
                   className="bg-black text-white px-1.5 py-0.5 cursor-default"
                   disabled
                 >
-                  SERVICE
+                  {(() => {
+                    const isCommunityChat = [
+                      "job_seeker",
+                      "recruiter",
+                      "friends",
+                    ].includes(currentChatType?.toLowerCase());
+                    return isCommunityChat ? "COMMUNITY" : "SERVICE";
+                  })()}
                 </button>
                 <button
                   className="bg-white text-black px-1.5 py-0.5 cursor-default"
                   disabled
                 >
                   {(() => {
-                    const service = brandContext?.services?.find(
-                      (s) =>
-                        s.name?.toLowerCase() === currentChatType?.toLowerCase()
-                    );
-                    return (
-                      service?.title?.toUpperCase() ||
-                      currentChatType?.split("_").join(" ").toUpperCase() ||
-                      ""
-                    );
+                    const isCommunityChat = [
+                      "job_seeker",
+                      "recruiter",
+                      "friends",
+                    ].includes(currentChatType?.toLowerCase());
+
+                    if (isCommunityChat) {
+                      const communityTitles = {
+                        job_seeker: "Looking for work",
+                        recruiter: "Looking at hiring",
+                        friends: "Looking for a friend",
+                      };
+                      return (
+                        communityTitles[
+                          currentChatType?.toLowerCase()
+                        ]?.toUpperCase() ||
+                        currentChatType?.split("_").join(" ").toUpperCase() ||
+                        ""
+                      );
+                    } else {
+                      const service = brandContext?.services?.find(
+                        (s) =>
+                          s.name?.toLowerCase() ===
+                          currentChatType?.toLowerCase()
+                      );
+                      return (
+                        service?.title?.toUpperCase() ||
+                        currentChatType?.split("_").join(" ").toUpperCase() ||
+                        ""
+                      );
+                    }
                   })()}
                 </button>
               </div>
@@ -596,20 +625,20 @@ export default function ChatBox({
               ))}
             {messageLoading && (
               <div className="flex justify-start mb-4">
-                <div className="bg-gradient-to-r from-gray-50 to-gray-100 rounded-2xl px-4 py-2 border border-gray-200 hover:shadow-md transition-all duration-300 cursor-default">
+                <div className="bg-[#59646F] rounded-2xl px-4 py-2 hover:shadow-md transition-all duration-300 cursor-default">
                   <div className="flex items-center gap-3">
                     <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"></div>
+                      <div className="w-2 h-2 bg-[#FFEED8] rounded-full animate-pulse"></div>
                       <div
-                        className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"
+                        className="w-2 h-2 bg-[#FFEED8] rounded-full animate-pulse"
                         style={{ animationDelay: "0.3s" }}
                       ></div>
                       <div
-                        className="w-2 h-2 bg-blue-500 rounded-full animate-pulse"
+                        className="w-2 h-2 bg-[#FFEED8] rounded-full animate-pulse"
                         style={{ animationDelay: "0.6s" }}
                       ></div>
                     </div>
-                    <span className="text-slate-600 text-sm font-medium">
+                    <span className="text-[#FFEED8] text-sm font-medium">
                       {brandContext?.brandName} is thinking
                     </span>
                   </div>
