@@ -45,10 +45,9 @@ export async function middleware(request) {
       const hostname = request.nextUrl.hostname;
       const brand = getSubdomainFromRequest(hostname);
       const isAdmin = await isBrandAdmin(decodedToken.email, brand);
-      console.log(userEmail, brand, isAdmin);
+
       if (request.nextUrl.pathname === "/login") {
         if (isAdmin) {
-          console.log("I am here");
           return NextResponse.redirect(
             new URL(`/admin/${brand}/v2`, request.url)
           );

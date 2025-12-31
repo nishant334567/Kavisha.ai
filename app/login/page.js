@@ -114,14 +114,14 @@ export default function LoginPage() {
 
   // Show loader while checking session
   if (loading) {
-    return <Loader loadingMessage="Checking session..." />;
+    return <Loader loadingMessage="Checking Session..." />;
   }
 
   return (
-    <div className="pr-4 mt-1 md:mt-8 h-full overflow-y-auto mx-auto w-full md:max-w-[60%] md:px-8 py-8">
+    <div className="md:mt-12 h-full overflow-y-auto mx-auto w-full md:max-w-[60%] md:px-8 py-8 space-y-6">
       {/* <div className="mt-8 w-full aspect-[3/1] rounded-lg shadow-lg overflow-hidden"> */}
 
-      <div className="md:hidden flex gap-4 px-4 my-2">
+      <div className="md:hidden flex gap-4 my-2 px-4">
         <img
           src={brand?.logoUrl}
           className="rounded-full w-10 h-10 object-cover"
@@ -135,12 +135,14 @@ export default function LoginPage() {
       <img
         src={brand?.brandImageUrl}
         alt={brand?.brandName?.toUpperCase() || "Brand"}
-        className="w-full h-full object-cover p-0"
+        className="w-full h-full object-cover"
       />
       {/* </div> */}
 
-      <div className="text-center mx-auto max-w-4xl">
-        <p className="font-fredoka font-normal text-3xl my-2">{brand?.title}</p>
+      <div className="text-center mx-auto max-w-4xl px-4">
+        <p className="font-fredoka font-normal text-3xl my-2 mb-4">
+          {brand?.title}
+        </p>
         <p className="font-fredoka leading-relaxed px-4">{brand?.subtitle}</p>
       </div>
 
@@ -169,12 +171,12 @@ export default function LoginPage() {
           <button
             onClick={handleSignIn}
             disabled={signingIn}
-            className=" font-akshar px-6 py-3 rounded-full bg-[#EBE9FF] text-md  disabled:opacity-50 flex items-center gap-2 text-[#041873] my-4"
+            className="font-akshar px-6 py-3 rounded-full bg-[#59646F] text-md disabled:opacity-50 flex items-center gap-2 text-[#FFEED8] hover:bg-[#4a5568] transition-colors my-4"
           >
             {signingIn ? (
               <span>Signing in...</span>
             ) : (
-              brand?.loginButtonText || "Talk to Kavisha now"
+              brand?.loginButtonText?.toUpperCase() || "Talk to Kavisha now"
             )}
           </button>
         )}

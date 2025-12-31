@@ -94,7 +94,7 @@ export default function RootLayout({ children }) {
   function SocketSessionWrapper({ children }) {
     const { user, loading } = useFirebaseSession();
     if (loading) {
-      return <Loader loadingMessage="Loading session..." />;
+      return <Loader loadingMessage="Loading Session..." />;
     }
     return <SocketProvider userId={user?.id}>{children}</SocketProvider>;
   }
