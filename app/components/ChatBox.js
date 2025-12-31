@@ -468,9 +468,9 @@ export default function ChatBox({
   }
 
   return (
-    <div className="w-full max-w-full md:w-3/5 flex bg-white rounded-xl p-4 h-full min-h-0 overflow-hidden mx-4 md:mx-0">
+    <div className="w-full max-w-full md:w-3/5 flex bg-white rounded-xl p-2 md:p-4 h-full min-h-0 mx-2 md:mx-4 overflow-hidden">
       <div className="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
-        <div className="rounded-xl w-full p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
+        <div className="rounded-xl w-full p-1 md:p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
           <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-white sm:bg-gray-100 z-10"></div>
           {/* Logo Section - flex-1 */}
           <div className="flex-2 flex flex-col md:flex-row justify-center items-center md:gap-8 md:items-start md:mb-8 mb-2 min-h-0  md:mt-12 md:px-2">
@@ -526,19 +526,19 @@ export default function ChatBox({
                   )}
                   {m.role === "user" ? (
                     <div className="flex justify-end w-full min-w-0">
-                      <div className="font-normal font-figtree leading-relaxed break-words rounded-2xl px-4 py-2 max-w-[85%] sm:max-w-[60%] bg-[#E6E9FF]">
+                      <div className="font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-[#E6E9FF]">
                         {m.message}
                       </div>
                     </div>
                   ) : (
-                    <div className="flex gap-2 items-end w-full min-w-0">
+                    <div className="flex gap-1.5 md:gap-2 items-end w-full min-w-0">
                       <div className="flex flex-col justify-end flex-shrink-0">
                         <img
                           src={brandContext?.logoUrl}
-                          className="rounded-full w-[40px] h-[40px] min-w-[40px] min-h-[40px] object-cover shadow-sm flex-shrink-0"
+                          className="rounded-full w-[32px] h-[32px] md:w-[40px] md:h-[40px] min-w-[32px] min-h-[32px] md:min-w-[40px] md:min-h-[40px] object-cover shadow-sm flex-shrink-0"
                         />
                       </div>
-                      <div className="font-normal font-figtree leading-relaxed break-words rounded-2xl px-4 py-2 max-w-[85%] sm:max-w-[60%] bg-[#F8F8F8] min-w-0">
+                      <div className="font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-[#F8F8F8] min-w-0">
                         {formatMessage(m.message)}
                       </div>
                     </div>
@@ -546,7 +546,7 @@ export default function ChatBox({
 
                   {/* Show requery for user messages */}
                   {m.role === "user" && m.requery && (
-                    <div className="mt-1.5 max-w-[85%] sm:max-w-[60%] min-w-0">
+                    <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0">
                       <p className="text-xs text-gray-500 italic break-words">
                         🔍 {m.requery}
                       </p>
@@ -556,7 +556,7 @@ export default function ChatBox({
                   {m.role === "assistant" &&
                     m.sources &&
                     m.sources.length > 0 && (
-                      <div className="mt-1.5 max-w-[85%] sm:max-w-[60%] min-w-0 flex flex-wrap gap-1.5">
+                      <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0 flex flex-wrap gap-1.5">
                         <span className="text-xs text-gray-500">
                           📚 Sources:
                         </span>
@@ -578,7 +578,7 @@ export default function ChatBox({
                     m.intent === "personal_call" &&
                     brandContext?.acceptPayment &&
                     brandContext?.paymentQrUrl && (
-                      <div className="mt-3 max-w-[85%] sm:max-w-[60%] min-w-0">
+                      <div className="mt-3 max-w-[90%] sm:max-w-[60%] min-w-0">
                         <img
                           src={brandContext.paymentQrUrl}
                           alt="Payment QR Code"
