@@ -13,30 +13,28 @@ export default function SelectChatType({
   const typeOfConnection = [
     {
       name: "job_seeker",
-      title: "I am looking for work",
+      title: "Looking for work",
       initialMessage:
         "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can done. :)",
     },
     {
       name: "recruiter",
-      title: "I am looking at hiring",
+      title: "Looking at hiring",
       initialMessage:
         "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can done. :)",
     },
     {
       name: "friends",
-      title: "I am looking for a friend",
+      title: "Looking for a friend",
       initialMessage:
         "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can done. :)",
     },
   ];
   const base =
-    "group relative px-6 py-3 text-center rounded-lg border transition-all duration-200 hover:shadow-sm focus:outline-none focus:ring-2 disabled:opacity-60 disabled:cursor-not-allowed w-full flex items-center justify-center";
+    "text-slate-600 uppercase font-extralight font-akshar group relative px-6 py-3 text-center transition-all duration-200  hover:font-semibold w-full flex items-center justify-center";
 
-  const cls = (item) =>
-    selectedType === item.name
-      ? "bg-blue-600 text-white border-blue-600 hover:bg-blue-700"
-      : "bg-white text-slate-700 border-slate-300 hover:bg-slate-50 hover:border-slate-400";
+  // const cls = (item) =>
+  //   selectedType === item.name ? "font-semibold" : "font-medium";
 
   return (
     <div className="flex items-center justify-center px-4 h-full min-h-screen">
@@ -45,11 +43,11 @@ export default function SelectChatType({
           <div className="flex flex-col gap-3">
             <button
               onClick={() => setShowtype(false)}
-              className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 flex items-center justify-center gap-2"
+              className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 flex items-center justify-start gap-2 self-start"
             >
               ← Go Back
             </button>
-            <p className="text-lg font-semibold mb-4">
+            <p className="text-lg font-medium mb-4 font-akshar uppercase text-center text-slate-700">
               Why do you want to connect with my community?
             </p>
             {typeOfConnection.map((item) => (
@@ -58,7 +56,7 @@ export default function SelectChatType({
                 onClick={() =>
                   selectChatType(item.name, item.initialMessage, true)
                 }
-                className={`${base} ${cls(item)}`}
+                className={`${base} `}
                 disabled={isCreating}
               >
                 {item.title}

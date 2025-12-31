@@ -473,20 +473,26 @@ export default function ChatBox({
         <div className="rounded-xl w-full p-1 md:p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
           <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-white sm:bg-gray-100 z-10"></div>
           {/* Logo Section - flex-1 */}
-          <div className="flex-2 flex flex-col md:flex-row justify-center items-center md:gap-8 md:items-start md:mb-8 mb-2 min-h-0  md:mt-12 md:px-2">
+          <div className="flex-2 flex flex-col md:flex-row justify-center items-center md:gap-4 md:items-start md:mb-8 my-4 min-h-0  md:mt-16 md:px-2">
             <img
               src={brandContext?.logoUrl}
-              className="rounded-full w-[60px] h-[60px] object-cover flex-shrink-0"
+              className="rounded-full w-[65px] h-[65px] object-cover flex-shrink-0"
             />
             <div className="flex flex-col items-center md:items-start">
               <p className="font-akshar font-medium mt-2 md:mt-0">
                 {brandContext?.brandName.toUpperCase() || ""}
               </p>
               <div className="flex font-akshar border border-gray-600 my-2">
-                <button className="bg-black text-white px-1.5 py-0.5">
+                <button
+                  className="bg-black text-white px-1.5 py-0.5 cursor-default"
+                  disabled
+                >
                   SERVICE
                 </button>
-                <button className="bg-white text-black px-1.5 py-0.5">
+                <button
+                  className="bg-white text-black px-1.5 py-0.5 cursor-default"
+                  disabled
+                >
                   {(() => {
                     const service = brandContext?.services?.find(
                       (s) =>
@@ -526,7 +532,7 @@ export default function ChatBox({
                   )}
                   {m.role === "user" ? (
                     <div className="flex justify-end w-full min-w-0">
-                      <div className="font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-[#E6E9FF]">
+                      <div className="text-white font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-[#59646F]">
                         {m.message}
                       </div>
                     </div>
@@ -623,7 +629,7 @@ export default function ChatBox({
             {/* </div> */}
           </div>
           {/* Textarea Section - flex-1 */}
-          <div className="flex-1 min-h-0 flex flex-col border-t border-slate-200 pt-2">
+          <div className="flex-1 min-h-0 flex flex-col border-slate-200 pt-2">
             <form
               className="relative w-full flex-1 flex flex-col min-h-0"
               onSubmit={(e) => {
