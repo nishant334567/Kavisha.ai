@@ -133,9 +133,9 @@ export default function HomePage() {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-hidden pr-6">
+    <div className="h-[calc(100vh-64px)] overflow-hidden">
       <div className="flex h-full overflow-hidden">
-        <div style={{ width: sidebarWidth }}>
+        <div>
           <ChatSidebar
             allChats={allChats}
             updateChatId={setCurrentChatId}
@@ -143,7 +143,7 @@ export default function HomePage() {
             currentChatType={currentChatType}
             setCurrentChatType={setCurrentChatType}
             onOpenInbox={() => setShowInbox(true)}
-            onSidebarWidthChange={(w) => setSidebarWidth(w)}
+            // onSidebarWidthChange={(w) => setSidebarWidth(w)}
           />
         </div>
 
@@ -161,7 +161,7 @@ export default function HomePage() {
           )}
 
           {currentChatId && (
-            <div className="flex-1 min-h-0 overflow-hidden">
+            <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center px-4 md:px-0">
               <ChatBox
                 currentChatId={currentChatId}
                 currentChatType={currentChatType}

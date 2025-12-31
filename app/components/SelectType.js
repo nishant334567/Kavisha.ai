@@ -91,13 +91,13 @@ export default function SelectChatType({
                       </div>
                     ) : (
                       <div className="flex items-center justify-center">
-                        <span className="font-akshar uppercase text-lg">
+                        <span className="font-akshar uppercase text-l font-light">
                           {item.title || item.name}
                         </span>
                       </div>
                     )}
                   </button>
-                  <div className="h-[0.5px] w-[30%] mx-auto bg-slate-400 my-4"></div>
+                  <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
                 </div>
               ))}
             {enableCommunityOnboarding && (
@@ -107,8 +107,8 @@ export default function SelectChatType({
                 disabled={isCreating}
               >
                 <div className="flex items-center justify-center">
-                  <span className="font-akshar uppercase text-lg">
-                    Connect with the community
+                  <span className="font-akshar uppercase text-lg font-light">
+                    Connect with other fans
                   </span>
                 </div>
               </button>

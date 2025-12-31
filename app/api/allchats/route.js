@@ -4,6 +4,7 @@ import { getUserFromDB } from "@/app/lib/firebase/get-user";
 import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
 import Logs from "@/app/models/ChatLogs";
+import Matches from "@/app/models/Matches";
 
 export async function GET(request) {
   return withAuth(request, {
@@ -75,6 +76,13 @@ export async function DELETE(request) {
           );
         }
 
+        // Delete all chat logs for this session
+        await Logs.deleteMany({ sessionId: chatId });
+
+        // Delete all matches for this session
+        await Matches.deleteMany({ sessionId: chatId });
+
+        // Finally, delete the session
         await Session.deleteOne({ _id: chatId });
         return NextResponse.json({ message: "success" });
       } catch (err) {

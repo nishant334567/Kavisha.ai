@@ -33,7 +33,6 @@ export default function Navbar() {
   };
 
   const settingOptions = [
-    { name: "Sign Out", path: "" },
     { name: "Settings", path: "/settings" },
     { name: "Privacy Policy", path: "/privacy-policy" },
     { name: "Terms and conditions", path: "/tnc" },
@@ -120,11 +119,7 @@ export default function Navbar() {
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg transition-colors"
                         onClick={() => {
                           setShowsettingDropdown(false);
-                          if (item?.name === "Sign Out") {
-                            signOut();
-                          } else if (item?.path) {
-                            router.push(item?.path);
-                          }
+                          router.push(item?.path);
                         }}
                       >
                         {item?.name}
@@ -143,7 +138,7 @@ export default function Navbar() {
           <button onClick={() => setOpenmenu((prev) => !prev)}>
             <Menu />
           </button>
-          <p>Home</p>
+          <p>HOME</p>
         </div>
       </nav>
 

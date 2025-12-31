@@ -453,25 +453,14 @@ export default function ChatBox({
 
   if (chatLoading) {
     return (
-      <div className="h-[60vh] mx-auto w-full lg:w-3/5 bg-white rounded-xl border border-slate-200 p-4 flex items-center justify-center">
+      <div className="h-full mx-auto w-full lg:w-3/5 bg-white rounded-xl p-4 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
-          <div className="flex items-center justify-center text-slate-600 text-sm mb-3">
-            <span className="mr-2 animate-spin rounded-full h-4 w-4 border-2 border-sky-500 border-t-transparent"></span>
-            Loading chat…
+          <div className="relative">
+            <div className="w-6 h-6 border-2 border-gray-200 rounded-full"></div>
+            <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-t-[#59646F] rounded-full animate-spin"></div>
           </div>
-          <div className="flex flex-col gap-3">
-            {[...Array(6)].map((_, i) => (
-              <div
-                key={i}
-                className={`flex ${i % 2 ? "justify-end" : "justify-start"}`}
-              >
-                <div
-                  className={`animate-pulse rounded-2xl ${
-                    i % 2 ? "bg-sky-100" : "bg-gray-100"
-                  } ${i % 3 === 0 ? "w-1/2" : "w-2/3"} h-6`}
-                ></div>
-              </div>
-            ))}
+          <div className="text-[#59646F] text-xs font-medium">
+            Loading chat…
           </div>
         </div>
       </div>
@@ -479,26 +468,38 @@ export default function ChatBox({
   }
 
   return (
-    <div className="w-full lg:w-3/5 mx-auto flex bg-white rounded-xl p-4 h-full min-h-0 overflow-hidden">
+    <div className="w-full max-w-full md:w-3/5 flex bg-white rounded-xl p-4 h-full min-h-0 overflow-hidden mx-4 md:mx-0">
       <div className="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
         <div className="rounded-xl w-full p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
           <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-white sm:bg-gray-100 z-10"></div>
           {/* Logo Section - flex-1 */}
-          <div className="flex-2 flex flex-col justify-center items-center min-h-0 mt-4 md:mt-12">
+          <div className="flex-2 flex flex-col md:flex-row justify-center items-center md:gap-8 md:items-start md:mb-8 mb-2 min-h-0  md:mt-12 md:px-2">
             <img
               src={brandContext?.logoUrl}
-              className="rounded-full w-[80px] h-[80px] object-cover"
+              className="rounded-full w-[60px] h-[60px] object-cover flex-shrink-0"
             />
-            <p className="font-akshar font-medium mt-2">
-              {brandContext?.brandName.toUpperCase() || ""}
-            </p>
-            <div className="flex font-akshar border border-gray-600 my-2">
-              <button className="bg-black text-white px-1.5 py-0.5">
-                SERVICE
-              </button>
-              <button className="bg-white text-black px-1.5 py-0.5">
-                {currentChatType.split("_").join(" ").toUpperCase()}
-              </button>
+            <div className="flex flex-col items-center md:items-start">
+              <p className="font-akshar font-medium mt-2 md:mt-0">
+                {brandContext?.brandName.toUpperCase() || ""}
+              </p>
+              <div className="flex font-akshar border border-gray-600 my-2">
+                <button className="bg-black text-white px-1.5 py-0.5">
+                  SERVICE
+                </button>
+                <button className="bg-white text-black px-1.5 py-0.5">
+                  {(() => {
+                    const service = brandContext?.services?.find(
+                      (s) =>
+                        s.name?.toLowerCase() === currentChatType?.toLowerCase()
+                    );
+                    return (
+                      service?.title?.toUpperCase() ||
+                      currentChatType?.split("_").join(" ").toUpperCase() ||
+                      ""
+                    );
+                  })()}
+                </button>
+              </div>
             </div>
           </div>
           {/* Messages Section - flex-2, scrollable */}
@@ -631,7 +632,7 @@ export default function ChatBox({
               }}
             >
               <textarea
-                className="px-6 py-2 w-full flex-1 border border-slate-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-500 transition bg-white text-slate-800  leading-6 resize-none placeholder-transparent min-h-0"
+                className="px-12 py-3 w-full flex-1 border border-slate-300 rounded-xl focus:outline-none focus:ring-0 focus:border-[#59646F] transition bg-white text-slate-800 leading-6 resize-none placeholder-transparent min-h-0"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -645,12 +646,12 @@ export default function ChatBox({
               />
 
               {(!input || input.trim().length === 0) && (
-                <div className="pointer-events-none absolute inset-y-0 left-10 right-14 sm:left-12 sm:right-24 flex items-center text-slate-400 text-sm">
+                <div className="pointer-events-none absolute inset-y-0 left-12 right-20 flex items-center text-slate-400 text-sm">
                   Message {brandContext?.brandName}…
                 </div>
               )}
 
-              <label className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 cursor-pointer text-slate-500 hover:text-blue-600 transition-colors">
+              <label className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer text-slate-500 hover:text-[#59646F] transition-colors">
                 <input
                   type="file"
                   accept=".pdf,.docx"
@@ -671,9 +672,7 @@ export default function ChatBox({
                 </span>
               </label>
 
-              <div className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 flex items-center">
-                {/* <span className="h-2 w-2 rounded-full bg-emerald-500"></span> */}
-
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
                 <div className="relative">
                   {isTranscribing && (
                     <div className="absolute bottom-full mb-2 right-0 z-10">
@@ -725,24 +724,25 @@ export default function ChatBox({
                     onClick={() =>
                       isRecording ? stopRecording() : startRecording()
                     }
-                    className="py-1 rounded-md hover:bg-slate-100"
+                    className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
                     title={isRecording ? "Stop recording" : "Start recording"}
                   >
                     {isRecording ? (
                       <Mic className="w-5 h-5 text-red-600" />
                     ) : (
-                      <MicOff className="w-5 h-5" />
+                      <MicOff className="w-5 h-5 text-slate-500" />
                     )}
                   </button>
                 </div>
                 <button
                   type="submit"
                   disabled={!input.trim() || messageLoading}
-                  className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-md text-sm text-white ${
+                  className={`inline-flex items-center justify-center p-2 rounded-lg ${
                     !input.trim() || messageLoading
-                      ? "opacity-50 cursor-not-allowed"
-                      : ""
-                  }`}
+                      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                      : "bg-[#59646F] text-[#FFEED8] hover:bg-[#4a5568] active:scale-95"
+                  } transition-all`}
+                  title="Send message"
                 >
                   <Send className="w-5 h-5" />
                 </button>
