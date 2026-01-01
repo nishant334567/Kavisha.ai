@@ -66,23 +66,23 @@ export default function MyServices() {
 
   return (
     <>
-      <div className="bg-white h-screen overflow-hidden flex flex-col">
-        <div className="px-6 flex-1 flex flex-col">
-          <div className="mt-4">
-            <button
-              onClick={() => router.back()}
-              className="text-black hover:opacity-70 transition-opacity"
-            >
-              <ArrowLeft className="w-6 h-6" />
-            </button>
-            <div className="text-center md:text-left">
-              <h1 className="font-zen md:ml-4 text-3xl md:text-4xl font-black text-[#000A67] leading-tight tracking-tight mb-4">
-                My services
-              </h1>
-            </div>
+      <div className="bg-white h-[calc(100vh-56px)] overflow-hidden flex items-center justify-center relative">
+        <div className="absolute top-4 left-6">
+          <button
+            onClick={() => router.back()}
+            className="text-black hover:opacity-70 transition-opacity"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+        </div>
+        <div className="flex flex-col items-center justify-center gap-4 font-akshar">
+          <div className="text-center mb-8">
+            <h1 className="uppercase font-zen text-3xl md:text-4xl font-black text-[#000A67] leading-tight tracking-tight">
+              My services
+            </h1>
           </div>
           {/* Service options */}
-          <div className="flex flex-col items-center gap-4 font-akshar flex-1 justify-center">
+          <div className="flex flex-col items-center gap-4 font-akshar">
             {services.map((service, index) => (
               <button
                 key={index}
