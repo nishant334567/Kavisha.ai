@@ -139,7 +139,9 @@ export default function UserCard({
               <p className="font-baloo text-[#42476D] mb-1 text-2xl font-bold">
                 {user.name}
               </p>
-              <p className="text-xs text-[#898989]">{user?.email}</p>
+              <p className="text-xs text-[#898989] break-words">
+                {user?.email}
+              </p>
             </div>
             <button
               onClick={() => openChatSession(adminUser?.id, user?.userId)}
@@ -159,7 +161,7 @@ export default function UserCard({
               <ChevronDown />
             </button>
             {showAdminDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-0.5 z-50">
+              <div className="absolute top-full left-0 right-0 mt-0.5 z-50 min-w-0">
                 <Dropdown
                   key={selectedChatSession?._id} // Force re-render when session changes
                   options={["Unassigned", ...(brandContext?.admins || [])]}
@@ -286,7 +288,9 @@ export default function UserCard({
             <p className="font-baloo text-[#42476D] mb-1 text-2xl">
               {user.name}
             </p>
-            <p className="text-xs text-[#898989] mb-2">{user?.email}</p>
+            <p className="text-xs text-[#898989] mb-2 break-words">
+              {user?.email}
+            </p>
             <button
               onClick={() => openChatSession(adminUser?.id, user?.userId)}
               className="w-full px-3 py-1.5 rounded-lg bg-[#7981C2] text-white text-xs font-medium hover:bg-purple-700 transition-colors mb-3"
@@ -322,7 +326,7 @@ export default function UserCard({
                 <ChevronDown />
               </button>
               {showAdminDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-0.5 z-50">
+                <div className="absolute top-full left-0 right-0 mt-0.5 z-50 min-w-0">
                   <Dropdown
                     key={selectedChatSession?._id} // Force re-render when session changes
                     options={["Unassigned", ...(brandContext?.admins || [])]}

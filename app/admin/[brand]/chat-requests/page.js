@@ -15,7 +15,7 @@ export default function ChatRequests() {
   const { user } = useFirebaseSession();
   const [sessionData, setSessionData] = useState([]);
   const [allSessions, setAllSessions] = useState([]);
-  const [selectedService, setSelectedService] = useState(null);
+  const [selectedService, setSelectedService] = useState("lead_journey");
   const brandContext = useBrandContext();
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [selectedSessionLogs, setSelectedSessionLogs] = useState(null);
@@ -36,7 +36,14 @@ export default function ChatRequests() {
         const data = await response.json();
         if (data.success) {
           setAllSessions(data.users);
-          setSessionData(data.users);
+          // Apply default filter for "lead_journey" (Talk to me)
+          const filtered = data.users
+            .map((user) => ({
+              ...user,
+              sessions: user.sessions.filter((s) => s.role === "lead_journey"),
+            }))
+            .filter((user) => user.sessions.length > 0);
+          setSessionData(filtered);
         } else {
           setSessionData([]);
           setAllSessions([]);

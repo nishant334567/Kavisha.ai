@@ -33,9 +33,9 @@ export default function Dropdown({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4">
+    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 min-w-0 max-w-full">
       <p className="text-gray-500 text-sm mb-3">Assign to menu</p>
-      <div className="space-y-2 mb-4">
+      <div className="space-y-2 mb-4 min-w-0">
         {options.map((item, index) => {
           const value = typeof item === "string" ? item : item.value;
           const label = typeof item === "string" ? item : item.label;
@@ -52,12 +52,14 @@ export default function Dropdown({
           return (
             <div
               key={index}
-              className={`flex items-center justify-between py-2 ${
+              className={`flex items-center justify-between py-2 min-w-0 ${
                 !isUnassigned ? "cursor-pointer hover:bg-gray-50" : ""
               }`}
               onClick={() => !isUnassigned && handleSelect(value)}
             >
-              <span className="text-sm text-gray-900">{label}</span>
+              <span className="text-sm text-gray-900 break-all min-w-0 flex-1 pr-2">
+                {label}
+              </span>
               {!isUnassigned && (
                 <div
                   className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
