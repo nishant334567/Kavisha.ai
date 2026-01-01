@@ -84,19 +84,21 @@ export default function MyServices() {
           {/* Service options */}
           <div className="flex flex-col items-center gap-4 font-akshar">
             {services.map((service, index) => (
-              <button
-                key={index}
-                className="text-black uppercase text-base tracking-wider font-normal relative pb-1 border-b border-black hover:opacity-60 transition-opacity"
-                onClick={() => handleEdit(service)}
-              >
-                {service?.title || service?.name || "Untitled Service"}
-              </button>
+              <div key={index}>
+                <button
+                  className="text-gray-600 uppercase text-base tracking-wider font-normal relative pb-1 w-fit hover:opacity-60 transition-opacity"
+                  onClick={() => handleEdit(service)}
+                >
+                  {service?.title || service?.name || "Untitled Service"}
+                </button>
+                <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
+              </div>
             ))}
             {!allServicesAvailed && (
               <div className="relative" ref={dropdownRef}>
                 <button
                   onClick={() => setshowAddserviceoptions((prev) => !prev)}
-                  className="text-black uppercase text-base tracking-wider font-normal relative pb-1 border-b border-black hover:opacity-60 transition-opacity"
+                  className="text-gray-600 uppercase text-base tracking-wider font-normal relative pb-1 border-b border-gray-400 w-fit hover:opacity-60 transition-opacity"
                 >
                   ADD SERVICES
                 </button>
