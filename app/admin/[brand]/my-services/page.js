@@ -96,12 +96,15 @@ export default function MyServices() {
             ))}
             {!allServicesAvailed && (
               <div className="relative" ref={dropdownRef}>
-                <button
-                  onClick={() => setshowAddserviceoptions((prev) => !prev)}
-                  className="text-gray-600 uppercase text-base tracking-wider font-normal relative pb-1 border-b border-gray-400 w-fit hover:opacity-60 transition-opacity"
-                >
-                  ADD SERVICES
-                </button>
+                <div>
+                  <button
+                    onClick={() => setshowAddserviceoptions((prev) => !prev)}
+                    className="text-gray-600 uppercase text-base tracking-wider font-normal relative pb-1 w-fit hover:opacity-60 transition-opacity"
+                  >
+                    ADD SERVICES
+                  </button>
+                  <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
+                </div>
                 {showAddserviceoptions && (
                   <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[200px]">
                     {availableServices
