@@ -1,11 +1,14 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { ArrowLeft } from "lucide-react";
 import TextTrainingModal from "@/app/admin/components/TextTrainingModal";
 import DocumentViewModal from "@/app/admin/components/DocumentViewModal";
 import DocumentCard from "@/app/admin/components/DocumentCard";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 
 export default function Train() {
+  const router = useRouter();
   const fileInputRef = useRef(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isViewModalOpen, setIsViewModalOpen] = useState(false);
@@ -15,6 +18,7 @@ export default function Train() {
   const [openMenuId, setOpenMenuId] = useState(null);
   const [loadingDocumentId, setLoadingDocumentId] = useState(null);
   const [uploading, setUploading] = useState(false);
+  const [selectedFileName, setSelectedFileName] = useState("");
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
   const brand = useBrandContext();
@@ -77,6 +81,7 @@ export default function Train() {
     const file = e.target.files[0];
     if (!file) return;
 
+    setSelectedFileName(file.name);
     setUploading(true);
     try {
       const title = file.name.replace(/\.[^/.]+$/, "");
@@ -102,6 +107,7 @@ export default function Train() {
       await processText(title, text);
       alert("File uploaded successfully!");
       fileInputRef.current.value = "";
+      setSelectedFileName("");
       fetchDocuments();
     } catch (error) {
       alert(`Error: ${error.message}`);
@@ -229,39 +235,91 @@ export default function Train() {
   return (
     <>
       <div className="max-w-7xl mx-auto px-4 py-8">
-        <div className="flex items-center justify-between mb-6">
-          <h1 className="text-2xl font-bold text-blue-900">Knowledge base</h1>
-          <div className="flex items-center gap-2">
-            <span className="text-sm text-gray-700">Sort by:</span>
-            <select className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500">
-              <option>Date</option>
-              <option>Title</option>
-            </select>
+        <div className="flex items-center gap-3 mb-6">
+          <button
+            onClick={() => router.back()}
+            className="text-black hover:opacity-70 transition-opacity"
+          >
+            <ArrowLeft className="w-6 h-6" />
+          </button>
+          <h1 className="uppercase text-2xl font-bold text-blue-900 font-zen">
+            Train your Avataar
+          </h1>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+          {/* PDF Document Card */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow flex flex-col h-full">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              PDF document
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Upload and extract text from PDFs
+            </p>
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileChange}
+              accept=".pdf"
+              className="hidden"
+            />
+            <div className="mb-4 flex-1">
+              <p className="text-xs text-gray-500">
+                {selectedFileName || "No file chosen"}
+              </p>
+            </div>
+            <button
+              onClick={() => fileInputRef.current?.click()}
+              disabled={uploading}
+              className="w-full px-4 py-2 bg-[#EBF3FF] text-[#242473] rounded-lg hover:bg-white transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
+            >
+              {uploading ? "Uploading..." : "Choose file"}
+            </button>
+          </div>
+
+          {/* YouTube Video Card */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow flex flex-col h-full">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Youtube video
+            </h3>
+            <p className="text-sm text-gray-600 mb-4">
+              Transcribe and train from videos
+            </p>
+            <div className="mb-4 flex-1">
+              <input
+                type="url"
+                placeholder="https://www.youtube.com/watch?v=..."
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                disabled
+              />
+            </div>
+            <button
+              disabled
+              className="w-full px-4 py-2 bg-[#C0614E] text-white rounded-lg transition-colors text-sm font-medium opacity-50 cursor-not-allowed mt-auto"
+            >
+              Upload and transcribe
+            </button>
+          </div>
+
+          {/* Direct Text Card */}
+          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow flex flex-col h-full">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+              Direct text
+            </h3>
+            <p className="text-sm text-gray-600 mb-4 flex-1">
+              Type or paste directly
+            </p>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="w-full px-4 py-2 bg-[#DBFFD5] rounded-lg hover:bg-green-600 hover:text-white transition-colors text-sm font-medium mt-auto"
+            >
+              Add text
+            </button>
           </div>
         </div>
-
-        <div className="flex flex-col md:flex-row justify-center items-center gap-4 mb-12">
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            className="hidden"
-          />
-          <button
-            onClick={() => fileInputRef.current?.click()}
-            disabled={uploading}
-            className="w-full md:w-auto px-6 py-3 bg-gray-800 text-white rounded-lg hover:bg-gray-700 transition-colors font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            {uploading ? "Uploading..." : "Upload Training Document"}
-          </button>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="w-full md:w-auto px-6 py-3 bg-white text-gray-800 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors font-medium shadow-sm"
-          >
-            Text Based Training
-          </button>
-        </div>
-
+        <p className="text-[#4D5495] my-4 font-akshar font-semibold uppercase">
+          Knowledge base
+        </p>
         {loading ? (
           <div className="text-center py-8">Loading...</div>
         ) : documents.length === 0 ? (

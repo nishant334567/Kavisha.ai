@@ -14,10 +14,12 @@ export default function DocumentCard({
   return (
     <div
       onClick={() => onView(doc.docid)}
-      className="bg-white rounded-lg border border-blue-200 overflow-visible shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      className="bg-blue-50 rounded-lg border border-blue-200 overflow-visible shadow-sm cursor-pointer hover:shadow-md transition-shadow"
     >
-      <div className="bg-blue-50 px-4 py-3 flex items-center justify-between rounded-t-lg relative">
-        <h3 className="font-semibold text-blue-900 text-sm">{doc.title}</h3>
+      <div className="px-4 py-3 flex items-center justify-between relative">
+        <h3 className="font-semibold text-blue-900 text-sm">
+          {doc?.title?.toUpperCase()}
+        </h3>
         <button
           onClick={(e) => {
             e.stopPropagation();
@@ -59,7 +61,7 @@ export default function DocumentCard({
           </div>
         )}
       </div>
-      <div className="p-4 min-h-[200px] border-b border-blue-100 bg-white">
+      <div className="p-4 min-h-[200px] bg-white mx-2 mb-2 rounded">
         {loadingDocumentId === doc.docid ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-sm text-gray-500">Loading...</div>
@@ -70,9 +72,10 @@ export default function DocumentCard({
           </p>
         )}
       </div>
-      <div className="bg-blue-50 px-4 py-3 flex items-center justify-between rounded-b-lg">
+      <div className="px-4 py-3 flex items-center justify-between">
+        <span className="text-xs text-blue-900">You added</span>
         <span className="text-xs text-blue-900">
-          You added {formatDate(doc.createdAt)}
+          {formatDate(doc.createdAt)}
         </span>
       </div>
     </div>
