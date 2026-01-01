@@ -8,6 +8,8 @@ import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import Livechat from "@/app/components/LiveChat";
+import Loader from "@/app/components/Loader";
+
 export default function ChatRequests() {
   const router = useRouter();
   const { user } = useFirebaseSession();
@@ -21,9 +23,12 @@ export default function ChatRequests() {
   const [userA, setUserA] = useState(null);
   const [userB, setUserB] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchChatRequests = async () => {
+      if (!brandContext?.subdomain) return;
+      setLoading(true);
       try {
         const response = await fetch(
           `/api/admin/fetch-sessions?brand=${brandContext?.subdomain}&type=normal`
@@ -40,12 +45,12 @@ export default function ChatRequests() {
         console.error("Failed to fetch sessions:", error);
         setSessionData([]);
         setAllSessions([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (brandContext?.subdomain) {
-      fetchChatRequests();
-    }
+    fetchChatRequests();
   }, [brandContext?.subdomain]);
 
   const getSessionCount = (serviceName) => {
@@ -80,6 +85,10 @@ export default function ChatRequests() {
     setOpenChat((prev) => !prev);
   };
 
+  if (loading) {
+    return <Loader loadingMessage="Loading chat requests..." />;
+  }
+
   return (
     <div>
       <div className="px-4 mt-4 gap-2">
@@ -90,7 +99,7 @@ export default function ChatRequests() {
           <ArrowLeft className="w-6 h-6" />
         </button>
         <div className="flex items-center gap-3 justify-center md:justify-start">
-          <h1 className=" text-3xl md:text-4xl font-zen text-[#000A67] mb-6 pb-2 inline-block">
+          <h1 className="md:pl-32 text-3xl md:text-4xl font-zen text-[#000A67] mb-6 pb-2 inline-block">
             All Chat Requests
           </h1>
         </div>
@@ -98,12 +107,12 @@ export default function ChatRequests() {
       <div className="w-full sm:w-[85%] mx-auto md:px-6">
         {/* <div className="flex items-center justify-between mb-8"> */}
         {/* <div className="flex-1"></div> */}
-        <div className="grid grid-cols-2 md:flex items-center justify-center gap-4 px-6">
+        <div className="grid grid-cols-2 md:flex items-center justify-center gap-y-4 md:gap-y-0 px-6 my-4">
           {brandContext?.services?.map((item, index) => {
             const count = getSessionCount(item?.name);
             const isLast = index === brandContext.services.length - 1;
             return (
-              <div key={index} className="flex items-center gap-4">
+              <div key={index} className="flex items-center">
                 <button
                   onClick={() => filterSessions(item?.name)}
                   className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${
@@ -120,7 +129,7 @@ export default function ChatRequests() {
                   )}
                 </button>
                 {!isLast && (
-                  <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300"></div>
+                  <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-8"></div>
                 )}
               </div>
             );

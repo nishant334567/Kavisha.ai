@@ -200,11 +200,11 @@ export default function EditProfile() {
         </div>
 
         {/* Cover Photo */}
-        <div className="mb-8 w-full relative overflow-hidden flex items-center justify-center bg-gray-100">
+        <div className="mb-8 w-full relative overflow-hidden bg-white">
           <img
             src={brand?.brandImageUrl}
             alt={brand?.brandName || "Cover"}
-            className="w-full h-auto max-h-96 object-contain"
+            className="w-full h-auto max-h-96 object-cover block m-0 p-0"
           />
           <label className="absolute bottom-4 right-4 cursor-pointer">
             <input

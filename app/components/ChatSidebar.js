@@ -14,6 +14,7 @@ export default function ChatSidebar({
   currentChatType,
   setCurrentChatType,
   onOpenInbox,
+  onCollapsedChange,
   // onSidebarWidthChange,
 }) {
   const { user } = useFirebaseSession();
@@ -90,6 +91,12 @@ export default function ChatSidebar({
   const toggleLeftSideBar = () => {
     setIscollapsed((prev) => !prev);
   };
+
+  useEffect(() => {
+    if (onCollapsedChange) {
+      onCollapsedChange(isCollapsed);
+    }
+  }, [isCollapsed, onCollapsedChange]);
 
   // useEffect(() => {
   //   if (typeof onSidebarWidthChange === "function") {

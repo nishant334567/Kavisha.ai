@@ -9,6 +9,7 @@ import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import Livechat from "@/app/components/LiveChat";
+import Loader from "@/app/components/Loader";
 
 export default function MyCommunity() {
   const router = useRouter();
@@ -22,9 +23,12 @@ export default function MyCommunity() {
   const [userA, setUserA] = useState(null);
   const [userB, setUserB] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchChatRequests = async () => {
+      if (!brandContext?.subdomain) return;
+      setLoading(true);
       try {
         const response = await fetch(
           `/api/admin/fetch-sessions?brand=${brandContext?.subdomain}&type=community`
@@ -41,12 +45,12 @@ export default function MyCommunity() {
         console.error("Failed to fetch sessions:", error);
         setAllUsers([]);
         setUsersData([]);
+      } finally {
+        setLoading(false);
       }
     };
 
-    if (brandContext?.subdomain) {
-      fetchChatRequests();
-    }
+    fetchChatRequests();
   }, [brandContext?.subdomain]);
   const getTabCount = (tab) => {
     // These tabs are display-only (not filterable)
@@ -63,60 +67,67 @@ export default function MyCommunity() {
     setOpenChat((prev) => !prev);
   };
 
+  if (loading) {
+    return <Loader loadingMessage="Loading community..." />;
+  }
+
   return (
-    <div className="mt-4 px-6">
-      <div className="flex items-center gap-2 mb-4">
+    <div>
+      <div className="px-4 mt-4 gap-2">
         <button
           onClick={() => router.back()}
           className="text-black hover:opacity-70 transition-opacity"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
+        <div className="flex items-center gap-3 justify-center md:justify-start">
+          <h1 className="md:pl-32 text-3xl md:text-4xl font-zen text-[#000A67] mb-6 pb-2 inline-block">
+            Community
+          </h1>
+        </div>
       </div>
-      <h1 className="font-zen text-3xl md:text-4xl font-black text-[#000A67] mb-6 leading-tight tracking-tight">
-        Community
-      </h1>
-
-      {/* Navigation Tabs - Display only (not clickable/filterable) */}
-      <div className="flex items-center justify-center gap-4 mb-8">
-        {["MEMBERS", "MATCHES", "CONNECTIONS"].map((tab, index) => {
-          const isLast = index === 2;
-          const count = getTabCount(tab);
-          return (
-            <div key={tab} className="flex items-center">
-              <div className="uppercase font-medium tracking-wide text-gray-900 relative font-akshar text-xl">
-                {tab}
-                {count > 0 && (
-                  <span className="absolute -top-2 -right-6 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                    {count}
-                  </span>
+      <div className="w-full sm:w-[85%] mx-auto md:px-6">
+        {/* Navigation Tabs - Display only (not clickable/filterable) */}
+        <div className="flex items-center justify-center gap-4 mb-8 px-6">
+          {["MEMBERS", "MATCHES", "CONNECTIONS"].map((tab, index) => {
+            const isLast = index === 2;
+            const count = getTabCount(tab);
+            return (
+              <div key={tab} className="flex items-center">
+                <div className="uppercase font-medium tracking-wide text-gray-900 relative font-akshar text-xl">
+                  {tab}
+                  {count > 0 && (
+                    <span className="absolute -top-2 -right-6 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                      {count}
+                    </span>
+                  )}
+                </div>
+                {!isLast && (
+                  <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-8"></div>
                 )}
               </div>
-              {!isLast && (
-                <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-16"></div>
-              )}
-            </div>
-          );
-        })}
-      </div>
-      <div>
-        {usersData.length > 0 ? (
-          usersData.map((item, index) => {
-            return (
-              <UserCard
-                key={index}
-                user={item}
-                setSelectedSessionLogs={setSelectedSessionLogs}
-                setShowLogsModal={setShowLogsModal}
-                openChatSession={openChatSession}
-              />
             );
-          })
-        ) : (
-          <div className="col-span-full text-center text-gray-500 py-8">
-            No sessions found
-          </div>
-        )}
+          })}
+        </div>
+        <div>
+          {usersData.length > 0 ? (
+            usersData.map((item, index) => {
+              return (
+                <UserCard
+                  key={index}
+                  user={item}
+                  setSelectedSessionLogs={setSelectedSessionLogs}
+                  setShowLogsModal={setShowLogsModal}
+                  openChatSession={openChatSession}
+                />
+              );
+            })
+          ) : (
+            <div className="col-span-full text-center text-gray-500 py-8">
+              No sessions found
+            </div>
+          )}
+        </div>
       </div>
 
       {showLogsModal && selectedSessionLogs && (

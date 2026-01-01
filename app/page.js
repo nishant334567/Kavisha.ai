@@ -28,6 +28,7 @@ export default function HomePage() {
   const [showInbox, setShowInbox] = useState(false);
   const [sidebarWidth, setSidebarWidth] = useState(256);
   const [servicesProvided, setServicesProvided] = useState({});
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   useEffect(() => {
     if (!user || !brandContext) return;
     const key = `lastChat:${user.id}:${brandContext.brandName}`;
@@ -144,6 +145,7 @@ export default function HomePage() {
             currentChatType={currentChatType}
             setCurrentChatType={setCurrentChatType}
             onOpenInbox={() => setShowInbox(true)}
+            onCollapsedChange={setIsSidebarCollapsed}
             // onSidebarWidthChange={(w) => setSidebarWidth(w)}
           />
         </div>
@@ -212,16 +214,15 @@ export default function HomePage() {
         </div>
       )}
 
-      {/* Floating Inbox Button - positioned below sidebar toggle */}
-      <button
-        className="fixed top-28 left-0 z-40 w-10 h-10 flex items-center justify-center rounded-r text-[#59646F] shadow-xl border border-gray-300 hover:bg-[#59646F] hover:text-[#FFEED8] transition-colors"
-        onClick={() => {
-          setShowInbox(true);
-        }}
-        title="Open Inbox"
-      >
-        <MessageCircleMore className="w-5 h-5" />
-      </button>
+      {isSidebarCollapsed && (
+        <button
+          className="fixed top-28 left-0 z-40 w-10 h-10 flex items-center justify-center rounded-r text-[#59646F] shadow-xl border border-gray-300 hover:bg-[#59646F] hover:text-[#FFEED8] transition-colors"
+          onClick={() => setShowInbox(true)}
+          title="Open Inbox"
+        >
+          <MessageCircleMore className="w-5 h-5" />
+        </button>
+      )}
     </div>
   );
 }

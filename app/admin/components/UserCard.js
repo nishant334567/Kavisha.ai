@@ -130,13 +130,13 @@ export default function UserCard({
 
   return (
     <>
-      <div className="p-4 md:m-4 flex flex-col md:flex-row justify-between h-full md:max-h-[200px] md:shadow-md bg-white mx-auto md:rounded-lg border border-gray-200">
+      <div className="shadow-md m-2 p-4 md:m-4 flex flex-col md:flex-row justify-between h-full md:max-h-[200px] md:shadow-md bg-white mx-auto ">
         {/* Mobile Layout */}
         <div className="w-full md:hidden flex flex-col gap-4">
           {/* Name and Contact Button Row */}
           <div className="flex items-start justify-between">
             <div>
-              <p className="font-baloo text-[#42476D] mb-1 text-2xl">
+              <p className="font-baloo text-[#42476D] mb-1 text-2xl font-bold">
                 {user.name}
               </p>
               <p className="text-xs text-[#898989]">{user?.email}</p>
@@ -159,7 +159,7 @@ export default function UserCard({
               <ChevronDown />
             </button>
             {showAdminDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 z-50">
+              <div className="absolute top-full left-0 right-0 mt-0.5 z-50">
                 <Dropdown
                   key={selectedChatSession?._id} // Force re-render when session changes
                   options={["Unassigned", ...(brandContext?.admins || [])]}
@@ -312,32 +312,34 @@ export default function UserCard({
               </p>
             </div>
           </div>
-          <div className="w-[35%] flex-shrink-0 relative">
-            <button
-              className="w-full bg-[#EEF0FE] border border-[#BFC4E5] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
-              onClick={() => setShowAdminDropdown((prev) => !prev)}
-            >
-              <span>{selectedChatSession?.assignedTo || "Assign to"}</span>
-              <ChevronDown />
-            </button>
-            {showAdminDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-1 z-50">
-                <Dropdown
-                  key={selectedChatSession?._id} // Force re-render when session changes
-                  options={["Unassigned", ...(brandContext?.admins || [])]}
-                  selectedValue={selectedChatSession?.assignedTo || ""}
-                  onProceed={(assignedTo) => {
-                    if (selectedChatSession?._id) {
-                      // Convert "Unassigned" to empty string
-                      const value =
-                        assignedTo === "Unassigned" ? "" : assignedTo;
-                      assignSession(selectedChatSession._id, value);
-                      setShowAdminDropdown(false);
-                    }
-                  }}
-                />
-              </div>
-            )}
+          <div className="w-[35%] flex-shrink-0">
+            <div className="relative">
+              <button
+                className="w-full bg-[#EEF0FE] border border-[#BFC4E5] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
+                onClick={() => setShowAdminDropdown((prev) => !prev)}
+              >
+                <span>{selectedChatSession?.assignedTo || "Assign to"}</span>
+                <ChevronDown />
+              </button>
+              {showAdminDropdown && (
+                <div className="absolute top-full left-0 right-0 mt-0.5 z-50">
+                  <Dropdown
+                    key={selectedChatSession?._id} // Force re-render when session changes
+                    options={["Unassigned", ...(brandContext?.admins || [])]}
+                    selectedValue={selectedChatSession?.assignedTo || ""}
+                    onProceed={(assignedTo) => {
+                      if (selectedChatSession?._id) {
+                        // Convert "Unassigned" to empty string
+                        const value =
+                          assignedTo === "Unassigned" ? "" : assignedTo;
+                        assignSession(selectedChatSession._id, value);
+                        setShowAdminDropdown(false);
+                      }
+                    }}
+                  />
+                </div>
+              )}
+            </div>
             <div className="bg-[#EEF0FE] p-1 rounded-md flex flex-col mt-4">
               <textarea
                 rows={2}
