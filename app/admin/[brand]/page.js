@@ -470,7 +470,7 @@ export default function BrandAdminPage() {
                   "recruiter",
                   "friends",
                   "lead_journey",
-                  "pitch_to_me",
+                  "pitch_to_investor",
                 ]
                   .filter(Boolean)
                   .map((role) => (

@@ -3,6 +3,7 @@ import { ArrowLeft } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useState, useEffect } from "react";
 import ProductModal from "./ProductModal";
+import ServiceModalForBuy from "./ServiceModalForBuy";
 
 export default function ServiceModal({
   isOpen,
@@ -13,6 +14,7 @@ export default function ServiceModal({
   const brand = useBrandContext();
 
   const [showProductModal, setShowProductModal] = useState(false);
+  const [showServiceModalForBuy, setShowServiceModalForBuy] = useState(false);
   const [personalitytype, setPersonalitytype] = useState("intro");
   const [formData, setFormData] = useState({
     serviceTitle: "",
@@ -228,6 +230,15 @@ export default function ServiceModal({
                     My Products
                   </button>
                 )}
+                {(service?.name === "buy_my_service" ||
+                  formData.serviceName === "buy_my_service") && (
+                  <button
+                    onClick={() => setShowServiceModalForBuy(true)}
+                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                  >
+                    My Services
+                  </button>
+                )}
                 <button
                   onClick={handleSave}
                   disabled={loading}
@@ -240,6 +251,12 @@ export default function ServiceModal({
                 <ProductModal
                   isOpen={showProductModal}
                   onClose={() => setShowProductModal(false)}
+                />
+              )}
+              {showServiceModalForBuy && (
+                <ServiceModalForBuy
+                  isOpen={showServiceModalForBuy}
+                  onClose={() => setShowServiceModalForBuy(false)}
                 />
               )}
             </div>

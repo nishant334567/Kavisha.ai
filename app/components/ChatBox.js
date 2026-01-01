@@ -349,6 +349,21 @@ export default function ChatBox({
           userId: user?.id,
         }),
       });
+    } else if (currentChatType === "buy_my_service") {
+      response = await fetch("/api/buy-my-service", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          history: historyToUse,
+          userMessage: messageText || "",
+          sessionId,
+          type: currentChatType,
+          prompt: getServicePrompt() || "",
+          userId: user?.id,
+        }),
+      });
     } else if (currentChatType !== "lead_journey") {
       response = await fetch("/api/ai", {
         method: "POST",
@@ -419,8 +434,11 @@ export default function ChatBox({
       setRetryIndex(undefined);
     }
 
-    // Handle matches and data collection status (skip for buy_my_product)
-    if (currentChatType !== "buy_my_product") {
+    // Handle matches and data collection status (skip for buy_my_product and buy_my_service)
+    if (
+      currentChatType !== "buy_my_product" &&
+      currentChatType !== "buy_my_service"
+    ) {
       if (
         data?.matchesWithObjectIds?.length > 0 &&
         data?.allDataCollected === "true"

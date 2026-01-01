@@ -19,9 +19,10 @@ export default function MyServices() {
 
   const availableServices = [
     { serviceName: "lead_journey", serviceTitle: "Talk to me" },
-    { serviceName: "pitch_to_me", serviceTitle: "Pitch to me" },
+    { serviceName: "pitch_to_investor", serviceTitle: "Pitch to me" },
     { serviceName: "job_seeker", serviceTitle: "Work with me" },
     { serviceName: "buy_my_product", serviceTitle: "Buy my product" },
+    { serviceName: "buy_my_service", serviceTitle: "Buy my service" },
   ];
   const allServicesAvailed = availedServices.length >= availableServices.length;
   const handleEdit = (service) => {
