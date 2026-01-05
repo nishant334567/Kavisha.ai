@@ -19,12 +19,26 @@ import {
   Fredoka,
   Figtree,
   Dosis,
+  Assistant,
+  Noto_Serif,
 } from "next/font/google";
+
+const notoSans = Noto_Serif({
+  weight: ["400", "700"], // Specify the weights you need
+  subsets: ["latin"], // Specify the subsets
+  variable: "--font-noto-serif", // Define a CSS variable name
+});
 
 const zenDots = Zen_Dots({
   subsets: ["latin"],
   weight: "400", // Zen Dots has ONLY one weight
   variable: "--font-zen-dots",
+});
+
+const assistant = Assistant({
+  subsets: ["latin"],
+  weight: ["300", "400", "500", "600", "700", "800"],
+  variable: "--font-assistant",
 });
 const dosis = Dosis({
   subsets: ["latin"],
@@ -72,7 +86,8 @@ export default function RootLayout({ children }) {
       ${akshar.variable} ${baloo.variable}
        ${commissioner.variable} 
        ${fredoka.variable} ${figtree.variable}
-       ${dosis.variable}`}
+       ${dosis.variable} ${assistant.variable}
+       ${notoSans.variable}`}
     >
       <head>
         <title>Kavisha.ai</title>

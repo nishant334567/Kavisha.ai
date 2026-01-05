@@ -14,6 +14,8 @@ module.exports = {
         fredoka: ["var(--font-fredoka)"],
         figtree: ["var(--font-figtree)"],
         dosis: ["var(--font-dosis)"],
+        assistant: ["var(--font-assistant)"],
+        notoSans: ["var(--font-noto-serif)"],
       },
     },
   },

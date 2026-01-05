@@ -1,0 +1,287 @@
+"use client";
+import InfoCard from "../components/InfoCard";
+import AvatarCard from "../components/AvatarCard";
+
+const cards = [
+  {
+    title: "Unresponded DMs are lost goodwill",
+    body: "Influencers get so many messages, that it’s impossible to address them all. But each unresponded message is some goodwill lost.",
+    variant: "teal",
+  },
+  {
+    title: "Every inbound is an opportunity",
+    body: "Whether it’s a harmless pleasantry, or a curious business enquiry, it’s all lost in the sea of DMs. That’s wasted opportunity.",
+    variant: "beige",
+  },
+  {
+    title: "Your Digital Avataar can unlock value",
+    body: "With Kavisha, it’s now possible to engage with fans in a much deeper way. Every DM now leads to a force multiplier, a sale, or a happier fan.",
+    variant: "beige",
+  },
+  {
+    title: "Give your fans an experience like never before",
+    body: "Your fans now get the gift of your conversations, knowing you’re behind them. This is something they’d really appreciate, and never forget.",
+    variant: "teal",
+  },
+];
+
+const avatars = [
+  {
+    name: "Nishant Mittal",
+    title: "Entrepreneur & Musician",
+    subtitle: "",
+    image:
+      "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    name: "Sanjeev Bikhchandani",
+    title: "Indian internet entrepreneur and investor",
+    subtitle: "",
+    image:
+      "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
+  },
+  {
+    name: "Jitendra Chouksey",
+    title: "Indian Entrepreneur in Health and Fitness",
+    subtitle: "",
+    image:
+      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80",
+  },
+];
+
+export default function Homepage() {
+  return (
+    <div className="mt-16">
+      <div className="flex flex-col items-center justify-center">
+        <p className="font-zen">KAVISHA</p>
+        <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
+      </div>
+      <div className="flex flex-col justify-center items-center font-fredoka max-w-[90%] md:max-w-[60%] mx-auto text-center px-4">
+        <p className="text-[#004A4E] text-4xl sm:text-5xl md:text-7xl lg:text-[90px] font-normal leading-tight">
+          Human <span className="text-[#00B5BD]">connections</span> in the age
+          of AI
+        </p>
+        <p className="my-6 md:my-8 text-base md:text-lg text-[#264653] font-light">
+          With Kavisha, Influencers and Brands create their Digital Avataars to
+          engage their fans. Fans talk to them, and also find each other.
+        </p>
+      </div>
+      <div className="font-akshar gap-2 md:gap-4 flex flex-wrap justify-center items-center mb-8 px-4">
+        <button className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md">
+          Talk to Avataars
+        </button>
+        <button className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#3D5E6B] text-white shadow-md">
+          Make my Avataar
+        </button>
+        <button className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md">
+          Connect with people
+        </button>
+      </div>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-[85%] mx-auto my-8">
+        {cards.map((card) => (
+          <InfoCard key={card.title} {...card} />
+        ))}
+      </div>
+      <div className="relative">
+        {/* Centered '=' badge */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10 bg-[#3D4A52] w-10 h-10 md:w-14 md:h-14 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1">
+          <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
+          <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
+        </div>
+        {/* Top cream section */}
+        <div className="bg-[#F5F0E1] text-[#3D5A5E] h-[120px] md:h-[160px] flex justify-center items-center px-4">
+          <p className="font-noto-serif text-xl sm:text-2xl md:text-4xl lg:text-5xl text-center">
+            Your Digital Avataar on Kavisha
+          </p>
+        </div>
+        {/* Bottom teal section */}
+        <div className="bg-[#4A6670] text-white h-auto min-h-[150px] md:h-[180px] flex flex-col justify-center items-center px-4 py-6 md:py-0">
+          <p className="font-noto-serif text-lg sm:text-xl md:text-3xl lg:text-4xl mb-2 md:mb-3 text-center">
+            Your (Knowledge <span className="text-[#E8B84A]">+</span> History{" "}
+            <span className="text-[#E8B84A]">+</span> Personality{" "}
+            <span className="text-[#E8B84A]">+</span> Style)
+          </p>
+          <p className="text-[#B8C5C9] font-assistant text-sm md:text-lg text-center">
+            With Kavisha, you'll be able to give your fans delightful
+            interactions 24x7x365
+          </p>
+        </div>
+      </div>
+      {/* Avatar cards */}
+      <div className="flex items-center gap-4 my-6 px-4 md:px-8">
+        <p className="font-fredoka text-lg md:text-2xl text-[#264653] whitespace-nowrap">
+          Talk to Avataars
+        </p>
+        <div className="flex-1 h-[1px] bg-[#6B6B6B]"></div>
+      </div>
+      <div className="max-w-6xl mx-auto px-4 mt-8 md:mt-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
+          {avatars.map((avatar) => (
+            <AvatarCard key={avatar.name} {...avatar} />
+          ))}
+        </div>
+      </div>
+
+      {/* Connect with people section */}
+      <div className="mt-8 md:mt-12">
+        {/* Header with line */}
+        <div className="flex items-center gap-4 mb-6 px-4 md:px-8">
+          <div className="flex-1 h-[1px] bg-[#6B6B6B]"></div>
+          <p className="font-fredoka text-lg md:text-2xl text-[#264653] whitespace-nowrap">
+            Connect with people
+          </p>
+        </div>
+
+        {/* Two column layout */}
+        <div className="flex flex-col md:flex-row">
+          {/* Left - Teal section */}
+          <div className="font-akshar md:flex-[4] bg-[#35515b] text-white px-6 md:px-10 py-8 md:py-12 flex flex-col justify-center">
+            <p className="text-3xl md:text-5xl lg:text-6xl font-fredoka leading-snug mb-4 md:mb-6">
+              Your fans can
+              <br />
+              <span className="text-[#f2d75e]">connect</span> with
+              <br />
+              each other
+            </p>
+            <button className="w-fit px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl font-akshar hover:bg-white hover:text-[#35515b] transition-colors">
+              Connect with people
+            </button>
+          </div>
+
+          {/* Right - Cream section */}
+          <div className="font-assistant md:flex-[6] bg-[#f7f0dd] text-[#264653] px-6 md:px-10 py-8 md:py-12 flex items-center">
+            <p className="text-lg md:text-2xl lg:text-3xl leading-relaxed font-assistant">
+              Your Digital Avataar doesn't just enable conversations between you
+              and your fans, it also gives your fans a chance to connect with
+              each other. This makes <span className="font-semibold">you</span>{" "}
+              a platform for lifelong, beautiful relationships, where people
+              find new connections, and deeper love for you.
+            </p>
+          </div>
+        </div>
+        {/* Logo and tagline section */}
+        <div className="bg-gray-50 flex flex-col items-center justify-center py-8 md:py-12 px-4 md:px-8 border-b border-gray-200">
+          <div className="flex flex-col items-center justify-center mb-4">
+            <p className="font-zen text-xs md:text-sm tracking-widest text-[#264653]">
+              KAVISHA
+            </p>
+            <img
+              src="/kavisha-logo.png"
+              width={80}
+              height={80}
+              alt="Kavisha"
+              className="md:w-[100px] md:h-[100px]"
+            />
+          </div>
+          <p className="font-fredoka text-base md:text-xl font-light text-center text-[#264653] max-w-3xl tracking-wide">
+            With Kavisha, influencers and brands can interact with their fans,
+            create opportunities for them, and make them happy. Like never
+            before.
+          </p>
+        </div>
+
+        {/* Footer */}
+        <div className="bg-white py-8 md:py-12 px-4 md:px-8">
+          <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-6 md:gap-8">
+            {/* Kavisha column */}
+            <div className="font-assistant">
+              <h4 className="font-semibold text-[#264653] mb-3 md:mb-4 text-sm md:text-base">
+                Kavisha
+              </h4>
+              <ul className="space-y-2 md:space-y-3 text-[#264653] text-sm md:text-base">
+                <li>
+                  <a href="#" className="hover:underline">
+                    About
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:underline">
+                    Terms and conditions
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:underline">
+                    Privacy policy
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:underline">
+                    Copyright
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:underline">
+                    Help
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Features column */}
+            <div className="font-assistant">
+              <h4 className="font-semibold text-[#264653] mb-3 md:mb-4 text-sm md:text-base">
+                Features
+              </h4>
+              <ul className="space-y-2 md:space-y-3 text-[#264653] text-sm md:text-base">
+                <li>
+                  <a href="#" className="hover:underline">
+                    Make my Avataar
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:underline">
+                    Talk to Avataars
+                  </a>
+                </li>
+                <li>
+                  <a href="#" className="hover:underline">
+                    Connect with people
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            {/* Social column */}
+            <div className="font-assistant flex flex-col col-span-2 md:col-span-1 items-start md:items-end mt-4 md:mt-0">
+              <div className="flex md:flex-col gap-4 md:gap-3">
+                <a
+                  href="#"
+                  className="flex items-center gap-2 md:gap-3 text-[#264653] hover:underline text-sm md:text-base"
+                >
+                  <svg
+                    className="w-5 h-5 md:w-6 md:h-6"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
+                  </svg>
+                  <span>Twitter</span>
+                </a>
+                <a
+                  href="#"
+                  className="flex items-center gap-2 md:gap-3 text-[#264653] hover:underline text-sm md:text-base"
+                >
+                  <svg
+                    className="w-5 h-5 md:w-6 md:h-6"
+                    viewBox="0 0 24 24"
+                    fill="currentColor"
+                  >
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z" />
+                  </svg>
+                  <span>LinkedIn</span>
+                </a>
+              </div>
+            </div>
+          </div>
+
+          {/* Copyright */}
+          <div className="text-center mt-8 md:mt-12 pt-6 md:pt-8 border-t border-gray-200">
+            <p className="font-assistant text-[#264653] text-sm md:text-base">
+              Copyright © 2026 Kavisha. All rights reserved.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
