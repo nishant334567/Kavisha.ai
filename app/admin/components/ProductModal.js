@@ -7,7 +7,6 @@ export default function ProductModal({ isOpen, onClose }) {
   const brand = useBrandContext();
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [sortBy, setSortBy] = useState("name");
   const [selectedProduct, setSelectedProduct] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
@@ -147,114 +146,96 @@ export default function ProductModal({ isOpen, onClose }) {
   };
 
   const sortedProducts = [...products].sort((a, b) => {
-    if (sortBy === "name") {
-      return a.name.localeCompare(b.name);
-    }
-    return new Date(b.createdAt) - new Date(a.createdAt);
+    return a.name.localeCompare(b.name);
   });
 
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center md:bg-black md:bg-opacity-50">
+      <div className="bg-white shadow-xl w-full h-full md:rounded-2xl md:max-w-2xl md:mx-4 md:max-h-[90vh] md:h-auto overflow-y-auto">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
-          <h2 className="text-xl font-semibold text-gray-900">Add a Product</h2>
+        <div className="relative px-6 pt-3 pb-4">
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
-        <div className="p-6 space-y-8">
-          {/* Add a Product Section */}
-          <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
-              Add a Product
-            </h3>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Product name:
-                </label>
-                <input
-                  type="text"
-                  value={formData.name}
-                  onChange={(e) =>
-                    setFormData({ ...formData, name: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter product name"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  URL:
-                </label>
-                <input
-                  type="url"
-                  value={formData.url}
-                  onChange={(e) =>
-                    setFormData({ ...formData, url: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-                  placeholder="Enter product URL"
-                />
-              </div>
-              <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
-                  Description:
-                </label>
-                <textarea
-                  rows={4}
-                  value={formData.description}
-                  onChange={(e) =>
-                    setFormData({ ...formData, description: e.target.value })
-                  }
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
-                  placeholder="Enter product description"
-                />
-              </div>
-              <div className="flex justify-center">
-                <button
-                  onClick={
-                    editingProduct ? handleUpdateProduct : handleAddProduct
-                  }
-                  disabled={loading}
-                  className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                >
-                  {editingProduct ? "Update" : "Add"}
-                </button>
-              </div>
+        {/* Title */}
+        <div className="text-center pb-6">
+          <h2 className="text-xl font-semibold text-[#4D5495]">
+            Add a Product
+          </h2>
+        </div>
+
+        <div className="px-8 pb-8 space-y-6">
+          {/* Form Fields - Inline Layout */}
+          <div className="space-y-4">
+            <div className="flex items-center">
+              <label className="w-28 text-sm text-gray-600 flex-shrink-0">
+                Product name:
+              </label>
+              <input
+                type="text"
+                value={formData.name}
+                onChange={(e) =>
+                  setFormData({ ...formData, name: e.target.value })
+                }
+                className="flex-1 px-3 py-2 border-b border-gray-300 focus:outline-none focus:border-[#4D5495]"
+              />
+            </div>
+            <div className="flex items-center">
+              <label className="w-28 text-sm text-gray-600 flex-shrink-0">
+                URL:
+              </label>
+              <input
+                type="url"
+                value={formData.url}
+                onChange={(e) =>
+                  setFormData({ ...formData, url: e.target.value })
+                }
+                className="flex-1 px-3 py-2 border-b border-gray-300 focus:outline-none focus:border-[#4D5495]"
+              />
+            </div>
+            <div className="flex items-start">
+              <label className="w-28 text-sm text-gray-600 flex-shrink-0 pt-2">
+                Description:
+              </label>
+              <textarea
+                rows={3}
+                value={formData.description}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
+                className="flex-1 px-3 py-2 border-b border-gray-300 focus:outline-none focus:border-[#4D5495] resize-none"
+              />
             </div>
           </div>
 
+          {/* Add/Update Button */}
+          <div className="flex justify-center pt-4">
+            <button
+              onClick={editingProduct ? handleUpdateProduct : handleAddProduct}
+              disabled={loading}
+              className="px-8 py-1 border shadow-md text-gray-700 rounded hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {editingProduct ? "Update" : "Add"}
+            </button>
+          </div>
+
           {/* My Products Section */}
-          <div>
+          <div className="pt-4">
             <div className="flex items-center gap-3 mb-4">
-              <h3 className="text-lg font-semibold text-blue-600">
+              <h3 className="text-lg font-semibold text-[#4D5495] whitespace-nowrap">
                 My Products
               </h3>
               <div className="flex-1 h-px bg-gray-300"></div>
             </div>
 
-            <div className="flex items-center gap-2 mb-4">
-              <label className="text-sm font-medium text-gray-700">
-                Sort by:
-              </label>
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="name">Name</option>
-                <option value="date">Date</option>
-              </select>
-            </div>
-
+            {/* Products List */}
             {loading && products.length === 0 ? (
               <div className="text-center py-8 text-gray-500">
                 Loading products...
@@ -264,29 +245,29 @@ export default function ProductModal({ isOpen, onClose }) {
                 No products yet. Add your first product above.
               </div>
             ) : (
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {sortedProducts.map((product) => (
                   <div
                     key={product._id}
-                    className="flex items-center gap-3 p-3 border border-gray-200 rounded hover:bg-gray-50"
+                    className="flex items-center gap-4 py-2"
                   >
                     <input
                       type="radio"
                       name="product"
                       checked={selectedProduct === product._id}
                       onChange={() => setSelectedProduct(product._id)}
-                      className="w-4 h-4 text-blue-600"
+                      className="w-5 h-5 text-[#4D5495] border-2 border-gray-300"
                     />
-                    <span className="flex-1 text-gray-900">{product.name}</span>
+                    <span className="flex-1 text-gray-800">{product.name}</span>
                     <button
                       onClick={() => handleModify(product)}
-                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                      className="px-4 py-1.5 bg-[#4D5495] text-white text-sm rounded-xl hover:bg-[#4D5495] transition-colors"
                     >
                       Modify
                     </button>
                     <button
                       onClick={() => handleRemove(product._id)}
-                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                      className="px-4 py-1.5 bg-[#4D5495] text-white text-sm rounded-xl hover:bg-[#4D5495] transition-colors"
                     >
                       Remove
                     </button>

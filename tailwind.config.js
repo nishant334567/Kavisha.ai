@@ -13,6 +13,7 @@ module.exports = {
         commissioner: ["var(--font-commissioner)"],
         fredoka: ["var(--font-fredoka)"],
         figtree: ["var(--font-figtree)"],
+        dosis: ["var(--font-dosis)"],
       },
     },
   },

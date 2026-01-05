@@ -40,6 +40,7 @@ export async function GET(req, { params }) {
           otherUser,
           otherUserEmail,
           lastMessage: lastMessage?.content,
+          lastMessageTime: lastMessage?.createdAt,
           userA: conversation.userA._id,
           userB: conversation.userB._id,
         };

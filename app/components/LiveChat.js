@@ -3,6 +3,7 @@ import { useEffect, useRef, useState, useMemo } from "react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import useSocket from "../context/useSocket";
 import { User, X } from "lucide-react";
+import { formatDate } from "../utils/dateUtils";
 
 export default function Livechat({
   userA,
@@ -10,6 +11,7 @@ export default function Livechat({
   currentUserId,
   onClose,
   connectionId,
+  isEmbedded = false,
 }) {
   const [message, setMessage] = useState("");
   const { user } = useFirebaseSession();
@@ -23,15 +25,21 @@ export default function Livechat({
 
   const { socket, isOnline } = useSocket();
 
-  const formatISTTime = (ts) => {
-    const date = ts ? new Date(ts) : new Date();
-    return date.toLocaleString("en-IN", {
-      timeZone: "Asia/Kolkata",
-      hour: "2-digit",
-      minute: "2-digit",
-      hour12: true,
+  const groupedMessages = useMemo(() => {
+    const grouped = {};
+    messages.forEach((msg) => {
+      // Use createdAt if available, fallback to current date
+      const dateKey = msg.createdAt
+        ? new Date(msg.createdAt).toDateString()
+        : new Date().toDateString();
+
+      if (!grouped[dateKey]) {
+        grouped[dateKey] = [];
+      }
+      grouped[dateKey].push(msg);
     });
-  };
+    return grouped;
+  }, [messages]);
 
   useEffect(() => {
     const checkConnection = async () => {
@@ -68,6 +76,7 @@ export default function Livechat({
         (history || []).map((m) => ({
           text: m.text ?? "",
           senderUserId: m.senderUserId,
+          createdAt: m.createdAt,
         }))
       );
     };
@@ -91,6 +100,7 @@ export default function Livechat({
           {
             text: data?.text ?? "",
             senderUserId: data?.senderUserId ?? data?.senderSessionId ?? "",
+            createdAt: data?.createdAt || new Date().toISOString(),
           },
         ];
       });
@@ -150,94 +160,114 @@ export default function Livechat({
     }
   };
 
-  return (
-    <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl w-full max-w-sm mx-auto flex flex-col h-[500px] border border-slate-200 shadow-lg">
-        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200 rounded-t-xl">
-          <div>
-            {/* <div className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center">
-              <User className="w-8 h-8 text-white" />
-            </div> */}
-            <img
-              src="/avatar.png"
-              alt="Avatar"
-              className="w-12 h-12 rounded-full"
-            />
-            <div className="font-semibold text-lg py-2">
-              {chatInfo.otherUser}
-            </div>
-            {/* <div className="text-xs text-slate-500">{chatInfo.jobTitle}</div> */}
-          </div>
-          <button
-            onClick={onClose}
-            className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors"
-            aria-label="Close Chat"
-          >
-            <X className="w-4 h-4 text-slate-600" />
-          </button>
-        </div>
-        {/* Messages Area */}
-        <div className="flex-1 overflow-y-auto p-2" ref={listRef}>
-          {messages.length === 0 ? (
-            <div className="text-center py-8 text-slate-400 text-sm">
-              No messages yet. Start the conversation!
-            </div>
-          ) : (
-            <div className="flex flex-col gap-2">
-              {messages.map((m, i) => {
-                const isMe = m.senderUserId === user?.id;
-                const text = typeof m === "string" ? m : m.text;
-                const senderName = isMe
-                  ? user?.name || "You"
-                  : chatInfo.otherUser;
-                return (
-                  <div key={i}>
-                    <div className="flex gap-2 px-4 py-2">
-                      <img
-                        src="/avatar.png"
-                        alt="Avatar"
-                        className="w-8 h-8 rounded-full"
-                      />
-
-                      <div>
-                        <p className="text-sm font-medium">{senderName}</p>
-                        <p className="text-xs text-gray-400">{text}</p>
-                      </div>
-                    </div>
-                    {i !== messages?.length - 1 && (
-                      <div className="h-[0.5px] w-full bg-gray-300"></div>
-                    )}
-                  </div>
-                );
-              })}
-            </div>
-          )}
-        </div>
-        {/* Message Input */}
-        <div className="w-full px-3 py-3 bg-slate-50 border-t border-slate-200 rounded-b-xl">
-          <textarea
-            rows={4}
-            value={message}
-            onChange={(e) => setMessage(e.target.value)}
-            onKeyPress={handleKeyPress}
-            className="w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-800 bg-[#F2F8FF] focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-500 text-sm transition resize-none"
-            placeholder="Write a message..."
+  const content = (
+    <div
+      className={`bg-white ${isEmbedded ? "w-full h-full" : "w-full h-full md:max-w-sm md:h-[500px]"} border border-slate-200 shadow-lg flex flex-col`}
+    >
+      <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200 rounded-t-xl">
+        <div>
+          <img
+            src="/avatar.png"
+            alt="Avatar"
+            className="w-12 h-12 rounded-full"
           />
+          <div className="uppercase font-baloo font-semibold text-lg py-2">
+            {chatInfo.otherUser}
+          </div>
         </div>
-        <div className="flex justify-end p-2">
-          <button
-            onClick={(e) => {
-              e.preventDefault();
-              sendMessage();
-            }}
-            type="submit"
-            disabled={!message.trim()}
-            className="px-4 py-2 bg-sky-700 hover:bg-sky-600 disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium rounded-xl transition-colors text-sm"
-          >
-            Send
-          </button>
-        </div>
+        <button
+          onClick={onClose}
+          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-slate-200 transition-colors"
+          aria-label="Close Chat"
+        >
+          <X className="w-4 h-4 text-slate-600" />
+        </button>
       </div>
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto scrollbar-none p-2" ref={listRef}>
+        {messages.length === 0 ? (
+          <div className="text-center py-8 text-slate-400 text-sm">
+            No messages yet. Start the conversation!
+          </div>
+        ) : (
+          <div className="flex flex-col gap-2">
+            {Object.entries(groupedMessages).map(([date, msgs]) => (
+              <div key={date}>
+                {/* Date Header */}
+                <div className="text-center py-2">
+                  <span className="text-xs text-gray-400 bg-gray-100 px-3 py-1 rounded-full">
+                    {formatDate(date)}
+                  </span>
+                </div>
+                {/* Messages for this date */}
+                {msgs.map((m, i) => {
+                  const isMe = m.senderUserId === user?.id;
+                  const text = typeof m === "string" ? m : m.text;
+                  const senderName = isMe
+                    ? user?.name || "You"
+                    : chatInfo.otherUser;
+                  return (
+                    <div key={`${date}-${i}`}>
+                      <div className="flex gap-2 px-4 py-2">
+                        <img
+                          src="/avatar.png"
+                          alt="Avatar"
+                          className="w-8 h-8 rounded-full"
+                        />
+                        <div>
+                          <p className="text-sm font-medium font-baloo">
+                            {senderName}
+                          </p>
+                          <p className="text-xs text-gray-400 font-baloo">
+                            {text}
+                          </p>
+                        </div>
+                      </div>
+                      {i !== msgs.length - 1 && (
+                        <div className="h-[0.5px] w-full bg-gray-300"></div>
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+      {/* Message Input */}
+      <div className="w-full px-3 py-3 border-t border-slate-400">
+        <textarea
+          rows={4}
+          value={message}
+          onChange={(e) => setMessage(e.target.value)}
+          onKeyPress={handleKeyPress}
+          className="font-baloo w-full border border-slate-300 rounded-xl px-3 py-2 text-slate-800 bg-[#F2F8FF] focus:outline-none focus:ring-2 focus:ring-sky-300 focus:border-sky-500 text-sm transition resize-none"
+          placeholder="Write a message..."
+        />
+      </div>
+      <div className="flex justify-end p-2 border-t border-slate-300 rounded-b-xl">
+        <button
+          onClick={(e) => {
+            e.preventDefault();
+            sendMessage();
+          }}
+          type="submit"
+          disabled={!message.trim()}
+          className="shadow-sm px-8 py-2 bg-[#3D6D94]  disabled:bg-slate-300 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors text-sm"
+        >
+          Send
+        </button>
+      </div>
+    </div>
+  );
+
+  if (isEmbedded) {
+    return content;
+  }
+
+  return (
+    <div className="fixed inset-0 z-50 bg-black bg-opacity-30 flex items-center justify-center md:p-4">
+      {content}
     </div>
   );
 }

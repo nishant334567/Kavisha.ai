@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import Loader from "./Loader";
 import { User, X } from "lucide-react";
+import { formatTime } from "../utils/dateUtils";
 
 export default function Inbox({ onOpenChat, onClose }) {
   const { user } = useFirebaseSession();
@@ -24,18 +25,13 @@ export default function Inbox({ onOpenChat, onClose }) {
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center h-[50vh] bg-white rounded-xl border border-slate-200 shadow-sm">
-        <div className="text-center">
-          <div className="text-sm text-slate-600 mb-4">
-            Hang on, all your messages are loading, please wait...
-          </div>
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-sky-500 mx-auto"></div>
-        </div>
+      <div className="flex items-center justify-center h-full md:h-[400px] bg-white border border-slate-200 shadow-sm">
+        <Loader message="Loading messages..." />
       </div>
     );
   }
   return (
-    <div className="mb-4 relative bg-white rounded-xl overflow-hidden flex flex-col h-[400px] border border-slate-200 shadow-sm">
+    <div className="relative bg-white overflow-hidden flex flex-col h-full md:h-[400px]">
       <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-slate-50 border-b border-slate-200">
         <h2 className="text-base font-semibold text-slate-800">Messaging</h2>
         {onClose && (
@@ -49,44 +45,48 @@ export default function Inbox({ onOpenChat, onClose }) {
         )}
       </div>
       {/* Chat List */}
-      <div className="flex-1 overflow-y-auto scrollbar-none px-2 py-2">
+      <div className="flex-1 overflow-y-auto scrollbar-none">
         {Array.isArray(activeChats) && activeChats.length === 0 && (
           <div className="text-slate-400 text-sm px-2 py-4 text-center">
             No active chats yet.
           </div>
         )}
         {Array.isArray(activeChats) && activeChats.length > 0 && (
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col">
             {Array.isArray(activeChats) &&
-              activeChats.map((chat) => (
-                <button
-                  key={chat._id}
-                  className="w-full text-left rounded-lg px-3 py-2 flex items-center gap-3  border border-transparent transition-all duration-200"
-                  onClick={() => onOpenChat(chat.userA, chat.userB)}
-                >
-                  <div className="flex gap-4">
-                    <div className="flex justify-between items-center">
-                      <img
-                        src="/avatar.png"
-                        alt="Avatar"
-                        className="w-6 h-6 rounded-full"
-                      />
-                    </div>
-                    <div>
-                      <div className="text-lg text-slate-800 truncate">
+              activeChats.map((chat, index) => (
+                <div key={chat._id}>
+                  <div
+                    className="w-full text-left px-3 py-3 flex items-center gap-3 hover:bg-slate-50 transition-all duration-200 cursor-pointer"
+                    onClick={() => onOpenChat(chat.userA, chat.userB)}
+                  >
+                    <img
+                      src="/avatar.png"
+                      alt="Avatar"
+                      className="w-10 h-10 rounded-full flex-shrink-0"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="font-baloo text-slate-800 truncate">
                         {chat.otherUser}
                       </div>
-                      {/* <div className="text-xs text-slate-500 truncate">
-                        {chat.otherUserEmail}
-                      </div> */}
                       {chat.lastMessage && (
-                        <div className="text-xs font-extralight text-gray-400 truncate mt-1">
-                          {chat.lastMessage || ""}
+                        <div className="font-dosis text-sm text-gray-500 truncate mt-0.5">
+                          {chat.lastMessage}
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex items-center flex-shrink-0 ml-2">
+                      {chat.lastMessageTime && (
+                        <div className="text-xs text-gray-400 whitespace-nowrap">
+                          {formatTime(chat.lastMessageTime)}
                         </div>
                       )}
                     </div>
                   </div>
-                </button>
+                  {index !== activeChats.length - 1 && (
+                    <div className="h-[0.5px] w-full bg-gray-200"></div>
+                  )}
+                </div>
               ))}
           </div>
         )}

@@ -83,6 +83,11 @@ app.prepare().then(() => {
           text: text,
           senderUserId: senderUserId,
           connectionId: connectionId,
+          createdAt: msg.createdAt
+            ? typeof msg.createdAt === "string"
+              ? msg.createdAt
+              : new Date(msg.createdAt).toISOString()
+            : new Date().toISOString(),
         });
       } catch (error) {}
     });
@@ -109,6 +114,11 @@ app.prepare().then(() => {
               id: m.senderId,
               text: m.content,
               senderUserId: m.senderId,
+              createdAt: m.createdAt
+                ? typeof m.createdAt === "string"
+                  ? m.createdAt
+                  : new Date(m.createdAt).toISOString()
+                : new Date().toISOString(),
             }))
           );
         } catch (e) {}

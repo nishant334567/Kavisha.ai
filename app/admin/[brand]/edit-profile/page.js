@@ -206,7 +206,7 @@ export default function EditProfile() {
             alt={brand?.brandName || "Cover"}
             className="w-full h-auto max-h-96 object-cover block m-0 p-0"
           />
-          <label className="absolute bottom-4 right-4 cursor-pointer">
+          <label className="absolute bottom-8 right-12 cursor-pointer">
             <input
               type="file"
               accept="image/*"
@@ -217,7 +217,7 @@ export default function EditProfile() {
               className="hidden"
               disabled={uploading.brandImage}
             />
-            <span className="font-akshar px-4 py-2 shadow-md  text-sm rounded-full bg-white  transition-colors">
+            <span className="font-akshar px-4 py-1.5 text-sm rounded-full bg-white/60 backdrop-blur-sm border border-gray-200 text-gray-700 hover:bg-white/75 transition-colors">
               {uploading.brandImage ? "Uploading..." : "Edit cover photo"}
             </span>
           </label>

@@ -43,7 +43,11 @@ export default function AdminHome() {
     setUserA(userA);
     setUserB(userB);
     setConnectionId([userA, userB].sort().join("_"));
-    setOpenChat((prev) => !prev);
+    setOpenChat(true);
+    // On mobile, close inbox when opening chat. On desktop, keep both open.
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setShowInbox(false);
+    }
   };
   return (
     <div className="relative flex flex-col h-[calc(100vh-56px)] bg-white">
@@ -116,7 +120,23 @@ export default function AdminHome() {
 
       {showInbox && (
         <div className="fixed inset-0 z-50 flex items-center justify-center md:items-end md:justify-end bg-black bg-opacity-30 md:bg-transparent">
-          <div className="w-full max-w-sm mx-auto md:mx-0 md:mr-6 md:mb-6 md:w-80 md:max-h-[60vh] overflow-y-auto shadow-2xl rounded-xl bg-white border border-slate-200">
+          {/* Desktop: Show chat to the left of inbox if open */}
+          {openChat && userA && userB && (
+            <div className="hidden md:flex md:mr-4 md:mb-6">
+              <div className="bg-white w-[500px] h-[80vh] border border-slate-200 shadow-2xl flex flex-col overflow-hidden">
+                <Livechat
+                  userA={userA}
+                  userB={userB}
+                  currentUserId={user?.id}
+                  onClose={() => setOpenChat(false)}
+                  connectionId={connectionId}
+                  isEmbedded={true}
+                />
+              </div>
+            </div>
+          )}
+          {/* Inbox - always at bottom right on desktop */}
+          <div className="w-full h-full md:w-80 md:h-auto md:max-h-[60vh] md:mx-0 md:mr-6 md:mb-6 overflow-hidden shadow-2xl bg-white border border-slate-200 flex flex-col">
             <Inbox
               onOpenChat={openChatSession}
               onClose={() => setShowInbox(false)}
@@ -124,7 +144,8 @@ export default function AdminHome() {
           </div>
         </div>
       )}
-      {openChat && userA && userB && (
+      {/* Mobile: Show chat full screen when open and inbox is closed */}
+      {openChat && userA && userB && !showInbox && (
         <Livechat
           userA={userA}
           userB={userB}
