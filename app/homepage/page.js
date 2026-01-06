@@ -1,58 +1,112 @@
 "use client";
+import { useState, useEffect, useRef } from "react";
 import InfoCard from "../components/InfoCard";
 import AvatarCard from "../components/AvatarCard";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const cards = [
   {
     title: "Unresponded DMs are lost goodwill",
-    body: "Influencers get so many messages, that it’s impossible to address them all. But each unresponded message is some goodwill lost.",
+    body: "Influencers get so many messages, that it's impossible to address them all. But each unresponded message is some goodwill lost.",
     variant: "teal",
   },
   {
     title: "Every inbound is an opportunity",
-    body: "Whether it’s a harmless pleasantry, or a curious business enquiry, it’s all lost in the sea of DMs. That’s wasted opportunity.",
+    body: "Whether it's a harmless pleasantry, or a curious business enquiry, it's all lost in the sea of DMs. That's wasted opportunity.",
     variant: "beige",
   },
   {
     title: "Your Digital Avataar can unlock value",
-    body: "With Kavisha, it’s now possible to engage with fans in a much deeper way. Every DM now leads to a force multiplier, a sale, or a happier fan.",
+    body: "With Kavisha, it's now possible to engage with fans in a much deeper way. Every DM now leads to a force multiplier, a sale, or a happier fan.",
     variant: "beige",
   },
   {
     title: "Give your fans an experience like never before",
-    body: "Your fans now get the gift of your conversations, knowing you’re behind them. This is something they’d really appreciate, and never forget.",
+    body: "Your fans now get the gift of your conversations, knowing you're behind them. This is something they'd really appreciate, and never forget.",
     variant: "teal",
   },
 ];
 
 const avatars = [
   {
+    id: 1,
     name: "Nishant Mittal",
     title: "Entrepreneur & Musician",
-    subtitle: "",
-    image:
-      "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
+    subtitle: "2M+ Followers",
+    image: "/nm.png",
   },
   {
+    id: 2,
     name: "Sanjeev Bikhchandani",
     title: "Indian internet entrepreneur and investor",
-    subtitle: "",
-    image:
-      "https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=800&q=80",
+    subtitle: "1.5M+ Followers",
+    image: "sb.png",
   },
   {
+    id: 3,
     name: "Jitendra Chouksey",
     title: "Indian Entrepreneur in Health and Fitness",
-    subtitle: "",
-    image:
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=800&q=80",
+    subtitle: "800K+ Followers",
+    image: "jc.png",
+  },
+  {
+    id: 4,
+    name: "Nishant Mittal",
+    title: "Entrepreneur & Musician",
+    subtitle: "2M+ Followers",
+    image: "/nm.png",
+  },
+  {
+    id: 5,
+    name: "Sanjeev Bikhchandani",
+    title: "Indian internet entrepreneur and investor",
+    subtitle: "1.5M+ Followers",
+    image: "sb.png",
+  },
+  {
+    id: 6,
+    name: "Jitendra Chouksey",
+    title: "Indian Entrepreneur in Health and Fitness",
+    subtitle: "800K+ Followers",
+    image: "jc.png",
   },
 ];
 
 export default function Homepage() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const sliderRef = useRef(null);
+
+  // Get visible count based on screen size
+  const getVisibleCount = () => {
+    if (typeof window === "undefined") return 3;
+    if (window.innerWidth < 640) return 1;
+    if (window.innerWidth < 1024) return 2;
+    return 3;
+  };
+
+  const [visibleCount, setVisibleCount] = useState(3);
+
+  useEffect(() => {
+    const handleResize = () => {
+      setVisibleCount(getVisibleCount());
+    };
+    handleResize();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  const maxIndex = Math.max(0, avatars.length - visibleCount);
+
+  const slideLeft = () => {
+    setCurrentIndex((prev) => Math.max(0, prev - 1));
+  };
+
+  const slideRight = () => {
+    setCurrentIndex((prev) => Math.min(maxIndex, prev + 1));
+  };
   return (
     <div className="mt-16">
-      <div className="flex flex-col items-center justify-center">
+      <div className="flex flex-col items-center justify-center py-8">
         <p className="font-zen">KAVISHA</p>
         <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
       </div>
@@ -61,7 +115,7 @@ export default function Homepage() {
           Human <span className="text-[#00B5BD]">connections</span> in the age
           of AI
         </p>
-        <p className="my-6 md:my-8 text-base md:text-lg text-[#264653] font-light">
+        <p className="my-6 md:my-8 text-lg text-[#264653] font-extralight">
           With Kavisha, Influencers and Brands create their Digital Avataars to
           engage their fans. Fans talk to them, and also find each other.
         </p>
@@ -77,7 +131,7 @@ export default function Homepage() {
           Connect with people
         </button>
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-[85%] mx-auto my-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-[85%] mx-auto my-16">
         {cards.map((card) => (
           <InfoCard key={card.title} {...card} />
         ))}
@@ -89,7 +143,7 @@ export default function Homepage() {
           <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
         </div>
         {/* Top cream section */}
-        <div className="bg-[#F5F0E1] text-[#3D5A5E] h-[120px] md:h-[160px] flex justify-center items-center px-4">
+        <div className="bg-[#F9F1D8] text-[#3D5A5E] h-[120px] md:h-[160px] flex justify-center items-center px-4">
           <p className="font-noto-serif text-xl sm:text-2xl md:text-4xl lg:text-5xl text-center">
             Your Digital Avataar on Kavisha
           </p>
@@ -115,11 +169,67 @@ export default function Homepage() {
         <div className="flex-1 h-[1px] bg-[#6B6B6B]"></div>
       </div>
       <div className="max-w-6xl mx-auto px-4 mt-8 md:mt-12">
-        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6 justify-items-center">
-          {avatars.map((avatar) => (
-            <AvatarCard key={avatar.name} {...avatar} />
-          ))}
-        </div>
+        {avatars.length > 0 ? (
+          <div>
+            {/* Slider Container */}
+            <div className="overflow-hidden px-2 pb-4" ref={sliderRef}>
+              <div
+                className="flex transition-transform duration-300 ease-in-out"
+                style={{
+                  gap: "24px",
+                  transform: `translateX(calc(-${currentIndex} * (100% / ${visibleCount} + ${24 / visibleCount}px)))`,
+                }}
+              >
+                {avatars.map((avatar) => (
+                  <div
+                    key={avatar.id}
+                    className="flex-shrink-0 flex justify-center"
+                    style={{
+                      width: `calc((100% - ${(visibleCount - 1) * 24}px) / ${visibleCount})`,
+                    }}
+                  >
+                    <AvatarCard
+                      name={avatar.name}
+                      title={avatar.title}
+                      subtitle={avatar.subtitle}
+                      image={avatar.image}
+                    />
+                  </div>
+                ))}
+              </div>
+            </div>
+
+            {/* Navigation Arrows - Centered Below */}
+            {avatars.length > visibleCount && (
+              <div className="flex justify-center gap-4 mt-8">
+                <button
+                  onClick={slideLeft}
+                  disabled={currentIndex === 0}
+                  className={`group w-10 h-10 rounded-full border-2 border-[#264653] flex items-center justify-center transition-colors ${
+                    currentIndex === 0
+                      ? "opacity-40 cursor-not-allowed"
+                      : "hover:bg-[#264653]"
+                  }`}
+                >
+                  <ChevronLeft className="w-5 h-5 text-[#264653] group-hover:text-white transition-colors" />
+                </button>
+                <button
+                  onClick={slideRight}
+                  disabled={currentIndex >= maxIndex}
+                  className={`group w-10 h-10 rounded-full border-2 border-[#264653] flex items-center justify-center transition-colors ${
+                    currentIndex >= maxIndex
+                      ? "opacity-40 cursor-not-allowed"
+                      : "hover:bg-[#264653]"
+                  }`}
+                >
+                  <ChevronRight className="w-5 h-5 text-[#264653] group-hover:text-white transition-colors" />
+                </button>
+              </div>
+            )}
+          </div>
+        ) : (
+          <p className="text-center text-gray-500">No avatars available</p>
+        )}
       </div>
 
       {/* Connect with people section */}

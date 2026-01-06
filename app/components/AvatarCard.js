@@ -1,7 +1,7 @@
 export default function AvatarCard({ image, name, title, subtitle }) {
   return (
     <div className="w-full max-w-xs bg-white rounded-2xl shadow-md overflow-hidden text-center">
-      <div className="w-full h-72 bg-gray-100">
+      <div className="w-full h-80 bg-gray-100">
         {image ? (
           <img src={image} alt={name} className="w-full h-full object-cover" />
         ) : (
