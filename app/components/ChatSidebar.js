@@ -11,40 +11,16 @@ export default function ChatSidebar({
   allChats,
   updateChatId,
   currentChatId,
-  currentChatType,
   setCurrentChatType,
-  onOpenInbox,
   onCollapsedChange,
-  // onSidebarWidthChange,
 }) {
   const { user } = useFirebaseSession();
-  const [isCollapsed, setIscollapsed] = useState(true);
+  const [isCollapsed, setIscollapsed] = useState(false);
   const [newChatLoading, setNewChatLoading] = useState(false);
-  const [inboxLoading, setInboxLoading] = useState(false);
   const brandContext = useBrandContext();
-  const [inboxChats, setInboxChats] = useState([]);
-  const [showChatActions, setShowChatActions] = useState(false);
+
   const [deletingChatId, setDeletingChatId] = useState(null);
   const router = useRouter();
-
-  const getRoleMeta = (role) => {
-    if (role === "recruiter") {
-      return {
-        label: "Recruiter",
-        cls: "bg-blue-100 text-blue-700 border-blue-200",
-      };
-    }
-    if (role === "dating") {
-      return {
-        label: "Dating",
-        cls: "bg-pink-100 text-pink-700 border-pink-200",
-      };
-    }
-    return {
-      label: "Job Seeker",
-      cls: "bg-orange-100 text-orange-700 border-orange-200",
-    };
-  };
 
   const formatIST = (iso) => {
     if (!iso) return "";
@@ -61,33 +37,6 @@ export default function ChatSidebar({
     }
   };
 
-  const fetchAllInbox = async (chatId) => {
-    updateChatId(chatId);
-    setInboxLoading(true);
-    try {
-      const response = await fetch(`/api/inbox/${chatId}`);
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-      const data = await response.json();
-
-      setInboxChats(data.chats || []);
-    } catch (error) {
-      setInboxChats([]);
-    } finally {
-      setInboxLoading(false);
-    }
-  };
-
-  // const deleteSession = async (id) => {
-  //   setIsdeleting(true);
-  //   const response = await fetch("/api/allchats/", {
-  //     method: "DELETE",
-  //     headers: { "Content-Type": "application/json" },
-  //     body: JSON.stringify({ chatId: id }),
-  //   });
-  //   setIsdeleting(false);
-  // };
   const toggleLeftSideBar = () => {
     setIscollapsed((prev) => !prev);
   };
@@ -98,22 +47,8 @@ export default function ChatSidebar({
     }
   }, [isCollapsed, onCollapsedChange]);
 
-  // useEffect(() => {
-  //   if (typeof onSidebarWidthChange === "function") {
-  //     if (window.innerWidth < 640) {
-  //       if (isCollapsed) {
-  //         onSidebarWidthChange(0);
-  //       } else {
-  //         onSidebarWidthChange(256);
-  //       }
-  //     } else {
-  //       onSidebarWidthChange(isCollapsed ? 64 : 256);
-  //     }
-  //     onSidebarWidthChange(window.innerWidth < 640 && isCollapsed ? 0 : 256);
-  //   }
-  // }, [isCollapsed, onSidebarWidthChange, window.innerWidth]);
-
   const newChat = () => {
+    router.push("/");
     updateChatId(null);
     setCurrentChatType(null);
     setIscollapsed(true);
@@ -149,8 +84,9 @@ export default function ChatSidebar({
         throw new Error("Failed to delete chat");
       }
 
-      // If the deleted chat is the current chat, clear it
+      // If the deleted chat is the current chat, redirect to home
       if (currentChatId === chatId) {
+        router.push("/");
         updateChatId(null);
         setCurrentChatType(null);
       }
@@ -168,7 +104,7 @@ export default function ChatSidebar({
       }
 
       // Refresh the page to update the chat list
-      window.location.reload();
+      router.refresh();
     } catch (error) {
       console.error("Error deleting chat:", error);
       alert("Failed to delete chat. Please try again.");
@@ -188,14 +124,6 @@ export default function ChatSidebar({
             ></div>
 
             <div className="h-full md:mt-12 fixed top-0 left-0 z-40 flex flex-col  p-4 border-r border-slate-200 bg-[#F8F8F8] shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
-              {/* <button
-                onClick={() => toggleLeftSideBar()}
-                className="sm:hidden absolute top-4 right-4 w-8 h-8 flex items-center justify-center rounded-full text-white hover:bg-slate-200 transition-colors"
-                title="Close sidebar"
-              >
-                <X className="w-4 h-4" />
-              </button> */}
-              {/* User Info Section */}
               <div className="font-akshar flex items-center gap-3 mb-6 p-3 rounded-xl bg-[#59646F] text-[#FFEED8] ">
                 <div className="w-8 h-8 rounded-full bg-white/20  flex items-center justify-center text-sm font-semibold">
                   {(user?.name || "K").charAt(0).toUpperCase()}
@@ -213,7 +141,7 @@ export default function ChatSidebar({
                   <ChevronLeft className="w-5 h-5" />
                 </button>
               </div>
-              {/* End User Info Section */}
+
               <div>
                 <div className="py-4 gap-2">
                   <button
@@ -223,12 +151,6 @@ export default function ChatSidebar({
                     {!newChatLoading ? "New Chat" : "Creating New Chat..."}
                   </button>
 
-                  {/* <button
-                    className="flex items-center gap-2 justify-center text-xs  w-full p-2 rounded-md hover:bg-red-50 hover:border-red-200 transition-all duration-200 text-red-600 border border-slate-200 mt-2"
-                    onClick={signOut}
-                  >
-                    Sign Out
-                  </button> */}
                   {brandContext?.isBrandAdmin && (
                     <button
                       className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
@@ -266,8 +188,11 @@ export default function ChatSidebar({
                   `}
                           type="button"
                           onClick={() => {
-                            updateChatId(id);
-                            setCurrentChatType(allChats?.sessions[id]?.role);
+                            // const chatType =
+                            //   allChats?.sessions[id]?.role || "default";
+                            router.push(`/chats/${id}`);
+                            // updateChatId(id);
+                            // setCurrentChatType(chatType);
                             // setIscollapsed(true);
                           }}
                         >
@@ -323,34 +248,6 @@ export default function ChatSidebar({
                 <ChevronsRight className="w-5 h-5" />
               </button>
             </div>
-
-            {/* Desktop: Full collapsed sidebar */}
-            {/* <div className="hidden sm:flex fixed top-0 left-0 z-40 w-16 h-full py-4 flex-col items-center gap-4 border-r border-slate-200 bg-white/90 backdrop-blur">
-              <div className="w-8 h-8 rounded-full bg-sky-700 text-white flex items-center justify-center text-sm font-semibold">
-                {(brandContext?.brandName || "K").charAt(0).toUpperCase()}
-              </div>
-              <button
-                onClick={() => toggleLeftSideBar()}
-                className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100"
-                title="Open sidebar"
-              >
-                <Menu className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => newChat()}
-                className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100"
-                title="New chat"
-              >
-                <Plus className="w-5 h-5" />
-              </button>
-              <button
-                onClick={() => onOpenInbox && onOpenInbox()}
-                className="w-10 h-10 flex items-center justify-center rounded-md hover:bg-slate-100"
-                title="All messages"
-              >
-                <MessageSquare className="w-5 h-5" />
-              </button>
-            </div> */}
           </>
         )}
       </div>

@@ -1,7 +1,7 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
-import InfoCard from "../components/InfoCard";
-import AvatarCard from "../components/AvatarCard";
+import InfoCard from "./InfoCard";
+import AvatarCard from "./AvatarCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 
 const cards = [

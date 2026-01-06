@@ -17,9 +17,6 @@ export function useFirebaseSession() {
       });
 
       if (!res.ok) {
-        if (pathname !== "/login") {
-          router.push("/login");
-        }
         setUser(null);
         return;
       }
@@ -28,10 +25,6 @@ export function useFirebaseSession() {
       setUser(data?.user || null);
     } catch {
       setUser(null);
-
-      if (pathname !== "/login") {
-        router.push("/login");
-      }
     } finally {
       setLoading(false);
     }

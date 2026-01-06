@@ -5,6 +5,6 @@ export async function signOut() {
     await fetch("/api/logout", { method: "GET" });
   } catch (error) {
   } finally {
-    window.location.href = "/login";
+    window.location.href = "/";
   }
 }

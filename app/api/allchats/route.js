@@ -19,26 +19,22 @@ export async function GET(request) {
         }
 
         await connectDB();
-        const sessions = await Session.find({ userId: user.id });
+        const sessions = await Session.find({ userId: user.id })
+          .select("_id title role updatedAt")
+          .sort({ updatedAt: -1 });
+
         const sessionIds = sessions.map((session) => session._id);
 
-        // Fetch logs for each session and build a map
+        // Build sessions map with only essential data for sidebar
         const sessionsMap = {};
-        await Promise.all(
-          sessions.map(async (s) => {
-            const logs = await Logs.find({ sessionId: s._id });
-            sessionsMap[s._id] = {
-              id: s._id,
-              resumeFilename: s.resumeFilename,
-              resumeSummary: s.resumeSummary,
-              title: s.title,
-              logs: logs,
-              matchesLatest: s.matches,
-              role: s.role,
-              updatedAt: s.updatedAt,
-            };
-          })
-        );
+        sessions.forEach((s) => {
+          sessionsMap[s._id] = {
+            id: s._id,
+            title: s.title,
+            role: s.role,
+            updatedAt: s.updatedAt,
+          };
+        });
 
         return NextResponse.json({
           sessionIds: sessionIds,

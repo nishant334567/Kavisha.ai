@@ -10,13 +10,15 @@ import ChatSidebar from "./components/ChatSidebar";
 import RightPanel from "./components/Rightpanel";
 import Loader from "./components/Loader";
 import { MessageCircleMore } from "lucide-react";
+import Homepage from "./components/Homepage";
+import AvatarHomepage from "./components/AvatarHomepage";
 
 export default function HomePage() {
   const { user, loading } = useFirebaseSession();
-  const router = useRouter();
+
   const [currentChatType, setCurrentChatType] = useState(null);
   const brandContext = useBrandContext();
-  const [input, setInput] = useState("");
+
   const [currentChatId, setCurrentChatId] = useState(null);
   const [allChats, setAllchats] = useState(null);
   const [creatingSession, setCreatingSession] = useState(false);
@@ -26,7 +28,6 @@ export default function HomePage() {
   const [matches, setMatches] = useState([]);
   const [connections, setConnections] = useState([]);
   const [showInbox, setShowInbox] = useState(false);
-  const [sidebarWidth, setSidebarWidth] = useState(256);
   const [servicesProvided, setServicesProvided] = useState({});
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
   useEffect(() => {
@@ -41,24 +42,19 @@ export default function HomePage() {
 
   useEffect(() => {
     if (!brandContext) return;
-
     let filteredServices = brandContext.services || [];
 
-    // For non-Kavisha brands, apply role-based filtering
     if (brandContext.subdomain !== "kavisha") {
       if (brandContext.isBrandAdmin) {
-        // Admin: ONLY show recruiter service
         filteredServices = filteredServices.filter(
           (service) => service.name?.toLowerCase() === "recruiter"
         );
       } else {
-        // Non-admin: Show all EXCEPT recruiter
         filteredServices = filteredServices.filter(
           (service) => service.name?.toLowerCase() !== "recruiter"
         );
       }
     }
-    // For Kavisha brand: show all services (no filtering)
 
     setServicesProvided(filteredServices);
   }, [brandContext]);
@@ -129,9 +125,14 @@ export default function HomePage() {
     return <Loader loadingMessage="Loading..." />;
   }
 
-  // Middleware handles redirect for unauthenticated users
   if (!user) {
-    return null;
+    if (!brandContext) {
+      return <Loader loadingMessage="Loading..." />;
+    }
+    if (brandContext.subdomain === "kavisha") {
+      return <Homepage />;
+    }
+    return <AvatarHomepage />;
   }
 
   return (
@@ -146,22 +147,19 @@ export default function HomePage() {
             setCurrentChatType={setCurrentChatType}
             onOpenInbox={() => setShowInbox(true)}
             onCollapsedChange={setIsSidebarCollapsed}
-            // onSidebarWidthChange={(w) => setSidebarWidth(w)}
           />
         </div>
 
         <div className="w-full h-full flex flex-col overflow-hidden">
-          {!currentChatType && !currentChatId && (
-            <SelectChatType
-              servicesProvided={servicesProvided}
-              selectedType={currentChatType}
-              selectChatType={selectChatType}
-              isCreating={creatingSession}
-              enableCommunityOnboarding={
-                brandContext?.enableCommunityOnboarding || false
-              }
-            />
-          )}
+          <SelectChatType
+            servicesProvided={servicesProvided}
+            selectedType={currentChatType}
+            selectChatType={selectChatType}
+            isCreating={creatingSession}
+            enableCommunityOnboarding={
+              brandContext?.enableCommunityOnboarding || false
+            }
+          />
 
           {currentChatId && (
             <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center px-4 md:px-0">

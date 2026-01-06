@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { authMiddleware, redirectToLogin } from "next-firebase-auth-edge";
+import { authMiddleware } from "next-firebase-auth-edge";
 import { serverConfig } from "./app/lib/firebase/config";
 import { getCookieOptions } from "./app/lib/firebase/cookie-config";
 
 import { isBrandAdmin } from "./app/lib/firebase/check-admin";
 
-const PUBLIC_PATHS = ["/login", "/api/login"];
+const PUBLIC_PATHS = ["/", "/api/login"];
 
 function getSubdomainFromRequest(hostname) {
   if (!hostname) return "kavisha";
@@ -46,13 +46,6 @@ export async function middleware(request) {
       const brand = getSubdomainFromRequest(hostname);
       const isAdmin = await isBrandAdmin(decodedToken.email, brand);
 
-      if (request.nextUrl.pathname === "/login") {
-        if (isAdmin) {
-          return NextResponse.redirect(
-            new URL(`/admin/${brand}/v2`, request.url)
-          );
-        } else return NextResponse.redirect(new URL("/", request.url));
-      }
       if (request.nextUrl.pathname === "/" && isAdmin) {
         return NextResponse.redirect(
           new URL(`/admin/${brand}/v2`, request.url)
@@ -62,18 +55,12 @@ export async function middleware(request) {
     },
     handleInvalidToken: async () => {
       if (!PUBLIC_PATHS.includes(request.nextUrl.pathname)) {
-        return redirectToLogin(request, {
-          path: "/login",
-          publicPaths: PUBLIC_PATHS,
-        });
+        return NextResponse.redirect(new URL("/", request.url));
       }
       return NextResponse.next();
     },
     handleError: async (error) => {
-      return redirectToLogin(request, {
-        path: "/login",
-        publicPaths: PUBLIC_PATHS,
-      });
+      return NextResponse.redirect(new URL("/", request.url));
     },
   });
 }

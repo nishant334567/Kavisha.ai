@@ -60,7 +60,7 @@ export default function TrainPage() {
   useEffect(() => {
     // Check if user is not logged in
     if (!authLoading && !user) {
-      router.push("/login");
+      router.push("/");
       return;
     }
 
@@ -75,7 +75,7 @@ export default function TrainPage() {
         alert(
           "You don't have admin privileges to access this. Ask admins for access"
         );
-        router.push("/login");
+        router.push("/");
         return;
       }
     }
