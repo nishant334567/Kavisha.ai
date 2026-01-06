@@ -11,12 +11,12 @@ import { Mic, MicOff, Send, Paperclip } from "lucide-react";
 
 export default function ChatBox({
   currentChatId,
-  currentChatType,
-  updateChatId,
-  openDetailsPanel,
-  toggleRightPanel,
-  showInbox,
-  setShowInbox,
+  // currentChatType,
+  // updateChatId,
+  // openDetailsPanel,
+  // toggleRightPanel,
+  // showInbox,
+  // setShowInbox,
 }) {
   const endOfMessagesRef = useRef(null);
   const [messages, setMessages] = useState([]);
@@ -51,8 +51,31 @@ export default function ChatBox({
   const [answerSources, setAnswerSources] = useState([]);
   const [openChunkModal, setOpenChunkModal] = useState(false);
   const [chunkData, setChunkData] = useState(null);
+  const [currentChatType, setCurrentChatType] = useState(null);
 
   //voice effects
+
+  // Fetch chat type from chat ID
+  useEffect(() => {
+    if (!currentChatId) {
+      setCurrentChatType(null);
+      return;
+    }
+
+    const fetchChatType = async () => {
+      try {
+        const response = await fetch(`/api/session/${currentChatId}`);
+        if (response.ok) {
+          const data = await response.json();
+          setCurrentChatType(data.role || null);
+        }
+      } catch (error) {
+        console.error("Error fetching chat type:", error);
+      }
+    };
+
+    fetchChatType();
+  }, [currentChatId]);
 
   useEffect(() => {
     if (!isRecording) return;
@@ -72,8 +95,14 @@ export default function ChatBox({
   }, [isRecording]);
 
   useEffect(() => {
-    //fetch resume data initially
-    if (!currentChatId || currentChatType === "lead_journey") return;
+    //fetch resume data initially - only for job_seeker, recruiter, or dating
+    if (!currentChatId) return;
+    const allowedTypes = ["job_seeker", "recruiter", "dating"];
+    if (
+      !currentChatType ||
+      !allowedTypes.includes(currentChatType.toLowerCase())
+    )
+      return;
 
     const fetchResumeData = async () => {
       try {
@@ -86,10 +115,17 @@ export default function ChatBox({
       } catch (error) {}
     };
     fetchResumeData();
-  }, [currentChatId]);
+  }, [currentChatId, currentChatType]);
 
   useEffect(() => {
-    if (!currentChatId || currentChatType === "lead_journey") return;
+    // Only fetch for job_seeker, recruiter, or dating
+    if (!currentChatId) return;
+    const allowedTypes = ["job_seeker", "recruiter", "dating"];
+    if (
+      !currentChatType ||
+      !allowedTypes.includes(currentChatType.toLowerCase())
+    )
+      return;
 
     const fetchDataCollectionStatus = async () => {
       try {
@@ -99,10 +135,17 @@ export default function ChatBox({
       } catch (error) {}
     };
     fetchDataCollectionStatus();
-  }, [currentChatId]);
+  }, [currentChatId, currentChatType]);
 
   useEffect(() => {
-    if (!currentChatId || currentChatType === "lead_journey") return;
+    // Only fetch for job_seeker, recruiter, or dating
+    if (!currentChatId) return;
+    const allowedTypes = ["job_seeker", "recruiter", "dating"];
+    if (
+      !currentChatType ||
+      !allowedTypes.includes(currentChatType.toLowerCase())
+    )
+      return;
 
     const fetchMatches = async () => {
       try {
@@ -116,7 +159,7 @@ export default function ChatBox({
       } catch (error) {}
     };
     fetchMatches();
-  }, [currentChatId]);
+  }, [currentChatId, currentChatType]);
   useEffect(() => {
     const timeout = setTimeout(() => {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -217,9 +260,9 @@ export default function ChatBox({
     setOpenChat((prev) => !prev);
 
     // Close inbox on mobile when opening a chat
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      setShowInbox(false);
-    }
+    // if (typeof window !== "undefined" && window.innerWidth < 768) {
+    //   setShowInbox(false);
+    // }
   };
 
   const onResumeUpload = (newResumeData) => {
@@ -669,14 +712,14 @@ export default function ChatBox({
               </div>
             )}
 
-            {hasDatacollected && (
+            {/* {hasDatacollected && (
               <Matches
                 currentChatId={currentChatId}
                 matches={matches}
                 openDetailsPanel={openDetailsPanel}
                 openChatSession={openChatSession}
               />
-            )}
+            )} */}
             <div ref={endOfMessagesRef}></div>
             {/* </div> */}
           </div>
@@ -819,10 +862,9 @@ export default function ChatBox({
           />
         </div>
       </div>
-      {/* Inbox for desktop and mobile */}
-      {showInbox && (
+
+      {/* {showInbox && (
         <div className="fixed inset-0 z-50 flex items-center justify-center md:items-end md:justify-end bg-black bg-opacity-30 md:bg-transparent">
-          {/* Desktop: Show chat to the left of inbox if open */}
           {openChat && userA && userB && (
             <div className="hidden md:flex md:mr-4 md:mb-6">
               <div className="bg-white rounded-xl w-[500px] h-[75vh] border border-slate-200 shadow-2xl flex flex-col overflow-hidden">
@@ -837,7 +879,7 @@ export default function ChatBox({
               </div>
             </div>
           )}
-          {/* Inbox - always at bottom right on desktop */}
+        
           <div className="w-full h-full md:w-80 md:h-auto md:max-h-[60vh] md:mx-0 md:mr-6 md:mb-6 overflow-hidden shadow-2xl rounded-xl bg-white border border-slate-200 flex flex-col">
             <Inbox
               onOpenChat={openChatSession}
@@ -845,9 +887,9 @@ export default function ChatBox({
             />
           </div>
         </div>
-      )}
-      {/* Mobile: Show chat full screen when open and inbox is closed */}
-      {openChat && userA && userB && !showInbox && (
+      )} */}
+
+      {/* {openChat && userA && userB && !showInbox && (
         <Livechat
           userA={userA}
           userB={userB}
@@ -855,16 +897,16 @@ export default function ChatBox({
           onClose={() => setOpenChat(false)}
           connectionId={connectionId}
         />
-      )}
+      )} */}
 
-      <ChunkModal
+      {/* <ChunkModal
         isOpen={openChunkModal}
         onClose={() => {
           setOpenChunkModal(false);
           setChunkData(null);
         }}
         chunk={chunkData}
-      />
+      /> */}
     </div>
   );
 }

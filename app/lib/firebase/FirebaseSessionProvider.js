@@ -23,11 +23,6 @@ export function FirebaseSessionProvider({ children }) {
       });
 
       if (!res.ok) {
-        // If user API fails (401 or 404), redirect to login
-        // Only redirect if not already on login page to avoid loops
-        if (pathname !== "/login") {
-          router.push("/login");
-        }
         setUser(null);
         return;
       }
@@ -36,10 +31,6 @@ export function FirebaseSessionProvider({ children }) {
       setUser(data?.user || null);
     } catch {
       setUser(null);
-      // On error, redirect to login if not already there
-      if (pathname !== "/login") {
-        router.push("/login");
-      }
     } finally {
       setLoading(false);
     }
