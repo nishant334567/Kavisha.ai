@@ -90,6 +90,8 @@ export default function HomePage() {
     toggleRightPanel();
   };
 
+  const router = useRouter();
+
   const selectChatType = async (
     type,
     initialMessage,
@@ -114,8 +116,11 @@ export default function HomePage() {
       const data = await res.json();
       if (data?.success && data?.sessionId) {
         setCurrentChatId(data.sessionId);
+        // Redirect to the new chat
+        router.push(`/chats/${data.sessionId}`);
       }
     } catch (e) {
+      console.error("Error creating chat session:", e);
     } finally {
       setCreatingSession(false);
     }
