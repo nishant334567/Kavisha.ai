@@ -41,15 +41,16 @@ export async function POST(request) {
   let brandId = null;
 
   try {
-    const {
-      subdomain,
-      brandName,
-      loginButtonText,
-      title,
-      subtitle,
-      email,
-      chatbotPersonality,
-    } = await request.json();
+    const formData = await request.formData();
+
+    const subdomain = formData.get("subdomain");
+    const brandName = formData.get("brandName");
+    const loginButtonText = formData.get("loginButtonText");
+    const title = formData.get("title");
+    const subtitle = formData.get("subtitle");
+    const email = formData.get("email");
+    const personality = formData.get("personality");
+    const imageFile = formData.get("image");
 
     if (!subdomain) {
       return NextResponse.json(
@@ -69,19 +70,29 @@ export async function POST(request) {
       );
     }
 
-    // Create lead_journey service if chatbotPersonality is provided
+    // Upload image to Sanity if provided
+    let imageAsset = null;
+    if (imageFile && imageFile.size > 0) {
+      const buffer = Buffer.from(await imageFile.arrayBuffer());
+      imageAsset = await sanityClient.assets.upload("image", buffer, {
+        filename: imageFile.name || "avatar-image.jpg",
+      });
+    }
+
+    // Create lead_journey service with personality in intro field
     const services = [];
-    if (chatbotPersonality?.trim()) {
+    if (personality?.trim()) {
       services.push({
         _key: `lead_journey_${Date.now()}`,
         name: "lead_journey",
         title: "Talk to me",
         initialMessage: "Hello, How can I assist you today?",
-        prompt: chatbotPersonality.trim(),
+        intro: personality.trim(),
       });
     }
 
-    const brand = await sanityClient.create({
+    // Build brand document
+    const brandDoc = {
       _type: "brand",
       brandName: brandName || subdomain,
       loginButtonText: loginButtonText || "Talk to me now",
@@ -90,8 +101,27 @@ export async function POST(request) {
       subdomain,
       admins: email?.trim() ? [email] : [],
       services: services,
-    });
+    };
 
+    // Add brandImage and logo if uploaded (same image for both)
+    if (imageAsset) {
+      brandDoc.brandImage = {
+        _type: "image",
+        asset: {
+          _type: "reference",
+          _ref: imageAsset._id,
+        },
+      };
+      brandDoc.logo = {
+        _type: "image",
+        asset: {
+          _type: "reference",
+          _ref: imageAsset._id,
+        },
+      };
+    }
+
+    const brand = await sanityClient.create(brandDoc);
     brandId = brand._id;
 
     const domainName = `${subdomain}.${ROOT_DOMAIN}`;

@@ -72,8 +72,7 @@ Your goal is to analyze the person's public data (articles, statements, LinkedIn
 Return ONLY this JSON structure (no markdown, no wrapping):
 {
   "fetchedpersonality": true,
-  "personality": "A concise summary of the person's public persona, tone, and speaking style. (e.g., 'Formal, academic, and data-driven, but with a witty and approachable tone.')",
-  "knowledge_base": "A summary of their core expertise, opinions, and public statements. This should be a consolidated text blob of their key knowledge. (e.g., 'Expert in decentralized finance and blockchain scalability. Believes in... Authored articles on... Frequently posts about...')",
+  "personality": "A comprehensive description of the person's public persona, tone, speaking style, expertise, and knowledge. Include how they communicate (tone, style, vocabulary) AND what they talk about (topics, expertise, opinions). This should be detailed enough to create a digital avatar that can represent them.",
   "subdomains": [
     "example1.kavisha.ai",
     "example2.kavisha.ai",
@@ -95,8 +94,7 @@ Return ONLY this JSON structure (no markdown, no wrapping):
   ]
 }
 
-- For "personality", analyze *how* they talk (tone, style, vocabulary).
-- For "knowledge_base", summarize *what* they talk about (topics, expertise, opinions).
+- For "personality", provide a comprehensive description that includes BOTH how they communicate (tone, style, vocabulary) AND their expertise/knowledge areas. This single field should contain everything needed to create a representative digital avatar.
 - For "subdomains", generate at least 5 creative and professional variations based on their name for the 'kavisha.ai' domain.
 - For "titles", generate exactly 5 options that user can select for their login page title (the first thing user will see when trying to talk to the avatar). Each title should be concise (1-10 words) and professional.
 - For "subtitles", generate exactly 5 options that user can select for their login page subtitle (the first thing user will see when trying to talk to the avatar). Each subtitle should be a brief description (1-2 sentences) that introduces the avatar.
