@@ -1,5 +1,4 @@
 "use client";
-
 import { useFirebaseSession } from "./lib/firebase/FirebaseSessionProvider";
 import { useState, useEffect } from "react";
 import { redirect, useRouter } from "next/navigation";
@@ -126,6 +125,12 @@ export default function HomePage() {
     }
   };
 
+  useEffect(() => {
+    if (user && brandContext?.isBrandAdmin) {
+      router.push(`/admin/${brandContext.subdomain}/v2`);
+    }
+  }, [user, brandContext, router]);
+
   if (loading) {
     return <Loader loadingMessage="Loading..." />;
   }
@@ -138,6 +143,11 @@ export default function HomePage() {
       return <Homepage />;
     }
     return <AvatarHomepage />;
+  }
+
+  // Don't render chat interface for admins (they'll be redirected)
+  if (brandContext?.isBrandAdmin) {
+    return <Loader loadingMessage="Redirecting to admin dashboard..." />;
   }
 
   return (

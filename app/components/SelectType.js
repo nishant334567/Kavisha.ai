@@ -15,19 +15,19 @@ export default function SelectChatType({
       name: "job_seeker",
       title: "Looking for work",
       initialMessage:
-        "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can done. :)",
+        "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)",
     },
     {
       name: "recruiter",
       title: "Looking at hiring",
       initialMessage:
-        "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can done. :)",
+        "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)",
     },
     {
       name: "friends",
       title: "Looking for a friend",
       initialMessage:
-        "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can done. :)",
+        "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)",
     },
   ];
   const base =
