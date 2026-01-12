@@ -32,13 +32,22 @@ export async function GET(req, { params }) {
           return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
         }
 
-        // Reconstruct user answers from report if completed
+        // Reconstruct user answers from report or surveyResponse if completed
         let userAnswers = [];
-        if (attempt.status === "completed" && attempt.report?.questionResults) {
-          userAnswers = attempt.report.questionResults.map((result) => ({
-            questionId: result.questionId,
-            selectedAnswers: result.userAnswer || [],
-          }));
+        if (attempt.status === "completed") {
+          if (attempt.surveyResponse && Array.isArray(attempt.surveyResponse)) {
+            // For surveys: use surveyResponse (contains answer text)
+            userAnswers = attempt.surveyResponse.map((item) => ({
+              questionId: item.questionId.toString(),
+              selectedAnswers: item.selectedAnswers || [],
+            }));
+          } else if (attempt.report?.questionResults) {
+            // For quizzes: use questionResults (contains answer IDs)
+            userAnswers = attempt.report.questionResults.map((result) => ({
+              questionId: result.questionId,
+              selectedAnswers: result.userAnswer || [],
+            }));
+          }
         }
 
         return NextResponse.json({
@@ -51,6 +60,7 @@ export async function GET(req, { params }) {
             startedAt: attempt.startedAt,
             completedAt: attempt.completedAt,
             report: attempt.report,
+            surveyResponse: attempt.surveyResponse || null,
           },
           userAnswers,
         });

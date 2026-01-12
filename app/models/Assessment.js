@@ -23,14 +23,22 @@ const AssessmentSchema = new mongoose.Schema(
     objective: String,
     instructions: String,
 
-    gradingMode: {
-      type: String,
-      enum: ["auto", "llm"],
-      default: "none",
-    },
-
     totalMarks: Number,
     durationInMinutes: Number,
+
+    // Survey-specific fields
+    legend: {
+      type: String,
+      default: null, // JSON string or plain text describing the response scale
+    },
+    scoringInfo: {
+      type: String,
+      default: null, // Instructions on how to calculate scores
+    },
+    trends: {
+      type: String,
+      default: null, // Interpretation guide based on score ranges
+    },
   },
   { timestamps: true }
 );

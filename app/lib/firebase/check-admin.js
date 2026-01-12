@@ -5,6 +5,8 @@ import { client as sanity } from "@/app/lib/sanity";
  */
 export async function isBrandAdmin(email, brand) {
   try {
+    if (!email || !brand) return false;
+
     const brandDoc = await sanity.fetch(
       `*[_type=="brand" && subdomain==$brand][0]{admins}`,
       { brand }

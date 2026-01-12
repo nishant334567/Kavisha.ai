@@ -4,6 +4,14 @@ import { connectDB } from "@/app/lib/db";
 import Assessments from "@/app/models/Assessment";
 import Questions from "@/app/models/Questions";
 import Attempts from "@/app/models/Attempt";
+import getGeminiModel from "@/app/lib/getAiModel";
+
+function estimateTokens(text) {
+  if (!text || typeof text !== "string") return 0;
+  const words = text.trim().split(/\s+/).filter(Boolean);
+  return Math.ceil(words.length * 1.33);
+}
+
 export async function POST(request) {
   return withAuth(request, {
     onAuthenticated: async ({ decodedToken }) => {
@@ -11,9 +19,125 @@ export async function POST(request) {
         const { quizid, selectedAnswersArray, attemptId } =
           await request.json();
         await connectDB();
+
+        // Fetch assessment to check if it's a survey
+        const assessment = await Assessments.findById(quizid).lean();
+        if (!assessment) {
+          return NextResponse.json(
+            { error: "Assessment not found" },
+            { status: 404 }
+          );
+        }
+
         const questions = await Questions.find({ assessmentId: quizid })
           .sort({ order: 1 })
           .lean();
+
+        // Handle surveys differently
+        if (assessment.type === "survey") {
+          // Build surveyResponse with question text and answer text (not IDs)
+          const surveyResponse = questions.map((question) => {
+            const questionId = question._id.toString();
+            const userAnswer = selectedAnswersArray.find(
+              (ans) => ans.questionId === questionId
+            );
+            const selectedOptionIds = userAnswer?.selectedAnswers || [];
+
+            // Get answer text values instead of IDs
+            const selectedAnswerTexts = selectedOptionIds.map((optionId) => {
+              const option = question.options?.find(
+                (opt) => opt.id === optionId
+              );
+              return option?.text || optionId;
+            });
+
+            return {
+              questionText: question.questionText,
+              questionId: question._id,
+              selectedAnswers: selectedAnswerTexts,
+            };
+          });
+
+          // Prepare LLM prompt with survey data
+          let llmAnalysis = null;
+          try {
+            const model = getGeminiModel("gemini-2.5-flash");
+            if (model) {
+              const surveyDataText = surveyResponse
+                .map(
+                  (item, index) =>
+                    `${index + 1}. ${item.questionText}\n   Answer: ${item.selectedAnswers.join(", ")}`
+                )
+                .join("\n\n");
+
+              const prompt = `You are analyzing a survey response. Please provide a comprehensive analysis and report based on the following:
+
+SURVEY TITLE: ${assessment.title}
+${assessment.subtitle ? `SUBTITLE: ${assessment.subtitle}` : ""}
+
+RESPONSE SCALE/LEGEND:
+${assessment.legend || "Not provided"}
+
+SCORING INSTRUCTIONS:
+${assessment.scoringInfo || "Not provided"}
+
+TRENDS/INTERPRETATION GUIDE:
+${assessment.trends || "Not provided"}
+
+SURVEY RESPONSES:
+${surveyDataText}
+
+Please provide:
+1. A calculated score based on the scoring instructions (if provided)
+2. An interpretation based on the trends guide
+3. A detailed analysis of the responses
+4. Any insights or recommendations
+
+Format your response as a structured report with clear sections.`;
+
+              const geminiContents = [
+                {
+                  role: "user",
+                  parts: [{ text: prompt }],
+                },
+              ];
+
+              const responseGemini = await model.generateContent({
+                contents: geminiContents,
+              });
+
+              llmAnalysis =
+                responseGemini.response.candidates[0].content.parts[0].text;
+            }
+          } catch (llmError) {
+            console.error("Error generating LLM analysis:", llmError);
+            llmAnalysis = "Analysis could not be generated at this time.";
+          }
+
+          // Update attempt with survey response and LLM analysis
+          if (attemptId) {
+            await Attempts.findByIdAndUpdate(attemptId, {
+              status: "completed",
+              completedAt: new Date(),
+              surveyResponse: surveyResponse,
+              report: {
+                llmAnalysis: llmAnalysis,
+                generatedAt: new Date(),
+              },
+            });
+          }
+
+          return NextResponse.json({
+            success: true,
+            type: "survey",
+            surveyResponse: surveyResponse,
+            report: {
+              llmAnalysis: llmAnalysis,
+            },
+          });
+        }
+
+        // Original quiz logic
 
         let totalMarks = 0;
         let obtainedMarks = 0;

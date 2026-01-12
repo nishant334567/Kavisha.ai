@@ -1,11 +1,14 @@
+// creates new quiz and survey
 "use client";
 import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import StepIndicator from "@/app/admin/components/StepIndicator";
 import AssessmentDetailsForm from "@/app/admin/components/AssessmentDetailsForm";
 import QuestionsForm from "@/app/admin/components/QuestionsForm";
 
 export default function AddQuiz() {
+  const router = useRouter();
   const brandContext = useBrandContext();
   const [currentStep, setCurrentStep] = useState(1);
 
@@ -16,9 +19,11 @@ export default function AddQuiz() {
     subtitle: "",
     objective: "",
     instructions: "",
-    gradingMode: "none",
     totalMarks: null,
     durationInMinutes: null,
+    legend: "",
+    scoringInfo: "",
+    trends: "",
   });
 
   const [questions, setQuestions] = useState([]);
@@ -52,7 +57,7 @@ export default function AddQuiz() {
   const handleSubmit = async () => {
     console.log("Adding the quiz");
     try {
-      const response = await fetch("/api/admin/create-assessment", {
+      const response = await fetch("/api/admin/quiz", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -69,8 +74,8 @@ export default function AddQuiz() {
       }
 
       alert("Quiz/Survey created successfully!");
-      // Redirect to admin dashboard or quiz list
-      window.location.href = `/admin/${brandContext.subdomain}/v2`;
+      // Redirect to admin dashboard
+      router.push(`/admin/${brandContext.subdomain}/v2`);
     } catch (error) {
       console.error("Error creating assessment:", error);
       alert("An error occurred while creating the quiz/survey");

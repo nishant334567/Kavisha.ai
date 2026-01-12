@@ -1,10 +1,76 @@
+import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import Assessments from "@/app/models/Assessment";
 import Questions from "@/app/models/Questions";
-import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 
+// GET - Fetch all quizzes for admin's brand
+export async function GET(req) {
+  return withAuth(req, {
+    onAuthenticated: async ({ decodedToken }) => {
+      try {
+        const { searchParams } = new URL(req.url);
+        const brand = searchParams.get("brand");
+
+        if (!brand) {
+          return NextResponse.json(
+            { error: "Brand parameter is required" },
+            { status: 400 }
+          );
+        }
+
+        await connectDB();
+
+        // Check if user is brand admin
+        const isAdmin = await isBrandAdmin(decodedToken.email, brand);
+        if (!isAdmin) {
+          return NextResponse.json(
+            { error: "Forbidden - not a brand admin" },
+            { status: 403 }
+          );
+        }
+
+        // Fetch assessments for this brand
+        const assessments = await Assessments.find({ brand })
+          .sort({ createdAt: -1 })
+          .lean();
+
+        // Fetch question counts for each assessment
+        const quizzes = await Promise.all(
+          assessments.map(async (assessment) => {
+            const questionCount = await Questions.countDocuments({
+              assessmentId: assessment._id,
+            });
+
+            return {
+              id: assessment._id.toString(),
+              brand: assessment.brand,
+              type: assessment.type,
+              title: assessment.title,
+              subtitle: assessment.subtitle,
+              totalMarks: assessment.totalMarks,
+              durationInMinutes: assessment.durationInMinutes,
+              questionCount: questionCount,
+              createdAt: assessment.createdAt,
+              updatedAt: assessment.updatedAt,
+            };
+          })
+        );
+
+        return NextResponse.json({ quizzes });
+      } catch (error) {
+        console.error("Error fetching quizzes:", error);
+        return NextResponse.json(
+          { error: "Failed to fetch quizzes", details: error.message },
+          { status: 500 }
+        );
+      }
+    },
+  });
+}
+
+// POST - Create new quiz/assessment
 export async function POST(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
@@ -76,6 +142,9 @@ export async function POST(req) {
           instructions: assessment.instructions || "",
           totalMarks: assessment.totalMarks || null,
           durationInMinutes: assessment.durationInMinutes || null,
+          legend: assessment.legend || null,
+          scoringInfo: assessment.scoringInfo || null,
+          trends: assessment.trends || null,
         });
 
         // Create questions

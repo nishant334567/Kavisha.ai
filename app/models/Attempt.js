@@ -25,7 +25,20 @@ const AttemptSchema = new mongoose.Schema(
       type: Number,
       default: null,
     },
-    // Survey-specific field (flexible - can store JSON, string, or object)
+    // Survey-specific fields
+    surveyResponse: {
+      type: [
+        {
+          questionText: String,
+          questionId: mongoose.Schema.Types.ObjectId,
+          selectedAnswers: [String], // Array of answer text values (not IDs)
+        },
+      ],
+      default: null,
+    },
+    // Report field (flexible - can store JSON, string, or object)
+    // For quizzes: contains score, percentage, questionResults
+    // For surveys: contains LLM-generated analysis/report
     report: {
       type: mongoose.Schema.Types.Mixed,
       default: null,

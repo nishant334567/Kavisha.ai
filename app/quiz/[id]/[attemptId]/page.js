@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Loader from "@/app/components/Loader";
 import ScoreCard from "@/app/components/quiz/ScoreCard";
+import SurveyReportCard from "@/app/components/quiz/SurveyReportCard";
 import QuestionCard from "@/app/components/quiz/QuestionCard";
 import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -15,9 +16,11 @@ export default function QuizAttempt() {
   const [questions, setQuestions] = useState();
   const [userAnswers, setUserAnswers] = useState([]);
   const [quizResults, setQuizResults] = useState(null);
+  const [surveyReport, setSurveyReport] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isCompleted, setIsCompleted] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [isSurvey, setIsSurvey] = useState(false);
 
   const quizId = params.id;
   const attemptId = params.attemptId;
@@ -32,6 +35,7 @@ export default function QuizAttempt() {
         const quizData = await quizResponse.json();
         setAssessmentData(quizData?.quiz);
         setQuestions(quizData?.questions);
+        setIsSurvey(quizData?.quiz?.type === "survey");
 
         // Fetch attempt data
         const attemptResponse = await fetch(`/api/quiz/attempt/${attemptId}`);
@@ -41,20 +45,60 @@ export default function QuizAttempt() {
 
           if (attempt.status === "completed") {
             setIsCompleted(true);
-            // Load answers from attempt data
-            if (attemptData.userAnswers?.length > 0) {
+
+            // For surveys, we need to map surveyResponse back to userAnswers format
+            // For quizzes, use userAnswers directly
+            if (attemptData.attempt.surveyResponse && quizData?.questions) {
+              // Survey: convert surveyResponse to userAnswers format
+              // We need to map answer text back to option IDs for display
+              const surveyAnswers = attemptData.attempt.surveyResponse.map(
+                (item) => {
+                  // Find the question and match answer text to option IDs
+                  const question = quizData.questions.find(
+                    (q) => q.id === item.questionId.toString()
+                  );
+                  if (question) {
+                    const selectedOptionIds = item.selectedAnswers
+                      .map((answerText) => {
+                        const option = question.options?.find(
+                          (opt) => opt.text === answerText
+                        );
+                        return option?.id;
+                      })
+                      .filter(Boolean);
+                    return {
+                      questionId: item.questionId.toString(),
+                      selectedAnswers: selectedOptionIds,
+                    };
+                  }
+                  return {
+                    questionId: item.questionId.toString(),
+                    selectedAnswers: [],
+                  };
+                }
+              );
+              setUserAnswers(surveyAnswers);
+            } else if (attemptData.userAnswers?.length > 0) {
+              // Quiz: use userAnswers directly
               setUserAnswers(attemptData.userAnswers);
             }
+
             // Load results from report
             if (attempt.report) {
-              setQuizResults({
-                score: attempt.score,
-                totalMarks: attempt.totalMarks,
-                percentage: attempt.report.percentage,
-                correctCount: attempt.correctCount,
-                totalQuestions: attempt.report.totalQuestions,
-                questionResults: attempt.report.questionResults,
-              });
+              if (attempt.report.llmAnalysis) {
+                // Survey report
+                setSurveyReport(attempt.report);
+              } else {
+                // Quiz results
+                setQuizResults({
+                  score: attempt.score,
+                  totalMarks: attempt.totalMarks,
+                  percentage: attempt.report.percentage,
+                  correctCount: attempt.correctCount,
+                  totalQuestions: attempt.report.totalQuestions,
+                  questionResults: attempt.report.questionResults,
+                });
+              }
             }
           } else {
             // Load saved answers from localStorage for in-progress attempts
@@ -147,7 +191,11 @@ export default function QuizAttempt() {
         }),
       });
       const data = await response.json();
-      setQuizResults(data);
+      if (data.type === "survey") {
+        setSurveyReport(data.report);
+      } else {
+        setQuizResults(data);
+      }
     } catch (error) {
       console.error("Error submitting quiz:", error);
       alert("Failed to submit quiz. Please try again.");
@@ -191,6 +239,11 @@ export default function QuizAttempt() {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 mb-2">
               {assessmentData?.title}
             </h1>
+            {assessmentData?.subtitle && (
+              <p className="text-sm sm:text-base text-gray-600 mb-2">
+                {assessmentData.subtitle}
+              </p>
+            )}
             {isCompleted && (
               <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                 <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
@@ -200,8 +253,68 @@ export default function QuizAttempt() {
           </div>
         </div>
 
-        {/* Score Card for Completed Attempts */}
-        {isCompleted && quizResults && <ScoreCard results={quizResults} />}
+        {/* Survey Legend - Show before questions */}
+        {assessmentData?.type === "survey" &&
+          assessmentData?.legend &&
+          !isCompleted && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+              <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
+                Response Scale
+              </h2>
+              <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
+                {assessmentData.legend}
+              </div>
+            </div>
+          )}
+
+        {/* Instructions */}
+        {assessmentData?.instructions && !isCompleted && (
+          <div className="bg-gray-50 border border-gray-200 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
+              Instructions
+            </h2>
+            <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
+              {assessmentData.instructions}
+            </div>
+          </div>
+        )}
+
+        {/* Score Card for Completed Quiz Attempts */}
+        {isCompleted && quizResults && !isSurvey && (
+          <ScoreCard results={quizResults} />
+        )}
+
+        {/* Survey Report for Completed Survey Attempts */}
+        {isCompleted && surveyReport && isSurvey && (
+          <SurveyReportCard report={surveyReport} />
+        )}
+
+        {/* Survey Scoring Info and Trends - Show after completion */}
+        {isCompleted && assessmentData?.type === "survey" && (
+          <>
+            {assessmentData?.scoringInfo && (
+              <div className="bg-purple-50 border border-purple-200 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
+                  Scoring Instructions
+                </h2>
+                <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
+                  {assessmentData.scoringInfo}
+                </div>
+              </div>
+            )}
+
+            {assessmentData?.trends && (
+              <div className="bg-green-50 border border-green-200 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold text-gray-900 mb-3">
+                  Trends & Interpretation
+                </h2>
+                <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
+                  {assessmentData.trends}
+                </div>
+              </div>
+            )}
+          </>
+        )}
 
         {/* Questions */}
         <div className="space-y-4">
