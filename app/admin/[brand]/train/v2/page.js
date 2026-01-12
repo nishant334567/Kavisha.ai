@@ -21,17 +21,24 @@ export default function Train() {
   const [selectedFileName, setSelectedFileName] = useState("");
   const [documents, setDocuments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCount, setTotalCount] = useState(0);
   const brand = useBrandContext();
 
-  const fetchDocuments = async () => {
+  const fetchDocuments = async (page = 1) => {
     if (!brand?.subdomain) return;
     try {
+      setLoading(true);
       const res = await fetch(
-        `/api/admin/training-documents?brand=${brand.subdomain}`
+        `/api/admin/training-documents?brand=${brand.subdomain}&page=${page}`
       );
       const data = await res.json();
       if (res.ok) {
         setDocuments(data.documents || []);
+        setCurrentPage(data.currentPage || 1);
+        setTotalPages(data.totalPages || 1);
+        setTotalCount(data.totalCount || 0);
       }
     } catch (error) {
       console.error("Failed to fetch documents:", error);
@@ -41,8 +48,8 @@ export default function Train() {
   };
 
   useEffect(() => {
-    fetchDocuments();
-  }, [brand?.subdomain]);
+    fetchDocuments(currentPage);
+  }, [brand?.subdomain, currentPage]);
 
   useEffect(() => {
     const handleClickOutside = () => setOpenMenuId(null);
@@ -108,7 +115,7 @@ export default function Train() {
       alert("File uploaded successfully!");
       fileInputRef.current.value = "";
       setSelectedFileName("");
-      fetchDocuments();
+      fetchDocuments(1); // Reset to page 1 after adding new document
     } catch (error) {
       alert(`Error: ${error.message}`);
     } finally {
@@ -124,7 +131,7 @@ export default function Train() {
       await processText(data.title, data.content);
       alert("Text saved successfully!");
       setIsModalOpen(false);
-      fetchDocuments();
+      fetchDocuments(1); // Reset to page 1 after adding new document
     } catch (error) {
       alert(`Error: ${error.message}`);
     } finally {
@@ -208,7 +215,7 @@ export default function Train() {
       alert("Document updated successfully!");
       setIsEditModalOpen(false);
       setEditingDocument(null);
-      fetchDocuments();
+      fetchDocuments(currentPage); // Stay on current page after update
     } catch (error) {
       alert(`Error: ${error.message}`);
     } finally {
@@ -226,7 +233,16 @@ export default function Train() {
       );
       if (!res.ok) throw new Error((await res.json()).error);
       alert("Document deleted successfully!");
-      fetchDocuments();
+      // If current page becomes empty, go to previous page, otherwise stay on current page
+      if (documents.length === 1 && currentPage > 1) {
+        const newPage = currentPage - 1;
+        setCurrentPage(newPage);
+        // Fetch directly to avoid waiting for useEffect
+        fetchDocuments(newPage);
+      } else {
+        // Refetch current page
+        fetchDocuments(currentPage);
+      }
     } catch (error) {
       alert(`Error: ${error.message}`);
     }
@@ -317,9 +333,17 @@ export default function Train() {
             </button>
           </div>
         </div>
-        <p className="text-[#4D5495] my-4 font-akshar font-semibold uppercase">
-          Knowledge base
-        </p>
+        <div className="flex justify-between items-center my-4">
+          <p className="text-[#4D5495] font-akshar font-semibold uppercase">
+            Knowledge base
+          </p>
+          {totalCount > 0 && (
+            <span className="text-sm text-gray-600">
+              Showing {documents.length} of {totalCount} documents (Page{" "}
+              {currentPage} of {totalPages})
+            </span>
+          )}
+        </div>
         {loading ? (
           <div className="text-center py-8">Loading...</div>
         ) : documents.length === 0 ? (
@@ -327,21 +351,47 @@ export default function Train() {
             No documents uploaded yet
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {documents.map((doc) => (
-              <DocumentCard
-                key={doc._id}
-                doc={doc}
-                onView={handleViewDocument}
-                onEdit={handleEditDocument}
-                onDelete={handleDeleteDocument}
-                openMenuId={openMenuId}
-                setOpenMenuId={setOpenMenuId}
-                loadingDocumentId={loadingDocumentId}
-                formatDate={formatDate}
-              />
-            ))}
-          </div>
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {documents.map((doc) => (
+                <DocumentCard
+                  key={doc._id}
+                  doc={doc}
+                  onView={handleViewDocument}
+                  onEdit={handleEditDocument}
+                  onDelete={handleDeleteDocument}
+                  openMenuId={openMenuId}
+                  setOpenMenuId={setOpenMenuId}
+                  loadingDocumentId={loadingDocumentId}
+                  formatDate={formatDate}
+                />
+              ))}
+            </div>
+
+            {/* Pagination Controls */}
+            {totalPages > 1 && (
+              <div className="flex justify-center items-center gap-4 mt-8">
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.max(1, prev - 1))
+                  }
+                  disabled={currentPage === 1}
+                  className="px-6 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() =>
+                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
+                  }
+                  disabled={currentPage === totalPages}
+                  className="px-6 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                >
+                  Next
+                </button>
+              </div>
+            )}
+          </>
         )}
 
         <div className="text-center mt-12 text-sm text-blue-900">
