@@ -22,7 +22,10 @@ export async function POST(request) {
 
     // Save to GCS
     const fileId = uuidv4();
-    const gcsFileName = `training/${brand}/${fileId}_${title.replace(/[^a-zA-Z0-9]/g, "_")}.txt`;
+    // Truncate title to avoid long filenames (max 50 chars for GCS filename part)
+    // GCS has a 1024 char limit, but we want to keep it reasonable
+    const sanitizedTitle = title.replace(/[^a-zA-Z0-9]/g, "_").substring(0, 50);
+    const gcsFileName = `training/${brand}/${fileId}_${sanitizedTitle}.txt`;
     const gcsFile = bucket.file(gcsFileName);
 
     await gcsFile.save(text, {

@@ -91,7 +91,10 @@ export default function Train() {
     setSelectedFileName(file.name);
     setUploading(true);
     try {
-      const title = file.name.replace(/\.[^/.]+$/, "");
+      // Extract title from filename and truncate to 50 characters (DB limit)
+      const fullTitle = file.name.replace(/\.[^/.]+$/, "");
+      const title =
+        fullTitle.length > 50 ? fullTitle.substring(0, 50) : fullTitle;
       let text = "";
 
       if (file.type === "application/pdf") {
@@ -128,7 +131,10 @@ export default function Train() {
 
     setUploading(true);
     try {
-      await processText(data.title, data.content);
+      // Truncate title to 50 characters (DB limit)
+      const title =
+        data.title.length > 50 ? data.title.substring(0, 50) : data.title;
+      await processText(title, data.content);
       alert("Text saved successfully!");
       setIsModalOpen(false);
       fetchDocuments(1); // Reset to page 1 after adding new document

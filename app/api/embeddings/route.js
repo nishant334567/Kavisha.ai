@@ -25,7 +25,11 @@ export async function POST(request) {
 
     await connectDB();
     const shortUuid = uuidv4().substring(0, 8); // First 8 chars for uniqueness
-    const titleSlug = title.trim().replace(/[^a-zA-Z0-9]/g, ""); // Remove special chars
+    // Truncate titleSlug to avoid very long docIds (max 50 chars to match DB title limit)
+    const titleSlug = title
+      .trim()
+      .replace(/[^a-zA-Z0-9]/g, "")
+      .substring(0, 50);
     const docId = `${titleSlug}_${shortUuid}`;
 
     let paragraphs = text
