@@ -1,10 +1,9 @@
 "use client";
 import { useState, useRef, useEffect } from "react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
-import Matches from "./Matches";
+
 import Resume from "./Resume";
-import Livechat from "./LiveChat";
-import Inbox from "./Inbox";
+import FormatText from "./FormatText";
 import ChunkModal from "./ChunkModal";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { Mic, MicOff, Send, Paperclip } from "lucide-react";
@@ -628,7 +627,7 @@ export default function ChatBox({
                   {m.role === "user" ? (
                     <div className="flex justify-end w-full min-w-0">
                       <div className="text-white font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-[#59646F]">
-                        {m.message}
+                        <FormatText text={m.message} />
                       </div>
                     </div>
                   ) : (
@@ -640,7 +639,7 @@ export default function ChatBox({
                         />
                       </div>
                       <div className="font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-[#F8F8F8] min-w-0">
-                        {formatMessage(m.message)}
+                        <FormatText text={m.message} />
                       </div>
                     </div>
                   )}

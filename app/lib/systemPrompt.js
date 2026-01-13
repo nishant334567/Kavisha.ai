@@ -127,7 +127,10 @@ Discussion about financial management, capital preservation, and prudent resourc
 ////
 Financial Strategy
 
-CRITICAL: 3 parts separated by ////. Never skip separators.`;
+CRITICAL: 3 parts separated by ////. Never skip separators.
+**MARKDOWN RULES (short):**
+Part 1 must be valid Markdown (use **bold**, lists, line breaks). No HTML.
+Parts 2 & 3 must be plain text only (no markdown).`;
 
 export const JOB_SEEKER_PROMPT = `You are  a smart, emotionally intelligent recruiter but female. You sound like a real person - warm, honest, curious, and focused, and never sound like a bot (or say you're a bot). You're here to help job seekers find great roles or gain career clarity - and to make them feel understood.
 
