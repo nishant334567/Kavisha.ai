@@ -1,5 +1,6 @@
 "use client";
 import { FileText, Sparkles } from "lucide-react";
+import FormatText from "@/app/components/FormatText";
 
 export default function SurveyReportCard({ report }) {
   if (!report?.llmAnalysis) return null;
@@ -15,11 +16,7 @@ export default function SurveyReportCard({ report }) {
         </h2>
       </div>
       <div className="bg-white rounded-lg p-4 sm:p-6 border border-gray-200">
-        <div className="prose prose-sm sm:prose-base max-w-none">
-          <div className="whitespace-pre-wrap text-sm sm:text-base text-gray-700 leading-relaxed">
-            {report.llmAnalysis}
-          </div>
-        </div>
+        <FormatText text={report.llmAnalysis} />
       </div>
       {report.generatedAt && (
         <div className="text-xs text-gray-500 mt-3 sm:mt-4 text-center">

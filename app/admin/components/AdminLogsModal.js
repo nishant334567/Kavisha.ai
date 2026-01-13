@@ -1,3 +1,4 @@
+import FormatText from "@/app/components/FormatText";
 import { X, FileText } from "lucide-react";
 
 export default function AdminLogsModal({
@@ -110,7 +111,7 @@ export default function AdminLogsModal({
                     }`}
                   >
                     <div className="text-sm whitespace-pre-wrap break-words leading-relaxed">
-                      {log.message}
+                      <FormatText text={log?.message} />
                     </div>
                     <div className="text-xs mt-2 text-gray-500">
                       {formatTime(log.createdAt)}
