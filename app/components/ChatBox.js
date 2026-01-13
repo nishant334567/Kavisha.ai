@@ -899,14 +899,14 @@ export default function ChatBox({
         />
       )} */}
 
-      {/* <ChunkModal
+      <ChunkModal
         isOpen={openChunkModal}
         onClose={() => {
           setOpenChunkModal(false);
           setChunkData(null);
         }}
         chunk={chunkData}
-      /> */}
+      />
     </div>
   );
 }

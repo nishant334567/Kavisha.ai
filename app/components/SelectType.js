@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { useRouter } from "next/navigation";
 
 export default function SelectChatType({
   servicesProvided,
@@ -8,6 +9,7 @@ export default function SelectChatType({
   isCreating,
   enableCommunityOnboarding = false,
 }) {
+  const router = useRouter();
   const [showType, setShowtype] = useState(false);
   useEffect(() => {}, [showType]);
   const typeOfConnection = [
@@ -111,6 +113,20 @@ export default function SelectChatType({
                 </div>
               </button>
             )}
+            <div className="flex flex-col justify-center items-center mt-2">
+              <button
+                onClick={() => router.push("/quiz")}
+                className="font-akshar uppercase text-lg flex items-center justify-center w-full"
+                disabled={isCreating}
+              >
+                <div className="flex items-center justify-center">
+                  <span className="font-akshar uppercase text-lg font-light">
+                    Quiz/Survey
+                  </span>
+                </div>
+              </button>
+              <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
+            </div>
           </div>
         )}
       </div>

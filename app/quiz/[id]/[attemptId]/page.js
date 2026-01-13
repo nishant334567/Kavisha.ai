@@ -191,10 +191,11 @@ export default function QuizAttempt() {
         }),
       });
       const data = await response.json();
-      if (data.type === "survey") {
-        setSurveyReport(data.report);
+      if (response.ok) {
+        // Reload page to show the results/report
+        window.location.reload();
       } else {
-        setQuizResults(data);
+        alert(data.error || "Failed to submit quiz/survey");
       }
     } catch (error) {
       console.error("Error submitting quiz:", error);
