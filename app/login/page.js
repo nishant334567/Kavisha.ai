@@ -90,10 +90,13 @@ export default function LoginPage() {
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
     setIsMobile(isMobileDevice());
-    // if (user) {
-    //   router.push("/");
-    // }
-  }, [user]);
+  }, []);
+
+  useEffect(() => {
+    if (user && !loading) {
+      router.push("/");
+    }
+  }, [user, loading, router]);
 
   const handleSignIn = async () => {
     setSigningIn(true);
@@ -101,7 +104,7 @@ export default function LoginPage() {
     try {
       await signIn();
       await refresh();
-      // Don't redirect - let the page re-render with logged-in state
+      // The useEffect will handle redirect when user state updates
     } catch (e) {
       setError(e.message || "Sign in failed");
     } finally {
