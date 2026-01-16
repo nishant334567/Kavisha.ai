@@ -9,7 +9,8 @@ export async function GET(req, { params }) {
       try {
         const { sessionId } = await params;
         await connectDB();
-        const session = await Session.findById(sessionId).select("role title");
+        const session =
+          await Session.findById(sessionId).select("role title name");
 
         if (!session) {
           return NextResponse.json(
@@ -21,6 +22,7 @@ export async function GET(req, { params }) {
         return NextResponse.json({
           role: session.role,
           title: session.title,
+          name: session.name,
         });
       } catch (err) {
         return NextResponse.json(

@@ -51,6 +51,7 @@ export default function ChatBox({
   const [openChunkModal, setOpenChunkModal] = useState(false);
   const [chunkData, setChunkData] = useState(null);
   const [currentChatType, setCurrentChatType] = useState(null);
+  const [sessionName, setSessionName] = useState(null);
 
   //voice effects
 
@@ -67,6 +68,7 @@ export default function ChatBox({
         if (response.ok) {
           const data = await response.json();
           setCurrentChatType(data.role || null);
+          setSessionName(data.name || null);
         }
       } catch (error) {
         console.error("Error fetching chat type:", error);
@@ -586,13 +588,12 @@ export default function ChatBox({
                         ""
                       );
                     } else {
-                      const service = brandContext?.services?.find(
-                        (s) =>
-                          s.name?.toLowerCase() ===
-                          currentChatType?.toLowerCase()
-                      );
+                      // Use name from database if available, otherwise fallback to brandContext lookup
+                      if (sessionName) {
+                        return sessionName.toUpperCase();
+                      }
+
                       return (
-                        service?.title?.toUpperCase() ||
                         currentChatType?.split("_").join(" ").toUpperCase() ||
                         ""
                       );

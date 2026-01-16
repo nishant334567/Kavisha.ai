@@ -56,7 +56,12 @@ export default function SelectChatType({
               <button
                 key={item.name}
                 onClick={() =>
-                  selectChatType(item.name, item.initialMessage, true)
+                  selectChatType(
+                    item.name,
+                    item.initialMessage,
+                    true,
+                    item.title
+                  )
                 }
                 className={`${base} `}
                 disabled={isCreating}
@@ -76,13 +81,18 @@ export default function SelectChatType({
 
                 return (
                   <div
-                    key={item.name}
+                    key={index}
                     className="flex flex-col justify-center items-center"
                   >
                     <button
                       onClick={() => {
                         !isCreating &&
-                          selectChatType(item.name, item.initialMessage);
+                          selectChatType(
+                            item.name,
+                            item.initialMessage,
+                            false,
+                            item.title
+                          );
                       }}
                       className="font-akshar uppercase text-lg flex items-center justify-center w-full"
                       disabled={isCreating}

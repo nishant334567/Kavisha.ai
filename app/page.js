@@ -94,7 +94,8 @@ export default function HomePage() {
   const selectChatType = async (
     type,
     initialMessage,
-    isCommunityChat = false
+    isCommunityChat = false,
+    name
   ) => {
     setCurrentChatType(type);
     if (!user || !brandContext) return;
@@ -110,6 +111,7 @@ export default function HomePage() {
           brand: brandContext.subdomain,
           initialmessage: initialMessage,
           isCommunityChat: isCommunityChat,
+          chatName: name,
         }),
       });
       const data = await res.json();

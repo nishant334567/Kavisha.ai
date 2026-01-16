@@ -7,7 +7,8 @@ async function createSessionWithDefaultLog(
   role,
   brand,
   initialmessage = null,
-  isCommunityChat
+  isCommunityChat,
+  chatName
 ) {
   try {
     await connectDB();
@@ -15,7 +16,8 @@ async function createSessionWithDefaultLog(
       userId,
       role,
       brand,
-      isCommunityChat: Boolean(isCommunityChat), // Ensure it's always a boolean
+      isCommunityChat: Boolean(isCommunityChat),
+      name: chatName, // Ensure it's always a boolean
     });
 
     await Logs.create({

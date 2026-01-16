@@ -36,6 +36,10 @@ const ChatSessionsSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    name: {
+      type: String,
+      required: false,
+    },
     allDataCollected: {
       type: Boolean,
       default: false,
