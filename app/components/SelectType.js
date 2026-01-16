@@ -69,49 +69,60 @@ export default function SelectChatType({
         {!showType && (
           <div className="px-4">
             {servicesProvided.length > 0 &&
-              servicesProvided.map((item) => (
-                <div
-                  key={item.name}
-                  className="flex flex-col justify-center items-center"
-                >
-                  <button
-                    onClick={() => {
-                      !isCreating &&
-                        selectChatType(item.name, item.initialMessage);
-                    }}
-                    className="font-akshar uppercase text-lg flex items-center justify-center w-full"
-                    disabled={isCreating}
+              servicesProvided.map((item, index) => {
+                const isLastService = index === servicesProvided.length - 1;
+                const hasCommunityButton = enableCommunityOnboarding;
+                const shouldShowLine = !(isLastService && !hasCommunityButton);
+
+                return (
+                  <div
+                    key={item.name}
+                    className="flex flex-col justify-center items-center"
                   >
-                    {isCreating && selectedType === item.name ? (
-                      <div className="flex flex-col items-center justify-center h-full">
-                        <span className="inline-block h-6 w-6 rounded-full border-2 border-white/70 border-t-transparent animate-spin"></span>
-                        <span className="font-akshar uppercase text-lg">
-                          Starting…
-                        </span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center justify-center">
-                        <span className="font-akshar uppercase text-l font-light">
-                          {item.title || item.name}
-                        </span>
-                      </div>
+                    <button
+                      onClick={() => {
+                        !isCreating &&
+                          selectChatType(item.name, item.initialMessage);
+                      }}
+                      className="font-akshar uppercase text-lg flex items-center justify-center w-full"
+                      disabled={isCreating}
+                    >
+                      {isCreating && selectedType === item.name ? (
+                        <div className="flex flex-col items-center justify-center h-full">
+                          <span className="inline-block h-6 w-6 rounded-full border-2 border-white/70 border-t-transparent animate-spin"></span>
+                          <span className="font-akshar uppercase text-lg">
+                            Starting…
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="flex items-center justify-center">
+                          <span className="font-akshar uppercase text-l font-light">
+                            {item.title || item.name}
+                          </span>
+                        </div>
+                      )}
+                    </button>
+                    {shouldShowLine && (
+                      <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
                     )}
-                  </button>
-                  <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
-                </div>
-              ))}
+                  </div>
+                );
+              })}
             {enableCommunityOnboarding && (
-              <button
-                onClick={() => setShowtype(true)}
-                className="flex items-center justify-center w-full"
-                disabled={isCreating}
-              >
-                <div className="flex items-center justify-center">
-                  <span className="font-akshar uppercase text-lg font-light">
-                    Connect with other fans
-                  </span>
-                </div>
-              </button>
+              <div className="flex flex-col justify-center items-center">
+                <button
+                  onClick={() => setShowtype(true)}
+                  className="flex items-center justify-center w-full"
+                  disabled={isCreating}
+                >
+                  <div className="flex items-center justify-center">
+                    <span className="font-akshar uppercase text-lg font-light">
+                      Connect with other learners
+                    </span>
+                  </div>
+                </button>
+                <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
+              </div>
             )}
             <div className="flex flex-col justify-center items-center mt-2">
               <button
@@ -125,7 +136,6 @@ export default function SelectChatType({
                   </span>
                 </div>
               </button>
-              <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
             </div>
           </div>
         )}
