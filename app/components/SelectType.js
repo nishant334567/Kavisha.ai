@@ -132,7 +132,7 @@ export default function SelectChatType({
               >
                 <div className="flex items-center justify-center">
                   <span className="font-akshar uppercase text-lg font-light">
-                    Quiz/Survey
+                    Take a Quiz/Survey
                   </span>
                 </div>
               </button>

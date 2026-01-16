@@ -1,5 +1,8 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { useRouter } from "next/navigation";
+import { signIn } from "../lib/firebase/sign-in";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import InfoCard from "./InfoCard";
 import AvatarCard from "./AvatarCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -73,8 +76,26 @@ const avatars = [
 ];
 
 export default function Homepage() {
+  const router = useRouter();
+  const { refresh } = useFirebaseSession();
   const [currentIndex, setCurrentIndex] = useState(0);
   const sliderRef = useRef(null);
+  const [signingIn, setSigningIn] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleSignIn = async () => {
+    setSigningIn(true);
+    setError("");
+    try {
+      await signIn();
+      await refresh();
+      // State will update and root page will show logged-in UI
+    } catch (e) {
+      setError(e.message || "Sign in failed");
+    } finally {
+      setSigningIn(false);
+    }
+  };
 
   // Get visible count based on screen size
   const getVisibleCount = () => {
@@ -120,15 +141,32 @@ export default function Homepage() {
           engage their fans. Fans talk to them, and also find each other.
         </p>
       </div>
+      {error && (
+        <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg max-w-md mx-auto text-sm text-center">
+          {error}
+        </div>
+      )}
+
       <div className="font-akshar gap-2 md:gap-4 flex flex-wrap justify-center items-center mb-8 px-4">
-        <button className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md">
-          Talk to Avataars
+        <button
+          onClick={handleSignIn}
+          disabled={signingIn}
+          className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
+        >
+          {signingIn ? "Signing in..." : "Talk to Avataars"}
         </button>
-        <button className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#3D5E6B] text-white shadow-md">
+        <button
+          onClick={() => router.push("/make-avatar/v2")}
+          className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#3D5E6B] text-white shadow-md hover:bg-[#2d4752] transition-colors"
+        >
           Make my Avataar
         </button>
-        <button className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md">
-          Connect with people
+        <button
+          onClick={handleSignIn}
+          disabled={signingIn}
+          className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
+        >
+          {signingIn ? "Signing in..." : "Connect with people"}
         </button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-[85%] mx-auto my-16">
@@ -253,8 +291,12 @@ export default function Homepage() {
               <br />
               each other
             </p>
-            <button className="w-fit px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl font-akshar hover:bg-white hover:text-[#35515b] transition-colors">
-              Connect with people
+            <button
+              onClick={handleSignIn}
+              disabled={signingIn}
+              className="w-fit px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl font-akshar hover:bg-white hover:text-[#35515b] transition-colors disabled:opacity-50"
+            >
+              {signingIn ? "Signing in..." : "Connect with people"}
             </button>
           </div>
 

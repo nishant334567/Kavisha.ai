@@ -2,11 +2,13 @@
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
 import { signIn } from "../lib/firebase/sign-in";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { useState } from "react";
 
 export default function AvatarHomepage() {
   const brand = useBrandContext();
   const router = useRouter();
+  const { refresh } = useFirebaseSession();
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState("");
 
@@ -15,7 +17,9 @@ export default function AvatarHomepage() {
     setError("");
     try {
       await signIn();
-      router.push("/");
+      await refresh();
+      // Force a hard refresh to ensure state is updated
+      // window.location.href = "/";
     } catch (e) {
       setError(e.message || "Sign in failed");
     } finally {
