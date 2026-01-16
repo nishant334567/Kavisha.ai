@@ -100,8 +100,8 @@ export default function LoginPage() {
     setError("");
     try {
       await signIn();
-      refresh();
-      router.push("/");
+      await refresh();
+      // Don't redirect - let the page re-render with logged-in state
     } catch (e) {
       setError(e.message || "Sign in failed");
     } finally {
