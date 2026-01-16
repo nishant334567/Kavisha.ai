@@ -83,7 +83,7 @@ export default function AddQuiz() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
+    <div className="min-h-screen bg-white pt-20 md:pt-24 pb-8">
       <div className="max-w-3xl mx-auto px-6">
         <StepIndicator steps={steps} currentStep={currentStep} />
 

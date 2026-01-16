@@ -32,6 +32,7 @@ export async function GET(req) {
         $project: {
           _id: 1,
           title: 1,
+          subtitle: 1,
           type: 1,
           createdAt: 1,
           questionCount: { $size: "$questions" },
@@ -44,6 +45,7 @@ export async function GET(req) {
       quizzes: assessments.map((assessment) => ({
         id: assessment._id,
         title: assessment.title,
+        subtitle: assessment.subtitle,
         type: assessment.type,
         questionCount: assessment.questionCount,
         createdAt: assessment.createdAt,

@@ -130,7 +130,7 @@ export default function QuestionsForm({
   return (
     <div className="bg-white rounded-xl shadow-lg p-8">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-bold text-gray-900">Add Questions</h2>
+        <h2 className="text-2xl font-semibold text-[#264653] font-fredoka">Add Questions</h2>
         <button
           type="button"
           onClick={() => {
@@ -149,7 +149,7 @@ export default function QuestionsForm({
               });
             }
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+          className="flex items-center gap-2 px-4 py-2 bg-[#264653] text-white rounded-full font-medium hover:bg-[#1e383e] transition-colors font-fredoka"
         >
           <Plus className="w-5 h-5" />
           {addQues ? "Cancel" : "Add Question"}
@@ -159,11 +159,11 @@ export default function QuestionsForm({
       {/* Questions List */}
       {questions.length === 0 ? (
         <div className="text-center py-12 border-2 border-dashed border-gray-300 rounded-lg mb-6">
-          <p className="text-gray-500 mb-4">No questions added yet.</p>
+          <p className="text-gray-500 mb-4 font-fredoka">No questions added yet.</p>
           <button
             type="button"
             onClick={() => setAddQues(true)}
-            className="text-purple-600 hover:text-purple-700 font-medium"
+            className="text-[#264653] hover:text-[#1e383e] font-medium font-fredoka"
           >
             Click here to add your first question
           </button>
@@ -184,8 +184,8 @@ export default function QuestionsForm({
 
       {/* Add Question Form */}
       {addQues && (
-        <div className="border-2 border-purple-200 border-dashed rounded-xl p-6 bg-purple-50 mb-6">
-          <h3 className="text-lg font-semibold text-gray-900 mb-4">
+        <div className="border-2 border-teal-200 border-dashed rounded-xl p-6 bg-teal-50 mb-6">
+          <h3 className="text-lg font-semibold text-[#264653] mb-4 font-fredoka">
             New Question
           </h3>
           <QuestionItem
@@ -200,7 +200,7 @@ export default function QuestionsForm({
             <button
               type="button"
               onClick={addQuestion}
-              className="flex-1 px-4 py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors"
+              className="flex-1 px-4 py-2 bg-[#264653] text-white rounded-full font-medium hover:bg-[#1e383e] transition-colors font-fredoka"
             >
               Save Question
             </button>
@@ -219,7 +219,7 @@ export default function QuestionsForm({
                   required: true,
                 });
               }}
-              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+              className="px-4 py-2 border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors font-fredoka"
             >
               Cancel
             </button>
@@ -230,7 +230,7 @@ export default function QuestionsForm({
       {/* Summary */}
       {questions.length > 0 && (
         <div className="mb-6 p-4 bg-gray-50 rounded-lg">
-          <div className="flex items-center gap-2 text-sm text-gray-700">
+          <div className="flex items-center gap-2 text-sm text-gray-700 font-fredoka">
             <CheckCircle2 className="w-4 h-4 text-green-600" />
             <span>
               <strong>{questions.length}</strong> question
@@ -245,14 +245,14 @@ export default function QuestionsForm({
         <button
           type="button"
           onClick={onBack}
-          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-lg font-medium hover:bg-gray-50 transition-colors"
+          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors font-fredoka"
         >
           Back
         </button>
         <button
           type="button"
           onClick={handleSubmit}
-          className="px-6 py-3 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-500 focus:ring-offset-2"
+          className="px-6 py-3 bg-[#264653] text-white rounded-full font-medium hover:bg-[#1e383e] transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 font-fredoka"
         >
           Submit Quiz/Survey
         </button>

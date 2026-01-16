@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import Loader from "@/app/components/Loader";
-import { BookOpen, ArrowLeft, Edit, Users } from "lucide-react";
+import { BookOpen, ArrowLeft, Users } from "lucide-react";
 
 export default function AdminQuizList() {
   const router = useRouter();
@@ -36,123 +36,128 @@ export default function AdminQuizList() {
     fetchQuizzes();
   }, [brandContext]);
 
+  // Format date: "12 Jan '26"
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    const day = date.getDate();
+    const month = date.toLocaleString("default", { month: "short" });
+    const year = date.getFullYear().toString().slice(-2);
+    return `${day} ${month} '${year}`;
+  };
+
   if (loading) {
     return <Loader loadingMessage="Loading quizzes..." />;
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="max-w-6xl mx-auto px-4 sm:px-6">
-        {/* Header */}
-        <div className="mb-6">
-          <button
-            onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-purple-600 transition-colors mb-4 text-sm font-medium"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back
-          </button>
+    <div className="min-h-screen bg-white pt-20 md:pt-24 pb-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        {/* Back Button */}
+        <button
+          onClick={() => router.back()}
+          className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6 text-sm font-medium font-fredoka group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          Back
+        </button>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="p-2 bg-purple-100 rounded-lg">
-                <BookOpen className="w-6 h-6 text-purple-600" />
-              </div>
-              <div>
-                <h1 className="text-3xl font-bold text-gray-900">
-                  My Quizzes & Surveys
-                </h1>
-                <p className="text-sm text-gray-600 mt-1">
-                  Manage your quizzes and surveys
-                </p>
-              </div>
-            </div>
-            <button
-              onClick={() => router.push("/admin/quiz/new")}
-              className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium"
-            >
-              + Add New
-            </button>
+        {/* Header Section */}
+        <div className="mb-6">
+          <div className="flex items-center gap-3 mb-2">
+            <h1 className="text-3xl font-semibold text-teal-800 font-fredoka">
+              My quizzes and surveys
+            </h1>
           </div>
+          <p className="text-sm text-gray-600 font-fredoka">
+            Manage your quizzes and surveys
+          </p>
+        </div>
+
+        {/* Action Bar: Add New */}
+        <div className="flex flex-col sm:flex-row gap-4 mb-6 justify-end">
+          {/* Add New Button */}
+          <button
+            onClick={() => router.push("/admin/quiz/new")}
+            className="px-4 py-2.5 bg-[#F2FFFF] text-[#00585C] rounded-full text-sm font-medium font-fredoka whitespace-nowrap"
+          >
+            + Add new
+          </button>
         </div>
 
         {/* Quiz Cards Grid */}
         {quizzes.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
             <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg font-medium mb-2">
+            <p className="text-gray-500 text-lg font-medium mb-2 font-fredoka">
               No quizzes created yet
             </p>
-            <p className="text-gray-400 text-sm mb-6">
+            <p className="text-gray-400 text-sm mb-6 font-fredoka">
               Create your first quiz or survey to get started
             </p>
             <button
               onClick={() => router.push("/admin/quiz/new")}
-              className="px-6 py-2.5 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors font-medium"
+              className="px-6 py-2.5 bg-teal-700 text-white rounded-lg hover:bg-teal-800 transition-colors font-medium font-fredoka"
             >
               Create Quiz
             </button>
           </div>
         ) : (
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
             {quizzes.map((quiz) => (
               <div
                 key={quiz.id}
-                onClick={() => router.push(`/admin/quiz/${quiz.id}`)}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 hover:shadow-lg hover:border-purple-300 transition-all duration-200 cursor-pointer"
+                onClick={() => router.push(`/admin/quiz/${quiz.id}/attempts`)}
+                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-all cursor-pointer"
               >
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1 min-w-0">
-                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-2">
-                      {quiz.title}
-                    </h3>
-                    {quiz.subtitle && (
-                      <p className="text-sm text-gray-600 mb-3 line-clamp-2">
-                        {quiz.subtitle}
-                      </p>
-                    )}
-                  </div>
+                {/* Title and Type Tag */}
+                <div className="flex items-start justify-between mb-3">
+                  <h3 className="font-fredoka text-lg font-semibold text-[#264653] flex-1 pr-2">
+                    {quiz.title || "Quiz title"}
+                  </h3>
                   <span
-                    className={`px-2.5 py-1 text-xs font-semibold rounded-full whitespace-nowrap ${
+                    className={`px-2.5 py-1 text-xs font-normal rounded-full whitespace-nowrap font-fredoka ${
                       quiz.type === "quiz"
-                        ? "bg-purple-100 text-purple-700"
-                        : "bg-blue-100 text-blue-700"
+                        ? "bg-blue-100 text-blue-700"
+                        : "bg-yellow-100 text-yellow-700"
                     }`}
                   >
                     {quiz.type === "quiz" ? "Quiz" : "Survey"}
                   </span>
                 </div>
 
-                <div className="space-y-2 mb-4">
-                  <div className="flex items-center gap-2 text-sm text-gray-600">
-                    <BookOpen className="w-4 h-4" />
-                    <span>
-                      {quiz.questionCount}{" "}
-                      {quiz.questionCount === 1 ? "question" : "questions"}
-                    </span>
+                {/* Subtitle */}
+                {quiz.subtitle && (
+                  <p className="text-sm text-gray-600 mb-4 line-clamp-2 font-fredoka">
+                    {quiz.subtitle}
+                  </p>
+                )}
+
+                {/* Details */}
+                <div className="space-y-1.5 mb-4">
+                  <div className="text-sm text-gray-600 font-fredoka">
+                    {quiz.questionCount || 0} questions
                   </div>
-                  {quiz.totalMarks && (
-                    <div className="text-sm text-gray-600">
-                      Total Marks: {quiz.totalMarks}
+                  {quiz.durationInMinutes && quiz.type === "quiz" && (
+                    <div className="text-sm text-gray-600 font-fredoka">
+                      Duration: {quiz.durationInMinutes}m
                     </div>
                   )}
-                  {quiz.durationInMinutes && (
-                    <div className="text-sm text-gray-600">
-                      Duration: {quiz.durationInMinutes} min
+                  {quiz.createdAt && (
+                    <div className="text-sm text-gray-600 font-fredoka">
+                      Created: {formatDate(quiz.createdAt)}
                     </div>
                   )}
-                  <div className="text-xs text-gray-500">
-                    Created: {new Date(quiz.createdAt).toLocaleDateString()}
-                  </div>
                 </div>
 
-                <div className="flex gap-2">
+                {/* Action Buttons */}
+                <div className="flex gap-2 mt-4">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();
                       router.push(`/admin/quiz/${quiz.id}/attempts`);
                     }}
-                    className="flex-1 px-3 py-2 bg-gray-100 text-gray-700 rounded-lg hover:bg-gray-200 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                    className="shadow-sm flex-1 px-4 py-2.5 text-sm font-medium text-[#264653] bg-[#F2FFFF] rounded-full font-fredoka flex items-center justify-center gap-2"
                   >
                     <Users className="w-4 h-4" />
                     Attempts
@@ -162,9 +167,8 @@ export default function AdminQuizList() {
                       e.stopPropagation();
                       router.push(`/admin/quiz/${quiz.id}`);
                     }}
-                    className="flex-1 px-3 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm font-medium flex items-center justify-center gap-2"
+                    className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-[#264653] rounded-full font-fredoka"
                   >
-                    <Edit className="w-4 h-4" />
                     Edit
                   </button>
                 </div>

@@ -24,17 +24,17 @@ export default function ScoreCard({ results }) {
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
           <Trophy className={`w-5 h-5 sm:w-6 sm:h-6 ${getScoreColor()}`} />
-          <h2 className="text-base sm:text-lg font-semibold text-gray-700">
+          <h2 className="text-base sm:text-lg font-semibold text-gray-700 font-fredoka">
             Quiz Results
           </h2>
         </div>
-        <div className={`text-3xl sm:text-4xl font-bold mb-1 sm:mb-2 ${getScoreColor()}`}>
+        <div className={`text-3xl sm:text-4xl font-bold mb-1 sm:mb-2 font-fredoka ${getScoreColor()}`}>
           {results.score} / {results.totalMarks}
         </div>
-        <div className={`text-xl sm:text-2xl font-semibold mb-2 sm:mb-3 ${getScoreColor()}`}>
+        <div className={`text-xl sm:text-2xl font-semibold mb-2 sm:mb-3 font-fredoka ${getScoreColor()}`}>
           {results.percentage}%
         </div>
-        <div className="flex items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+        <div className="flex items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600 font-fredoka">
           <div className="flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
             <span>
