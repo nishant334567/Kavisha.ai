@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import Attempts from "@/app/models/Attempt";
+import Assessments from "@/app/models/Assessment";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { getUserFromDB } from "@/app/lib/firebase/get-user";
+import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 
 export async function GET(req, { params }) {
   return withAuth(req, {
@@ -27,9 +29,25 @@ export async function GET(req, { params }) {
           );
         }
 
-        // Verify the attempt belongs to the current user
-        if (attempt.userId.toString() !== user.id) {
-          return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+        // Allow brand admins to view any completed attempt for their brand's assessments
+        const assessment = await Assessments.findById(
+          attempt.assessmentId
+        ).lean();
+        if (assessment) {
+          const adminOfBrand = await isBrandAdmin(
+            decodedToken.email,
+            assessment.brand
+          );
+          if (adminOfBrand && attempt.status === "completed") {
+            // Admin viewing completed attempt: skip ownership check, fall through to return
+          } else if (attempt.userId.toString() !== user.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+          }
+        } else {
+          // No assessment: enforce ownership only
+          if (attempt.userId.toString() !== user.id) {
+            return NextResponse.json({ error: "Unauthorized" }, { status: 403 });
+          }
         }
 
         // Reconstruct user answers from report or surveyResponse if completed

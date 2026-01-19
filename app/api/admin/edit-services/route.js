@@ -99,3 +99,62 @@ export async function PATCH(req) {
     },
   });
 }
+
+export async function DELETE(req) {
+  return withAuth(req, {
+    onAuthenticated: async ({ decodedToken }) => {
+      const { brandName, serviceName, serviceKey } = await req.json();
+
+      if (!brandName || (serviceKey == null && !serviceName)) {
+        return NextResponse.json(
+          { error: "brandName and (serviceKey or serviceName) are required" },
+          { status: 400 }
+        );
+      }
+
+      const isAdmin = await isBrandAdmin(decodedToken.email, brandName);
+      if (!isAdmin) {
+        return NextResponse.json(
+          { error: "Forbidden - not a brand admin" },
+          { status: 403 }
+        );
+      }
+
+      const brandData = await client.fetch(
+        `*[_type == "brand" && subdomain == "${brandName}"][0]`
+      );
+      if (!brandData) {
+        return NextResponse.json({ error: "Brand not found" }, { status: 404 });
+      }
+
+      const services = brandData.services || [];
+      let updatedServices;
+      if (serviceKey != null) {
+        updatedServices = services.filter((s) => s._key !== serviceKey);
+      } else {
+        const idx = services.findIndex((s) => s.name === serviceName);
+        if (idx === -1) {
+          return NextResponse.json(
+            { error: "Service not found" },
+            { status: 404 }
+          );
+        }
+        updatedServices = services.filter((_, i) => i !== idx);
+      }
+
+      if (updatedServices.length === services.length) {
+        return NextResponse.json(
+          { error: "Service not found" },
+          { status: 404 }
+        );
+      }
+
+      const updated = await client
+        .patch(brandData._id)
+        .set({ services: updatedServices })
+        .commit();
+
+      return NextResponse.json(updated);
+    },
+  });
+}

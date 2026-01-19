@@ -70,7 +70,7 @@ export async function GET(req, { params }) {
             };
           }
 
-          // Calculate time taken if completed
+          // Calculate time taken if completed (in seconds; frontend formats as "Xm Ys")
           let timeTaken = null;
           if (
             attempt.status === "completed" &&
@@ -80,9 +80,7 @@ export async function GET(req, { params }) {
             const startTime = new Date(attempt.startedAt);
             const endTime = new Date(attempt.completedAt);
             const diffMs = endTime - startTime;
-            const diffMins = Math.floor(diffMs / 60000);
-            const diffSecs = Math.floor((diffMs % 60000) / 1000);
-            timeTaken = `${diffMins}m ${diffSecs}s`;
+            timeTaken = Math.round(diffMs / 1000); // seconds as number
           }
 
           attemptsByUser[userId].attempts.push({

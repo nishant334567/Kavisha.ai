@@ -58,11 +58,13 @@ export default function QuizAttemptsPage() {
     return `${day} ${month} '${year}, ${time.toLowerCase()}`;
   };
 
-  // Format time taken: "1m 6s"
+  // Format time taken: "1m 6s" (expects seconds as number from API)
   const formatTimeTaken = (seconds) => {
-    if (!seconds && seconds !== 0) return "NA";
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
+    if (seconds == null || (seconds !== 0 && !seconds)) return "NA";
+    const n = Number(seconds);
+    if (isNaN(n) || n < 0) return "NA";
+    const mins = Math.floor(n / 60);
+    const secs = Math.floor(n % 60);
     if (mins === 0) return `${secs}s`;
     if (secs === 0) return `${mins}m`;
     return `${mins}m ${secs}s`;
@@ -139,38 +141,41 @@ export default function QuizAttemptsPage() {
                     return (
                       <div
                         key={attempt.id}
-                        className={`border rounded-lg p-4 flex items-center justify-between gap-4 ${
+                        onClick={
                           isCompleted
-                            ? "border-green-300 bg-green-50"
+                            ? () => router.push(`/quiz/${qid}/${attempt.id}`)
+                            : undefined
+                        }
+                        className={`border rounded-lg p-4 flex items-start justify-between gap-4 ${
+                          isCompleted
+                            ? "border-green-300 bg-green-50 cursor-pointer hover:bg-green-100/80 transition-colors"
                             : isInProgress
-                              ? "border-yellow-300 bg-yellow-50"
-                              : "border-gray-200 bg-gray-50"
+                              ? "border-yellow-300 bg-yellow-50 cursor-default"
+                              : "border-gray-200 bg-gray-50 cursor-default"
                         }`}
                       >
-                        {/* Left: Quiz Title */}
+                        {/* Col 1: Quiz Title */}
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-medium text-gray-900 font-fredoka">
                             {quiz?.title || "Quiz title"}
                           </p>
                         </div>
 
-                        {/* Center: Started/Completed Time */}
-                        <div className="flex-1 min-w-0 text-sm text-gray-600 font-fredoka">
-                          <div>
-                            Started: {formatDateTime(attempt.startedAt)}
-                          </div>
+                        {/* Col 2: Started, Completed, Time taken (below) */}
+                        <div className="flex-1 min-w-0 text-sm text-gray-600 font-fredoka space-y-0.5">
+                          <div>Started: {formatDateTime(attempt.startedAt)}</div>
                           {attempt.completedAt && (
-                            <div className="mt-1">
-                              Completed: {formatDateTime(attempt.completedAt)}
+                            <div>Completed: {formatDateTime(attempt.completedAt)}</div>
+                          )}
+                          {isCompleted && (
+                            <div className="whitespace-nowrap">
+                              Time taken: {formatTimeTaken(attempt.timeTaken)}
                             </div>
                           )}
                         </div>
 
-                        {/* Right: Time Taken and Status */}
-                        <div className="flex items-center gap-4">
-                          <div className="text-sm text-gray-600 font-fredoka whitespace-nowrap">
-                            Time taken: {formatTimeTaken(attempt.timeTaken)}
-                          </div>
+                        {/* Col 3: Status */}
+                        <div className="flex-shrink-0">
                           <span
                             className={`px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap font-fredoka ${
                               isCompleted

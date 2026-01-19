@@ -1,5 +1,5 @@
 "use client";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Trash2 } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useState, useEffect } from "react";
 import ProductModal from "./ProductModal";
@@ -25,6 +25,7 @@ export default function ServiceModal({
     behaviour: "",
   });
   const [loading, setLoading] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
   // Populate form when service is provided
@@ -121,19 +122,60 @@ export default function ServiceModal({
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const handleDelete = async () => {
+    if (!service || addNewservice) return;
+    if (!confirm("Are you sure you want to delete this service? This cannot be undone."))
+      return;
+    setDeleting(true);
+    setError("");
+    try {
+      const payload = {
+        brandName: brand?.subdomain,
+        serviceName: service.name,
+      };
+      if (service._key) payload.serviceKey = service._key;
+      const res = await fetch("/api/admin/edit-services", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete service");
+      onClose();
+      window.location.reload();
+    } catch (err) {
+      setError(err.message || "Failed to delete service");
+      console.error("Delete service error:", err);
+    } finally {
+      setDeleting(false);
+    }
+  };
+
   const serviceName = service?.title || "";
 
   return (
     <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen">
       <div className="flex-1 overflow-y-auto bg-white">
         <div className="max-w-3xl mx-auto px-6 py-8">
-          {/* Back button */}
-          <button
-            onClick={onClose}
-            className="mb-6 text-black hover:opacity-70 transition-opacity"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
+          {/* Back button and Delete (when editing) */}
+          <div className="mb-6 flex items-center justify-between">
+            <button
+              onClick={onClose}
+              className="text-black hover:opacity-70 transition-opacity"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            {!addNewservice && service && (
+              <button
+                onClick={handleDelete}
+                disabled={deleting}
+                title="Delete service"
+                className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Trash2 className="w-5 h-5" />
+              </button>
+            )}
+          </div>
 
           <div>
             <h1 className="text-4xl md:text-5xl font-black text-purple-900 mb-12 text-center leading-tight tracking-tight normal-case font-mono">
