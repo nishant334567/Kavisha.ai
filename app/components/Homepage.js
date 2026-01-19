@@ -37,6 +37,7 @@ const avatars = [
     title: "Entrepreneur & Musician",
     subtitle: "2M+ Followers",
     image: "/nm.png",
+    link: "https://nishantmittal.kavisha.ai", // Add avatar URL to redirect on click (e.g. "/" or "https://...")
   },
   {
     id: 2,
@@ -44,6 +45,7 @@ const avatars = [
     title: "Indian internet entrepreneur and investor",
     subtitle: "1.5M+ Followers",
     image: "sb.png",
+    link: "https://sanjeevbikhchandani.kavisha.ai", // Add avatar URL to redirect on click
   },
   {
     id: 3,
@@ -51,27 +53,7 @@ const avatars = [
     title: "Indian Entrepreneur in Health and Fitness",
     subtitle: "800K+ Followers",
     image: "jc.png",
-  },
-  {
-    id: 4,
-    name: "Nishant Mittal",
-    title: "Entrepreneur & Musician",
-    subtitle: "2M+ Followers",
-    image: "/nm.png",
-  },
-  {
-    id: 5,
-    name: "Sanjeev Bikhchandani",
-    title: "Indian internet entrepreneur and investor",
-    subtitle: "1.5M+ Followers",
-    image: "sb.png",
-  },
-  {
-    id: 6,
-    name: "Jitendra Chouksey",
-    title: "Indian Entrepreneur in Health and Fitness",
-    subtitle: "800K+ Followers",
-    image: "jc.png",
+    link: "https://jitendrachouksey.kavisha.ai", // Add avatar URL to redirect on click
   },
 ];
 
@@ -128,7 +110,7 @@ export default function Homepage() {
   return (
     <div className="mt-16">
       <div className="flex flex-col items-center justify-center py-8">
-        <p className="font-zen">KAVISHA</p>
+    
         <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
       </div>
       <div className="flex flex-col justify-center items-center font-fredoka max-w-[90%] md:max-w-[60%] mx-auto text-center px-4">
@@ -226,12 +208,26 @@ export default function Homepage() {
                       width: `calc((100% - ${(visibleCount - 1) * 24}px) / ${visibleCount})`,
                     }}
                   >
-                    <AvatarCard
-                      name={avatar.name}
-                      title={avatar.title}
-                      subtitle={avatar.subtitle}
-                      image={avatar.image}
-                    />
+                    {avatar.link ? (
+                      <a
+                        href={avatar.link}
+                        className="block w-full cursor-pointer hover:opacity-95 active:opacity-90 transition-opacity rounded-2xl focus:outline-none"
+                      >
+                        <AvatarCard
+                          name={avatar.name}
+                          title={avatar.title}
+                          subtitle={avatar.subtitle}
+                          image={avatar.image}
+                        />
+                      </a>
+                    ) : (
+                      <AvatarCard
+                        name={avatar.name}
+                        title={avatar.title}
+                        subtitle={avatar.subtitle}
+                        image={avatar.image}
+                      />
+                    )}
                   </div>
                 ))}
               </div>
@@ -312,19 +308,11 @@ export default function Homepage() {
           </div>
         </div>
         {/* Logo and tagline section */}
-        <div className="bg-gray-50 flex flex-col items-center justify-center py-8 md:py-12 px-4 md:px-8 border-b border-gray-200">
-          <div className="flex flex-col items-center justify-center mb-4">
-            <p className="font-zen text-xs md:text-sm tracking-widest text-[#264653]">
-              KAVISHA
-            </p>
-            <img
-              src="/kavisha-logo.png"
-              width={80}
-              height={80}
-              alt="Kavisha"
-              className="md:w-[100px] md:h-[100px]"
-            />
-          </div>
+        <div className="bg-[linear-gradient(180deg,#FFFFFF_34%,#EDF4F7_100%)] flex flex-col items-center justify-center py-8 md:py-12 px-4 md:px-8 border-b border-gray-200">
+ <div className="flex flex-col items-center justify-center py-8">
+    
+        <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
+      </div>
           <p className="font-fredoka text-base md:text-xl font-light text-center text-[#264653] max-w-3xl tracking-wide">
             With Kavisha, influencers and brands can interact with their fans,
             create opportunities for them, and make them happy. Like never

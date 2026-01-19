@@ -50,7 +50,7 @@ export default function Navbar() {
               <img
                 src={brand.logoUrl}
                 alt={`${brand.brandName} logo`}
-                className="w-10 h-10 rounded-full object-cover"
+                className="w-14 h-14 object-contain"
               />
             ) : (
               <div className="w-8 h-8 rounded-md bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
