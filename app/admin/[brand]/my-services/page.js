@@ -18,13 +18,15 @@ export default function MyServices() {
   const availedServices = services.map((item) => item.name) || [];
 
   const availableServices = [
-    { serviceName: "lead_journey", serviceTitle: "Talk to me" },
+    { serviceName: "lead_journey", serviceTitle: "Talk to me", allowMultiple: true },
     { serviceName: "pitch_to_investor", serviceTitle: "Pitch to me" },
     { serviceName: "job_seeker", serviceTitle: "Work with me" },
     { serviceName: "buy_my_product", serviceTitle: "Buy my product" },
     { serviceName: "buy_my_service", serviceTitle: "Buy my service" },
   ];
-  const allServicesAvailed = availedServices.length >= availableServices.length;
+  const hasServicesToAdd = availableServices.some(
+    (item) => item.allowMultiple || !availedServices.includes(item.serviceName)
+  );
   const handleEdit = (service) => {
     setSelectedService(service);
     setAddnewservice(false);
@@ -85,7 +87,7 @@ export default function MyServices() {
           {/* Service options */}
           <div className="flex flex-col items-center gap-4 font-akshar">
             {services.map((service, index) => (
-              <div key={index}>
+              <div key={service._key || index}>
                 <button
                   className="text-gray-600 uppercase text-base tracking-wider font-normal relative pb-1 w-fit hover:opacity-60 transition-opacity"
                   onClick={() => handleEdit(service)}
@@ -95,7 +97,7 @@ export default function MyServices() {
                 <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
               </div>
             ))}
-            {!allServicesAvailed && (
+            {hasServicesToAdd && (
               <div className="relative" ref={dropdownRef}>
                 <div>
                   <button
@@ -110,7 +112,9 @@ export default function MyServices() {
                   <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[200px]">
                     {availableServices
                       .filter(
-                        (item) => !availedServices.includes(item.serviceName)
+                        (item) =>
+                          item.allowMultiple ||
+                          !availedServices.includes(item.serviceName)
                       )
                       .map((item, index) => (
                         <button

@@ -40,6 +40,10 @@ const ChatSessionsSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    serviceKey: {
+      type: String,
+      required: false,
+    },
     allDataCollected: {
       type: Boolean,
       default: false,

@@ -6,7 +6,7 @@ import { createSessionWithDefaultLog } from "@/app/lib/createSessionWithDefaultL
 export async function POST(request) {
   return withAuth(request, {
     onAuthenticated: async ({ decodedToken }) => {
-      const { role, brand, initialmessage, isCommunityChat, chatName } =
+      const { role, brand, initialmessage, isCommunityChat, chatName, serviceKey } =
         await request.json();
       const user = await getUserFromDB(decodedToken.email);
 
@@ -20,7 +20,8 @@ export async function POST(request) {
         brand,
         initialmessage || null,
         isCommunityChat,
-        chatName
+        chatName,
+        serviceKey || null
       );
       return NextResponse.json({ success: true, sessionId: sid._id });
     },

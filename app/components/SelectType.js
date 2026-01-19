@@ -7,6 +7,7 @@ export default function SelectChatType({
   selectedType,
   selectChatType,
   isCreating,
+  creatingForServiceKey = null,
   enableCommunityOnboarding = false,
 }) {
   const router = useRouter();
@@ -81,7 +82,7 @@ export default function SelectChatType({
 
                 return (
                   <div
-                    key={index}
+                    key={item._key || index}
                     className="flex flex-col justify-center items-center"
                   >
                     <button
@@ -91,13 +92,17 @@ export default function SelectChatType({
                             item.name,
                             item.initialMessage,
                             false,
-                            item.title
+                            item.title,
+                            item._key
                           );
                       }}
                       className="font-akshar uppercase text-lg flex items-center justify-center w-full"
                       disabled={isCreating}
                     >
-                      {isCreating && selectedType === item.name ? (
+                      {isCreating &&
+                      (creatingForServiceKey != null
+                        ? creatingForServiceKey === item._key
+                        : selectedType === item.name) ? (
                         <div className="flex flex-col items-center justify-center h-full">
                           <span className="inline-block h-6 w-6 rounded-full border-2 border-white/70 border-t-transparent animate-spin"></span>
                           <span className="font-akshar uppercase text-lg">

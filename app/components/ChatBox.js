@@ -52,6 +52,7 @@ export default function ChatBox({
   const [chunkData, setChunkData] = useState(null);
   const [currentChatType, setCurrentChatType] = useState(null);
   const [sessionName, setSessionName] = useState(null);
+  const [serviceKey, setServiceKey] = useState(null);
 
   //voice effects
 
@@ -59,6 +60,7 @@ export default function ChatBox({
   useEffect(() => {
     if (!currentChatId) {
       setCurrentChatType(null);
+      setServiceKey(null);
       return;
     }
 
@@ -69,6 +71,7 @@ export default function ChatBox({
           const data = await response.json();
           setCurrentChatType(data.role || null);
           setSessionName(data.name || null);
+          setServiceKey(data.serviceKey || null);
         }
       } catch (error) {
         console.error("Error fetching chat type:", error);
@@ -330,14 +333,19 @@ export default function ChatBox({
     }
   };
 
-  // Function to get service-specific prompt based on chat type
+  // Function to get service-specific prompt based on chat type or serviceKey (for multiple lead_journey)
   const getServicePrompt = () => {
-    if (!brandContext?.services || !currentChatType) return "";
-
-    const service = brandContext.services.find(
-      (s) => s.name?.toLowerCase() === currentChatType?.toLowerCase()
-    );
-
+    if (!brandContext?.services) return "";
+    // Prefer serviceKey when present (multiple lead_journey or same-name services)
+    let service;
+    if (serviceKey) {
+      service = brandContext.services.find((s) => s._key === serviceKey);
+    }
+    if (!service && currentChatType) {
+      service = brandContext.services.find(
+        (s) => s.name?.toLowerCase() === currentChatType?.toLowerCase()
+      );
+    }
     if (!service) return "";
 
     const parts = [];

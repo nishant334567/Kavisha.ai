@@ -49,7 +49,7 @@ export async function POST(req) {
 export async function PATCH(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
-      const { brandName, serviceName, serviceData } = await req.json();
+      const { brandName, serviceName, serviceData, serviceKey } = await req.json();
 
       // Check if requester is admin for this brand
       const isAdmin = await isBrandAdmin(decodedToken.email, brandName);
@@ -69,9 +69,10 @@ export async function PATCH(req) {
       }
 
       const services = brandData.services || [];
-      const index = services.findIndex(
-        (service) => service.name === serviceName
-      );
+      const index =
+        serviceKey != null
+          ? services.findIndex((s) => s._key === serviceKey)
+          : services.findIndex((s) => s.name === serviceName);
 
       if (index === -1) {
         return NextResponse.json(

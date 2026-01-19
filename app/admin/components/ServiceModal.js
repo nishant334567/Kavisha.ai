@@ -85,10 +85,11 @@ export default function ServiceModal({
         serviceData,
       };
 
-      // If editing existing service (not adding new), add serviceName to payload
-      // When adding new service, service.name exists but we should use POST
+      // If editing existing service (not adding new), add serviceName and serviceKey to payload
+      // serviceKey is required when multiple services share the same name (e.g. lead_journey)
       if (service?.name && !addNewservice) {
         payload.serviceName = service.name;
+        if (service._key) payload.serviceKey = service._key;
       }
 
       const method = service?.name && !addNewservice ? "PATCH" : "POST";

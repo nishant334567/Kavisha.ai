@@ -10,7 +10,7 @@ export async function GET(req, { params }) {
         const { sessionId } = await params;
         await connectDB();
         const session =
-          await Session.findById(sessionId).select("role title name");
+          await Session.findById(sessionId).select("role title name serviceKey");
 
         if (!session) {
           return NextResponse.json(
@@ -23,6 +23,7 @@ export async function GET(req, { params }) {
           role: session.role,
           title: session.title,
           name: session.name,
+          serviceKey: session.serviceKey || null,
         });
       } catch (err) {
         return NextResponse.json(

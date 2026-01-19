@@ -21,6 +21,7 @@ export default function HomePage() {
   const [currentChatId, setCurrentChatId] = useState(null);
   const [allChats, setAllchats] = useState(null);
   const [creatingSession, setCreatingSession] = useState(false);
+  const [creatingForServiceKey, setCreatingForServiceKey] = useState(null);
   const [show, setShow] = useState(false);
   const [type, setType] = useState(1);
   const [viewData, setViewdata] = useState({});
@@ -95,10 +96,15 @@ export default function HomePage() {
     type,
     initialMessage,
     isCommunityChat = false,
-    name
+    name,
+    serviceKey
   ) => {
     setCurrentChatType(type);
-    if (!user || !brandContext) return;
+    setCreatingForServiceKey(serviceKey || null);
+    if (!user || !brandContext) {
+      setCreatingForServiceKey(null);
+      return;
+    }
 
     try {
       setCreatingSession(true);
@@ -112,6 +118,7 @@ export default function HomePage() {
           initialmessage: initialMessage,
           isCommunityChat: isCommunityChat,
           chatName: name,
+          ...(serviceKey && { serviceKey }),
         }),
       });
       const data = await res.json();
@@ -173,6 +180,7 @@ export default function HomePage() {
             selectedType={currentChatType}
             selectChatType={selectChatType}
             isCreating={creatingSession}
+            creatingForServiceKey={creatingForServiceKey}
             enableCommunityOnboarding={
               brandContext?.enableCommunityOnboarding || false
             }
