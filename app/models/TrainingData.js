@@ -32,7 +32,13 @@ const TrainingDataSchema = new mongoose.Schema(
     chunkSize: {
       type: Number,
     },
-    gcsPath: { type: String, required: true },
+    gcsPath: { type: String, required: false },
+    folderId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "KnowledgeFolder",
+      required: false,
+      default: null,
+    },
   },
   { timestamps: true }
 );

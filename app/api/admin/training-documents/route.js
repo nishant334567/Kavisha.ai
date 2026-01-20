@@ -6,6 +6,7 @@ import pc from "@/app/lib/pinecone";
 export async function GET(req) {
   await connectDB();
   const { searchParams } = new URL(req.url);
+  const folderId = searchParams.get("folderId");
   const brand = searchParams.get("brand");
   const page = parseInt(searchParams.get("page")) || 1;
   const docid = searchParams.get("docid");
@@ -14,24 +15,35 @@ export async function GET(req) {
     return NextResponse.json({ error: "Brand is required" }, { status: 400 });
   }
 
+  // Single document by docid (folderId ignored; docid is unique)
   if (docid) {
-    const document = await TrainingData.findOne({ docid: docid });
+    const document = await TrainingData.findOne({ docid, brand });
     if (document) {
-      return NextResponse.json({ document: document }, { status: 200 });
+      return NextResponse.json({ document }, { status: 200 });
     }
     return NextResponse.json({ message: "Failed to fetch" }, { status: 500 });
+  }
+
+  // List: build query with optional folder filter
+  const query = { brand };
+  if (folderId === "unfiled") {
+    query.$or = [
+      { folderId: null },
+      { folderId: { $exists: false } },
+    ];
+  } else if (folderId) {
+    query.folderId = folderId;
   }
 
   const limit = 10;
   const skip = (page - 1) * limit;
 
-  let documents, totalCount;
-  [documents, totalCount] = await Promise.all([
-    TrainingData.find({ brand })
+  const [documents, totalCount] = await Promise.all([
+    TrainingData.find(query)
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(limit),
-    TrainingData.countDocuments({ brand }),
+    TrainingData.countDocuments(query),
   ]);
 
   const totalPages = Math.ceil(totalCount / limit);

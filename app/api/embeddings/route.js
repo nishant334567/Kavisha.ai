@@ -12,20 +12,19 @@ export async function POST(request) {
       brand,
       title,
       description,
-      gcsPath,
+      folderId
       // chunkSize = 200,
     } = await request.json();
 
-    if (!text?.trim() || !brand || !title?.trim() || !gcsPath) {
+    if (!text?.trim() || !brand || !title?.trim()) {
       return NextResponse.json(
-        { error: "Text, brand, title, and gcsPath are required" },
+        { error: "Text, brand, and title are required" },
         { status: 400 }
       );
     }
 
     await connectDB();
-    const shortUuid = uuidv4().substring(0, 8); // First 8 chars for uniqueness
-    // Truncate titleSlug to avoid very long docIds (max 50 chars to match DB title limit)
+    const shortUuid = uuidv4().substring(0, 8); 
     const titleSlug = title
       .trim()
       .replace(/[^a-zA-Z0-9]/g, "")
@@ -57,8 +56,8 @@ export async function POST(request) {
       brand,
       text: text,
       totalChunks: totalChunks,
-      gcsPath: gcsPath,
       createdAt,
+      ...(folderId && {folderId})
     });
 
     const results = [];
@@ -145,7 +144,7 @@ export async function POST(request) {
 
 export async function PATCH(request) {
   try {
-    const { docid, text, brand, title } = await request.json();
+    const { docid, text, brand, title, folderId } = await request.json();
     await connectDB();
     const sparseIndexNamespace = pc.index("kavisha-sparse").namespace(brand);
     const denseIndexNamespace = pc
@@ -250,6 +249,9 @@ export async function PATCH(request) {
           text: text,
           totalChunks: totalChunks,
           updatedAt: new Date(),
+          ...(folderId !== undefined && {
+            folderId: folderId === "" || folderId == null ? null : folderId,
+          }),
         },
       }
     );

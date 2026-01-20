@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, FolderPlus, Trash2 } from "lucide-react";
 import TextTrainingModal from "@/app/admin/components/TextTrainingModal";
 import DocumentViewModal from "@/app/admin/components/DocumentViewModal";
 import DocumentCard from "@/app/admin/components/DocumentCard";
@@ -25,14 +25,32 @@ export default function Train() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCount, setTotalCount] = useState(0);
   const brand = useBrandContext();
+  const [folders, setFolders] = useState([]);
+  const [selectedFolderId, setSelectedFolderId] = useState(null);
+  const [uploadFolderId, setUploadFolderId] = useState("");
+  const [textUploadFolderId, setTextUploadFolderId] = useState("");
+  const [editFolderId, setEditFolderId] = useState("");
 
-  const fetchDocuments = async (page = 1) => {
+  const fetchFolders = async () => {
+    if (!brand?.subdomain) return;
+    try {
+      const res = await fetch(
+        `/api/admin/knowledge-folders?brand=${brand.subdomain}`
+      );
+      const data = await res.json();
+      if (res.ok) setFolders(data.folders || []);
+    } catch (e) {
+      console.error("Failed to fetch folders:", e);
+    }
+  };
+
+  const fetchDocuments = async (page = 1, folderId = undefined) => {
     if (!brand?.subdomain) return;
     try {
       setLoading(true);
-      const res = await fetch(
-        `/api/admin/training-documents?brand=${brand.subdomain}&page=${page}`
-      );
+      let url = `/api/admin/training-documents?brand=${brand.subdomain}&page=${page}`;
+      if (folderId) url += `&folderId=${folderId}`;
+      const res = await fetch(url);
       const data = await res.json();
       if (res.ok) {
         setDocuments(data.documents || []);
@@ -47,9 +65,50 @@ export default function Train() {
     }
   };
 
+  const handleAddFolder = async () => {
+    const name = prompt("Folder name");
+    if (!name?.trim()) return;
+    try {
+      const res = await fetch("/api/admin/knowledge-folders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ brand: brand?.subdomain, name: name.trim() }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      fetchFolders();
+    } catch (e) {
+      alert(e?.message || "Failed to create folder");
+    }
+  };
+
+  const handleDeleteFolder = async (folderId) => {
+    if (!confirm("Delete this folder? Documents in it will be moved to Unfiled."))
+      return;
+    try {
+      const res = await fetch(
+        `/api/admin/knowledge-folders?brand=${brand?.subdomain}&folderId=${folderId}`,
+        { method: "DELETE" }
+      );
+      if (!res.ok) throw new Error((await res.json()).error);
+      fetchFolders();
+      if (selectedFolderId === folderId) {
+        setSelectedFolderId(null);
+        setCurrentPage(1);
+      }
+      if (uploadFolderId === folderId) setUploadFolderId("");
+      if (textUploadFolderId === folderId) setTextUploadFolderId("");
+    } catch (e) {
+      alert(e?.message || "Failed to delete folder");
+    }
+  };
+
   useEffect(() => {
-    fetchDocuments(currentPage);
-  }, [brand?.subdomain, currentPage]);
+    fetchFolders();
+  }, [brand?.subdomain]);
+
+  useEffect(() => {
+    fetchDocuments(currentPage, selectedFolderId);
+  }, [brand?.subdomain, currentPage, selectedFolderId]);
 
   useEffect(() => {
     const handleClickOutside = () => setOpenMenuId(null);
@@ -59,16 +118,8 @@ export default function Train() {
     }
   }, [openMenuId]);
 
-  const processText = async (title, text) => {
+  const processText = async (title, text, folderId) => {
     const brandName = brand?.subdomain || "";
-
-    const gcsRes = await fetch("/api/admin/savetogcs", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ title, text, brand: brandName }),
-    });
-    if (!gcsRes.ok) throw new Error((await gcsRes.json()).error);
-    const gcsData = await gcsRes.json();
 
     const embRes = await fetch("/api/embeddings", {
       method: "POST",
@@ -78,7 +129,7 @@ export default function Train() {
         brand: brandName,
         title,
         description: title,
-        gcsPath: gcsData.gcsPath,
+        ...(folderId && { folderId }),
       }),
     });
     if (!embRes.ok) throw new Error((await embRes.json()).error);
@@ -114,11 +165,11 @@ export default function Train() {
         throw new Error("Only PDF and text files allowed");
       }
 
-      await processText(title, text);
+      await processText(title, text, uploadFolderId || undefined);
       alert("File uploaded successfully!");
       fileInputRef.current.value = "";
       setSelectedFileName("");
-      fetchDocuments(1); // Reset to page 1 after adding new document
+      fetchDocuments(1, selectedFolderId);
     } catch (error) {
       alert(`Error: ${error.message}`);
     } finally {
@@ -134,10 +185,10 @@ export default function Train() {
       // Truncate title to 50 characters (DB limit)
       const title =
         data.title.length > 50 ? data.title.substring(0, 50) : data.title;
-      await processText(title, data.content);
+      await processText(title, data.content, textUploadFolderId || undefined);
       alert("Text saved successfully!");
       setIsModalOpen(false);
-      fetchDocuments(1); // Reset to page 1 after adding new document
+      fetchDocuments(1, selectedFolderId);
     } catch (error) {
       alert(`Error: ${error.message}`);
     } finally {
@@ -197,6 +248,7 @@ export default function Train() {
     const data = await res.json();
     if (res.ok && data.document) {
       setEditingDocument(data.document);
+      setEditFolderId(data.document.folderId ? String(data.document.folderId) : "");
       setIsEditModalOpen(true);
     } else {
       alert("Failed to load document");
@@ -215,13 +267,14 @@ export default function Train() {
           text: updateData.content,
           brand: brand?.subdomain,
           title: updateData.title,
+          folderId: (updateData.folderId ?? editFolderId) || null,
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error);
       alert("Document updated successfully!");
       setIsEditModalOpen(false);
       setEditingDocument(null);
-      fetchDocuments(currentPage); // Stay on current page after update
+      fetchDocuments(currentPage, selectedFolderId);
     } catch (error) {
       alert(`Error: ${error.message}`);
     } finally {
@@ -243,11 +296,9 @@ export default function Train() {
       if (documents.length === 1 && currentPage > 1) {
         const newPage = currentPage - 1;
         setCurrentPage(newPage);
-        // Fetch directly to avoid waiting for useEffect
-        fetchDocuments(newPage);
+        fetchDocuments(newPage, selectedFolderId);
       } else {
-        // Refetch current page
-        fetchDocuments(currentPage);
+        fetchDocuments(currentPage, selectedFolderId);
       }
     } catch (error) {
       alert(`Error: ${error.message}`);
@@ -278,6 +329,18 @@ export default function Train() {
             <p className="text-sm text-gray-600 mb-4">
               Upload and extract text from PDFs
             </p>
+            <select
+              value={uploadFolderId}
+              onChange={(e) => setUploadFolderId(e.target.value)}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2"
+            >
+              <option value="">Unfiled</option>
+              {folders.map((f) => (
+                <option key={f._id} value={f._id}>
+                  {f.name}
+                </option>
+              ))}
+            </select>
             <input
               type="file"
               ref={fileInputRef}
@@ -350,55 +413,107 @@ export default function Train() {
             </span>
           )}
         </div>
-        {loading ? (
-          <div className="text-center py-8">Loading...</div>
-        ) : documents.length === 0 ? (
-          <div className="text-center py-8 text-gray-500">
-            No documents uploaded yet
-          </div>
-        ) : (
-          <>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {documents.map((doc) => (
-                <DocumentCard
-                  key={doc._id}
-                  doc={doc}
-                  onView={handleViewDocument}
-                  onEdit={handleEditDocument}
-                  onDelete={handleDeleteDocument}
-                  openMenuId={openMenuId}
-                  setOpenMenuId={setOpenMenuId}
-                  loadingDocumentId={loadingDocumentId}
-                  formatDate={formatDate}
-                />
-              ))}
-            </div>
-
-            {/* Pagination Controls */}
-            {totalPages > 1 && (
-              <div className="flex justify-center items-center gap-4 mt-8">
+        <div className="flex gap-6 mt-4">
+          {/* Left: folders */}
+          <div className="w-48 shrink-0 border-r border-gray-200 pr-4">
+            <button
+              onClick={handleAddFolder}
+              className="flex items-center gap-2 w-full px-2 py-1.5 rounded hover:bg-gray-100 text-gray-700 text-sm mb-2"
+              title="Add folder"
+            >
+              <FolderPlus className="w-4 h-4" />
+              Add folder
+            </button>
+            <button
+              onClick={() => {
+                setSelectedFolderId(null);
+                setCurrentPage(1);
+              }}
+              className={`block w-full text-left px-2 py-1.5 rounded text-sm ${selectedFolderId === null ? "bg-[#EBF3FF] text-[#242473] font-medium" : "text-gray-700 hover:bg-gray-100"}`}
+            >
+              All
+            </button>
+            {folders.map((f) => (
+              <div
+                key={f._id}
+                className={`flex items-center gap-1 rounded ${selectedFolderId === f._id ? "bg-[#EBF3FF]" : ""}`}
+              >
                 <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.max(1, prev - 1))
-                  }
-                  disabled={currentPage === 1}
-                  className="px-6 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  onClick={() => {
+                    setSelectedFolderId(f._id);
+                    setCurrentPage(1);
+                  }}
+                  className={`flex-1 text-left px-2 py-1.5 rounded text-sm truncate ${selectedFolderId === f._id ? "text-[#242473] font-medium" : "text-gray-700 hover:bg-gray-100"}`}
                 >
-                  Previous
+                  {f.name}
                 </button>
                 <button
-                  onClick={() =>
-                    setCurrentPage((prev) => Math.min(totalPages, prev + 1))
-                  }
-                  disabled={currentPage === totalPages}
-                  className="px-6 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDeleteFolder(f._id);
+                  }}
+                  className="shrink-0 p-1 rounded text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                  title="Delete folder"
                 >
-                  Next
+                  <Trash2 className="w-3.5 h-3.5" />
                 </button>
               </div>
+            ))}
+          </div>
+          {/* Right: documents */}
+          <div className="flex-1 min-w-0">
+            {loading ? (
+              <div className="text-center py-8">Loading...</div>
+            ) : documents.length === 0 ? (
+              <div className="text-center py-8 text-gray-500">
+                {selectedFolderId
+                  ? "No documents in this folder"
+                  : "No documents uploaded yet"}
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {documents.map((doc) => (
+                    <DocumentCard
+                      key={doc._id}
+                      doc={doc}
+                      onView={handleViewDocument}
+                      onEdit={handleEditDocument}
+                      onDelete={handleDeleteDocument}
+                      openMenuId={openMenuId}
+                      setOpenMenuId={setOpenMenuId}
+                      loadingDocumentId={loadingDocumentId}
+                      formatDate={formatDate}
+                    />
+                  ))}
+                </div>
+                {totalPages > 1 && (
+                  <div className="flex justify-center items-center gap-4 mt-8">
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) => Math.max(1, prev - 1))
+                      }
+                      disabled={currentPage === 1}
+                      className="px-6 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    >
+                      Previous
+                    </button>
+                    <button
+                      onClick={() =>
+                        setCurrentPage((prev) =>
+                          Math.min(totalPages, prev + 1))
+                      }
+                      disabled={currentPage === totalPages}
+                      className="px-6 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    >
+                      Next
+                    </button>
+                  </div>
+                )}
+              </>
             )}
-          </>
-        )}
+          </div>
+        </div>
 
         <div className="text-center mt-12 text-sm text-blue-900">
           Powered by KAVISHA
@@ -409,6 +524,9 @@ export default function Train() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveText}
+        folders={folders}
+        folderId={textUploadFolderId}
+        onFolderChange={setTextUploadFolderId}
       />
 
       <TextTrainingModal
@@ -416,11 +534,15 @@ export default function Train() {
         onClose={() => {
           setIsEditModalOpen(false);
           setEditingDocument(null);
+          setEditFolderId("");
         }}
         onSave={handleUpdateDocument}
         initialTitle={editingDocument?.title || ""}
         initialContent={editingDocument?.text || ""}
         isEditMode={true}
+        folders={folders}
+        folderId={editFolderId}
+        onFolderChange={setEditFolderId}
       />
 
       <DocumentViewModal

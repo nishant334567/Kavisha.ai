@@ -160,7 +160,7 @@ export async function POST(request) {
     if (email?.trim() && resend) {
       try {
         const editProfileUrl = `https://${domainName}/admin/${subdomain}/edit-profile`;
-        const trainUrl = `https://${domainName}/admin/${subdomain}/train`;
+        const trainUrl = `https://${domainName}/admin/${subdomain}/train/v2`;
 
         await resend.emails.send({
           from: "hello@kavisha.ai",

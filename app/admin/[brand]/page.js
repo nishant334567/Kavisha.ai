@@ -393,7 +393,7 @@ export default function BrandAdminPage() {
                 <span>Edit Profile</span>
               </button>
               <button
-                onClick={() => router.push(`/admin/${brand}/train`)}
+                onClick={() => router.push(`/admin/${brand}/train/v2`)}
                 className="w-full sm:w-auto px-4 sm:px-6 py-2.5 sm:py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white rounded-lg hover:from-blue-700 hover:to-indigo-700 focus:ring-4 focus:ring-blue-200 transition-all duration-200 text-sm font-medium flex items-center justify-center gap-2 sm:gap-3 shadow-lg hover:shadow-xl"
               >
                 <Sparkles className="w-4 h-4 sm:w-5 sm:h-5" />

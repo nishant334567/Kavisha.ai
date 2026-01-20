@@ -9,6 +9,9 @@ export default function TextTrainingModal({
   initialTitle = "",
   initialContent = "",
   isEditMode = false,
+  folders = [],
+  folderId = "",
+  onFolderChange,
 }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -27,7 +30,11 @@ export default function TextTrainingModal({
 
   const handleSave = () => {
     if (onSave && title && content) {
-      onSave({ title, content });
+      onSave({
+        title,
+        content,
+        ...(onFolderChange && { folderId: folderId ?? "" }),
+      });
     }
     onClose();
   };
@@ -62,6 +69,25 @@ export default function TextTrainingModal({
               className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 text-gray-900"
             />
           </div>
+          {onFolderChange && (
+            <div>
+              <label className="block text-sm font-semibold text-gray-700 mb-3 tracking-wide">
+                Folder
+              </label>
+              <select
+                value={folderId}
+                onChange={(e) => onFolderChange(e.target.value)}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 text-gray-900"
+              >
+                <option value="">Unfiled</option>
+                {folders.map((f) => (
+                  <option key={f._id} value={f._id}>
+                    {f.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+          )}
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-3 tracking-wide">
               Content
