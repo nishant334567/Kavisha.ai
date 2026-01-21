@@ -1,7 +1,7 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, FolderPlus, Trash2 } from "lucide-react";
+import { ArrowLeft, FolderPlus, Trash2, FolderInput } from "lucide-react";
 import TextTrainingModal from "@/app/admin/components/TextTrainingModal";
 import DocumentViewModal from "@/app/admin/components/DocumentViewModal";
 import DocumentCard from "@/app/admin/components/DocumentCard";
@@ -30,6 +30,10 @@ export default function Train() {
   const [uploadFolderId, setUploadFolderId] = useState("");
   const [textUploadFolderId, setTextUploadFolderId] = useState("");
   const [editFolderId, setEditFolderId] = useState("");
+  const [selectionMode, setSelectionMode] = useState(false);
+  const [selectedDocs, setSelectedDocs] = useState(new Set());
+  const [moveTargetFolderId, setMoveTargetFolderId] = useState("");
+  const [moving, setMoving] = useState(false);
 
   const fetchFolders = async () => {
     if (!brand?.subdomain) return;
@@ -240,6 +244,45 @@ export default function Train() {
     }
   };
 
+  const toggleSelect = (docid) => {
+    setSelectedDocs((prev) => {
+      const next = new Set(prev);
+      if (next.has(docid)) next.delete(docid);
+      else next.add(docid);
+      return next;
+    });
+  };
+
+const handleMoveToFolder = async() => {
+  const docids = [...selectedDocs];
+  if(docids.length===0) return;
+  setMoving(true);
+
+  try{
+    const res = await fetch("/api/admin/training-documents", {
+      method: "PATCH",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({
+        docids,
+        folderId: moveTargetFolderId || null,
+        brand: brand?.subdomain
+      })})
+
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to move");
+
+      setSelectedDocs(new Set());
+      setSelectionMode(false)
+      setMoveTargetFolderId("")
+      fetchDocuments(currentPage, selectedFolderId);
+      alert(`Moved ${data.modifiedCount} document(s).`);
+  }catch(err){
+      alert(err?.message || "Failed to move documents");
+  }finally{
+    setMoving(false);
+  }
+}
+
   const handleEditDocument = async (doc) => {
     setOpenMenuId(null);
     const res = await fetch(
@@ -281,6 +324,7 @@ export default function Train() {
       setUploading(false);
     }
   };
+
 
   const handleDeleteDocument = async (docid) => {
     if (!confirm("Are you sure you want to delete this document?")) return;
@@ -402,10 +446,50 @@ export default function Train() {
             </button>
           </div>
         </div>
-        <div className="flex justify-between items-center my-4">
-          <p className="text-[#4D5495] font-akshar font-semibold uppercase">
-            Knowledge base
-          </p>
+        <div className="flex justify-between items-center my-4 flex-wrap gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
+            <p className="text-[#4D5495] font-akshar font-semibold uppercase">
+              Knowledge base
+            </p>
+            {documents.length > 0 && (
+              <button
+                onClick={() => {
+                  setSelectionMode((prev) => !prev);
+                  if (selectionMode) setSelectedDocs(new Set());
+                }}
+                className="px-3 py-1 text-sm rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
+              >
+                {selectionMode ? "Cancel" : "Select"}
+              </button>
+            )}
+            {selectionMode && selectedDocs.size > 0 && (
+              <>
+                <select
+                  value={moveTargetFolderId}
+                  onChange={(e) => setMoveTargetFolderId(e.target.value)}
+                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white"
+                >
+                  <option value="">Unfiled</option>
+                  {folders.map((f) => (
+                    <option key={f._id} value={f._id}>
+                      {f.name}
+                    </option>
+                  ))}
+                </select>
+                <button
+                  onClick={handleMoveToFolder}
+                  disabled={moving}
+                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-[#242473] text-white hover:bg-[#1a1a5c] disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <FolderInput className="w-3.5 h-3.5" />
+                  Move to folder
+                </button>
+                <span className="text-sm text-gray-500">
+                  {selectedDocs.size} selected
+                </span>
+              </>
+            )}
+          </div>
           {totalCount > 0 && (
             <span className="text-sm text-gray-600">
               Showing {documents.length} of {totalCount} documents (Page{" "}
@@ -484,6 +568,9 @@ export default function Train() {
                       setOpenMenuId={setOpenMenuId}
                       loadingDocumentId={loadingDocumentId}
                       formatDate={formatDate}
+                      selectionMode={selectionMode}
+                      isSelected={selectedDocs.has(doc.docid)}
+                      onToggleSelect={() => toggleSelect(doc.docid)}
                     />
                   ))}
                 </div>

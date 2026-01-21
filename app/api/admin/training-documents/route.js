@@ -3,6 +3,35 @@ import TrainingData from "@/app/models/TrainingData";
 import { NextResponse } from "next/server";
 import pc from "@/app/lib/pinecone";
 
+export async function PATCH(req) {
+  try {
+    const { docids, folderId, brand } = await req.json();
+    if (!brand || !Array.isArray(docids) || docids.length === 0) {
+      return NextResponse.json(
+        { error: "brand and non-empty docids array required" },
+        { status: 400 }
+      );
+    }
+    await connectDB();
+    const targetFolderId =
+      folderId === "" || folderId == null ? null : folderId;
+    const { modifiedCount } = await TrainingData.updateMany(
+      { docid: { $in: docids }, brand },
+      { $set: { folderId: targetFolderId, updatedAt: new Date() } }
+    );
+    return NextResponse.json({
+      success: true,
+      modifiedCount,
+      message: `Moved ${modifiedCount} document(s) to folder`,
+    });
+  } catch (error) {
+    return NextResponse.json(
+      { error: "Failed to move documents", details: error.message },
+      { status: 500 }
+    );
+  }
+}
+
 export async function GET(req) {
   await connectDB();
   const { searchParams } = new URL(req.url);

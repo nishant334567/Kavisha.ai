@@ -10,8 +10,12 @@ export default function DocumentCard({
   setOpenMenuId,
   loadingDocumentId,
   formatDate,
+  selectionMode,
+  isSelected,
+  onToggleSelect,
 }) {
-  return (
+
+  const card = (
     <div
       onClick={() => onView(doc.docid)}
       className="bg-blue-50 rounded-lg border border-blue-200 overflow-visible shadow-sm cursor-pointer hover:shadow-md transition-shadow"
@@ -80,4 +84,22 @@ export default function DocumentCard({
       </div>
     </div>
   );
+
+  if (selectionMode) {
+    return (
+      <div className="flex items-start gap-2">
+        <input
+          type="checkbox"
+          checked={!!isSelected}
+          onChange={(e) => {
+            e.stopPropagation();
+            onToggleSelect()
+          }}
+          className="mt-3 shrink-0 rounded border-gray-300 text-[#242473] focus:ring-[#242473]"
+        />
+        {card}
+      </div>
+    );
+  }
+  return card;
 }
