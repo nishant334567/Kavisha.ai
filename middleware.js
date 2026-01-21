@@ -25,6 +25,15 @@ function getSubdomainFromRequest(hostname) {
 }
 
 export async function middleware(request) {
+  const hostname = request.nextUrl.hostname || "";
+  if (hostname.toLowerCase().startsWith("www.")) {
+    const targetHost = hostname.replace(/^www\./i, "");
+    const url = request.nextUrl.clone();
+    url.hostname = targetHost;
+    if (url.port === "80" || url.port === "443") url.port = "";
+    return NextResponse.redirect(url, 301);
+  }
+
   return authMiddleware(request, {
     loginPath: "/api/login",
     logoutPath: "/api/logout",
