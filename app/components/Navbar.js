@@ -67,7 +67,7 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   if (user) {
-                    router.push("/make-avatar/v2");
+                    router.push("/");
                   } else {
                     handleSignIn();
                   }
@@ -81,7 +81,7 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   if (user) {
-                    router.push("/");
+                    router.push("/make-avatar/v2");
                   } else {
                     handleSignIn();
                   }

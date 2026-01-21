@@ -21,7 +21,7 @@ export default function AdminNavbar() {
     { name: "Privacy Policy", path: "/privacy-policy" },
     { name: "Terms and conditions", path: "/tnc" },
     { name: "Help", path: "" },
-    { name: "Add Quiz/Survey", path: `/admin/quiz/new` },
+    // { name: "Add Quiz/Survey", path: `/admin/quiz/new` },
   ];
 
   const navOptions = [
