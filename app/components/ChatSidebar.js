@@ -188,15 +188,40 @@ export default function ChatSidebar({
                   `}
                           type="button"
                           onClick={() => {
-                            // const chatType =
-                            //   allChats?.sessions[id]?.role || "default";
+                            const sessionBrand = allChats?.sessions[id]?.brand;
+                            // If kavisha and session belongs to different brand, redirect
+                            if (
+                              brandContext?.subdomain === "kavisha" &&
+                              sessionBrand &&
+                              sessionBrand !== "kavisha"
+                            ) {
+                              const hostname =
+                                typeof window !== "undefined"
+                                  ? window.location.hostname
+                                  : "";
+                              if (hostname === "localhost" || hostname === "127.0.0.1") {
+                                window.location.href = `/chats/${id}?subdomain=${sessionBrand}`;
+                              } else {
+                                window.location.href = `https://${sessionBrand}.kavisha.ai/chats/${id}`;
+                              }
+                              return;
+                            }
+                            // Normal navigation for same brand
                             router.push(`/chats/${id}`);
-                            // updateChatId(id);
-                            // setCurrentChatType(chatType);
-                            // setIscollapsed(true);
                           }}
                         >
                           <div className="font-akshar flex flex-col items-start w-full justify-center">
+                            {/* Show brand name above title when brand is kavisha */}
+                            {brandContext?.subdomain === "kavisha" &&
+                              allChats?.sessions[id]?.brand &&
+                              allChats.sessions[id].brand !== "kavisha" && (
+                                <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mb-0.5 whitespace-nowrap">
+                                  {allChats.sessions[id].brand
+                                    .charAt(0)
+                                    .toUpperCase() +
+                                    allChats.sessions[id].brand.slice(1)}
+                                </span>
+                              )}
                             <div className="flex items-center gap-2 w-full">
                               <span className="truncate">
                                 {allChats?.sessions[id]?.title ||

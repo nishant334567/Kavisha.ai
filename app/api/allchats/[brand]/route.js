@@ -23,7 +23,7 @@ export async function GET(req, { params }) {
           userId: user.id,
           brand: brand,
         })
-          .select("_id title role updatedAt")
+          .select("_id title role updatedAt brand")
           .sort({ updatedAt: -1 });
 
         const sessionIds = sessions.map((session) => session._id);
@@ -36,6 +36,7 @@ export async function GET(req, { params }) {
             title: s.title,
             role: s.role,
             updatedAt: s.updatedAt,
+            brand: s.brand,
           };
         });
 

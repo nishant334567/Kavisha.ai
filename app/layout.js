@@ -11,6 +11,7 @@ import Loader from "./components/Loader";
 import DynamicMetaTags from "./components/DynamicMetaTags";
 import { usePathname } from "next/navigation";
 import AdminNavbar from "./admin/components/AdminNavbar";
+import GlobalMessages from "./components/GlobalMessages";
 import {
   Zen_Dots,
   Akshar,
@@ -105,6 +106,7 @@ export default function RootLayout({ children }) {
               {!isMaintenancePage && !isAdmin && <Navbar />}
               {!isMaintenancePage && isAdmin && <AdminNavbar />}
               <div className={isAdmin ? "pt-14" : ""}>{children}</div>
+              {!isMaintenancePage && !isAdmin && <GlobalMessages />}
             </SocketSessionWrapper>
           </BrandContextProvider>
         </FirebaseSessionProvider>

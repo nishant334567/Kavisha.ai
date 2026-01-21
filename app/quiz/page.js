@@ -78,7 +78,7 @@ export default function QuizPage() {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 auto-rows-fr">
             {quizzes.map((quiz) => (
               <QuizCard
                 key={quiz.id}
