@@ -9,9 +9,11 @@ export default function QuestionsForm({
   onBack,
   onSubmit,
   isQuiz,
+  brand,
 }) {
   const [addQues, setAddQues] = useState(false);
   const [newQuestionData, setNewQuestionData] = useState({
+    images: [],
     questionText: "",
     questionType: "single_choice",
     options: [],
@@ -71,6 +73,7 @@ export default function QuestionsForm({
 
     // Reset form
     setNewQuestionData({
+      images: [],
       questionText: "",
       questionType: "single_choice",
       options: [],
@@ -138,6 +141,7 @@ export default function QuestionsForm({
             if (addQues) {
               // Reset form when canceling
               setNewQuestionData({
+                images: [],
                 questionText: "",
                 questionType: "single_choice",
                 options: [],
@@ -177,6 +181,7 @@ export default function QuestionsForm({
               index={index}
               onChange={updateQuestion}
               isQuiz={isQuiz}
+              brand={brand}
             />
           ))}
         </div>
@@ -195,6 +200,7 @@ export default function QuestionsForm({
               setNewQuestionData((prev) => ({ ...prev, [key]: value }));
             }}
             isQuiz={isQuiz}
+            brand={brand}
           />
           <div className="flex gap-3 mt-4">
             <button
@@ -209,6 +215,7 @@ export default function QuestionsForm({
               onClick={() => {
                 setAddQues(false);
                 setNewQuestionData({
+                  images: [],
                   questionText: "",
                   questionType: "single_choice",
                   options: [],

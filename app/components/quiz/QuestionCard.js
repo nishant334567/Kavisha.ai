@@ -22,13 +22,12 @@ export default function QuestionCard({
 
   return (
     <div
-      className={`mb-4 sm:mb-6 p-4 sm:p-6 border border-gray-200 rounded-lg sm:rounded-xl transition-all ${
-        questionResult
+      className={`mb-4 sm:mb-6 p-4 sm:p-6 border border-gray-200 rounded-lg sm:rounded-xl transition-all ${questionResult
           ? questionResult.isCorrect
             ? "border-green-400 bg-green-50/50"
             : "border-red-400 bg-red-50/50"
           : ""
-      }`}
+        }`}
     >
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1 min-w-0">
@@ -38,11 +37,10 @@ export default function QuestionCard({
             </span>
             {questionResult && (
               <span
-                className={`px-2.5 py-1 rounded-full text-xs font-semibold font-fredoka ${
-                  questionResult.isCorrect
+                className={`px-2.5 py-1 rounded-full text-xs font-semibold font-fredoka ${questionResult.isCorrect
                     ? "bg-green-100 text-green-700"
                     : "bg-red-100 text-red-700"
-                }`}
+                  }`}
               >
                 {questionResult.isCorrect ? "✓ Correct" : "✗ Incorrect"}
               </span>
@@ -51,6 +49,19 @@ export default function QuestionCard({
           <p className="text-sm sm:text-base font-medium text-gray-700 leading-relaxed font-fredoka">
             {question?.questionText}
           </p>
+          {/* Question Images */}
+          {question?.images && question.images.length > 0 && (
+            <div className="flex flex-wrap gap-2 mt-3">
+              {question.images.map((imageUrl, imgIndex) => (
+                <img
+                  key={imgIndex}
+                  src={imageUrl}
+                  alt={`Question ${index + 1} image ${imgIndex + 1}`}
+                  className="max-h-48 w-auto object-contain rounded-lg border border-gray-300 bg-white"
+                />
+              ))}
+            </div>
+          )}
         </div>
         {question?.maxMarks && (
           <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-pink-100 text-pink-700 font-fredoka whitespace-nowrap ml-2">
@@ -63,9 +74,8 @@ export default function QuestionCard({
         {question?.options?.map((option, optIndex) => (
           <label
             key={optIndex}
-            className={`flex items-center gap-3 cursor-pointer ${
-              isCompleted ? "cursor-default" : ""
-            }`}
+            className={`flex items-center gap-3 cursor-pointer ${isCompleted ? "cursor-default" : ""
+              }`}
           >
             <input
               type={
@@ -78,14 +88,12 @@ export default function QuestionCard({
               checked={isOptionSelected(option.id)}
               onChange={() => handleChange(option.id)}
               disabled={isCompleted}
-              className={`w-4 h-4 text-[#264653] border-gray-300 focus:ring-2 focus:ring-teal-500 focus:ring-offset-1 ${
-                isCompleted ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
-              }`}
+              className={`w-4 h-4 text-[#264653] border-gray-300 focus:ring-2 focus:ring-teal-500 focus:ring-offset-1 ${isCompleted ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+                }`}
             />
             <span
-              className={`text-sm font-fredoka ${
-                isCompleted ? "text-gray-600" : "text-gray-700"
-              }`}
+              className={`text-sm font-fredoka ${isCompleted ? "text-gray-600" : "text-gray-700"
+                }`}
             >
               {option?.text}
             </span>

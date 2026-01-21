@@ -56,6 +56,13 @@ export default function AddQuiz() {
 
   const handleSubmit = async () => {
     console.log("Adding the quiz");
+    // Debug: Log questions with images
+    console.log("Questions being sent:", questions.map(q => ({
+      questionText: q.questionText,
+      images: q.images,
+      hasImages: !!q.images && q.images.length > 0
+    })));
+
     try {
       const response = await fetch("/api/admin/quiz", {
         method: "POST",
@@ -102,6 +109,7 @@ export default function AddQuiz() {
             onBack={handleBack}
             onSubmit={handleSubmit}
             isQuiz={assessmentData.type === "quiz"}
+            brand={assessmentData.brand || brandContext?.subdomain}
           />
         )}
       </div>

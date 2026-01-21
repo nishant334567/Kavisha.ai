@@ -4,6 +4,7 @@ import Assessments from "@/app/models/Assessment";
 import Questions from "@/app/models/Questions";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
+import { refreshImageUrl } from "@/app/lib/gcs";
 
 // GET - Fetch assessment and its questions
 export async function GET(req, { params }) {
@@ -64,17 +65,23 @@ export async function GET(req, { params }) {
             createdAt: assessment.createdAt,
             updatedAt: assessment.updatedAt,
           },
-          questions: questions.map((q) => ({
-            id: q._id.toString(),
-            questionText: q.questionText,
-            questionType: q.questionType,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            evaluationHint: q.evaluationHint,
-            maxMarks: q.maxMarks,
-            order: q.order,
-            required: q.required,
-          })),
+          questions: await Promise.all(
+            questions.map(async (q) => ({
+              id: q._id.toString(),
+              questionText: q.questionText,
+              questionType: q.questionType,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+              evaluationHint: q.evaluationHint,
+              maxMarks: q.maxMarks,
+              order: q.order,
+              required: q.required,
+              images:
+                q.images && q.images.length > 0
+                  ? await Promise.all(q.images.map(refreshImageUrl))
+                  : [],
+            }))
+          ),
         });
       } catch (error) {
         console.error("Error fetching quiz:", error);
@@ -172,6 +179,7 @@ export async function PATCH(req, { params }) {
                 maxMarks: q.maxMarks || 1,
                 order: q.order || index + 1,
                 required: q.required !== undefined ? q.required : true,
+                images: q.images || [],
               }))
             );
           }
@@ -200,17 +208,23 @@ export async function PATCH(req, { params }) {
             trends: updatedAssessment.trends || null,
             updatedAt: updatedAssessment.updatedAt,
           },
-          questions: updatedQuestions.map((q) => ({
-            id: q._id.toString(),
-            questionText: q.questionText,
-            questionType: q.questionType,
-            options: q.options,
-            correctAnswer: q.correctAnswer,
-            evaluationHint: q.evaluationHint,
-            maxMarks: q.maxMarks,
-            order: q.order,
-            required: q.required,
-          })),
+          questions: await Promise.all(
+            updatedQuestions.map(async (q) => ({
+              id: q._id.toString(),
+              questionText: q.questionText,
+              questionType: q.questionType,
+              options: q.options,
+              correctAnswer: q.correctAnswer,
+              evaluationHint: q.evaluationHint,
+              maxMarks: q.maxMarks,
+              order: q.order,
+              required: q.required,
+              images:
+                q.images && q.images.length > 0
+                  ? await Promise.all(q.images.map(refreshImageUrl))
+                  : [],
+            }))
+          ),
         });
       } catch (error) {
         console.error("Error updating quiz:", error);

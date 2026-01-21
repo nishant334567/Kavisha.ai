@@ -4,6 +4,7 @@ import Assessments from "@/app/models/Assessment";
 import Questions from "@/app/models/Questions";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
+import { refreshImageUrl } from "@/app/lib/gcs";
 
 // GET - Fetch all quizzes for admin's brand
 export async function GET(req) {
@@ -148,6 +149,12 @@ export async function POST(req) {
         });
 
         // Create questions
+        // Log to debug images
+        console.log("Questions received:", JSON.stringify(questions.map(q => ({
+          questionText: q.questionText,
+          images: q.images
+        })), null, 2));
+
         const questionDocs = await Questions.insertMany(
           questions.map((q, index) => ({
             assessmentId: assessmentDoc._id,
@@ -162,6 +169,7 @@ export async function POST(req) {
             maxMarks: q.maxMarks || 1,
             order: q.order || index + 1,
             required: q.required !== undefined ? q.required : true,
+            images: q.images || [],
           }))
         );
 

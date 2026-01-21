@@ -405,35 +405,46 @@ export default function QuizViewEdit() {
                       {question.questionText}
                     </p>
 
+                    {/* Question Images */}
+                    {question.images && question.images.length > 0 && (
+                      <div className="flex flex-wrap gap-2 mb-4">
+                        {question.images.map((imageUrl, imgIndex) => (
+                          <img
+                            key={imgIndex}
+                            src={imageUrl}
+                            alt={`Question ${index + 1} image ${imgIndex + 1}`}
+                            className="h-32 w-auto object-contain rounded-lg border border-gray-300 bg-white"
+                          />
+                        ))}
+                      </div>
+                    )}
+
                     <div className="space-y-2">
                       {question.options?.map((option) => {
                         const correct = isCorrect(option.id);
                         return (
                           <div
                             key={option.id}
-                            className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${
-                              correct
+                            className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${correct
                                 ? "bg-green-50 border-green-300"
                                 : "bg-white border-gray-200"
-                            }`}
+                              }`}
                           >
                             <div
-                              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${
-                                correct
+                              className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${correct
                                   ? "border-green-600 bg-green-100"
                                   : "border-gray-300"
-                              }`}
+                                }`}
                             >
                               {correct && (
                                 <CheckCircle2 className="w-3 h-3 text-green-600" />
                               )}
                             </div>
                             <span
-                              className={`flex-1 ${
-                                correct
+                              className={`flex-1 ${correct
                                   ? "text-green-900 font-medium"
                                   : "text-gray-700"
-                              }`}
+                                }`}
                             >
                               {option.text}
                             </span>

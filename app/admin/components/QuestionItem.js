@@ -1,9 +1,11 @@
 "use client";
-import { useState, useEffect } from "react";
-import { Trash2, Plus } from "lucide-react";
+import { useState, useEffect, useRef } from "react";
+import { Trash2, Plus, ImagePlus } from "lucide-react";
 
-export default function QuestionItem({ question, index, onChange, isQuiz }) {
+export default function QuestionItem({ question, index, onChange, isQuiz, brand }) {
   const [localQuestion, setLocalQuestion] = useState(question);
+  const [uploadingImages, setUploadingImages] = useState(false);
+  const fileInputRef = useRef(null);
 
   useEffect(() => {
     setLocalQuestion(question);
@@ -80,6 +82,43 @@ export default function QuestionItem({ question, index, onChange, isQuiz }) {
     onChange(index, "maxMarks", parseInt(e.target.value) || 1);
   };
 
+  const handleImageChange = async(e) => {
+    const files = Array.from(e.target.files || [])
+    if(files.length===0) return 
+    if (!brand) {
+      alert("Image upload requires brand context.");
+      e.target.value = "";
+      return;
+    }
+ setUploadingImages(true);
+    const urls = [];
+
+    try{
+      for (const file of files) {
+        const fd = new FormData();
+        fd.append("file", file);
+        fd.append("brand", brand);
+         const res = await fetch("/api/admin/quiz/upload-question-image", { method: "POST", body: fd });
+         const data = await res.json();
+         if(!res.ok) throw new Error(data.error || "Upload Failed")
+          if(data.url) urls.push(data.url)
+         
+      }
+      const existing = localQuestion?.images|| [];
+      onChange(index,"images", [...existing,...urls])
+    }catch (err) {
+      alert(err?.message || "Failed to upload images");
+    } finally {
+      setUploadingImages(false);
+      e.target.value = "";
+    }
+  };
+
+  const removeImage = (imgIndex) => {
+    const arr = (localQuestion?.images || []).filter((_, i) => i !== imgIndex);
+    onChange(index, "images", arr);
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-4 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
@@ -131,6 +170,29 @@ export default function QuestionItem({ question, index, onChange, isQuiz }) {
           className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none font-fredoka"
           placeholder="Enter your question"
         />
+      </div>
+      <div>
+        <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+          Question images (optional)
+        </label>
+        <input ref={fileInputRef} type="file" multiple className="hidden" accept="image/*" onChange={handleImageChange}/>
+      <button className="flex items-center gap-1.5 px-3 py-2 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 text-sm font-fredoka text-[#264653] disabled:opacity-50" type="button" onClick={()=>fileInputRef.current?.click()} disabled={uploadingImages}><ImagePlus className="w-4 h-4" />
+          {uploadingImages ? "Uploading…" : "Add images"}</button>
+      <div className="flex flex-wrap gap-2 mt-2">
+        {(localQuestion?.images || []).map((url, i) => (
+          <div key={i} className="relative group">
+            <img src={url} alt="" className="h-16 w-16 object-cover rounded-lg border border-gray-200" />
+            <button
+              type="button"
+              onClick={() => removeImage(i)}
+              className="absolute -top-1 -right-1 p-1 bg-red-500 text-white rounded-full hover:opacity-100 opacity-90 transition-opacity"
+              title="Remove"
+            >
+              <Trash2 className="w-3 h-3" />
+            </button>
+          </div>
+        ))}
+      </div>
       </div>
 
       {/* Options */}

@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft,Trash2 } from "lucide-react";
 
 export default function AddAdminPage() {
   const brand = useBrandContext();

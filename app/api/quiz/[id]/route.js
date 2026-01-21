@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import Assessments from "@/app/models/Assessment";
 import Questions from "@/app/models/Questions";
+import { refreshImageUrl } from "@/app/lib/gcs";
 
 export async function GET(req, { params }) {
   try {
@@ -52,19 +53,25 @@ export async function GET(req, { params }) {
         createdAt: assessment.createdAt,
         updatedAt: assessment.updatedAt,
       },
-      questions: questions.map((q) => ({
-        id: q._id,
-        questionText: q.questionText,
-        questionType: q.questionType,
-        options: q.options,
-        // correctAnswer: q.correctAnswer,
-        evaluationHint: q.evaluationHint,
-        maxMarks: q.maxMarks,
-        order: q.order,
-        required: q.required,
-        createdAt: q.createdAt,
-        updatedAt: q.updatedAt,
-      })),
+      questions: await Promise.all(
+        questions.map(async (q) => ({
+          id: q._id,
+          questionText: q.questionText,
+          questionType: q.questionType,
+          options: q.options,
+          // correctAnswer: q.correctAnswer,
+          evaluationHint: q.evaluationHint,
+          maxMarks: q.maxMarks,
+          order: q.order,
+          required: q.required,
+          images:
+            q.images && q.images.length > 0
+              ? await Promise.all(q.images.map(refreshImageUrl))
+              : [],
+          createdAt: q.createdAt,
+          updatedAt: q.updatedAt,
+        }))
+      ),
       questionCount: questions.length,
     });
   } catch (error) {
