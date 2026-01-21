@@ -364,17 +364,17 @@ export default function Homepage() {
               </h4>
               <ul className="space-y-2 md:space-y-3 text-[#264653] text-sm md:text-base">
                 <li>
-                  <a href="#" className="hover:underline">
+                  <a href="/make-avatar/v2" className="hover:underline">
                     Make my Avataar
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:underline">
+                  <a href="/" className="hover:underline">
                     Talk to Avataars
                   </a>
                 </li>
                 <li>
-                  <a href="#" className="hover:underline">
+                  <a href="/" className="hover:underline">
                     Connect with people
                   </a>
                 </li>

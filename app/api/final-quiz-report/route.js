@@ -70,7 +70,7 @@ export async function POST(request) {
                 )
                 .join("\n\n");
 
-              const prompt = `You are analyzing a survey response. Please provide a comprehensive analysis and report based on the following:
+              const prompt = `You are scoring a survey. Use ONLY the data and rules below. Do NOT add your own analysis, insights, or recommendations.
 
 SURVEY TITLE: ${assessment.title}
 ${assessment.subtitle ? `SUBTITLE: ${assessment.subtitle}` : ""}
@@ -87,13 +87,14 @@ ${assessment.trends || "Not provided"}
 SURVEY RESPONSES:
 ${surveyDataText}
 
-Please provide:
-1. A calculated score based on the scoring instructions (if provided)
-2. An interpretation based on the trends guide
-3. A detailed analysis of the responses
-4. Any insights or recommendations
+Output ONLY:
+1. **Score** – Calculate the score strictly using the SCORING INSTRUCTIONS above and the SURVEY RESPONSES. Show the numeric/result.
+2. **Interpretation** – Copy or summarize ONLY what applies from the TRENDS/INTERPRETATION GUIDE for this score. Do not add your own feedback.
 
-Format your response as a structured report with clear sections.`;
+Format:
+- Use **bold** for the two section headings (**Score**, **Interpretation**).
+- Put a blank line between sections. Valid Markdown only, no HTML.
+- Do not include analysis, insights, recommendations, or any text not derived from the scoring instructions and trends guide.`;
 
               const geminiContents = [
                 {
@@ -111,7 +112,7 @@ Format your response as a structured report with clear sections.`;
             }
           } catch (llmError) {
             console.error("Error generating LLM analysis:", llmError);
-            llmAnalysis = "Analysis could not be generated at this time.";
+            llmAnalysis = "Report could not be generated at this time.";
           }
 
           // Update attempt with survey response and LLM analysis

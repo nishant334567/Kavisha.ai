@@ -18,6 +18,7 @@ export default function AdminNavbar() {
   const settingOptions = [
     { name: "Sign Out", path: "" },
     { name: "Settings", path: "/settings" },
+    { name: "Add Admin", path: `/admin/${brand?.subdomain}/add-admin` },
     { name: "Privacy Policy", path: "/privacy-policy" },
     { name: "Terms and conditions", path: "/tnc" },
     { name: "Help", path: "" },
