@@ -86,7 +86,18 @@ export default function DocumentCard({
         )}
       </div>
       <div className="px-4 py-3 flex items-center justify-between">
-        <span className="text-xs text-blue-900">You added</span>
+        <div className="flex items-center gap-2">
+          {selectionMode && (
+            <input
+              type="checkbox"
+              checked={!!isSelected}
+              onClick={(e) => e.stopPropagation()}
+              onChange={(e) => onToggleSelect()}
+              className="shrink-0 rounded border-gray-300 text-[#242473] focus:ring-[#242473]"
+            />
+          )}
+          <span className="text-xs text-blue-900">You added</span>
+        </div>
         <span className="text-xs text-blue-900">
           {formatDate(doc.createdAt)}
         </span>
@@ -94,21 +105,5 @@ export default function DocumentCard({
     </div>
   );
 
-  if (selectionMode) {
-    return (
-      <div className="flex items-start gap-2">
-        <input
-          type="checkbox"
-          checked={!!isSelected}
-          onChange={(e) => {
-            e.stopPropagation();
-            onToggleSelect()
-          }}
-          className="mt-3 shrink-0 rounded border-gray-300 text-[#242473] focus:ring-[#242473]"
-        />
-        {card}
-      </div>
-    );
-  }
   return card;
 }
