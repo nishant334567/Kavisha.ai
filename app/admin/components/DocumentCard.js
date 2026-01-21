@@ -13,6 +13,7 @@ export default function DocumentCard({
   selectionMode,
   isSelected,
   onToggleSelect,
+  folderName,
 }) {
 
   const card = (
@@ -20,10 +21,18 @@ export default function DocumentCard({
       onClick={() => onView(doc.docid)}
       className="bg-blue-50 rounded-lg border border-blue-200 overflow-visible shadow-sm cursor-pointer hover:shadow-md transition-shadow"
     >
-      <div className="px-4 py-3 flex items-center justify-between relative">
-        <h3 className="font-semibold text-blue-900 text-sm">
+      <div className="px-4 py-3 flex items-center justify-between gap-2 relative">
+        <h3 className="font-semibold text-blue-900 text-sm min-w-0 truncate">
           {doc?.title?.toUpperCase()}
         </h3>
+        {folderName && folderName !== "Unfiled" && (
+          <span
+            onClick={(e) => e.stopPropagation()}
+            className="shrink-0 inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-md border border-blue-200 bg-white text-blue-800 cursor-default"
+          >
+            {folderName}
+          </span>
+        )}
         <button
           onClick={(e) => {
             e.stopPropagation();

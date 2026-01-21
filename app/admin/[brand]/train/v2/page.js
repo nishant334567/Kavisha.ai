@@ -571,6 +571,7 @@ const handleMoveToFolder = async() => {
                       selectionMode={selectionMode}
                       isSelected={selectedDocs.has(doc.docid)}
                       onToggleSelect={() => toggleSelect(doc.docid)}
+                      folderName={folders.find((f) => String(f._id) === String(doc.folderId))?.name ?? null}
                     />
                   ))}
                 </div>

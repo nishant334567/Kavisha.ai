@@ -64,7 +64,7 @@ export async function GET(req) {
     query.folderId = folderId;
   }
 
-  const limit = 10;
+  const limit = 100;
   const skip = (page - 1) * limit;
 
   const [documents, totalCount] = await Promise.all([
