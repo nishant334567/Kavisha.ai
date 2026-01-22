@@ -9,10 +9,13 @@ export default function SelectChatType({
   isCreating,
   creatingForServiceKey = null,
   enableCommunityOnboarding = false,
+  communityName = "",
+  enableQuiz = false,
+  quizName = "",
 }) {
   const router = useRouter();
   const [showType, setShowtype] = useState(false);
-  useEffect(() => {}, [showType]);
+  useEffect(() => { }, [showType]);
   const typeOfConnection = [
     {
       name: "job_seeker",
@@ -77,8 +80,8 @@ export default function SelectChatType({
             {servicesProvided.length > 0 &&
               servicesProvided.map((item, index) => {
                 const isLastService = index === servicesProvided.length - 1;
-                const hasCommunityButton = enableCommunityOnboarding;
-                const shouldShowLine = !(isLastService && !hasCommunityButton);
+                const hasMoreItems = enableCommunityOnboarding || enableQuiz;
+                const shouldShowLine = !(isLastService && !hasMoreItems);
 
                 return (
                   <div
@@ -100,9 +103,9 @@ export default function SelectChatType({
                       disabled={isCreating}
                     >
                       {isCreating &&
-                      (creatingForServiceKey != null
-                        ? creatingForServiceKey === item._key
-                        : selectedType === item.name) ? (
+                        (creatingForServiceKey != null
+                          ? creatingForServiceKey === item._key
+                          : selectedType === item.name) ? (
                         <div className="flex flex-col items-center justify-center h-full">
                           <span className="inline-block h-6 w-6 rounded-full border-2 border-white/70 border-t-transparent animate-spin"></span>
                           <span className="font-akshar uppercase text-lg">
@@ -123,35 +126,45 @@ export default function SelectChatType({
                   </div>
                 );
               })}
-            {enableCommunityOnboarding && (
-              <div className="flex flex-col justify-center items-center">
-                <button
-                  onClick={() => setShowtype(true)}
-                  className="flex items-center justify-center w-full"
-                  disabled={isCreating}
-                >
-                  <div className="flex items-center justify-center">
-                    <span className="font-akshar uppercase text-lg font-light">
-                      Connect with other learners
-                    </span>
+
+            {/* Features Section - at the bottom */}
+            {(enableCommunityOnboarding || enableQuiz) && (
+              <>
+                {enableCommunityOnboarding && (
+                  <div className="flex flex-col justify-center items-center">
+                    <button
+                      onClick={() => setShowtype(true)}
+                      className="flex items-center justify-center w-full"
+                      disabled={isCreating}
+                    >
+                      <div className="flex items-center justify-center">
+                        <span className="font-akshar uppercase text-lg font-light">
+                          {communityName || "Connect with other learners"}
+                        </span>
+                      </div>
+                    </button>
+                    {enableQuiz && (
+                      <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
+                    )}
                   </div>
-                </button>
-                <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
-              </div>
+                )}
+                {enableQuiz && (
+                  <div className="flex flex-col justify-center items-center">
+                    <button
+                      onClick={() => router.push("/quiz")}
+                      className="font-akshar uppercase text-lg flex items-center justify-center w-full"
+                      disabled={isCreating}
+                    >
+                      <div className="flex items-center justify-center">
+                        <span className="font-akshar uppercase text-lg font-light">
+                          {quizName || "Take a Quiz/Survey"}
+                        </span>
+                      </div>
+                    </button>
+                  </div>
+                )}
+              </>
             )}
-            <div className="flex flex-col justify-center items-center mt-2">
-              <button
-                onClick={() => router.push("/quiz")}
-                className="font-akshar uppercase text-lg flex items-center justify-center w-full"
-                disabled={isCreating}
-              >
-                <div className="flex items-center justify-center">
-                  <span className="font-akshar uppercase text-lg font-light">
-                    Take a Quiz/Survey
-                  </span>
-                </div>
-              </button>
-            </div>
           </div>
         )}
       </div>

@@ -108,50 +108,52 @@ export default function AdminQuizList() {
               <div
                 key={quiz.id}
                 onClick={() => router.push(`/admin/quiz/${quiz.id}/attempts`)}
-                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-all cursor-pointer"
+                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-all cursor-pointer flex flex-col h-full"
               >
-                {/* Title and Type Tag */}
-                <div className="flex items-start justify-between mb-3">
-                  <h3 className="font-fredoka text-lg font-semibold text-[#264653] flex-1 pr-2">
-                    {quiz.title || "Quiz title"}
-                  </h3>
-                  <span
-                    className={`px-2.5 py-1 text-xs font-normal rounded-full whitespace-nowrap font-fredoka ${
-                      quiz.type === "quiz"
-                        ? "bg-blue-100 text-blue-700"
-                        : "bg-yellow-100 text-yellow-700"
-                    }`}
-                  >
-                    {quiz.type === "quiz" ? "Quiz" : "Survey"}
-                  </span>
-                </div>
-
-                {/* Subtitle */}
-                {quiz.subtitle && (
-                  <p className="text-sm text-gray-600 mb-4 line-clamp-2 font-fredoka">
-                    {quiz.subtitle}
-                  </p>
-                )}
-
-                {/* Details */}
-                <div className="space-y-1.5 mb-4">
-                  <div className="text-sm text-gray-600 font-fredoka">
-                    {quiz.questionCount || 0} questions
+                {/* Content Area - takes available space */}
+                <div className="flex-1">
+                  {/* Title and Type Tag */}
+                  <div className="flex items-start justify-between mb-3">
+                    <h3 className="font-fredoka text-lg font-semibold text-[#264653] flex-1 pr-2">
+                      {quiz.title || "Quiz title"}
+                    </h3>
+                    <span
+                      className={`px-2.5 py-1 text-xs font-normal rounded-full whitespace-nowrap font-fredoka ${quiz.type === "quiz"
+                          ? "bg-blue-100 text-blue-700"
+                          : "bg-yellow-100 text-yellow-700"
+                        }`}
+                    >
+                      {quiz.type === "quiz" ? "Quiz" : "Survey"}
+                    </span>
                   </div>
-                  {quiz.durationInMinutes && quiz.type === "quiz" && (
-                    <div className="text-sm text-gray-600 font-fredoka">
-                      Duration: {quiz.durationInMinutes}m
-                    </div>
+
+                  {/* Subtitle */}
+                  {quiz.subtitle && (
+                    <p className="text-sm text-gray-600 mb-4 line-clamp-2 font-fredoka">
+                      {quiz.subtitle}
+                    </p>
                   )}
-                  {quiz.createdAt && (
+
+                  {/* Details */}
+                  <div className="space-y-1.5">
                     <div className="text-sm text-gray-600 font-fredoka">
-                      Created: {formatDate(quiz.createdAt)}
+                      {quiz.questionCount || 0} questions
                     </div>
-                  )}
+                    {quiz.durationInMinutes && quiz.type === "quiz" && (
+                      <div className="text-sm text-gray-600 font-fredoka">
+                        Duration: {quiz.durationInMinutes}m
+                      </div>
+                    )}
+                    {quiz.createdAt && (
+                      <div className="text-sm text-gray-600 font-fredoka">
+                        Created: {formatDate(quiz.createdAt)}
+                      </div>
+                    )}
+                  </div>
                 </div>
 
-                {/* Action Buttons */}
-                <div className="flex gap-2 mt-4">
+                {/* Action Buttons - stick to bottom */}
+                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100">
                   <button
                     onClick={(e) => {
                       e.stopPropagation();

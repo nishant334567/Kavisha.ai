@@ -90,6 +90,28 @@ export default {
       initialValue: false,
     },
     {
+      name: "communityName",
+      title: "Community Name",
+      type: "string",
+      description: "Name/label for the community feature (e.g., 'My Community', 'Connect')",
+      hidden: ({ parent }) => !parent?.enableCommunityOnboarding,
+    },
+    {
+      name: "enableQuiz",
+      title: "Enable Quiz/Survey",
+      type: "boolean",
+      description:
+        "Toggle to enable quiz and survey functionality",
+      initialValue: false,
+    },
+    {
+      name: "quizName",
+      title: "Quiz/Survey Name",
+      type: "string",
+      description: "Name/label for the quiz/survey feature (e.g., 'My Quizzes', 'Assessments')",
+      hidden: ({ parent }) => !parent?.enableQuiz,
+    },
+    {
       name: "services",
       title: "Services",
       type: "array",

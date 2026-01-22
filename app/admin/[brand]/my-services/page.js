@@ -1,7 +1,7 @@
 "use client";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, Edit2, Check, X } from "lucide-react";
 import ServiceModal from "@/app/admin/components/ServiceModal";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 
@@ -13,6 +13,14 @@ export default function MyServices() {
   const [selectedService, setSelectedService] = useState(null);
   const [addNewservice, setAddnewservice] = useState(false);
   const [showAddserviceoptions, setshowAddserviceoptions] = useState(false);
+  const [editingFeature, setEditingFeature] = useState(null);
+  const [featureData, setFeatureData] = useState({
+    enableQuiz: brandContext?.enableQuiz || false,
+    quizName: brandContext?.quizName || "",
+    enableCommunityOnboarding: brandContext?.enableCommunityOnboarding || false,
+    communityName: brandContext?.communityName || "",
+  });
+  const [updating, setUpdating] = useState(false);
 
   const services = brandContext?.services || [];
   const availedServices = services.map((item) => item.name) || [];
@@ -67,10 +75,82 @@ export default function MyServices() {
     };
   }, [showAddserviceoptions]);
 
+  useEffect(() => {
+    if (brandContext) {
+      setFeatureData({
+        enableQuiz: brandContext.enableQuiz || false,
+        quizName: brandContext.quizName || "",
+        enableCommunityOnboarding: brandContext.enableCommunityOnboarding || false,
+        communityName: brandContext.communityName || "",
+      });
+    }
+  }, [brandContext]);
+
+  const handleToggleFeature = async (featureType, value) => {
+    setUpdating(true);
+    try {
+      const updatePayload = {
+        subdomain: brandContext?.subdomain,
+        [featureType]: value,
+      };
+
+      const response = await fetch("/api/admin/update-features", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatePayload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update feature");
+      }
+
+      setFeatureData((prev) => ({ ...prev, [featureType]: value }));
+      window.location.reload();
+    } catch (err) {
+      console.error("Error updating feature:", err);
+      alert(err.message || "Failed to update feature");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
+  const handleSaveFeatureName = async (featureType, name) => {
+    setUpdating(true);
+    try {
+      const updatePayload = {
+        subdomain: brandContext?.subdomain,
+        [featureType]: name,
+      };
+
+      const response = await fetch("/api/admin/update-features", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(updatePayload),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update feature name");
+      }
+
+      setFeatureData((prev) => ({ ...prev, [featureType]: name }));
+      setEditingFeature(null);
+      window.location.reload();
+    } catch (err) {
+      console.error("Error updating feature name:", err);
+      alert(err.message || "Failed to update feature name");
+    } finally {
+      setUpdating(false);
+    }
+  };
+
   return (
     <>
-      <div className="bg-white h-[calc(100vh-56px)] overflow-hidden flex items-center justify-center relative">
-        <div className="absolute top-4 left-6">
+      <div className="bg-white h-[calc(100vh-56px)] overflow-y-auto flex items-start justify-center relative py-8">
+        <div className="absolute top-4 left-6 z-10">
           <button
             onClick={() => router.back()}
             className="text-black hover:opacity-70 transition-opacity"
@@ -78,14 +158,15 @@ export default function MyServices() {
             <ArrowLeft className="w-6 h-6" />
           </button>
         </div>
-        <div className="flex flex-col items-center justify-center gap-4 font-akshar">
+        <div className="flex flex-col items-center gap-4 font-akshar w-full max-w-2xl px-4">
           <div className="text-center mb-8">
             <h1 className="uppercase font-zen text-3xl md:text-4xl font-black text-[#000A67] leading-tight tracking-tight">
               My services
             </h1>
           </div>
-          {/* Service options */}
-          <div className="flex flex-col items-center gap-4 font-akshar">
+
+          {/* Services Section */}
+          <div className="flex flex-col items-center gap-4 font-akshar mb-8">
             {services.map((service, index) => (
               <div key={service._key || index}>
                 <button
@@ -129,6 +210,195 @@ export default function MyServices() {
                 )}
               </div>
             )}
+          </div>
+
+          {/* Featured Services Section - Show enabled features */}
+          {(featureData.enableQuiz || featureData.enableCommunityOnboarding) && (
+            <div className="flex flex-col items-center gap-4 font-akshar mt-8 pt-8 border-t border-gray-300">
+              <h2 className="uppercase font-zen text-xl md:text-2xl font-bold text-[#000A67] mb-4">
+                Featured Services
+              </h2>
+              {featureData.enableQuiz && (
+                <div className="flex flex-col items-center">
+                  <span className="text-gray-600 uppercase text-base tracking-wider font-normal">
+                    {featureData.quizName || "Take a Quiz/Survey"}
+                  </span>
+                  <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
+                </div>
+              )}
+              {featureData.enableCommunityOnboarding && (
+                <div className="flex flex-col items-center">
+                  <span className="text-gray-600 uppercase text-base tracking-wider font-normal">
+                    {featureData.communityName || "Connect with others"}
+                  </span>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Features Configuration Section */}
+          <div className="flex flex-col items-center gap-6 font-akshar mt-12 pt-8 border-t-2 border-gray-300">
+            <h2 className="uppercase font-zen text-xl md:text-2xl font-bold text-[#000A67] mb-2">
+              Features
+            </h2>
+
+            {/* Community Feature */}
+            <div className="flex items-center justify-between w-full gap-4 px-4">
+              <div className="flex items-center gap-3">
+                <span className="text-gray-600 uppercase text-base tracking-wider font-normal">
+                  Community
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={featureData.enableCommunityOnboarding}
+                    onChange={(e) =>
+                      handleToggleFeature(
+                        "enableCommunityOnboarding",
+                        e.target.checked
+                      )
+                    }
+                    disabled={updating}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+              {featureData.enableCommunityOnboarding && (
+                <div className="flex items-center gap-2 flex-1 justify-end">
+                  {editingFeature === "communityName" ? (
+                    <>
+                      <input
+                        type="text"
+                        value={featureData.communityName}
+                        onChange={(e) =>
+                          setFeatureData((prev) => ({
+                            ...prev,
+                            communityName: e.target.value,
+                          }))
+                        }
+                        className="px-3 py-1 text-sm border border-gray-300 rounded-lg text-center uppercase max-w-[200px]"
+                        placeholder="Community Name"
+                        disabled={updating}
+                      />
+                      <button
+                        onClick={() =>
+                          handleSaveFeatureName(
+                            "communityName",
+                            featureData.communityName
+                          )
+                        }
+                        disabled={updating}
+                        className="text-green-600 hover:text-green-700"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingFeature(null);
+                          setFeatureData((prev) => ({
+                            ...prev,
+                            communityName: brandContext?.communityName || "",
+                          }));
+                        }}
+                        disabled={updating}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-gray-600 uppercase text-sm tracking-wider font-normal">
+                        {featureData.communityName || "Connect with others"}
+                      </span>
+                      <button
+                        onClick={() => setEditingFeature("communityName")}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Quiz/Survey Feature */}
+            <div className="flex items-center justify-between w-full gap-4 px-4">
+              <div className="flex items-center gap-3">
+                <span className="text-gray-600 uppercase text-base tracking-wider font-normal">
+                  Quiz/Survey
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={featureData.enableQuiz}
+                    onChange={(e) =>
+                      handleToggleFeature("enableQuiz", e.target.checked)
+                    }
+                    disabled={updating}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+              {featureData.enableQuiz && (
+                <div className="flex items-center gap-2 flex-1 justify-end">
+                  {editingFeature === "quizName" ? (
+                    <>
+                      <input
+                        type="text"
+                        value={featureData.quizName}
+                        onChange={(e) =>
+                          setFeatureData((prev) => ({
+                            ...prev,
+                            quizName: e.target.value,
+                          }))
+                        }
+                        className="px-3 py-1 text-sm border border-gray-300 rounded-lg text-center uppercase max-w-[200px]"
+                        placeholder="Quiz/Survey Name"
+                        disabled={updating}
+                      />
+                      <button
+                        onClick={() =>
+                          handleSaveFeatureName("quizName", featureData.quizName)
+                        }
+                        disabled={updating}
+                        className="text-green-600 hover:text-green-700"
+                      >
+                        <Check className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={() => {
+                          setEditingFeature(null);
+                          setFeatureData((prev) => ({
+                            ...prev,
+                            quizName: brandContext?.quizName || "",
+                          }));
+                        }}
+                        disabled={updating}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-gray-600 uppercase text-sm tracking-wider font-normal">
+                        {featureData.quizName || "Take a Quiz/Survey"}
+                      </span>
+                      <button
+                        onClick={() => setEditingFeature("quizName")}
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <Edit2 className="w-4 h-4" />
+                      </button>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
         </div>
       </div>

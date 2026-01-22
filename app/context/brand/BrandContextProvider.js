@@ -52,6 +52,9 @@ export default function BrandContextProvider({ children }) {
                   admins,
                   initialmessage,
                   enableCommunityOnboarding,
+                  communityName,
+                  enableQuiz,
+                  quizName,
                   services
               }[0]`
         );
@@ -83,6 +86,9 @@ export default function BrandContextProvider({ children }) {
             subdomain,
             initialmessage: brand.initialmessage,
             enableCommunityOnboarding: brand.enableCommunityOnboarding || false,
+            communityName: brand.communityName || "",
+            enableQuiz: brand.enableQuiz || false,
+            quizName: brand.quizName || "",
             services: brand.services,
           };
 

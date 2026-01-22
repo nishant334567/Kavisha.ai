@@ -198,6 +198,9 @@ export default function HomePage() {
             enableCommunityOnboarding={
               brandContext?.enableCommunityOnboarding || false
             }
+            communityName={brandContext?.communityName || ""}
+            enableQuiz={brandContext?.enableQuiz || false}
+            quizName={brandContext?.quizName || ""}
           />
 
           {currentChatId && (
