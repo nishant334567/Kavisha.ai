@@ -1,124 +1,89 @@
-"use client";
 import "./globals.css";
-import SocketProvider from "./context/SocketProvider";
-import {
-  FirebaseSessionProvider,
-  useFirebaseSession,
-} from "./lib/firebase/FirebaseSessionProvider";
-import BrandContextProvider from "./context/brand/BrandContextProvider";
-import Navbar from "@/app/components/Navbar";
-import Loader from "./components/Loader";
-import DynamicMetaTags from "./components/DynamicMetaTags";
-import { usePathname } from "next/navigation";
-import AdminNavbar from "./admin/components/AdminNavbar";
-import GlobalMessages from "./components/GlobalMessages";
-import {
-  Zen_Dots,
-  Akshar,
-  Baloo_2,
-  Commissioner,
-  Fredoka,
-  Figtree,
-  Dosis,
-  Assistant,
-  Noto_Serif,
-} from "next/font/google";
+import { fontVariables } from "./lib/fonts";
+import { headers } from "next/headers";
+import { client, urlFor } from "./lib/sanity";
+import ClientLayout from "./components/ClientLayout";
 
-const notoSans = Noto_Serif({
-  weight: ["400", "700"], // Specify the weights you need
-  subsets: ["latin"], // Specify the subsets
-  variable: "--font-noto-serif", // Define a CSS variable name
-});
+function trimText(str = "", max = 100) {
+  if (!str?.trim()) return "";
+  const trimmed = str.trim();
+  return trimmed.length > max ? trimmed.slice(0, max - 1) + "…" : trimmed;
+}
 
-const zenDots = Zen_Dots({
-  subsets: ["latin"],
-  weight: "400", // Zen Dots has ONLY one weight
-  variable: "--font-zen-dots",
-});
+function getSubdomainFromHost(host) {
+  const parts = host.split(".");
+  return parts.length > 2 ? parts[0] : "kavisha";
+}
 
-const assistant = Assistant({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-assistant",
-});
-const dosis = Dosis({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-dosis",
-});
-const figtree = Figtree({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700", "800"],
-  variable: "--font-figtree",
-});
-const akshar = Akshar({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-akshar",
-});
+function getImageUrl(imageAsset, fallback) {
+  if (!imageAsset?.asset?._ref) return fallback;
+  const url = urlFor(imageAsset).url();
+  return url || fallback;
+}
 
-const baloo = Baloo_2({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700", "800"],
-  variable: "--font-baloo",
-});
+export async function generateMetadata() {
+  const headersList = await headers();
+  const host = headersList.get("host") || "";
+  const subdomain = getSubdomainFromHost(host);
 
-const commissioner = Commissioner({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  variable: "--font-commissioner",
-});
+  const brand = await client.fetch(
+    `*[_type == "brand" && subdomain == $subdomain][0]{
+      brandName,
+      title,
+      subtitle,
+      brandImage,
+      logo
+    }`,
+    { subdomain }
+  );
 
-const fredoka = Fredoka({
-  subsets: ["latin"],
-  weight: ["400", "500", "600", "700"],
-  variable: "--font-fredoka",
-});
+  const brandTitle = brand?.brandName || brand?.title || subdomain;
+  const pageTitle =
+    subdomain === "kavisha" ? brandTitle : `${brandTitle} | Kavisha.ai`;
+  const description = trimText(brand?.subtitle || "AI platform", 100);
+
+  const siteUrl = `https://${host}`;
+  const ogImage = getImageUrl(brand?.brandImage, "https://kavisha.ai/og-home.png");
+  const favicon = getImageUrl(brand?.logo, getImageUrl(brand?.brandImage, "/favicon.ico"));
+
+  return {
+    title: pageTitle,
+    description,
+    metadataBase: new URL(siteUrl),
+    icons: {
+      icon: favicon,
+      shortcut: favicon,
+      apple: favicon,
+    },
+    openGraph: {
+      type: "website",
+      locale: "en_US",
+      url: siteUrl,
+      siteName: "Kavisha.ai",
+      title: pageTitle,
+      description,
+      images: [{ url: ogImage, width: 1200, height: 630, alt: pageTitle }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: pageTitle,
+      description,
+      images: [ogImage],
+    },
+  };
+}
 
 export default function RootLayout({ children }) {
-  const pathname = usePathname();
-  const isMaintenancePage = pathname === "/maintenance";
-  const isAdmin = pathname?.startsWith("/admin");
-
   return (
-    <html
-      lang="en"
-      className={`${zenDots.variable} 
-      ${akshar.variable} ${baloo.variable}
-       ${commissioner.variable} 
-       ${fredoka.variable} ${figtree.variable}
-       ${dosis.variable} ${assistant.variable}
-       ${notoSans.variable}`}
-    >
-      <head>
-        <title>Kavisha.ai</title>
-        <link rel="icon" href="data:," />
-      </head>
+    <html lang="en" className={fontVariables}>
+      <head />
       <body
         className="h-full"
         suppressHydrationWarning={true}
         suppressContentEditableWarning={true}
       >
-        <FirebaseSessionProvider>
-          <BrandContextProvider>
-            <DynamicMetaTags />
-            <SocketSessionWrapper>
-              {!isMaintenancePage && !isAdmin && <Navbar />}
-              {!isMaintenancePage && isAdmin && <AdminNavbar />}
-              <div className={isAdmin ? "pt-14" : ""}>{children}</div>
-              {!isMaintenancePage && !isAdmin && <GlobalMessages />}
-            </SocketSessionWrapper>
-          </BrandContextProvider>
-        </FirebaseSessionProvider>
+        <ClientLayout>{children}</ClientLayout>
       </body>
     </html>
   );
-
-  function SocketSessionWrapper({ children }) {
-    const { user, loading } = useFirebaseSession();
-    if (loading) {
-      return <Loader loadingMessage="Loading Session..." />;
-    }
-    return <SocketProvider userId={user?.id}>{children}</SocketProvider>;
-  }
 }
