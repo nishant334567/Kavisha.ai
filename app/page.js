@@ -1,6 +1,6 @@
 "use client";
 import { useFirebaseSession } from "./lib/firebase/FirebaseSessionProvider";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useLayoutEffect, useRef } from "react";
 import { redirect, useRouter } from "next/navigation";
 import { useBrandContext } from "./context/brand/BrandContextProvider";
 import SelectChatType from "./components/SelectType";
@@ -13,7 +13,7 @@ import AvatarHomepage from "./components/AvatarHomepage";
 
 export default function HomePage() {
   const { user, loading } = useFirebaseSession();
-
+  const router = useRouter()
   const [currentChatType, setCurrentChatType] = useState(null);
   const brandContext = useBrandContext();
 
@@ -29,6 +29,23 @@ export default function HomePage() {
   const [showInbox, setShowInbox] = useState(false);
   const [servicesProvided, setServicesProvided] = useState({});
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+
+
+
+  useLayoutEffect(() => {
+    if (loading || !user || !brandContext) {
+      return;
+    }
+    const redirectPath = typeof window !== "undefined" ? localStorage.getItem("redirectAfterLogin") : null;
+
+    if (redirectPath) {
+      localStorage.removeItem("redirectAfterLogin");
+      router.replace(redirectPath);
+      return;
+    }
+  }, [user, loading, brandContext, router]);
+
+
   useEffect(() => {
     if (!user || !brandContext) return;
     const key = `lastChat:${user.id}:${brandContext.brandName}`;
@@ -88,8 +105,6 @@ export default function HomePage() {
     type === 3 && setViewdata(dataObject);
     toggleRightPanel();
   };
-
-  const router = useRouter();
 
   const selectChatType = async (
     type,

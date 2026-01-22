@@ -59,16 +59,19 @@ const avatars = [
 
 export default function Homepage() {
   const router = useRouter();
-  const { refresh } = useFirebaseSession();
+  const { user, refresh } = useFirebaseSession();
   const [currentIndex, setCurrentIndex] = useState(0);
   const sliderRef = useRef(null);
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState("");
 
-  const handleSignIn = async () => {
+  const handleSignIn = async (redirectPath = null) => {
     setSigningIn(true);
     setError("");
     try {
+      if (redirectPath && typeof window !== "undefined") {
+        localStorage.setItem("redirectAfterLogin", redirectPath)
+      }
       await signIn();
       await refresh();
       // State will update and root page will show logged-in UI
@@ -110,7 +113,7 @@ export default function Homepage() {
   return (
     <div className="mt-16">
       <div className="flex flex-col items-center justify-center py-8">
-    
+
         <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
       </div>
       <div className="flex flex-col justify-center items-center font-fredoka max-w-[90%] md:max-w-[60%] mx-auto text-center px-4">
@@ -131,20 +134,38 @@ export default function Homepage() {
 
       <div className="font-akshar gap-2 md:gap-4 flex flex-wrap justify-center items-center mb-8 px-4">
         <button
-          onClick={handleSignIn}
+          onClick={() => {
+            if (user) {
+              router.push("/talk-to-avatar2");
+            } else {
+              handleSignIn("/talk-to-avatar");
+            }
+          }}
           disabled={signingIn}
           className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
         >
           {signingIn ? "Signing in..." : "Talk to Avataars"}
         </button>
         <button
-          onClick={() => router.push("/make-avatar/v2")}
+          onClick={() => {
+            if (user) {
+              router.push("/make-avatar/v2");
+            } else {
+              handleSignIn("/make-avatar/v2");
+            }
+          }}
           className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#3D5E6B] text-white shadow-md hover:bg-[#2d4752] transition-colors"
         >
           Make my Avataar
         </button>
         <button
-          onClick={handleSignIn}
+          onClick={() => {
+            if (user) {
+              router.push("/talk-to-avatar");
+            } else {
+              handleSignIn("/talk-to-avatar");
+            }
+          }}
           disabled={signingIn}
           className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
         >
@@ -239,22 +260,20 @@ export default function Homepage() {
                 <button
                   onClick={slideLeft}
                   disabled={currentIndex === 0}
-                  className={`group w-10 h-10 rounded-full border-2 border-[#264653] flex items-center justify-center transition-colors ${
-                    currentIndex === 0
-                      ? "opacity-40 cursor-not-allowed"
-                      : "hover:bg-[#264653]"
-                  }`}
+                  className={`group w-10 h-10 rounded-full border-2 border-[#264653] flex items-center justify-center transition-colors ${currentIndex === 0
+                    ? "opacity-40 cursor-not-allowed"
+                    : "hover:bg-[#264653]"
+                    }`}
                 >
                   <ChevronLeft className="w-5 h-5 text-[#264653] group-hover:text-white transition-colors" />
                 </button>
                 <button
                   onClick={slideRight}
                   disabled={currentIndex >= maxIndex}
-                  className={`group w-10 h-10 rounded-full border-2 border-[#264653] flex items-center justify-center transition-colors ${
-                    currentIndex >= maxIndex
-                      ? "opacity-40 cursor-not-allowed"
-                      : "hover:bg-[#264653]"
-                  }`}
+                  className={`group w-10 h-10 rounded-full border-2 border-[#264653] flex items-center justify-center transition-colors ${currentIndex >= maxIndex
+                    ? "opacity-40 cursor-not-allowed"
+                    : "hover:bg-[#264653]"
+                    }`}
                 >
                   <ChevronRight className="w-5 h-5 text-[#264653] group-hover:text-white transition-colors" />
                 </button>
@@ -288,7 +307,13 @@ export default function Homepage() {
               each other
             </p>
             <button
-              onClick={handleSignIn}
+              onClick={() => {
+                if (user) {
+                  router.push("/talk-to-avatar");
+                } else {
+                  handleSignIn("/talk-to-avatar");
+                }
+              }}
               disabled={signingIn}
               className="w-fit px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl font-akshar hover:bg-white hover:text-[#35515b] transition-colors disabled:opacity-50"
             >
@@ -309,10 +334,10 @@ export default function Homepage() {
         </div>
         {/* Logo and tagline section */}
         <div className="bg-[linear-gradient(180deg,#FFFFFF_34%,#EDF4F7_100%)] flex flex-col items-center justify-center py-8 md:py-12 px-4 md:px-8 border-b border-gray-200">
- <div className="flex flex-col items-center justify-center py-8">
-    
-        <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
-      </div>
+          <div className="flex flex-col items-center justify-center py-8">
+
+            <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
+          </div>
           <p className="font-fredoka text-base md:text-xl font-light text-center text-[#264653] max-w-3xl tracking-wide">
             With Kavisha, influencers and brands can interact with their fans,
             create opportunities for them, and make them happy. Like never
@@ -364,19 +389,46 @@ export default function Homepage() {
               </h4>
               <ul className="space-y-2 md:space-y-3 text-[#264653] text-sm md:text-base">
                 <li>
-                  <a href="/make-avatar/v2" className="hover:underline">
+                  <button
+                    onClick={() => {
+                      if (user) {
+                        router.push("/make-avatar/v2");
+                      } else {
+                        handleSignIn("/make-avatar/v2");
+                      }
+                    }}
+                    className="hover:underline text-left"
+                  >
                     Make my Avataar
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <a href="/" className="hover:underline">
+                  <button
+                    onClick={() => {
+                      if (user) {
+                        router.push("/talk-to-avatar2");
+                      } else {
+                        handleSignIn("/talk-to-avatar");
+                      }
+                    }}
+                    className="hover:underline text-left"
+                  >
                     Talk to Avataars
-                  </a>
+                  </button>
                 </li>
                 <li>
-                  <a href="/" className="hover:underline">
+                  <button
+                    onClick={() => {
+                      if (user) {
+                        router.push("/talk-to-avatar");
+                      } else {
+                        handleSignIn("/talk-to-avatar");
+                      }
+                    }}
+                    className="hover:underline text-left"
+                  >
                     Connect with people
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>

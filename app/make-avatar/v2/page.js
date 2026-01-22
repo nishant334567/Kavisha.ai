@@ -1,8 +1,10 @@
 "use client";
 
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Settings, User, Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useBrandContext } from "../../context/brand/BrandContextProvider";
+import Loader from "../../components/Loader";
 
 const stages = {
   BASIC_INFO: 1,
@@ -12,6 +14,7 @@ const stages = {
 
 export default function MakeAvatar() {
   const router = useRouter();
+  const brandContext = useBrandContext();
   const fileInputRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(stages.BASIC_INFO);
   const [loading, setLoading] = useState(false);
@@ -265,6 +268,21 @@ export default function MakeAvatar() {
       />
     </div>
   );
+
+  // Only allow access for kavisha brand
+  useEffect(() => {
+    if (brandContext && brandContext.subdomain !== "kavisha") {
+      router.push("/");
+    }
+  }, [brandContext, router]);
+
+  if (!brandContext) {
+    return <Loader loadingMessage="Loading..." />;
+  }
+
+  if (brandContext.subdomain !== "kavisha") {
+    return <Loader loadingMessage="Redirecting..." />;
+  }
 
   return (
     <div className="min-h-screen bg-white flex flex-col">

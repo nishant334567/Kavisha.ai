@@ -20,12 +20,15 @@ export default function Navbar() {
     (brand?.subdomain === "kavisha" ||
       window.location.hostname.replace(/^www\./, "").split(".").length === 2);
 
-  const handleSignIn = async () => {
+  const handleSignIn = async (redirectPath) => {
     setSigningIn(true);
     try {
+      if (redirectPath && typeof window !== "undefined") {
+        localStorage.setItem("redirectAfterLogin", redirectPath);
+      }
       await signIn();
       refresh();
-      router.push("/");
+      // router.push("/");
     } catch (e) {
     } finally {
       setSigningIn(false);
@@ -69,10 +72,10 @@ export default function Navbar() {
                   if (user) {
                     router.push("/");
                   } else {
-                    handleSignIn();
+                    handleSignIn("/talk-to-avatar");
                   }
                 }}
-                // className="px-3 py-1.5 rounded-md text-sm bg-blue-600 hover:bg-blue-700 transition-colors"
+              // className="px-3 py-1.5 rounded-md text-sm bg-blue-600 hover:bg-blue-700 transition-colors"
               >
                 TALK TO AVATAARS
               </button>
@@ -83,10 +86,10 @@ export default function Navbar() {
                   if (user) {
                     router.push("/make-avatar/v2");
                   } else {
-                    handleSignIn();
+                    handleSignIn("/make-avatar/v2");
                   }
                 }}
-                // className="px-3 py-1.5 rounded-md text-sm bg-blue-600 hover:bg-blue-700 transition-colors"
+              // className="px-3 py-1.5 rounded-md text-sm bg-blue-600 hover:bg-blue-700 transition-colors"
               >
                 MAKE MY AVATAAR
               </button>
