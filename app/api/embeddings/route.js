@@ -12,7 +12,8 @@ export async function POST(request) {
       brand,
       title,
       description,
-      folderId
+      folderId,
+      sourceUrl = ""
       // chunkSize = 200,
     } = await request.json();
 
@@ -24,7 +25,7 @@ export async function POST(request) {
     }
 
     await connectDB();
-    const shortUuid = uuidv4().substring(0, 8); 
+    const shortUuid = uuidv4().substring(0, 8);
     const titleSlug = title
       .trim()
       .replace(/[^a-zA-Z0-9]/g, "")
@@ -57,7 +58,8 @@ export async function POST(request) {
       text: text,
       totalChunks: totalChunks,
       createdAt,
-      ...(folderId && {folderId})
+      ...(folderId && { folderId }),
+      sourceUrl: sourceUrl
     });
 
     const results = [];
@@ -89,12 +91,17 @@ export async function POST(request) {
           description: descriptionValue,
           createdAt: createdAtISO,
           chunkIndex: chunkIndex.toString(),
+          chunkSourceUrl: sourceUrl
         },
       });
 
       sparseRecords.push({
         id: datapointId,
         text: chunk,
+        docid: docId,
+        chunkSourceUrl: sourceUrl,
+        chunkIndex: chunkIndex.toString(),
+        title: titleValue
       });
 
       results.push(datapointId);
@@ -144,7 +151,7 @@ export async function POST(request) {
 
 export async function PATCH(request) {
   try {
-    const { docid, text, brand, title, folderId } = await request.json();
+    const { docid, text, brand, title, folderId, sourceUrl = "" } = await request.json();
     await connectDB();
     const sparseIndexNamespace = pc.index("kavisha-sparse").namespace(brand);
     const denseIndexNamespace = pc
@@ -200,12 +207,17 @@ export async function PATCH(request) {
           title: titleValue,
           createdAt: createdAtISO,
           chunkIndex: chunkIndex.toString(),
+          chunkSourceUrl: sourceUrl,
         },
       });
 
       sparseRecords.push({
         id: datapointId,
         text: chunk,
+        docid: docid,
+        chunkSourceUrl: sourceUrl,
+        chunkIndex: chunkIndex.toString(),
+        title: titleValue,
       });
 
       results.push(datapointId);
@@ -252,6 +264,7 @@ export async function PATCH(request) {
           ...(folderId !== undefined && {
             folderId: folderId === "" || folderId == null ? null : folderId,
           }),
+          ...(sourceUrl !== undefined && { sourceUrl: sourceUrl || "" }),
         },
       }
     );

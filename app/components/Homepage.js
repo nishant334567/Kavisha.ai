@@ -70,7 +70,11 @@ export default function Homepage() {
     setError("");
     try {
       if (redirectPath && typeof window !== "undefined") {
-        localStorage.setItem("redirectAfterLogin", redirectPath)
+        // Ensure redirectPath is a string and starts with /
+        const path = typeof redirectPath === "string" && redirectPath.startsWith("/")
+          ? redirectPath
+          : "/";
+        localStorage.setItem("redirectAfterLogin", path);
       }
       await signIn();
       await refresh();

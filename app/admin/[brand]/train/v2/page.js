@@ -28,6 +28,7 @@ export default function Train() {
   const [folders, setFolders] = useState([]);
   const [selectedFolderId, setSelectedFolderId] = useState(null);
   const [uploadFolderId, setUploadFolderId] = useState("");
+  const [uploadSourceUrl, setUploadSourceUrl] = useState("");
   const [textUploadFolderId, setTextUploadFolderId] = useState("");
   const [editFolderId, setEditFolderId] = useState("");
   const [selectionMode, setSelectionMode] = useState(false);
@@ -122,7 +123,7 @@ export default function Train() {
     }
   }, [openMenuId]);
 
-  const processText = async (title, text, folderId) => {
+  const processText = async (title, text, folderId, sourceUrl = "") => {
     const brandName = brand?.subdomain || "";
 
     const embRes = await fetch("/api/embeddings", {
@@ -134,6 +135,7 @@ export default function Train() {
         title,
         description: title,
         ...(folderId && { folderId }),
+        ...(sourceUrl && { sourceUrl }),
       }),
     });
     if (!embRes.ok) throw new Error((await embRes.json()).error);
@@ -169,10 +171,11 @@ export default function Train() {
         throw new Error("Only PDF and text files allowed");
       }
 
-      await processText(title, text, uploadFolderId || undefined);
+      await processText(title, text, uploadFolderId || undefined, uploadSourceUrl || "");
       alert("File uploaded successfully!");
       fileInputRef.current.value = "";
       setSelectedFileName("");
+      setUploadSourceUrl("");
       fetchDocuments(1, selectedFolderId);
     } catch (error) {
       alert(`Error: ${error.message}`);
@@ -189,7 +192,7 @@ export default function Train() {
       // Truncate title to 50 characters (DB limit)
       const title =
         data.title.length > 50 ? data.title.substring(0, 50) : data.title;
-      await processText(title, data.content, textUploadFolderId || undefined);
+      await processText(title, data.content, textUploadFolderId || undefined, data.sourceUrl || "");
       alert("Text saved successfully!");
       setIsModalOpen(false);
       fetchDocuments(1, selectedFolderId);
@@ -253,20 +256,21 @@ export default function Train() {
     });
   };
 
-const handleMoveToFolder = async() => {
-  const docids = [...selectedDocs];
-  if(docids.length===0) return;
-  setMoving(true);
+  const handleMoveToFolder = async () => {
+    const docids = [...selectedDocs];
+    if (docids.length === 0) return;
+    setMoving(true);
 
-  try{
-    const res = await fetch("/api/admin/training-documents", {
-      method: "PATCH",
-      headers: {"Content-Type": "application/json"},
-      body: JSON.stringify({
-        docids,
-        folderId: moveTargetFolderId || null,
-        brand: brand?.subdomain
-      })})
+    try {
+      const res = await fetch("/api/admin/training-documents", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          docids,
+          folderId: moveTargetFolderId || null,
+          brand: brand?.subdomain
+        })
+      })
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to move");
@@ -276,12 +280,12 @@ const handleMoveToFolder = async() => {
       setMoveTargetFolderId("")
       fetchDocuments(currentPage, selectedFolderId);
       alert(`Moved ${data.modifiedCount} document(s).`);
-  }catch(err){
+    } catch (err) {
       alert(err?.message || "Failed to move documents");
-  }finally{
-    setMoving(false);
+    } finally {
+      setMoving(false);
+    }
   }
-}
 
   const handleEditDocument = async (doc) => {
     setOpenMenuId(null);
@@ -311,6 +315,7 @@ const handleMoveToFolder = async() => {
           brand: brand?.subdomain,
           title: updateData.title,
           folderId: (updateData.folderId ?? editFolderId) || null,
+          ...(updateData.sourceUrl && { sourceUrl: updateData.sourceUrl }),
         }),
       });
       if (!res.ok) throw new Error((await res.json()).error);
@@ -385,6 +390,13 @@ const handleMoveToFolder = async() => {
                 </option>
               ))}
             </select>
+            <input
+              type="url"
+              value={uploadSourceUrl}
+              onChange={(e) => setUploadSourceUrl(e.target.value)}
+              placeholder="Source URL (optional)"
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2 placeholder:text-gray-400"
+            />
             <input
               type="file"
               ref={fileInputRef}
@@ -627,6 +639,7 @@ const handleMoveToFolder = async() => {
         onSave={handleUpdateDocument}
         initialTitle={editingDocument?.title || ""}
         initialContent={editingDocument?.text || ""}
+        initialSourceUrl={editingDocument?.sourceUrl || ""}
         isEditMode={true}
         folders={folders}
         folderId={editFolderId}

@@ -12,19 +12,23 @@ export default function TextTrainingModal({
   folders = [],
   folderId = "",
   onFolderChange,
+  initialSourceUrl = "",
 }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
+  const [sourceUrl, setSourceUrl] = useState("");
 
   useEffect(() => {
     if (isOpen) {
       setTitle(initialTitle);
       setContent(initialContent);
+      setSourceUrl(initialSourceUrl);
     } else {
       setTitle("");
       setContent("");
+      setSourceUrl("");
     }
-  }, [isOpen, initialTitle, initialContent]);
+  }, [isOpen, initialTitle, initialContent, initialSourceUrl]);
 
   if (!isOpen) return null;
 
@@ -34,6 +38,7 @@ export default function TextTrainingModal({
         title,
         content,
         ...(onFolderChange && { folderId: folderId ?? "" }),
+        sourceUrl: sourceUrl || "",
       });
     }
     onClose();
@@ -88,6 +93,18 @@ export default function TextTrainingModal({
               </select>
             </div>
           )}
+          <div>
+            <label className="block text-sm font-semibold text-gray-700 mb-3 tracking-wide">
+              Source URL <span className="text-gray-400 font-normal">(optional)</span>
+            </label>
+            <input
+              type="url"
+              value={sourceUrl}
+              onChange={(e) => setSourceUrl(e.target.value)}
+              placeholder="https://example.com/article"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 text-gray-900"
+            />
+          </div>
           <div>
             <label className="block text-sm font-semibold text-gray-700 mb-3 tracking-wide">
               Content

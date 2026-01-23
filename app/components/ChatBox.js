@@ -480,6 +480,7 @@ export default function ChatBox({
         role: "assistant",
         message: data.reply,
         sources: data?.sources || [],
+        sourceUrls: data?.sourceUrls || [],
         intent: data?.intent || "",
       },
     ]);
@@ -620,8 +621,8 @@ export default function ChatBox({
                 <div
                   key={i}
                   className={`mb-4 w-full min-w-0 ${m.role === "user"
-                      ? "flex flex-col items-end"
-                      : "flex flex-col items-start"
+                    ? "flex flex-col items-end"
+                    : "flex flex-col items-start"
                     }`}
                 >
                   {i === retryIndex && retry && (
@@ -662,23 +663,37 @@ export default function ChatBox({
                   )}
                   {/* Show sources for assistant messages */}
                   {m.role === "assistant" &&
-                    m.sources &&
-                    m.sources.length > 0 && (
+                    ((m.sourceUrls && m.sourceUrls.length > 0) ||
+                      (m.sources && m.sources.length > 0)) && (
                       <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0 flex flex-wrap gap-1.5">
                         <span className="text-xs text-gray-500">
                           📚 Sources:
                         </span>
-                        {m.sources.map((sourceId, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => fetchChunkById(sourceId)}
-                            className="text-xs text-blue-600 hover:text-blue-800 hover:underline px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors"
-                          >
-                            {sourceId.length > 10
-                              ? `${sourceId.slice(0, 10)}...`
-                              : sourceId}
-                          </button>
-                        ))}
+                        {m.sourceUrls && m.sourceUrls.length > 0
+                          ? m.sourceUrls.map((url, idx) => (
+                            <a
+                              key={idx}
+                              href={url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-xs text-blue-600 hover:text-blue-800 hover:underline px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors"
+                            >
+                              {url.length > 30
+                                ? `${url.slice(0, 30)}...`
+                                : url}
+                            </a>
+                          ))
+                          : m.sources.map((sourceId, idx) => (
+                            <button
+                              key={idx}
+                              onClick={() => fetchChunkById(sourceId)}
+                              className="text-xs text-blue-600 hover:text-blue-800 hover:underline px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors"
+                            >
+                              {sourceId.length > 10
+                                ? `${sourceId.slice(0, 10)}...`
+                                : sourceId}
+                            </button>
+                          ))}
                       </div>
                     )}
                   {/* Show payment QR code for personal_call intent */}
@@ -846,8 +861,8 @@ export default function ChatBox({
                   type="submit"
                   disabled={!input.trim() || messageLoading}
                   className={`inline-flex items-center justify-center p-2 rounded-lg ${!input.trim() || messageLoading
-                      ? "bg-slate-200 text-slate-400 cursor-not-allowed"
-                      : "bg-[#59646F] text-[#FFEED8] hover:bg-[#4a5568] active:scale-95"
+                    ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                    : "bg-[#59646F] text-[#FFEED8] hover:bg-[#4a5568] active:scale-95"
                     } transition-all`}
                   title="Send message"
                 >

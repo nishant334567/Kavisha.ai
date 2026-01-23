@@ -39,9 +39,19 @@ export default function HomePage() {
     const redirectPath = typeof window !== "undefined" ? localStorage.getItem("redirectAfterLogin") : null;
 
     if (redirectPath) {
-      localStorage.removeItem("redirectAfterLogin");
-      router.replace(redirectPath);
-      return;
+      // Validate that redirectPath is a valid string path
+      const path = typeof redirectPath === "string" && redirectPath.startsWith("/")
+        ? redirectPath
+        : null;
+
+      if (path) {
+        localStorage.removeItem("redirectAfterLogin");
+        router.replace(path);
+        return;
+      } else {
+        // Clean up invalid redirect path
+        localStorage.removeItem("redirectAfterLogin");
+      }
     }
   }, [user, loading, brandContext, router]);
 

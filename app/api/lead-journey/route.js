@@ -31,6 +31,7 @@ export async function POST(req) {
       let outputToken = 0;
       await connectDB();
       let sourceChunkIds = [];
+      let sourceUrls = [];
       const model = getGeminiModel(process.env.AI_MODEL ?? "gemini-2.5-flash");
 
       if (!model) {
@@ -152,6 +153,8 @@ export async function POST(req) {
           summary: summary || "",
           title: "Community Chat",
           intent: intent,
+          sources: [],
+          sourceUrls: [],
           inputTokens: inputToken,
           outputTokens: outputToken,
           totalTokens: inputToken + outputToken,
@@ -161,6 +164,8 @@ export async function POST(req) {
       let betterQuery = requery || userMessage;
 
       let context = "";
+      const uniqueContext = new Map(); // Declare at higher scope so it's always available
+
       if (betterQuery && betterQuery !== '""' && betterQuery !== "''") {
         const userMessageEmbedding = await generateEmbedding(
           betterQuery,
@@ -183,8 +188,6 @@ export async function POST(req) {
             { status: 500 }
           );
         }
-
-        const uniqueContext = new Map();
         try {
           const [results, results2] = await Promise.all([
             pc.index("intelligent-kavisha").namespace(brand).query({
@@ -205,19 +208,26 @@ export async function POST(req) {
               .catch(() => ({ result: { hits: [] } })),
           ]);
           results?.matches?.forEach((match) => {
-            uniqueContext.set(match.id, match.metadata?.text);
+            uniqueContext.set(match.id, {
+              text: match.metadata?.text || "",
+              url: match.metadata?.chunkSourceUrl || "",
+            });
           });
 
           results2?.result?.hits?.forEach((hit) => {
+            console.log("Hit: ", hit)
             if (!uniqueContext.has(hit._id)) {
-              uniqueContext.set(hit._id, hit.fields?.text);
+              uniqueContext.set(hit._id, {
+                text: hit.fields?.text || "",
+                url: hit.fields?.chunkSourceUrl || hit.chunkSourceUrl || "",
+              });
             }
           });
 
           const documentsForRerank = Array.from(uniqueContext.entries()).map(
-            ([id, text]) => ({
+            ([id, data]) => ({
               id,
-              text: text || "",
+              text: data?.text || "",
             })
           );
 
@@ -253,19 +263,39 @@ export async function POST(req) {
 
                   return { text, id };
                 });
+                // Format context with chunk IDs: [CHUNK_ID:id] text
                 context = rerankedItems
-                  .map((item) => item.text)
+                  .map((item) => {
+                    if (!item.text || !item.id) return "";
+                    return `[CHUNK_ID:${item.id}] ${item.text}`;
+                  })
                   .filter(Boolean)
-                  .join(" ");
+                  .join("\n\n");
                 sourceChunkIds = rerankedItems
                   .map((item) => item.id)
                   .filter(Boolean);
               } else {
-                context = [...uniqueContext.values()].join(" ");
+                // Format context with chunk IDs when reranking fails
+                const contextItems = Array.from(uniqueContext.entries());
+                context = contextItems
+                  .map(([id, data]) => {
+                    if (!data?.text || !id) return "";
+                    return `[CHUNK_ID:${id}] ${data.text}`;
+                  })
+                  .filter(Boolean)
+                  .join("\n\n");
                 sourceChunkIds = Array.from(uniqueContext.keys());
               }
             } catch (rerankError) {
-              context = [...uniqueContext.values()].join(" ");
+              // Format context with chunk IDs when reranking errors
+              const contextItems = Array.from(uniqueContext.entries());
+              context = contextItems
+                .map(([id, data]) => {
+                  if (!data?.text || !id) return "";
+                  return `[CHUNK_ID:${id}] ${data.text}`;
+                })
+                .filter(Boolean)
+                .join("\n\n");
               sourceChunkIds = Array.from(uniqueContext.keys());
             }
           } else {
@@ -286,15 +316,17 @@ export async function POST(req) {
 
       const finalPrompt = `${prompt}${nameInstruction}
 
-CONVERSATION HISTORY:
-${fullFormattedHistory}
+              CONVERSATION HISTORY:
+              ${fullFormattedHistory}
 
-RELEVANT CONTEXT:
-${context}
+              RELEVANT CONTEXT (each chunk is marked with [CHUNK_ID:...]):
+              ${context}
 
-USER QUESTION: ${betterQuery}
+              USER QUESTION: ${betterQuery}
 
-Please provide a helpful response based on the above information:`;
+              IMPORTANT: After your 3-part response (reply //// summary //// title), add a 4th part with a JSON array of CHUNK_IDs you actually used in your answer. Format: //// ["chunk_id_1", "chunk_id_2"] or [] if none. Do NOT include chunk IDs in your actual response text - only in the 4th part.
+
+              Please provide a helpful response based on the above information:`;
 
       const mainPrompt = finalPrompt + SYSTEM_PROMPT_LEAD;
       inputToken += estimateTokens(mainPrompt);
@@ -317,8 +349,57 @@ Please provide a helpful response based on the above information:`;
 
         let reParts = responseText.split("////").map((item) => item.trim());
 
-        if (reParts.length !== 3) {
-          const strictPrompt = `CRITICAL: You MUST respond in EXACT format: [Your reply] //// [Summary] //// [Title]\n\nPrevious response was invalid. Retry with EXACT format - 3 parts separated by //// only.`;
+        // Extract chunk IDs from 4th part if present
+        let usedChunkIds = [];
+        if (reParts.length >= 4) {
+          const chunkIdsPart = reParts[3].trim();
+          try {
+            // Try to parse as JSON array
+            const parsed = JSON.parse(chunkIdsPart);
+            if (Array.isArray(parsed)) {
+              usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
+            }
+          } catch (e) {
+            // If not valid JSON, try to extract from text
+            const jsonArrayMatch = chunkIdsPart.match(/\[(.*?)\]/);
+            if (jsonArrayMatch) {
+              try {
+                const parsed = JSON.parse(jsonArrayMatch[0]);
+                if (Array.isArray(parsed)) {
+                  usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
+                }
+              } catch (e2) {
+                // Try extracting quoted strings
+                const quotedIds = chunkIdsPart.match(/"([^"]+)"/g);
+                if (quotedIds) {
+                  usedChunkIds = quotedIds.map(q => q.replace(/"/g, '')).filter(id => id.trim());
+                }
+              }
+            }
+          }
+        }
+
+        // Filter to only include valid chunk IDs that exist in sourceChunkIds
+        usedChunkIds = usedChunkIds.filter(id => sourceChunkIds.includes(id));
+
+        // Map used chunk IDs to URLs
+        if (usedChunkIds.length > 0) {
+          sourceUrls = usedChunkIds
+            .map((chunkId) => {
+              const chunkData = uniqueContext.get(chunkId);
+              return chunkData?.url || "";
+            })
+            .filter((url) => url && url.trim() !== "");
+          // Update sourceChunkIds to only include used ones
+          sourceChunkIds = usedChunkIds;
+        } else {
+          // No chunks were used, return empty arrays
+          sourceUrls = [];
+          sourceChunkIds = [];
+        }
+
+        if (reParts.length !== 3 && reParts.length !== 4) {
+          const strictPrompt = `CRITICAL: You MUST respond in EXACT format: [Your reply] //// [Summary] //// [Title] //// [JSON array of CHUNK_IDs used, or [] if none]\n\nPrevious response was invalid. Retry with EXACT format - 4 parts separated by ////. The 4th part must be a JSON array like ["chunk_id_1", "chunk_id_2"] or [] if you didn't use any chunks.`;
 
           inputToken += estimateTokens(strictPrompt);
           responseGemini = await model.generateContent({
@@ -336,11 +417,49 @@ Please provide a helpful response based on the above information:`;
 
           responseText =
             responseGemini.response.candidates[0].content.parts[0].text;
-          outputToken = estimateTokens(responseText); // Replace with retry count
+          outputToken = estimateTokens(responseText);
           reParts = responseText.split("////").map((item) => item.trim());
+
+          // Re-extract chunk IDs after retry
+          if (reParts.length >= 4) {
+            const chunkIdsPart = reParts[3].trim();
+            try {
+              const parsed = JSON.parse(chunkIdsPart);
+              if (Array.isArray(parsed)) {
+                usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
+              }
+            } catch (e) {
+              const jsonArrayMatch = chunkIdsPart.match(/\[(.*?)\]/);
+              if (jsonArrayMatch) {
+                try {
+                  const parsed = JSON.parse(jsonArrayMatch[0]);
+                  if (Array.isArray(parsed)) {
+                    usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
+                  }
+                } catch (e2) {
+                  usedChunkIds = [];
+                }
+              }
+            }
+            usedChunkIds = usedChunkIds.filter(id => sourceChunkIds.includes(id));
+
+            // Re-map URLs
+            if (usedChunkIds.length > 0) {
+              sourceUrls = usedChunkIds
+                .map((chunkId) => {
+                  const chunkData = uniqueContext.get(chunkId);
+                  return chunkData?.url || "";
+                })
+                .filter((url) => url && url.trim() !== "");
+              sourceChunkIds = usedChunkIds;
+            } else {
+              sourceUrls = [];
+              sourceChunkIds = [];
+            }
+          }
         }
 
-        if (reParts.length === 3) {
+        if (reParts.length === 3 || reParts.length === 4) {
           setImmediate(async () => {
             try {
               await Logs.create({
@@ -384,6 +503,7 @@ Please provide a helpful response based on the above information:`;
             title: reParts[2],
             requery: betterQuery,
             sources: sourceChunkIds,
+            sourceUrls: sourceUrls,
             inputTokens: inputToken,
             outputTokens: outputToken,
             totalTokens: inputToken + outputToken,
