@@ -111,7 +111,7 @@ export async function POST(req) {
               }[0]`
             );
             acceptPayment = brandData?.acceptPayment || false;
-          } catch (error) {}
+          } catch (error) { }
 
           if (acceptPayment) {
             redirectMessage = `I'd love to have a one-on-one conversation with you! To schedule a personal call with me, please complete a payment of ₹500 using the QR code below. Once the payment is confirmed, we can set up a time that works for both of us. Looking forward to our conversation!`;
@@ -144,7 +144,7 @@ export async function POST(req) {
                 },
               }
             );
-          } catch (error) {}
+          } catch (error) { }
         });
 
         return NextResponse.json({
@@ -278,7 +278,14 @@ export async function POST(req) {
         betterQuery = userMessage;
       }
 
-      const finalPrompt = `${prompt}
+      const fullName = user?.name || "";
+      const firstName = fullName.split(" ")[0] || "";
+      const nameInstruction = firstName
+        ? `\n\nIMPORTANT - PERSONAL CONNECTION: The user's first name is "${firstName}". Use their name naturally in your responses when it feels appropriate and adds warmth to the conversation. Consider the conversation history - if you've already used their name recently, you don't need to repeat it. Use it when it feels natural: at the beginning of a new topic, when emphasizing a point, or when transitioning between ideas. The goal is to create a personal connection without overusing it. Let the conversation flow naturally and use their name when it genuinely enhances the interaction.`
+        : "";
+
+      const finalPrompt = `${prompt}${nameInstruction}
+
 CONVERSATION HISTORY:
 ${fullFormattedHistory}
 
@@ -368,7 +375,7 @@ Please provide a helpful response based on the above information:`;
                 },
                 { upsert: true }
               );
-            } catch (error) {}
+            } catch (error) { }
           });
 
           return NextResponse.json({

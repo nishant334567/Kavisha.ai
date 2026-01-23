@@ -81,18 +81,22 @@ export default function AdminHome() {
               </span>
             )}
           </button>
-          <div className="w-px h-6 bg-gray-300 self-center"></div>
-          <button
-            onClick={() => go(`/admin/quiz`)}
-            className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl relative"
-          >
-            Quizzes/Survey
-            {communityCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                {communityCount}
-              </span>
-            )}
-          </button>
+          {brand?.enableQuiz && (
+            <>
+              <div className="w-px h-6 bg-gray-300 self-center"></div>
+              <button
+                onClick={() => go(`/admin/quiz`)}
+                className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl relative"
+              >
+                Quizzes/Survey
+                {communityCount > 0 && (
+                  <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                    {communityCount}
+                  </span>
+                )}
+              </button>
+            </>
+          )}
         </div>
       </div>
 

@@ -116,7 +116,7 @@ export default function ChatBox({
           filename: data.resumeFilename,
           resumeSummary: data.resumeSummary,
         });
-      } catch (error) {}
+      } catch (error) { }
     };
     fetchResumeData();
   }, [currentChatId, currentChatType]);
@@ -136,7 +136,7 @@ export default function ChatBox({
         const response = await fetch(`/api/all-data-fetched/${currentChatId}`);
         const data = await response.json();
         setHasDatacollected(data.allDataCollected);
-      } catch (error) {}
+      } catch (error) { }
     };
     fetchDataCollectionStatus();
   }, [currentChatId, currentChatType]);
@@ -160,7 +160,7 @@ export default function ChatBox({
         if (Array.isArray(data.matches) && data.matches.length > 0) {
           setMatches(data.matches);
         }
-      } catch (error) {}
+      } catch (error) { }
     };
     fetchMatches();
   }, [currentChatId, currentChatType]);
@@ -619,11 +619,10 @@ export default function ChatBox({
               messages.map((m, i) => (
                 <div
                   key={i}
-                  className={`mb-4 w-full min-w-0 ${
-                    m.role === "user"
+                  className={`mb-4 w-full min-w-0 ${m.role === "user"
                       ? "flex flex-col items-end"
                       : "flex flex-col items-start"
-                  }`}
+                    }`}
                 >
                   {i === retryIndex && retry && (
                     <button
@@ -846,11 +845,10 @@ export default function ChatBox({
                 <button
                   type="submit"
                   disabled={!input.trim() || messageLoading}
-                  className={`inline-flex items-center justify-center p-2 rounded-lg ${
-                    !input.trim() || messageLoading
+                  className={`inline-flex items-center justify-center p-2 rounded-lg ${!input.trim() || messageLoading
                       ? "bg-slate-200 text-slate-400 cursor-not-allowed"
                       : "bg-[#59646F] text-[#FFEED8] hover:bg-[#4a5568] active:scale-95"
-                  } transition-all`}
+                    } transition-all`}
                   title="Send message"
                 >
                   <Send className="w-5 h-5" />

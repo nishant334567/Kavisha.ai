@@ -278,7 +278,7 @@ export default function MyServices() {
                           }))
                         }
                         className="px-3 py-1 text-sm border border-gray-300 rounded-lg text-center uppercase max-w-[200px]"
-                        placeholder="Community Name"
+                        placeholder="Eg. Connect with other fans"
                         disabled={updating}
                       />
                       <button
