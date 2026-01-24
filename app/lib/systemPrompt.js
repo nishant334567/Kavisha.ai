@@ -153,7 +153,9 @@ Financial Strategy
 - Look for [CHUNK_ID:...] markers in the context provided
 - If you used information from a chunk, include its ID
 - If you didn't use any context chunks, use []
-- Do NOT mention chunk IDs in Part 1 (your reply)
+- **CRITICAL: Do NOT include [CHUNK_ID:...] markers in your reply text**
+- **CRITICAL: Remove all [CHUNK_ID:...] markers from your response**
+- **The markers are ONLY for tracking - never show them to users**
 - Examples: ["74_b2a51334_1", "54_097c41f2_2"] or []
 
 **CRITICAL RULES:**
