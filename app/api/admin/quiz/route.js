@@ -150,10 +150,6 @@ export async function POST(req) {
 
         // Create questions
         // Log to debug images
-        console.log("Questions received:", JSON.stringify(questions.map(q => ({
-          questionText: q.questionText,
-          images: q.images
-        })), null, 2));
 
         const questionDocs = await Questions.insertMany(
           questions.map((q, index) => ({

@@ -5,13 +5,6 @@ import User from "@/app/models/Users";
  * Create or get user from database (used during login)
  */
 export async function createOrGetUser(decodedToken) {
-  console.log(
-    "Token values:\n",
-    "name:",
-    decodedToken.name,
-    "email:",
-    decodedToken.email
-  );
   await connectDB();
   let dbUser = await User.findOne({ email: decodedToken.email });
 

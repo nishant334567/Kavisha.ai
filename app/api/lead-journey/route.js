@@ -215,132 +215,118 @@ export async function POST(req) {
           });
 
           results2?.result?.hits?.forEach((hit) => {
-            console.log("Hit: ", hit)
-            if (!uniqueContext.has(hit._id)) {
-              uniqueContext.set(hit._id, {
-                text: hit.fields?.text || "",
-                url: hit.fields?.chunkSourceUrl || hit.chunkSourceUrl || "",
-              });
-            }
+          }
           });
 
-          const documentsForRerank = Array.from(uniqueContext.entries()).map(
-            ([id, data]) => ({
-              id,
-              text: data?.text || "",
-            })
-          );
+  const documentsForRerank = Array.from(uniqueContext.entries()).map(
+    ([id, data]) => ({
+      id,
+      text: data?.text || "",
+    })
+  );
 
-          if (documentsForRerank.length > 0) {
-            // Skip reranking if we have 10 or fewer chunks (optimization)
-            if (documentsForRerank.length <= 10) {
-              console.log(`⚡ Optimization: Skipping rerank (${documentsForRerank.length} chunks ≤ 10, using all)`);
-              // Use all chunks without reranking
-              context = documentsForRerank
-                .map(({ id, text }) => {
-                  if (!text || !id) return "";
-                  return `[CHUNK_ID:${id}] ${text}`;
-                })
-                .filter(Boolean)
-                .join("\n\n");
-              sourceChunkIds = documentsForRerank.map(doc => doc.id).filter(Boolean);
-              console.log(`Context formatted with ${sourceChunkIds.length} chunks (no rerank needed)`);
-            } else {
-              // Rerank for larger contexts
-              try {
-                const rerankOptions = {
-                  topN: 10,
-                  rankFields: ["text"],
-                  returnDocuments: true,
-                };
+  if (documentsForRerank.length > 0) {
+    // Skip reranking if we have 10 or fewer chunks (optimization)
+    if (documentsForRerank.length <= 10) {
+      // Use all chunks without reranking
+      context = documentsForRerank
+        .map(({ id, text }) => {
+          if (!text || !id) return "";
+          return `[CHUNK_ID:${id}] ${text}`;
+        })
+        .filter(Boolean)
+        .join("\n\n");
+      sourceChunkIds = documentsForRerank.map(doc => doc.id).filter(Boolean);
+    } else {
+      // Rerank for larger contexts
+      try {
+        const rerankOptions = {
+          topN: 10,
+          rankFields: ["text"],
+          returnDocuments: true,
+        };
 
-                const reranked = await pc.inference.rerank(
-                  "bge-reranker-v2-m3",
-                  betterQuery,
-                  documentsForRerank,
-                  rerankOptions
-                );
+        const reranked = await pc.inference.rerank(
+          "bge-reranker-v2-m3",
+          betterQuery,
+          documentsForRerank,
+          rerankOptions
+        );
 
-                if (
-                  reranked &&
-                  reranked.data &&
-                  Array.isArray(reranked.data) &&
-                  reranked.data.length > 0
-                ) {
-                  const rerankedItems = reranked.data.map((item) => {
-                    let text = "";
-                    let id = "";
+        if (
+          reranked &&
+          reranked.data &&
+          Array.isArray(reranked.data) &&
+          reranked.data.length > 0
+        ) {
+          const rerankedItems = reranked.data.map((item) => {
+            let text = "";
+            let id = "";
 
-                    if (item.document) {
-                      text = item.document.text || "";
-                      id = item.document.id || item.id || "";
-                    }
-
-                    return { text, id };
-                  });
-                  // Format context with chunk IDs: [CHUNK_ID:id] text
-                  context = rerankedItems
-                    .map((item) => {
-                      if (!item.text || !item.id) return "";
-                      return `[CHUNK_ID:${item.id}] ${item.text}`;
-                    })
-                    .filter(Boolean)
-                    .join("\n\n");
-                  sourceChunkIds = rerankedItems
-                    .map((item) => item.id)
-                    .filter(Boolean);
-                  console.log(`Context formatted with ${sourceChunkIds.length} chunks (reranked from ${documentsForRerank.length})`);
-
-                } else {
-                  // Format context with chunk IDs when reranking fails
-                  const contextItems = Array.from(uniqueContext.entries());
-                  context = contextItems
-                    .map(([id, data]) => {
-                      if (!data?.text || !id) return "";
-                      return `[CHUNK_ID:${id}] ${data.text}`;
-                    })
-                    .filter(Boolean)
-                    .join("\n\n");
-                  sourceChunkIds = Array.from(uniqueContext.keys());
-                }
-              } catch (rerankError) {
-                // Format context with chunk IDs when reranking errors
-                const contextItems = Array.from(uniqueContext.entries());
-                context = contextItems
-                  .map(([id, data]) => {
-                    if (!data?.text || !id) return "";
-                    return `[CHUNK_ID:${id}] ${data.text}`;
-                  })
-                  .filter(Boolean)
-                  .join("\n\n");
-                sourceChunkIds = Array.from(uniqueContext.keys());
-              }
+            if (item.document) {
+              text = item.document.text || "";
+              id = item.document.id || item.id || "";
             }
-          } else {
-            context = "";
-          }
-        } catch (pineconeError) {
-          context = "";
+
+            return { text, id };
+          });
+          // Format context with chunk IDs: [CHUNK_ID:id] text
+          context = rerankedItems
+            .map((item) => {
+              if (!item.text || !item.id) return "";
+              return `[CHUNK_ID:${item.id}] ${item.text}`;
+            })
+            .filter(Boolean)
+            .join("\n\n");
+          sourceChunkIds = rerankedItems
+            .map((item) => item.id)
+            .filter(Boolean);
+
+        } else {
+          // Format context with chunk IDs when reranking fails
+          const contextItems = Array.from(uniqueContext.entries());
+          context = contextItems
+            .map(([id, data]) => {
+              if (!data?.text || !id) return "";
+              return `[CHUNK_ID:${id}] ${data.text}`;
+            })
+            .filter(Boolean)
+            .join("\n\n");
+          sourceChunkIds = Array.from(uniqueContext.keys());
         }
+      } catch (rerankError) {
+        // Format context with chunk IDs when reranking errors
+        const contextItems = Array.from(uniqueContext.entries());
+        context = contextItems
+          .map(([id, data]) => {
+            if (!data?.text || !id) return "";
+            return `[CHUNK_ID:${id}] ${data.text}`;
+          })
+          .filter(Boolean)
+          .join("\n\n");
+        sourceChunkIds = Array.from(uniqueContext.keys());
+      }
+    }
+  } else {
+    context = "";
+  }
+} catch (pineconeError) {
+  context = "";
+}
       } else {
-        betterQuery = userMessage;
-      }
+  betterQuery = userMessage;
+}
 
-      const fullName = user?.name || "";
-      const firstName = fullName.split(" ")[0] || "";
-      const nameInstruction = firstName
-        ? `\n\nIMPORTANT - PERSONAL CONNECTION: The user's first name is "${firstName}". Use their name naturally in your responses when it feels appropriate and adds warmth to the conversation. Consider the conversation history - if you've already used their name recently, you don't need to repeat it. Use it when it feels natural: at the beginning of a new topic, when emphasizing a point, or when transitioning between ideas. The goal is to create a personal connection without overusing it. Let the conversation flow naturally and use their name when it genuinely enhances the interaction.`
-        : "";
+const fullName = user?.name || "";
+const firstName = fullName.split(" ")[0] || "";
+const nameInstruction = firstName
+  ? `\n\nIMPORTANT - PERSONAL CONNECTION: The user's first name is "${firstName}". Use their name naturally in your responses when it feels appropriate and adds warmth to the conversation. Consider the conversation history - if you've already used their name recently, you don't need to repeat it. Use it when it feels natural: at the beginning of a new topic, when emphasizing a point, or when transitioning between ideas. The goal is to create a personal connection without overusing it. Let the conversation flow naturally and use their name when it genuinely enhances the interaction.`
+  : "";
 
-      console.log(`\n=== CONTEXT INFO ===`);
-      console.log(`Context length: ${context.length} characters`);
-      console.log(`Context is ${context ? 'PROVIDED' : 'EMPTY'}`);
-      if (context) {
-        console.log(`Context preview (first 300 chars):`, context.substring(0, 300) + '...');
-      }
-      console.log(`==================\n`);
+if (context) {
+}
 
-      const finalPrompt = `${prompt}${nameInstruction}
+const finalPrompt = `${prompt}${nameInstruction}
 
               CONVERSATION HISTORY:
               ${fullFormattedHistory}
@@ -352,220 +338,210 @@ export async function POST(req) {
 
               Please provide a helpful response based on the above information.`;
 
-      const mainPrompt = finalPrompt + SYSTEM_PROMPT_LEAD;
-      inputToken += estimateTokens(mainPrompt);
+const mainPrompt = finalPrompt + SYSTEM_PROMPT_LEAD;
+inputToken += estimateTokens(mainPrompt);
 
-      let geminiContents = [
+let geminiContents = [
+  {
+    role: "user",
+    parts: [{ text: mainPrompt }],
+  },
+];
+
+try {
+  let responseGemini = await model.generateContent({
+    contents: geminiContents,
+  });
+
+  let responseText =
+    responseGemini.response.candidates[0].content.parts[0].text;
+  outputToken += estimateTokens(responseText);
+
+  let reParts = responseText.split("////").map((item) => item.trim());
+  if (reParts.length >= 4) {
+  } else {
+  }
+  if (reParts.length >= 1) {
+  }
+
+  // Extract chunk IDs from 4th part if present
+  let usedChunkIds = [];
+  if (reParts.length >= 4) {
+    const chunkIdsPart = reParts[3].trim();
+    try {
+      // Try to parse as JSON array
+      const parsed = JSON.parse(chunkIdsPart);
+      if (Array.isArray(parsed)) {
+        usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
+      }
+    } catch (e) {
+      // If not valid JSON, try to extract from text
+      const jsonArrayMatch = chunkIdsPart.match(/\[(.*?)\]/);
+      if (jsonArrayMatch) {
+        try {
+          const parsed = JSON.parse(jsonArrayMatch[0]);
+          if (Array.isArray(parsed)) {
+            usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
+          }
+        } catch (e2) {
+          // Try extracting quoted strings
+          const quotedIds = chunkIdsPart.match(/"([^"]+)"/g);
+          if (quotedIds) {
+            usedChunkIds = quotedIds.map(q => q.replace(/"/g, '')).filter(id => id.trim());
+          }
+        }
+      }
+    }
+  }
+
+  // Filter to only include valid chunk IDs that exist in sourceChunkIds
+  usedChunkIds = usedChunkIds.filter(id => sourceChunkIds.includes(id));
+
+  // Map used chunk IDs to URLs (deduplicate with Set)
+  if (usedChunkIds.length > 0) {
+    const urlsSet = new Set();
+    usedChunkIds.forEach((chunkId) => {
+      const chunkData = uniqueContext.get(chunkId);
+      const url = chunkData?.url || "";
+      if (url && url.trim() !== "") {
+        urlsSet.add(url);
+      }
+    });
+    sourceUrls = Array.from(urlsSet);
+    // Update sourceChunkIds to only include used ones
+    sourceChunkIds = usedChunkIds;
+  } else {
+    // No chunks were used, return empty arrays
+    sourceUrls = [];
+    sourceChunkIds = [];
+  }
+
+  if (reParts.length !== 4) {
+    const strictPrompt = `CRITICAL ERROR: Your previous response had ${reParts.length} parts but the format requires EXACTLY 4 parts separated by ////.\n\nYou MUST follow the format specified in the system instructions. This is MANDATORY, not optional. Please retry with the correct 4-part format.`;
+
+    inputToken += estimateTokens(strictPrompt);
+    responseGemini = await model.generateContent({
+      contents: [
         {
           role: "user",
-          parts: [{ text: mainPrompt }],
+          parts: [
+            {
+              text: mainPrompt + "\n\n" + strictPrompt,
+            },
+          ],
         },
-      ];
+      ],
+    });
 
+    responseText =
+      responseGemini.response.candidates[0].content.parts[0].text;
+    outputToken = estimateTokens(responseText);
+    reParts = responseText.split("////").map((item) => item.trim());
+
+    // Re-extract chunk IDs after retry
+    if (reParts.length >= 4) {
+      const chunkIdsPart = reParts[3].trim();
       try {
-        let responseGemini = await model.generateContent({
-          contents: geminiContents,
-        });
-
-        let responseText =
-          responseGemini.response.candidates[0].content.parts[0].text;
-        outputToken += estimateTokens(responseText);
-
-        let reParts = responseText.split("////").map((item) => item.trim());
-        console.log(`\n=== LLM RESPONSE ANALYSIS ===`);
-        console.log(`Response has ${reParts.length} parts. Context had ${sourceChunkIds.length} chunks available.`);
-        console.log(`Available chunk IDs:`, sourceChunkIds.slice(0, 3), '...');
-        if (reParts.length >= 4) {
-          console.log(`Part 4 (chunk IDs returned):`, reParts[3]);
-        } else {
-          console.log(`ERROR: Only ${reParts.length} parts returned, expected 4`);
+        const parsed = JSON.parse(chunkIdsPart);
+        if (Array.isArray(parsed)) {
+          usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
         }
-        if (reParts.length >= 1) {
-          console.log(`Part 1 (reply) preview:`, reParts[0].substring(0, 150) + '...');
-        }
-        console.log(`=========================\n`);
-
-        // Extract chunk IDs from 4th part if present
-        let usedChunkIds = [];
-        if (reParts.length >= 4) {
-          const chunkIdsPart = reParts[3].trim();
+      } catch (e) {
+        const jsonArrayMatch = chunkIdsPart.match(/\[(.*?)\]/);
+        if (jsonArrayMatch) {
           try {
-            // Try to parse as JSON array
-            const parsed = JSON.parse(chunkIdsPart);
+            const parsed = JSON.parse(jsonArrayMatch[0]);
             if (Array.isArray(parsed)) {
               usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
             }
-          } catch (e) {
-            // If not valid JSON, try to extract from text
-            const jsonArrayMatch = chunkIdsPart.match(/\[(.*?)\]/);
-            if (jsonArrayMatch) {
-              try {
-                const parsed = JSON.parse(jsonArrayMatch[0]);
-                if (Array.isArray(parsed)) {
-                  usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
-                }
-              } catch (e2) {
-                // Try extracting quoted strings
-                const quotedIds = chunkIdsPart.match(/"([^"]+)"/g);
-                if (quotedIds) {
-                  usedChunkIds = quotedIds.map(q => q.replace(/"/g, '')).filter(id => id.trim());
-                }
-              }
-            }
+          } catch (e2) {
+            usedChunkIds = [];
           }
         }
-
-        // Filter to only include valid chunk IDs that exist in sourceChunkIds
-        usedChunkIds = usedChunkIds.filter(id => sourceChunkIds.includes(id));
-        console.log(`Extracted ${usedChunkIds.length} valid chunk IDs from LLM response:`, usedChunkIds);
-
-        // Map used chunk IDs to URLs (deduplicate with Set)
-        if (usedChunkIds.length > 0) {
-          const urlsSet = new Set();
-          usedChunkIds.forEach((chunkId) => {
-            const chunkData = uniqueContext.get(chunkId);
-            const url = chunkData?.url || "";
-            if (url && url.trim() !== "") {
-              urlsSet.add(url);
-            }
-          });
-          sourceUrls = Array.from(urlsSet);
-          // Update sourceChunkIds to only include used ones
-          sourceChunkIds = usedChunkIds;
-        } else {
-          // No chunks were used, return empty arrays
-          sourceUrls = [];
-          sourceChunkIds = [];
-        }
-
-        if (reParts.length !== 4) {
-          const strictPrompt = `CRITICAL ERROR: Your previous response had ${reParts.length} parts but the format requires EXACTLY 4 parts separated by ////.\n\nYou MUST follow the format specified in the system instructions. This is MANDATORY, not optional. Please retry with the correct 4-part format.`;
-
-          inputToken += estimateTokens(strictPrompt);
-          responseGemini = await model.generateContent({
-            contents: [
-              {
-                role: "user",
-                parts: [
-                  {
-                    text: mainPrompt + "\n\n" + strictPrompt,
-                  },
-                ],
-              },
-            ],
-          });
-
-          responseText =
-            responseGemini.response.candidates[0].content.parts[0].text;
-          outputToken = estimateTokens(responseText);
-          reParts = responseText.split("////").map((item) => item.trim());
-
-          // Re-extract chunk IDs after retry
-          if (reParts.length >= 4) {
-            const chunkIdsPart = reParts[3].trim();
-            try {
-              const parsed = JSON.parse(chunkIdsPart);
-              if (Array.isArray(parsed)) {
-                usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
-              }
-            } catch (e) {
-              const jsonArrayMatch = chunkIdsPart.match(/\[(.*?)\]/);
-              if (jsonArrayMatch) {
-                try {
-                  const parsed = JSON.parse(jsonArrayMatch[0]);
-                  if (Array.isArray(parsed)) {
-                    usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
-                  }
-                } catch (e2) {
-                  usedChunkIds = [];
-                }
-              }
-            }
-            usedChunkIds = usedChunkIds.filter(id => sourceChunkIds.includes(id));
-            console.log(`After retry: Extracted ${usedChunkIds.length} valid chunk IDs:`, usedChunkIds);
-
-            // Re-map URLs (deduplicate with Set)
-            if (usedChunkIds.length > 0) {
-              const urlsSet = new Set();
-              usedChunkIds.forEach((chunkId) => {
-                const chunkData = uniqueContext.get(chunkId);
-                const url = chunkData?.url || "";
-                if (url && url.trim() !== "") {
-                  urlsSet.add(url);
-                }
-              });
-              sourceUrls = Array.from(urlsSet);
-              sourceChunkIds = usedChunkIds;
-            } else {
-              sourceUrls = [];
-              sourceChunkIds = [];
-            }
-          }
-        }
-
-        if (reParts.length === 4) {
-          setImmediate(async () => {
-            try {
-              await Logs.create({
-                message: userMessage || "",
-                altMessage: betterQuery || "",
-                sessionId: sessionId,
-                userId: user.id,
-                role: "user",
-              });
-
-              await Logs.create({
-                message: reParts[0] || "",
-                sessionId: sessionId,
-                userId: user.id,
-                role: "assistant",
-                sourceChunk: Array.isArray(sourceChunkIds)
-                  ? sourceChunkIds
-                  : [],
-              });
-
-              await Session.updateOne(
-                { _id: sessionId },
-                {
-                  $set: {
-                    chatSummary: reParts[1],
-                    title: reParts[2],
-                  },
-                  $inc: {
-                    totalInputTokens: inputToken,
-                    totalOutputTokens: outputToken,
-                  },
-                },
-                { upsert: true }
-              );
-            } catch (error) { }
-          });
-
-          console.log(`Final response: ${sourceChunkIds.length} sources, ${sourceUrls.length} URLs`);
-
-          return NextResponse.json({
-            reply: reParts[0],
-            summary: reParts[1],
-            title: reParts[2],
-            requery: betterQuery,
-            sources: sourceChunkIds,
-            sourceUrls: sourceUrls,
-            inputTokens: inputToken,
-            outputTokens: outputToken,
-            totalTokens: inputToken + outputToken,
-          });
-        } else {
-          return NextResponse.json(
-            { error: "Unexpected response format from AI model" },
-            { status: 500 }
-          );
-        }
-      } catch (error) {
-        return NextResponse.json(
-          { error: "Failed to generate AI response", details: error.message },
-          { status: 500 }
-        );
       }
+      usedChunkIds = usedChunkIds.filter(id => sourceChunkIds.includes(id));
+
+      // Re-map URLs (deduplicate with Set)
+      if (usedChunkIds.length > 0) {
+        const urlsSet = new Set();
+        usedChunkIds.forEach((chunkId) => {
+          const chunkData = uniqueContext.get(chunkId);
+          const url = chunkData?.url || "";
+          if (url && url.trim() !== "") {
+            urlsSet.add(url);
+          }
+        });
+        sourceUrls = Array.from(urlsSet);
+        sourceChunkIds = usedChunkIds;
+      } else {
+        sourceUrls = [];
+        sourceChunkIds = [];
+      }
+    }
+  }
+
+  if (reParts.length === 4) {
+    setImmediate(async () => {
+      try {
+        await Logs.create({
+          message: userMessage || "",
+          altMessage: betterQuery || "",
+          sessionId: sessionId,
+          userId: user.id,
+          role: "user",
+        });
+
+        await Logs.create({
+          message: reParts[0] || "",
+          sessionId: sessionId,
+          userId: user.id,
+          role: "assistant",
+          sourceChunk: Array.isArray(sourceChunkIds)
+            ? sourceChunkIds
+            : [],
+        });
+
+        await Session.updateOne(
+          { _id: sessionId },
+          {
+            $set: {
+              chatSummary: reParts[1],
+              title: reParts[2],
+            },
+            $inc: {
+              totalInputTokens: inputToken,
+              totalOutputTokens: outputToken,
+            },
+          },
+          { upsert: true }
+        );
+      } catch (error) { }
+    });
+
+
+    return NextResponse.json({
+      reply: reParts[0],
+      summary: reParts[1],
+      title: reParts[2],
+      requery: betterQuery,
+      sources: sourceChunkIds,
+      sourceUrls: sourceUrls,
+      inputTokens: inputToken,
+      outputTokens: outputToken,
+      totalTokens: inputToken + outputToken,
+    });
+  } else {
+    return NextResponse.json(
+      { error: "Unexpected response format from AI model" },
+      { status: 500 }
+    );
+  }
+} catch (error) {
+  return NextResponse.json(
+    { error: "Failed to generate AI response", details: error.message },
+    { status: 500 }
+  );
+}
     },
   });
 }
