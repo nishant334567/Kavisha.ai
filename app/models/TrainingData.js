@@ -39,6 +39,11 @@ const TrainingDataSchema = new mongoose.Schema(
       required: false,
       default: null,
     },
+    sourceUrl: {
+      type: String,
+      required: false,
+      default: "",
+    },
   },
   { timestamps: true }
 );

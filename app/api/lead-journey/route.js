@@ -232,50 +232,79 @@ export async function POST(req) {
           );
 
           if (documentsForRerank.length > 0) {
-            try {
-              const rerankOptions = {
-                topN: 10,
-                rankFields: ["text"],
-                returnDocuments: true,
-              };
+            // Skip reranking if we have 10 or fewer chunks (optimization)
+            if (documentsForRerank.length <= 10) {
+              console.log(`⚡ Optimization: Skipping rerank (${documentsForRerank.length} chunks ≤ 10, using all)`);
+              // Use all chunks without reranking
+              context = documentsForRerank
+                .map(({ id, text }) => {
+                  if (!text || !id) return "";
+                  return `[CHUNK_ID:${id}] ${text}`;
+                })
+                .filter(Boolean)
+                .join("\n\n");
+              sourceChunkIds = documentsForRerank.map(doc => doc.id).filter(Boolean);
+              console.log(`Context formatted with ${sourceChunkIds.length} chunks (no rerank needed)`);
+            } else {
+              // Rerank for larger contexts
+              try {
+                const rerankOptions = {
+                  topN: 10,
+                  rankFields: ["text"],
+                  returnDocuments: true,
+                };
 
-              const reranked = await pc.inference.rerank(
-                "bge-reranker-v2-m3",
-                betterQuery,
-                documentsForRerank,
-                rerankOptions
-              );
+                const reranked = await pc.inference.rerank(
+                  "bge-reranker-v2-m3",
+                  betterQuery,
+                  documentsForRerank,
+                  rerankOptions
+                );
 
-              if (
-                reranked &&
-                reranked.data &&
-                Array.isArray(reranked.data) &&
-                reranked.data.length > 0
-              ) {
-                const rerankedItems = reranked.data.map((item) => {
-                  let text = "";
-                  let id = "";
+                if (
+                  reranked &&
+                  reranked.data &&
+                  Array.isArray(reranked.data) &&
+                  reranked.data.length > 0
+                ) {
+                  const rerankedItems = reranked.data.map((item) => {
+                    let text = "";
+                    let id = "";
 
-                  if (item.document) {
-                    text = item.document.text || "";
-                    id = item.document.id || item.id || "";
-                  }
+                    if (item.document) {
+                      text = item.document.text || "";
+                      id = item.document.id || item.id || "";
+                    }
 
-                  return { text, id };
-                });
-                // Format context with chunk IDs: [CHUNK_ID:id] text
-                context = rerankedItems
-                  .map((item) => {
-                    if (!item.text || !item.id) return "";
-                    return `[CHUNK_ID:${item.id}] ${item.text}`;
-                  })
-                  .filter(Boolean)
-                  .join("\n\n");
-                sourceChunkIds = rerankedItems
-                  .map((item) => item.id)
-                  .filter(Boolean);
-              } else {
-                // Format context with chunk IDs when reranking fails
+                    return { text, id };
+                  });
+                  // Format context with chunk IDs: [CHUNK_ID:id] text
+                  context = rerankedItems
+                    .map((item) => {
+                      if (!item.text || !item.id) return "";
+                      return `[CHUNK_ID:${item.id}] ${item.text}`;
+                    })
+                    .filter(Boolean)
+                    .join("\n\n");
+                  sourceChunkIds = rerankedItems
+                    .map((item) => item.id)
+                    .filter(Boolean);
+                  console.log(`Context formatted with ${sourceChunkIds.length} chunks (reranked from ${documentsForRerank.length})`);
+
+                } else {
+                  // Format context with chunk IDs when reranking fails
+                  const contextItems = Array.from(uniqueContext.entries());
+                  context = contextItems
+                    .map(([id, data]) => {
+                      if (!data?.text || !id) return "";
+                      return `[CHUNK_ID:${id}] ${data.text}`;
+                    })
+                    .filter(Boolean)
+                    .join("\n\n");
+                  sourceChunkIds = Array.from(uniqueContext.keys());
+                }
+              } catch (rerankError) {
+                // Format context with chunk IDs when reranking errors
                 const contextItems = Array.from(uniqueContext.entries());
                 context = contextItems
                   .map(([id, data]) => {
@@ -286,17 +315,6 @@ export async function POST(req) {
                   .join("\n\n");
                 sourceChunkIds = Array.from(uniqueContext.keys());
               }
-            } catch (rerankError) {
-              // Format context with chunk IDs when reranking errors
-              const contextItems = Array.from(uniqueContext.entries());
-              context = contextItems
-                .map(([id, data]) => {
-                  if (!data?.text || !id) return "";
-                  return `[CHUNK_ID:${id}] ${data.text}`;
-                })
-                .filter(Boolean)
-                .join("\n\n");
-              sourceChunkIds = Array.from(uniqueContext.keys());
             }
           } else {
             context = "";
@@ -314,6 +332,14 @@ export async function POST(req) {
         ? `\n\nIMPORTANT - PERSONAL CONNECTION: The user's first name is "${firstName}". Use their name naturally in your responses when it feels appropriate and adds warmth to the conversation. Consider the conversation history - if you've already used their name recently, you don't need to repeat it. Use it when it feels natural: at the beginning of a new topic, when emphasizing a point, or when transitioning between ideas. The goal is to create a personal connection without overusing it. Let the conversation flow naturally and use their name when it genuinely enhances the interaction.`
         : "";
 
+      console.log(`\n=== CONTEXT INFO ===`);
+      console.log(`Context length: ${context.length} characters`);
+      console.log(`Context is ${context ? 'PROVIDED' : 'EMPTY'}`);
+      if (context) {
+        console.log(`Context preview (first 300 chars):`, context.substring(0, 300) + '...');
+      }
+      console.log(`==================\n`);
+
       const finalPrompt = `${prompt}${nameInstruction}
 
               CONVERSATION HISTORY:
@@ -324,9 +350,7 @@ export async function POST(req) {
 
               USER QUESTION: ${betterQuery}
 
-              IMPORTANT: After your 3-part response (reply //// summary //// title), add a 4th part with a JSON array of CHUNK_IDs you actually used in your answer. Format: //// ["chunk_id_1", "chunk_id_2"] or [] if none. Do NOT include chunk IDs in your actual response text - only in the 4th part.
-
-              Please provide a helpful response based on the above information:`;
+              Please provide a helpful response based on the above information.`;
 
       const mainPrompt = finalPrompt + SYSTEM_PROMPT_LEAD;
       inputToken += estimateTokens(mainPrompt);
@@ -348,6 +372,18 @@ export async function POST(req) {
         outputToken += estimateTokens(responseText);
 
         let reParts = responseText.split("////").map((item) => item.trim());
+        console.log(`\n=== LLM RESPONSE ANALYSIS ===`);
+        console.log(`Response has ${reParts.length} parts. Context had ${sourceChunkIds.length} chunks available.`);
+        console.log(`Available chunk IDs:`, sourceChunkIds.slice(0, 3), '...');
+        if (reParts.length >= 4) {
+          console.log(`Part 4 (chunk IDs returned):`, reParts[3]);
+        } else {
+          console.log(`ERROR: Only ${reParts.length} parts returned, expected 4`);
+        }
+        if (reParts.length >= 1) {
+          console.log(`Part 1 (reply) preview:`, reParts[0].substring(0, 150) + '...');
+        }
+        console.log(`=========================\n`);
 
         // Extract chunk IDs from 4th part if present
         let usedChunkIds = [];
@@ -381,15 +417,19 @@ export async function POST(req) {
 
         // Filter to only include valid chunk IDs that exist in sourceChunkIds
         usedChunkIds = usedChunkIds.filter(id => sourceChunkIds.includes(id));
+        console.log(`Extracted ${usedChunkIds.length} valid chunk IDs from LLM response:`, usedChunkIds);
 
-        // Map used chunk IDs to URLs
+        // Map used chunk IDs to URLs (deduplicate with Set)
         if (usedChunkIds.length > 0) {
-          sourceUrls = usedChunkIds
-            .map((chunkId) => {
-              const chunkData = uniqueContext.get(chunkId);
-              return chunkData?.url || "";
-            })
-            .filter((url) => url && url.trim() !== "");
+          const urlsSet = new Set();
+          usedChunkIds.forEach((chunkId) => {
+            const chunkData = uniqueContext.get(chunkId);
+            const url = chunkData?.url || "";
+            if (url && url.trim() !== "") {
+              urlsSet.add(url);
+            }
+          });
+          sourceUrls = Array.from(urlsSet);
           // Update sourceChunkIds to only include used ones
           sourceChunkIds = usedChunkIds;
         } else {
@@ -398,8 +438,8 @@ export async function POST(req) {
           sourceChunkIds = [];
         }
 
-        if (reParts.length !== 3 && reParts.length !== 4) {
-          const strictPrompt = `CRITICAL: You MUST respond in EXACT format: [Your reply] //// [Summary] //// [Title] //// [JSON array of CHUNK_IDs used, or [] if none]\n\nPrevious response was invalid. Retry with EXACT format - 4 parts separated by ////. The 4th part must be a JSON array like ["chunk_id_1", "chunk_id_2"] or [] if you didn't use any chunks.`;
+        if (reParts.length !== 4) {
+          const strictPrompt = `CRITICAL ERROR: Your previous response had ${reParts.length} parts but the format requires EXACTLY 4 parts separated by ////.\n\nYou MUST follow the format specified in the system instructions. This is MANDATORY, not optional. Please retry with the correct 4-part format.`;
 
           inputToken += estimateTokens(strictPrompt);
           responseGemini = await model.generateContent({
@@ -442,15 +482,19 @@ export async function POST(req) {
               }
             }
             usedChunkIds = usedChunkIds.filter(id => sourceChunkIds.includes(id));
+            console.log(`After retry: Extracted ${usedChunkIds.length} valid chunk IDs:`, usedChunkIds);
 
-            // Re-map URLs
+            // Re-map URLs (deduplicate with Set)
             if (usedChunkIds.length > 0) {
-              sourceUrls = usedChunkIds
-                .map((chunkId) => {
-                  const chunkData = uniqueContext.get(chunkId);
-                  return chunkData?.url || "";
-                })
-                .filter((url) => url && url.trim() !== "");
+              const urlsSet = new Set();
+              usedChunkIds.forEach((chunkId) => {
+                const chunkData = uniqueContext.get(chunkId);
+                const url = chunkData?.url || "";
+                if (url && url.trim() !== "") {
+                  urlsSet.add(url);
+                }
+              });
+              sourceUrls = Array.from(urlsSet);
               sourceChunkIds = usedChunkIds;
             } else {
               sourceUrls = [];
@@ -459,7 +503,7 @@ export async function POST(req) {
           }
         }
 
-        if (reParts.length === 3 || reParts.length === 4) {
+        if (reParts.length === 4) {
           setImmediate(async () => {
             try {
               await Logs.create({
@@ -496,6 +540,8 @@ export async function POST(req) {
               );
             } catch (error) { }
           });
+
+          console.log(`Final response: ${sourceChunkIds.length} sources, ${sourceUrls.length} URLs`);
 
           return NextResponse.json({
             reply: reParts[0],
