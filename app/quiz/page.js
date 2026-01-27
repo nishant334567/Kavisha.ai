@@ -58,12 +58,12 @@ export default function QuizPage() {
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
             <h1 className="text-3xl font-semibold text-[#264653] font-fredoka">
-              My quizzes and surveys
+              Quizzes and Surveys
             </h1>
           </div>
-          <p className="text-sm text-gray-600 font-fredoka">
+          {/* <p className="text-sm text-gray-600 font-fredoka">
             Manage your quizzes and surveys
-          </p>
+          </p> */}
         </div>
 
         {/* Quiz Cards Grid */}

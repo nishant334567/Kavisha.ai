@@ -11,7 +11,7 @@ export default function Resume({
   onResumeUpload,
   hideFileInput = false,
   selectedFile = null,
-  setSelectedFile = () => {},
+  setSelectedFile = () => { },
 }) {
   // Use selectedFile from props if available, otherwise use local state
   const resume = selectedFile;
@@ -39,7 +39,7 @@ export default function Resume({
       let extractedText;
       if (data.text) {
         extractedText = data.text;
-        alert("Resume processed. Will consider it in your job search journey!");
+        alert("Document uploaded successfully.");
         updateResume(resume.name, extractedText);
         onResumeUpload(extractedText);
       } else {
@@ -73,7 +73,7 @@ export default function Resume({
       } else {
         alert(data.error || "Failed to delete resume");
       }
-    } catch (err) {}
+    } catch (err) { }
     setIsdeleting(false);
   };
   return (

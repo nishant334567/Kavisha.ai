@@ -271,7 +271,7 @@ export default function ChatBox({
 
   const onResumeUpload = (newResumeData) => {
     if (newResumeData) {
-      let resumeSubText = `I have sent my ${brandContext?.isBrandAdmin ? "JD" : "resume"}!! Please have a look at it.`;
+      let resumeSubText = "I have uploaded the document. Have a look at it";
       const resumeSent = async () => {
         const newUserMessage = {
           role: "user",

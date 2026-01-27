@@ -197,7 +197,7 @@ export default function ChatSidebar({
                           type="button"
                           onClick={() => {
                             const sessionBrand = allChats?.sessions[id]?.brand;
-                            // If kavisha and session belongs to different brand, redirect
+                            // If kavisha and session belongs to different brand, open in new tab
                             if (
                               brandContext?.subdomain === "kavisha" &&
                               sessionBrand &&
@@ -207,11 +207,13 @@ export default function ChatSidebar({
                                 typeof window !== "undefined"
                                   ? window.location.hostname
                                   : "";
+                              let url;
                               if (hostname === "localhost" || hostname === "127.0.0.1") {
-                                window.location.href = `/chats/${id}?subdomain=${sessionBrand}`;
+                                url = `/chats/${id}?subdomain=${sessionBrand}`;
                               } else {
-                                window.location.href = `https://${sessionBrand}.kavisha.ai/chats/${id}`;
+                                url = `https://${sessionBrand}.kavisha.ai/chats/${id}`;
                               }
+                              window.open(url, "_blank");
                               return;
                             }
                             // Normal navigation for same brand
