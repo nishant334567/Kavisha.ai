@@ -113,14 +113,14 @@ export default function TalkToAvatarPage() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 justify-items-center sm:justify-items-stretch">
               {avatars.map((avatar) => (
                 <a
                   key={avatar.id}
                   href={avatar.link}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="block cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200 rounded-2xl focus:outline-none h-full"
+                  className="block cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200 rounded-2xl focus:outline-none h-full w-full max-w-sm sm:max-w-none"
                 >
                   <AvatarCard
                     image={avatar.image}

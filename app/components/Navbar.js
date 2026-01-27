@@ -94,7 +94,7 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   if (user) {
-                    router.push("/");
+                    router.push("/talk-to-avatar");
                   } else {
                     handleSignIn("/talk-to-avatar");
                   }
@@ -183,12 +183,19 @@ export default function Navbar() {
             </li>
             {brand?.subdomain === "kavisha" && (
               <li>
-                <button>Make my Avataar</button>
+                <button onClick={() => {
+                  setOpenmenu(false);
+                  if (user) {
+                    router.push("/make-avatar/v2");
+                  } else {
+                    handleSignIn("/make-avatar/v2");
+                  }
+                }}>Make my Avataar</button>
               </li>
             )}
             {brand?.subdomain === "kavisha" && (
               <li>
-                <button>Talk to Avataars</button>
+                <button onClick={() => { setOpenmenu(false); router.push("/talk-to-avatar"); }}>Talk to Avataars</button>
               </li>
             )}
             <li>
