@@ -17,7 +17,6 @@ export default function AdminNavbar() {
 
   const settingOptions = [
     { name: "Sign Out", path: "" },
-    { name: "Settings", path: "/settings" },
     { name: "Add Admin", path: `/admin/${brand?.subdomain}/add-admin` },
     { name: "Privacy Policy", path: "/privacy-policy" },
     { name: "Terms and conditions", path: "/tnc" },
@@ -55,25 +54,22 @@ export default function AdminNavbar() {
           </button>
           <ul className="items-center gap-6 hidden md:flex">
             <li
-              className={`cursor-pointer text-[#FFEED8] uppercase tracking-wide ${
-                pathname?.includes("/my-services") ? "font-semibold" : ""
-              }`}
+              className={`cursor-pointer text-[#FFEED8] uppercase tracking-wide ${pathname?.includes("/my-services") ? "font-semibold" : ""
+                }`}
               onClick={() => go(`/admin/${brand?.subdomain}/my-services`)}
             >
               MY SERVICES
             </li>
             <li
-              className={`cursor-pointer text-[#FFEED8] uppercase tracking-wide ${
-                pathname?.includes("/train") ? "font-semibold" : ""
-              }`}
+              className={`cursor-pointer text-[#FFEED8] uppercase tracking-wide ${pathname?.includes("/train") ? "font-semibold" : ""
+                }`}
               onClick={() => go(`/admin/${brand?.subdomain}/train/v2`)}
             >
               TRAIN MY AVATAAR
             </li>
             <li
-              className={`cursor-pointer text-[#FFEED8] uppercase tracking-wide flex items-center gap-2 ${
-                pathname?.includes("/edit-profile") ? "font-semibold" : ""
-              }`}
+              className={`cursor-pointer text-[#FFEED8] uppercase tracking-wide flex items-center gap-2 ${pathname?.includes("/edit-profile") ? "font-semibold" : ""
+                }`}
               onClick={() => go(`/admin/${brand?.subdomain}/edit-profile`)}
             >
               MY PROFILE
@@ -145,11 +141,10 @@ export default function AdminNavbar() {
                     setShowNavoption(false);
                     go(item.path);
                   }}
-                  className={`w-full text-left px-4 py-3 font-akshar text-sm uppercase tracking-wide transition-colors border-b border-gray-100 ${
-                    pathname === item.path
+                  className={`w-full text-left px-4 py-3 font-akshar text-sm uppercase tracking-wide transition-colors border-b border-gray-100 ${pathname === item.path
                       ? "bg-gray-50 text-gray-900 font-semibold"
                       : "text-gray-700 hover:bg-gray-50"
-                  }`}
+                    }`}
                 >
                   {item.name}
                 </button>

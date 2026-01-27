@@ -187,7 +187,7 @@ export default function MyServices() {
                   >
                     ADD SERVICES
                   </button>
-                  <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
+
                 </div>
                 {showAddserviceoptions && (
                   <div className="absolute top-full left-0 mt-2 bg-white border border-gray-200 rounded-lg shadow-lg z-50 min-w-[200px]">
@@ -214,7 +214,7 @@ export default function MyServices() {
 
           {/* Featured Services Section - Show enabled features */}
           {(featureData.enableQuiz || featureData.enableCommunityOnboarding) && (
-            <div className="flex flex-col items-center gap-4 font-akshar mt-8 pt-8 border-t border-gray-300">
+            <div className="flex flex-col items-center gap-4 font-akshar mt-4 border-gray-300">
               <h2 className="uppercase font-zen text-xl md:text-2xl font-bold text-[#000A67] mb-4">
                 Featured Services
               </h2>

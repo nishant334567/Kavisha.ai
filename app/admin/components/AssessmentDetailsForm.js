@@ -3,6 +3,7 @@ export default function AssessmentDetailsForm({
   assessmentData,
   onChange,
   onNext,
+  onCancel,
 }) {
   const inputClass =
     "w-full px-4 py-2 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent font-fredoka";
@@ -25,11 +26,10 @@ export default function AssessmentDetailsForm({
                 key={type}
                 type="button"
                 onClick={() => onChange("type", type)}
-                className={`flex-1 py-2.5 rounded-full font-medium text-xs transition-all font-fredoka ${
-                  assessmentData.type === type
+                className={`flex-1 py-2.5 rounded-full font-medium text-xs transition-all font-fredoka ${assessmentData.type === type
                     ? "bg-[#264653] text-white shadow-md"
                     : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                }`}
+                  }`}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}
               </button>
@@ -108,11 +108,19 @@ export default function AssessmentDetailsForm({
           </>
         )}
 
-        {/* Next Button */}
-        <div className="flex justify-end pt-4">
+        {/* Action Buttons */}
+        <div className="flex justify-between items-center pt-4">
+          {onCancel && (
+            <button
+              onClick={onCancel}
+              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors font-fredoka"
+            >
+              Cancel
+            </button>
+          )}
           <button
             onClick={onNext}
-            className="px-6 py-3 bg-[#264653] text-white rounded-full font-medium hover:bg-[#1e383e] transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 font-fredoka"
+            className={`px-6 py-3 bg-[#264653] text-white rounded-full font-medium hover:bg-[#1e383e] transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 font-fredoka ${onCancel ? "ml-auto" : ""}`}
           >
             Next: Add Questions
           </button>

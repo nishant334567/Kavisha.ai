@@ -6,6 +6,7 @@ import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import StepIndicator from "@/app/admin/components/StepIndicator";
 import AssessmentDetailsForm from "@/app/admin/components/AssessmentDetailsForm";
 import QuestionsForm from "@/app/admin/components/QuestionsForm";
+import { ArrowLeft } from "lucide-react";
 
 export default function AddQuiz() {
   const router = useRouter();
@@ -83,9 +84,24 @@ export default function AddQuiz() {
     }
   };
 
+  const handleCancel = () => {
+    if (confirm("Are you sure you want to cancel? All unsaved changes will be lost.")) {
+      router.push("/admin/quiz");
+    }
+  };
+
   return (
     <div className="min-h-screen bg-white pt-20 md:pt-24 pb-8">
       <div className="max-w-3xl mx-auto px-6">
+        {/* Back/Cancel Button */}
+        <button
+          onClick={handleCancel}
+          className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6 text-sm font-medium font-fredoka group"
+        >
+          <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
+          Cancel
+        </button>
+
         <StepIndicator steps={steps} currentStep={currentStep} />
 
         {currentStep === 1 && (
@@ -93,6 +109,7 @@ export default function AddQuiz() {
             assessmentData={assessmentData}
             onChange={handleAssessmentChange}
             onNext={handleNext}
+            onCancel={handleCancel}
           />
         )}
 
@@ -102,6 +119,7 @@ export default function AddQuiz() {
             onChange={handleQuestionsChange}
             onBack={handleBack}
             onSubmit={handleSubmit}
+            onCancel={handleCancel}
             isQuiz={assessmentData.type === "quiz"}
             brand={assessmentData.brand || brandContext?.subdomain}
           />

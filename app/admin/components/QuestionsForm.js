@@ -8,6 +8,7 @@ export default function QuestionsForm({
   onChange,
   onBack,
   onSubmit,
+  onCancel,
   isQuiz,
   brand,
 }) {
@@ -248,14 +249,25 @@ export default function QuestionsForm({
       )}
 
       {/* Action Buttons */}
-      <div className="flex justify-between items-center pt-6 border-t border-gray-200">
-        <button
-          type="button"
-          onClick={onBack}
-          className="px-6 py-3 border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors font-fredoka"
-        >
-          Back
-        </button>
+      <div className="flex justify-between items-center pt-6 border-t border-gray-200 gap-3">
+        <div className="flex gap-3">
+          {onCancel && (
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-6 py-3 border border-red-300 text-red-700 rounded-full font-medium hover:bg-red-50 transition-colors font-fredoka"
+            >
+              Cancel
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={onBack}
+            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors font-fredoka"
+          >
+            Back
+          </button>
+        </div>
         <button
           type="button"
           onClick={handleSubmit}

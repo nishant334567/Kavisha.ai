@@ -40,7 +40,6 @@ export default function Navbar() {
   };
 
   const settingOptions = [
-    { name: "Settings", path: "/settings" },
     { name: "Privacy Policy", path: "/privacy-policy" },
     { name: "Terms and conditions", path: "/tnc" },
     { name: "Help", path: "/help" },
@@ -154,9 +153,6 @@ export default function Navbar() {
           <ul className="space-y-4 font-akshar">
             <li>
               <button onClick={() => { setOpenmenu(false); router.push("/help"); }}>Help</button>
-            </li>
-            <li>
-              <button onClick={() => { setOpenmenu(false); router.push("/settings"); }}>Settings</button>
             </li>
             <li>
               <button onClick={() => { setOpenmenu(false); router.push("/privacy-policy"); }}>Privacy Policy</button>

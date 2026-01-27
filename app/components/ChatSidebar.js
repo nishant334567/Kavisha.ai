@@ -124,9 +124,17 @@ export default function ChatSidebar({
             ></div>
 
             <div className="h-full md:mt-12 fixed top-0 left-0 z-40 flex flex-col  p-4 border-r border-slate-200 bg-[#F8F8F8] shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
-              <div className="font-akshar flex items-center gap-3 mb-6 p-3 rounded-xl bg-[#59646F] text-[#FFEED8] ">
-                <div className="w-8 h-8 rounded-full bg-white/20  flex items-center justify-center text-sm font-semibold">
-                  {(user?.name || "K").charAt(0).toUpperCase()}
+              <div className="font-akshar flex items-center gap-3 mb-6 p-3 rounded-xl bg-[#3D5E6B] text-[#FFEED8] ">
+                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm font-semibold overflow-hidden flex-shrink-0">
+                  {user?.image ? (
+                    <img
+                      src={user.image}
+                      alt={user?.name || "User"}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <span>{(user?.name || "K").charAt(0).toUpperCase()}</span>
+                  )}
                 </div>
                 <div className="flex flex-col overflow-hidden">
                   <span className="font-semibold truncate text-base">
@@ -145,7 +153,7 @@ export default function ChatSidebar({
               <div>
                 <div className="py-4 gap-2">
                   <button
-                    className="flex gap-2 justify-center text-xs bg-[#59646F] text-[#FFEED8]   w-full p-2 rounded-md font-medium transition-colors"
+                    className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8]   w-full p-2 rounded-md font-medium transition-colors"
                     onClick={() => newChat()}
                   >
                     {!newChatLoading ? "New Chat" : "Creating New Chat..."}
