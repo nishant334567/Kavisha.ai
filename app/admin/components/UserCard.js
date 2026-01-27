@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { formatToIST } from "@/app/utils/formatToIST";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
@@ -20,10 +20,31 @@ export default function UserCard({
   const [comment, setComment] = useState("");
   const [showAdminDropdown, setShowAdminDropdown] = useState(false);
   const [showSessionDropdown, setShowSessionDropdown] = useState(false);
+  const adminDropdownRef = useRef(null);
+  const sessionDropdownRef = useRef(null);
 
   useEffect(() => {
     setSelectedChatSession(user?.sessions[0]);
   }, [user?.sessions]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (adminDropdownRef.current && !adminDropdownRef.current.contains(event.target)) {
+        setShowAdminDropdown(false);
+      }
+      if (sessionDropdownRef.current && !sessionDropdownRef.current.contains(event.target)) {
+        setShowSessionDropdown(false);
+      }
+    };
+
+    if (showAdminDropdown || showSessionDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showAdminDropdown, showSessionDropdown]);
 
   useEffect(() => {
     if (selectedChatSession) {
@@ -152,7 +173,7 @@ export default function UserCard({
           </div>
 
           {/* Assign to Dropdown */}
-          <div className="relative">
+          <div className="relative" ref={adminDropdownRef}>
             <button
               className="w-full bg-[#EEF0FE] border border-[#BFC4E5] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
               onClick={() => setShowAdminDropdown((prev) => !prev)}
@@ -226,7 +247,7 @@ export default function UserCard({
 
           {/* All Chats Dropdown */}
           {selectedChatSession && (
-            <div className="relative">
+            <div className="relative" ref={sessionDropdownRef}>
               <button
                 className="w-full bg-[#EEF0FE] border border-[#BFC4E5] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
                 onClick={() => setShowSessionDropdown((prev) => !prev)}
@@ -244,11 +265,10 @@ export default function UserCard({
                     return (
                       <button
                         key={index}
-                        className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 last:border-b-0 transition ${
-                          isSelected
-                            ? "bg-gray-100 text-gray-900 font-semibold"
-                            : "text-gray-700 hover:bg-gray-50"
-                        }`}
+                        className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 last:border-b-0 transition ${isSelected
+                          ? "bg-gray-100 text-gray-900 font-semibold"
+                          : "text-gray-700 hover:bg-gray-50"
+                          }`}
                         onClick={() => {
                           setSelectedChatSession(item);
                           setShowSessionDropdown(false);
@@ -272,7 +292,7 @@ export default function UserCard({
               </p>
               <div className="flex justify-end">
                 <button
-                  className="text-xs text-gray-700"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-[#7981C2] text-white font-medium hover:bg-purple-700 transition-colors"
                   onClick={() => showLogs(selectedChatSession?._id)}
                 >
                   View chat
@@ -317,7 +337,7 @@ export default function UserCard({
             </div>
           </div>
           <div className="w-[35%] flex-shrink-0">
-            <div className="relative">
+            <div className="relative" ref={adminDropdownRef}>
               <button
                 className="w-full bg-[#EEF0FE] border border-[#BFC4E5] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
                 onClick={() => setShowAdminDropdown((prev) => !prev)}
@@ -373,9 +393,8 @@ export default function UserCard({
               return (
                 <button
                   key={index}
-                  className={`text-xs w-full text-left px-2.5 py-1.5 transition shadow-sm ${
-                    isSelected ? "font-bold " : "font-light "
-                  }`}
+                  className={`text-xs w-full text-left px-2.5 py-1.5 transition shadow-sm ${isSelected ? "font-bold " : "font-light "
+                    }`}
                   onClick={() => setSelectedChatSession(item)}
                 >
                   {item?.title || `Chat ${index + 1}`}
@@ -394,7 +413,7 @@ export default function UserCard({
             </div>
             <div className="flex justify-end">
               <button
-                className="text-xs"
+                className="text-xs px-3 py-1.5 rounded-lg bg-[#7981C2] text-white font-medium hover:bg-purple-700 transition-colors"
                 onClick={() => showLogs(selectedChatSession?._id)}
               >
                 View chat

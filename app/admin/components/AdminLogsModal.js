@@ -1,3 +1,4 @@
+"use client";
 import FormatText from "@/app/components/FormatText";
 import { X, FileText } from "lucide-react";
 
@@ -52,7 +53,15 @@ export default function AdminLogsModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-2 sm:p-4"
+      onClick={(e) => {
+        if (e.target === e.currentTarget) {
+          setShowLogsModal(false);
+          setSelectedSessionLogs(null);
+        }
+      }}
+    >
       <div className="bg-white rounded-xl shadow-2xl w-full max-w-5xl max-h-[95vh] sm:max-h-[90vh] overflow-hidden flex flex-col">
         <div className="flex justify-between items-center p-3 sm:p-6 border-b border-gray-200 bg-white">
           <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
@@ -99,16 +108,14 @@ export default function AdminLogsModal({
               {selectedSessionLogs.logs.map((log, index) => (
                 <div
                   key={log._id || index}
-                  className={`flex ${
-                    log.role === "user" ? "justify-start" : "justify-end"
-                  }`}
+                  className={`flex ${log.role === "user" ? "justify-start" : "justify-end"
+                    }`}
                 >
                   <div
-                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${
-                      log.role === "user"
+                    className={`max-w-[85%] rounded-2xl px-4 py-3 ${log.role === "user"
                         ? "bg-white text-gray-800"
                         : "bg-blue-200 text-gray-800 border border-blue-300"
-                    }`}
+                      }`}
                   >
                     <div className="text-sm whitespace-pre-wrap break-words leading-relaxed">
                       <FormatText text={log?.message} />

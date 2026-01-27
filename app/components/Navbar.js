@@ -1,5 +1,5 @@
 "use client";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { signIn } from "../lib/firebase/sign-in";
 import { signOut } from "../lib/firebase/logout";
@@ -14,6 +14,27 @@ export default function Navbar() {
   const [signingIn, setSigningIn] = useState(false);
   const [openMenu, setOpenmenu] = useState(false);
   const [showSettingDropdown, setShowsettingDropdown] = useState(false);
+  const settingDropdownRef = useRef(null);
+  const mobileMenuRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (settingDropdownRef.current && !settingDropdownRef.current.contains(event.target)) {
+        setShowsettingDropdown(false);
+      }
+      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+        setOpenmenu(false);
+      }
+    };
+
+    if (showSettingDropdown || openMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showSettingDropdown, openMenu]);
 
   const isMainDomain =
     typeof window !== "undefined" &&
@@ -112,7 +133,7 @@ export default function Navbar() {
                 SIGN OUT
               </button>
             )}
-            <div className="relative">
+            <div className="relative" ref={settingDropdownRef}>
               <button onClick={() => setShowsettingDropdown((prev) => !prev)}>
                 <Settings className="w-4 h-4 text-[#FFEED8] stroke-2" />
               </button>
@@ -149,7 +170,7 @@ export default function Navbar() {
       </nav>
 
       {openMenu && (
-        <div className="w-50% z-50 absolute left-0 top-14 py-2 px-8 bg-gray-50 rounded-md">
+        <div className="w-50% z-50 absolute left-0 top-14 py-2 px-8 bg-gray-50 rounded-md" ref={mobileMenuRef}>
           <ul className="space-y-4 font-akshar">
             <li>
               <button onClick={() => { setOpenmenu(false); router.push("/help"); }}>Help</button>

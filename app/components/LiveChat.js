@@ -88,7 +88,7 @@ export default function Livechat({
           (msg) =>
             msg.text === (data?.text ?? "") &&
             msg.senderUserId ===
-              (data?.senderUserId ?? data?.senderSessionId ?? "")
+            (data?.senderUserId ?? data?.senderSessionId ?? "")
         );
 
         if (messageExists) {

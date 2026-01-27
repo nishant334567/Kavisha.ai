@@ -5,7 +5,7 @@ import { signOut } from "@/app/lib/firebase/logout";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { User, Settings, Menu, X, MessageCircleMore } from "lucide-react";
 import { useRouter, usePathname } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 export default function AdminNavbar() {
   const { user, loading } = useFirebaseSession();
   const router = useRouter();
@@ -15,13 +15,30 @@ export default function AdminNavbar() {
   const [showNavoption, setShowNavoption] = useState(false);
   const [showSettingDropdown, setShowsettingDropdown] = useState(false);
 
+  const settingDropdownRef = useRef(null);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (settingDropdownRef.current && !settingDropdownRef.current.contains(event.target)) {
+        setShowsettingDropdown(false);
+      }
+    };
+
+    if (showSettingDropdown) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showSettingDropdown]);
+
   const settingOptions = [
     { name: "Sign Out", path: "" },
     { name: "Add Admin", path: `/admin/${brand?.subdomain}/add-admin` },
     { name: "Privacy Policy", path: "/privacy-policy" },
     { name: "Terms and conditions", path: "/tnc" },
     { name: "Help", path: "/help" },
-    // { name: "Add Quiz/Survey", path: `/admin/quiz/new` },
   ];
 
   const navOptions = [
@@ -74,7 +91,7 @@ export default function AdminNavbar() {
             >
               MY PROFILE
             </li>
-            <li className="relative">
+            <li className="relative" ref={settingDropdownRef}>
               <button onClick={() => setShowsettingDropdown((prev) => !prev)}>
                 <Settings className="w-4 h-4 text-[#FFEED8] stroke-2" />
               </button>
@@ -142,8 +159,8 @@ export default function AdminNavbar() {
                     go(item.path);
                   }}
                   className={`w-full text-left px-4 py-3 font-akshar text-sm uppercase tracking-wide transition-colors border-b border-gray-100 ${pathname === item.path
-                      ? "bg-gray-50 text-gray-900 font-semibold"
-                      : "text-gray-700 hover:bg-gray-50"
+                    ? "bg-gray-50 text-gray-900 font-semibold"
+                    : "text-gray-700 hover:bg-gray-50"
                     }`}
                 >
                   {item.name}
