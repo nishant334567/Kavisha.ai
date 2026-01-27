@@ -43,7 +43,7 @@ export default function Navbar() {
     { name: "Settings", path: "/settings" },
     { name: "Privacy Policy", path: "/privacy-policy" },
     { name: "Terms and conditions", path: "/tnc" },
-    { name: "Help", path: "" },
+    { name: "Help", path: "/help" },
   ];
   return (
     <div className="relative">
@@ -153,16 +153,16 @@ export default function Navbar() {
         <div className="w-50% z-50 absolute left-0 top-14 py-2 px-8 bg-gray-50 rounded-md">
           <ul className="space-y-4 font-akshar">
             <li>
-              <button>Help</button>
+              <button onClick={() => { setOpenmenu(false); router.push("/help"); }}>Help</button>
             </li>
             <li>
-              <button>Settings</button>
+              <button onClick={() => { setOpenmenu(false); router.push("/settings"); }}>Settings</button>
             </li>
             <li>
-              <button>Privacy Policy</button>
+              <button onClick={() => { setOpenmenu(false); router.push("/privacy-policy"); }}>Privacy Policy</button>
             </li>
             <li>
-              <button>Terms and Conditions</button>
+              <button onClick={() => { setOpenmenu(false); router.push("/tnc"); }}>Terms and Conditions</button>
             </li>
             {brand?.subdomain === "kavisha" && (
               <li>

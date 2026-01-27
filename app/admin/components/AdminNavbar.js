@@ -21,7 +21,7 @@ export default function AdminNavbar() {
     { name: "Add Admin", path: `/admin/${brand?.subdomain}/add-admin` },
     { name: "Privacy Policy", path: "/privacy-policy" },
     { name: "Terms and conditions", path: "/tnc" },
-    { name: "Help", path: "" },
+    { name: "Help", path: "/help" },
     // { name: "Add Quiz/Survey", path: `/admin/quiz/new` },
   ];
 
