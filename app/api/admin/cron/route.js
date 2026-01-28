@@ -6,6 +6,7 @@ import Matches from "@/app/models/Matches";
 import Connection from "@/app/models/Connection";
 import { Resend } from "resend";
 
+//added comment
 const BATCH_SIZE = parseInt(process.env.CRON_BATCH_SIZE || "500", 10);
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const CRON_REPORT_EMAIL = "hello@kavisha.ai";
