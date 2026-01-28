@@ -4,8 +4,29 @@ import Session from "@/app/models/ChatSessions";
 import Logs from "@/app/models/ChatLogs";
 import Matches from "@/app/models/Matches";
 import Connection from "@/app/models/Connection";
+import { Resend } from "resend";
 
 const BATCH_SIZE = parseInt(process.env.CRON_BATCH_SIZE || "500", 10);
+const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
+const CRON_REPORT_EMAIL = "hello@kavisha.ai";
+
+async function sendCronReport({ success, deleted = 0, batchSize = 0, message, error }) {
+    if (!resend) return;
+    const subject = success ? `[Cron] Cleanup ok – ${deleted} deleted` : `[Cron] Cleanup failed`;
+    const body = success
+        ? `Deleted: ${deleted}<br>Batch size: ${batchSize}<br>${message || ""}`
+        : `Error: ${error || "Unknown"}`;
+    try {
+        await resend.emails.send({
+            from: CRON_REPORT_EMAIL,
+            to: [CRON_REPORT_EMAIL],
+            subject,
+            html: `<p>${body}</p>`,
+        });
+    } catch (e) {
+        console.error("[cron] email report failed:", e);
+    }
+}
 
 export async function POST(req) {
     try {
@@ -26,6 +47,12 @@ export async function POST(req) {
 
         const sessionIds = singleLogSessions.map((s) => s.sessionId);
         if (sessionIds.length === 0) {
+            await sendCronReport({
+                success: true,
+                deleted: 0,
+                batchSize: 0,
+                message: "No sessions with exactly one log found.",
+            });
             return NextResponse.json({
                 success: true,
                 deleted: 0,
@@ -47,15 +74,27 @@ export async function POST(req) {
             ],
         });
         const { deletedCount } = await Session.deleteMany({ _id: { $in: sessionIds } });
+        const message = `Deleted ${deletedCount} session(s) with exactly one log.`;
+
+        await sendCronReport({
+            success: true,
+            deleted: deletedCount,
+            batchSize: sessionIds.length,
+            message,
+        });
 
         return NextResponse.json({
             success: true,
             deleted: deletedCount,
             batchSize: sessionIds.length,
-            message: `Deleted ${deletedCount} session(s) with exactly one log.`,
+            message,
         });
     } catch (err) {
         console.error("[cron] cleanup error:", err);
+        await sendCronReport({
+            success: false,
+            error: err?.message ?? "Cleanup failed",
+        });
         return NextResponse.json(
             { success: false, error: err?.message ?? "Cleanup failed" },
             { status: 500 }
