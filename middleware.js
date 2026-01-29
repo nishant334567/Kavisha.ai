@@ -25,6 +25,12 @@ function getSubdomainFromRequest(hostname) {
 }
 
 export async function middleware(request) {
+  const pathname = request.nextUrl.pathname || "";
+
+  // ✅ CRON BYPASS – allow scheduler POST without Firebase auth
+  if (pathname.startsWith("/api/admin/cron")) {
+    return NextResponse.next();
+  }
   const hostname = request.nextUrl.hostname || "";
   if (hostname.toLowerCase().startsWith("www.")) {
     const targetHost = hostname.replace(/^www\./i, "");
