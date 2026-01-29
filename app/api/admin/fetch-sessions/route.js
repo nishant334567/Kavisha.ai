@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
 import Logs from "@/app/models/ChatLogs";
+import Assessments from "@/app/models/Assessment";
+import Attempts from "@/app/models/Attempt";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 
 export async function GET(request) {
@@ -48,10 +50,22 @@ export async function GET(request) {
         }
       });
 
+      // Count unique users who attempted any quiz/survey for this brand
+      const assessmentIds = await Assessments.find({ brand })
+        .select("_id")
+        .lean();
+      const aIds = assessmentIds.map((a) => a._id);
+      const quizSurveyUserIds =
+        aIds.length > 0
+          ? await Attempts.distinct("userId", { assessmentId: { $in: aIds } })
+          : [];
+      const quizSurveyCount = quizSurveyUserIds.length;
+
       return NextResponse.json({
         success: true,
         communityCount: communityUserIds.size,
         chatRequestCount: normalUserIds.size,
+        quizSurveyAttemptCount: quizSurveyCount,
       });
     }
 
@@ -66,7 +80,7 @@ export async function GET(request) {
     const sessions = await Session.find(filter)
       .populate("userId", "name email _id")
       .select(
-        "userId role title chatSummary status allDataCollected createdAt updatedAt comment totalInputTokens totalOutputTokens assignedTo"
+        "userId role title chatSummary status allDataCollected createdAt updatedAt comment totalInputTokens totalOutputTokens assignedTo serviceKey"
       )
       .sort({ createdAt: -1 })
       .lean();
@@ -112,6 +126,7 @@ export async function GET(request) {
       usersMap.get(userId).sessions.push({
         _id: session._id,
         role: session.role,
+        serviceKey: session.serviceKey || null,
         title: session.title,
         chatSummary: session.chatSummary,
         status: session.status,

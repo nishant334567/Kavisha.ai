@@ -9,8 +9,11 @@ async function createSessionWithDefaultLog(
   initialmessage = null,
   isCommunityChat,
   chatName,
-  serviceKey = null
+  serviceKey
 ) {
+  if (!serviceKey || typeof serviceKey !== "string" || !serviceKey.trim()) {
+    throw new Error("serviceKey is required and must be a non-empty string");
+  }
   try {
     await connectDB();
     const session = await Session.create({
@@ -19,7 +22,7 @@ async function createSessionWithDefaultLog(
       brand,
       isCommunityChat: Boolean(isCommunityChat),
       name: chatName,
-      ...(serviceKey && { serviceKey }),
+      serviceKey: serviceKey.trim(),
     });
 
     await Logs.create({
@@ -30,7 +33,9 @@ async function createSessionWithDefaultLog(
     });
 
     return session;
-  } catch (err) {}
+  } catch (err) {
+    throw err;
+  }
 }
 
 module.exports = { createSessionWithDefaultLog };

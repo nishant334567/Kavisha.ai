@@ -15,7 +15,7 @@ export default function ChatRequests() {
   const { user } = useFirebaseSession();
   const [sessionData, setSessionData] = useState([]);
   const [allSessions, setAllSessions] = useState([]);
-  const [selectedService, setSelectedService] = useState("lead_journey");
+  const [selectedService, setSelectedService] = useState("all"); // "all" | service _key
   const brandContext = useBrandContext();
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [selectedSessionLogs, setSelectedSessionLogs] = useState(null);
@@ -36,14 +36,8 @@ export default function ChatRequests() {
         const data = await response.json();
         if (data.success) {
           setAllSessions(data.users);
-          // Apply default filter for "lead_journey" (Talk to me)
-          const filtered = data.users
-            .map((user) => ({
-              ...user,
-              sessions: user.sessions.filter((s) => s.role === "lead_journey"),
-            }))
-            .filter((user) => user.sessions.length > 0);
-          setSessionData(filtered);
+          setSelectedService("all");
+          setSessionData(data.users);
         } else {
           setSessionData([]);
           setAllSessions([]);
@@ -60,26 +54,30 @@ export default function ChatRequests() {
     fetchChatRequests();
   }, [brandContext?.subdomain]);
 
-  const getSessionCount = (serviceName) => {
-    if (!serviceName)
+  // Filter by service _key (session.serviceKey). "All" = no filter = all sessions (including serviceKey null / remaining).
+  const getSessionCount = (service) => {
+    if (!service)
       return allSessions.reduce((sum, user) => sum + user.sessions.length, 0);
+    const key = service._key ?? service;
     return allSessions.reduce(
       (sum, user) =>
-        sum + user.sessions.filter((s) => s.role === serviceName).length,
+        sum + user.sessions.filter((s) => s.serviceKey === key).length,
       0
     );
   };
 
-  const filterSessions = (serviceName) => {
-    setSelectedService(serviceName);
-    if (!serviceName) {
-      setSessionData(allSessions);
+  const filterSessions = (service) => {
+    if (!service || service === "all") {
+      setSelectedService("all");
+      setSessionData(allSessions); // All = every session (remaining + keyed)
       return;
     }
+    const key = service._key ?? service;
+    setSelectedService(key);
     const filtered = allSessions
       .map((user) => ({
         ...user,
-        sessions: user.sessions.filter((s) => s.role === serviceName),
+        sessions: user.sessions.filter((s) => s.serviceKey === key),
       }))
       .filter((user) => user.sessions.length > 0);
     setSessionData(filtered);
@@ -115,18 +113,33 @@ export default function ChatRequests() {
         {/* <div className="flex items-center justify-between mb-8"> */}
         {/* <div className="flex-1"></div> */}
         <div className="grid grid-cols-2 md:flex items-center justify-center gap-y-4 md:gap-y-0 px-6 my-4">
+          <div className="flex items-center">
+            <button
+              onClick={() => filterSessions("all")}
+              className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${selectedService === "all" ? "text-blue-600" : "text-black"
+                }`}
+            >
+              All
+              {getSessionCount(null) > 0 && (
+                <span className="absolute -top-2 -right-6 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                  {getSessionCount(null)}
+                </span>
+              )}
+            </button>
+            {brandContext?.services?.length > 0 && (
+              <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-8"></div>
+            )}
+          </div>
           {brandContext?.services?.map((item, index) => {
-            const count = getSessionCount(item?.name);
+            const count = getSessionCount(item);
             const isLast = index === brandContext.services.length - 1;
+            const isSelected = selectedService === (item?._key ?? item?.name);
             return (
-              <div key={index} className="flex items-center">
+              <div key={item?._key ?? index} className="flex items-center">
                 <button
-                  onClick={() => filterSessions(item?.name)}
-                  className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${
-                    selectedService === item?.name
-                      ? "text-blue-600"
-                      : "text-black"
-                  }`}
+                  onClick={() => filterSessions(item)}
+                  className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${isSelected ? "text-blue-600" : "text-black"
+                    }`}
                 >
                   {item?.title}
                   {count > 0 && (
@@ -169,7 +182,7 @@ export default function ChatRequests() {
             selectedSessionLogs={selectedSessionLogs}
             setShowLogsModal={setShowLogsModal}
             setSelectedSessionLogs={setSelectedSessionLogs}
-            //   loadingLogs={loadingLogs}
+          //   loadingLogs={loadingLogs}
           />
         )}
 
