@@ -8,8 +8,8 @@ export default function AvatarCard({ image, name, title, subtitle }) {
   };
 
   return (
-    <div className="w-full max-w-xs bg-white rounded-2xl shadow-md overflow-hidden text-center h-[520px] flex flex-col">
-      <div className="w-full h-80 bg-gray-100 flex-shrink-0">
+    <div className="w-full max-w-xs bg-white rounded-2xl shadow-md overflow-hidden text-center h-[400px] flex flex-col">
+      <div className="w-full h-[280px] flex-shrink-0">
         {image ? (
           <img src={image} alt={name} className="w-full h-full object-cover" />
         ) : (
@@ -21,11 +21,11 @@ export default function AvatarCard({ image, name, title, subtitle }) {
       <div className="px-4 py-4 font-akshar flex-1 flex flex-col min-h-0">
         <h3 className="text-lg font-semibold text-[#1f2933] mb-1">{name}</h3>
         {title && <p className="text-sm text-[#1f2933] mb-2">{title}</p>}
-        {subtitle && (
+        {/* {subtitle && (
           <p className="text-sm text-gray-600 leading-relaxed line-clamp-4 overflow-hidden">
             {truncateText(subtitle, 30)}
           </p>
-        )}
+        )} */}
       </div>
     </div>
   );

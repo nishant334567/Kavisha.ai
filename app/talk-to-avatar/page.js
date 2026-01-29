@@ -62,10 +62,10 @@ export default function TalkToAvatarPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-[#F9F9F9] to-[#EDF4F7] pt-16">
-      <div className="container mx-auto px-4 py-8 md:py-12">
+    <div className="min-h-screen from-[#F9F9F9] to-[#EDF4F7] pt-8">
+      <div className="container mx-auto p-4">
         {/* Header */}
-        <div className="mb-8 md:mb-12">
+        <div className="mb-8 md:mb-12 mt-4">
           <button
             onClick={() => router.push("/")}
             className="flex items-center gap-2 text-[#3D5E6B] hover:text-[#2d4752] transition-colors mb-6 font-akshar"
@@ -75,28 +75,29 @@ export default function TalkToAvatarPage() {
           </button>
 
           <div className="text-center mb-6">
-            <h1 className="text-4xl md:text-5xl lg:text-6xl font-akshar font-bold text-[#3D5E6B] mb-4">
-              Talk to Avataars
+            <div className="flex flex-col items-center justify-center">
+              <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
+            </div>
+            <h1 className="text-6xl font-fredoka text-[#3D5E6B] my-4">
+              Talk to <span className="text-[#00B5BD]">Avataars</span>
             </h1>
-            <p className="text-lg md:text-xl text-gray-700 max-w-3xl mx-auto font-assistant leading-relaxed">
-              Talk to leaders in the world of business, finance, art and academia.
-              Interact, learn and grow. Also, connect with other fans while you're
-              at it.
+            <p className="text-lg text-gray-700 max-w-3xl mx-auto font-fredoka leading-relaxed">
+              Talk to leaders in the world of business, finance, art and academia. Interact, learn and grow. Also, connect with other fans while you’re at it.
             </p>
           </div>
         </div>
 
         {/* Content */}
         {loading ? (
-          <div className="flex justify-center items-center py-20">
-            <Loader loadingMessage="Loading avatars..." />
-          </div>
+
+          <Loader loadingMessage="Loading avatars..." />
+
         ) : error ? (
           <div className="text-center py-20">
             <p className="text-red-600 mb-4">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-2 bg-[#3D5E6B] text-white rounded-lg hover:bg-[#2d4752] transition-colors font-akshar"
+              className="px-6 py-2 text-white rounded-lg transition-colors font-akshar"
             >
               Retry
             </button>
@@ -113,7 +114,7 @@ export default function TalkToAvatarPage() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6 md:gap-8 justify-items-center sm:justify-items-stretch">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-8 justify-items-center sm:justify-items-stretch px-8">
               {avatars.map((avatar) => (
                 <a
                   key={avatar.id}
