@@ -137,14 +137,11 @@ export default function ChatBox({
   }, [currentChatId, currentChatType]);
 
   useEffect(() => {
-    // Only fetch for job_seeker, recruiter, or dating
-    if (!currentChatId) return;
-    const allowedTypes = ["job_seeker", "recruiter", "dating"];
-    if (
-      !currentChatType ||
-      !allowedTypes.includes(currentChatType.toLowerCase())
-    )
+    // Fetch matches from DB for any chat
+    if (!currentChatId) {
+      setMatches([]);
       return;
+    }
 
     const fetchMatches = async () => {
       try {
@@ -154,11 +151,17 @@ export default function ChatBox({
         setHasDatacollected(data.allDataCollected);
         if (Array.isArray(data.matches) && data.matches.length > 0) {
           setMatches(data.matches);
+        } else {
+          setMatches([]);
         }
-      } catch (error) { }
+      } catch (error) {
+        console.error(`[Matches] Error fetching matches:`, error);
+        setMatches([]);
+      }
     };
+    
     fetchMatches();
-  }, [currentChatId, currentChatType]);
+  }, [currentChatId]);
   useEffect(() => {
     const timeout = setTimeout(() => {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });

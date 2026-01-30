@@ -64,8 +64,8 @@ export default function AvatarHomepage() {
           </div>
         )}
 
-        {/* Mobile: button in flow, just below content */}
-        <div className="md:hidden flex justify-center py-6">
+        {/* Button in normal flow for both mobile and desktop */}
+        <div className="flex justify-center py-6">
           <button
             onClick={handleSignIn}
             disabled={signingIn}
@@ -78,21 +78,6 @@ export default function AvatarHomepage() {
             )}
           </button>
         </div>
-      </div>
-
-      {/* Desktop: fixed at bottom */}
-      <div className="hidden md:flex fixed bottom-0 left-0 right-0 justify-center py-4 bg-white z-10">
-        <button
-          onClick={handleSignIn}
-          disabled={signingIn}
-          className="font-akshar px-6 py-3 rounded-full bg-[#59646F] text-md disabled:opacity-50 flex items-center gap-2 text-[#FFEED8] hover:bg-[#4a5568] transition-colors"
-        >
-          {signingIn ? (
-            <span>Signing in...</span>
-          ) : (
-            brand?.loginButtonText?.toUpperCase() || "TALK TO ME NOW"
-          )}
-        </button>
       </div>
     </div>
   );
