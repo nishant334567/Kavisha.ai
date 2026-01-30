@@ -10,8 +10,9 @@ const LogsSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
-    sourceChunk: {
+    sourceUrls: {
       type: [String],
+      default: [],
     },
     sessionId: {
       type: mongoose.Schema.Types.ObjectId,

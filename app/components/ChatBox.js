@@ -4,7 +4,6 @@ import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 
 import Resume from "./Resume";
 import FormatText from "./FormatText";
-import ChunkModal from "./ChunkModal";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { Mic, MicOff, Send, Paperclip } from "lucide-react";
 
@@ -47,9 +46,6 @@ export default function ChatBox({
 
   const [chatLoading, setChatLoading] = useState(false);
   const [summaryUptilnow, setSummaryUptilnow] = useState("");
-  const [answerSources, setAnswerSources] = useState([]);
-  const [openChunkModal, setOpenChunkModal] = useState(false);
-  const [chunkData, setChunkData] = useState(null);
   const [currentChatType, setCurrentChatType] = useState(null);
   const [sessionName, setSessionName] = useState(null);
   const [serviceKey, setServiceKey] = useState(null);
@@ -196,25 +192,6 @@ export default function ChatBox({
       setTranscribeError("Failed to read transcription response.");
     } finally {
       setIsTranscribing(false);
-    }
-  };
-  const fetchChunkById = async (chunkId) => {
-    if (!chunkId || !brandContext?.subdomain) return;
-
-    try {
-      const response = await fetch(
-        `/api/admin/fetch-chunk?chunkId=${chunkId}&brand=${brandContext.subdomain}`
-      );
-      const data = await response.json();
-
-      if (response.ok && data.chunk) {
-        setChunkData(data.chunk);
-        setOpenChunkModal(true);
-      } else {
-        alert("Failed to load chunk content");
-      }
-    } catch (error) {
-      alert("Error loading chunk");
     }
   };
   const startRecording = async () => {
@@ -479,13 +456,11 @@ export default function ChatBox({
       {
         role: "assistant",
         message: data.reply,
-        sources: data?.sources || [],
         sourceUrls: data?.sourceUrls || [],
         intent: data?.intent || "",
       },
     ]);
     setMessageLoading(false);
-    setAnswerSources(data?.sources);
     // Reset retry state on success
     if (isRetry) {
       setRetry(false);
@@ -662,40 +637,24 @@ export default function ChatBox({
                     </div>
                   )}
                   {/* Show sources for assistant messages */}
-                  {m.role === "assistant" &&
-                    ((m.sourceUrls && m.sourceUrls.length > 0) ||
-                      (m.sources && m.sources.length > 0)) && (
-                      <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0 flex flex-wrap gap-1.5">
-                        <span className="text-xs text-gray-500">
-                          📚 Sources:
-                        </span>
-                        {m.sourceUrls && m.sourceUrls.length > 0
-                          ? m.sourceUrls.map((url, idx) => (
-                            <a
-                              key={idx}
-                              href={url}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-blue-600 hover:text-blue-800 hover:underline px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors"
-                            >
-                              {url.length > 30
-                                ? `${url.slice(0, 30)}...`
-                                : url}
-                            </a>
-                          ))
-                          : m.sources.map((sourceId, idx) => (
-                            <button
-                              key={idx}
-                              onClick={() => fetchChunkById(sourceId)}
-                              className="text-xs text-blue-600 hover:text-blue-800 hover:underline px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors"
-                            >
-                              {sourceId.length > 10
-                                ? `${sourceId.slice(0, 10)}...`
-                                : sourceId}
-                            </button>
-                          ))}
-                      </div>
-                    )}
+                  {m.role === "assistant" && m.sourceUrls?.length > 0 && (
+                    <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0 flex flex-wrap gap-1.5">
+                      <span className="text-xs text-gray-500">
+                        📚 Sources:
+                      </span>
+                      {m.sourceUrls.map((url, idx) => (
+                        <a
+                          key={idx}
+                          href={url}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-xs text-blue-600 hover:text-blue-800 hover:underline px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors"
+                        >
+                          {url.length > 30 ? `${url.slice(0, 30)}...` : url}
+                        </a>
+                      ))}
+                    </div>
+                  )}
                   {/* Show payment QR code for personal_call intent */}
                   {m.role === "assistant" &&
                     m.intent === "personal_call" &&
@@ -884,50 +843,6 @@ export default function ChatBox({
         </div>
       </div>
 
-      {/* {showInbox && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center md:items-end md:justify-end bg-black bg-opacity-30 md:bg-transparent">
-          {openChat && userA && userB && (
-            <div className="hidden md:flex md:mr-4 md:mb-6">
-              <div className="bg-white rounded-xl w-[500px] h-[75vh] border border-slate-200 shadow-2xl flex flex-col overflow-hidden">
-                <Livechat
-                  userA={userA}
-                  userB={userB}
-                  currentUserId={user?.id}
-                  onClose={() => setOpenChat(false)}
-                  connectionId={connectionId}
-                  isEmbedded={true}
-                />
-              </div>
-            </div>
-          )}
-        
-          <div className="w-full h-full md:w-80 md:h-auto md:max-h-[60vh] md:mx-0 md:mr-6 md:mb-6 overflow-hidden shadow-2xl rounded-xl bg-white border border-slate-200 flex flex-col">
-            <Inbox
-              onOpenChat={openChatSession}
-              onClose={() => setShowInbox(false)}
-            />
-          </div>
-        </div>
-      )} */}
-
-      {/* {openChat && userA && userB && !showInbox && (
-        <Livechat
-          userA={userA}
-          userB={userB}
-          currentUserId={user?.id}
-          onClose={() => setOpenChat(false)}
-          connectionId={connectionId}
-        />
-      )} */}
-
-      <ChunkModal
-        isOpen={openChunkModal}
-        onClose={() => {
-          setOpenChunkModal(false);
-          setChunkData(null);
-        }}
-        chunk={chunkData}
-      />
     </div>
   );
 }

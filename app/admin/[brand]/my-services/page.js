@@ -17,7 +17,7 @@ export default function MyServices() {
   const [featureData, setFeatureData] = useState({
     enableQuiz: brandContext?.enableQuiz || false,
     quizName: brandContext?.quizName || "",
-    enableCommunityOnboarding: brandContext?.enableCommunityOnboarding || false,
+    enableCommunityOnboarding: true, // Community is always enabled
     communityName: brandContext?.communityName || "",
   });
   const [updating, setUpdating] = useState(false);
@@ -80,13 +80,19 @@ export default function MyServices() {
       setFeatureData({
         enableQuiz: brandContext.enableQuiz || false,
         quizName: brandContext.quizName || "",
-        enableCommunityOnboarding: brandContext.enableCommunityOnboarding || false,
+        enableCommunityOnboarding: true, // Community is always enabled
         communityName: brandContext.communityName || "",
       });
     }
   }, [brandContext]);
 
   const handleToggleFeature = async (featureType, value) => {
+    // Prevent disabling community feature
+    if (featureType === "enableCommunityOnboarding" && value === false) {
+      alert("Community feature cannot be disabled. It is always enabled for all brands.");
+      return;
+    }
+
     setUpdating(true);
     try {
       const updatePayload = {
@@ -242,27 +248,26 @@ export default function MyServices() {
               Features
             </h2>
 
-            {/* Community Feature */}
+            {/* Community Feature - Always Enabled */}
             <div className="flex items-center justify-between w-full gap-4 px-4">
               <div className="flex items-center gap-3">
                 <span className="text-gray-600 uppercase text-base tracking-wider font-normal">
                   Community
                 </span>
-                <label className="relative inline-flex items-center cursor-pointer">
+                <label
+                  className="relative inline-flex items-center cursor-not-allowed opacity-70"
+                  title="Community feature is always enabled"
+                >
                   <input
                     type="checkbox"
-                    checked={featureData.enableCommunityOnboarding}
-                    onChange={(e) =>
-                      handleToggleFeature(
-                        "enableCommunityOnboarding",
-                        e.target.checked
-                      )
-                    }
-                    disabled={updating}
+                    checked={true}
+                    readOnly
+                    disabled
                     className="sr-only peer"
                   />
-                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                  <div className="w-11 h-6 bg-blue-600 rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all after:translate-x-full"></div>
                 </label>
+                <span className="text-xs text-gray-400">(Always on)</span>
               </div>
               {featureData.enableCommunityOnboarding && (
                 <div className="flex items-center gap-2 flex-1 justify-end">

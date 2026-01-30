@@ -161,11 +161,17 @@ export default function Navbar() {
       </nav>
 
       <nav className="md:hidden bg-white border border-b-2 border-gray-200 py-4 px-4">
-        <div className="flex gap-2">
+        <div className="flex gap-2 items-center">
           <button onClick={() => setOpenmenu((prev) => !prev)}>
             <Menu />
           </button>
-          <p>HOME</p>
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="font-akshar text-left hover:opacity-80"
+          >
+            HOME
+          </button>
         </div>
       </nav>
 

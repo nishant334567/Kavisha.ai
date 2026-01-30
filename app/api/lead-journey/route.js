@@ -500,9 +500,7 @@ export async function POST(req) {
                 sessionId: sessionId,
                 userId: user.id,
                 role: "assistant",
-                sourceChunk: Array.isArray(sourceChunkIds)
-                  ? sourceChunkIds
-                  : [],
+                sourceUrls: Array.isArray(sourceUrls) ? sourceUrls : [],
               });
 
               await Session.updateOne(
@@ -528,7 +526,6 @@ export async function POST(req) {
             summary: reParts[1],
             title: reParts[2],
             requery: betterQuery,
-            sources: sourceChunkIds,
             sourceUrls: sourceUrls,
             inputTokens: inputToken,
             outputTokens: outputToken,

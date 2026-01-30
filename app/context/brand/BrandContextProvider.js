@@ -85,7 +85,7 @@ export default function BrandContextProvider({ children }) {
             isBrandAdmin: isAdmin,
             subdomain,
             initialmessage: brand.initialmessage,
-            enableCommunityOnboarding: brand.enableCommunityOnboarding || false,
+            enableCommunityOnboarding: true, // Community is always enabled
             communityName: brand.communityName || "",
             enableQuiz: brand.enableQuiz || false,
             quizName: brand.quizName || "",

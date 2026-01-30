@@ -200,13 +200,19 @@ export default function EditProfile() {
         </div>
 
         {/* Cover Photo */}
-        <div className="mb-8 w-full relative overflow-hidden bg-white">
-          <img
-            src={brand?.brandImageUrl}
-            alt={brand?.brandName || "Cover"}
-            className="w-full h-auto max-h-96 object-cover block m-0 p-0"
-          />
-          <label className="absolute bottom-8 right-12 cursor-pointer">
+        <div className="mb-8 w-full relative overflow-hidden bg-gray-100 min-h-[200px] md:min-h-[300px]">
+          {brand?.brandImageUrl ? (
+            <img
+              src={brand.brandImageUrl}
+              alt={brand?.brandName || "Cover"}
+              className="w-full h-auto max-h-96 object-cover block m-0 p-0"
+            />
+          ) : (
+            <div className="w-full h-[200px] md:h-[300px] flex items-center justify-center text-gray-400">
+              <span className="text-sm">No cover photo</span>
+            </div>
+          )}
+          <label className="absolute bottom-4 right-4 md:bottom-8 md:right-12 cursor-pointer">
             <input
               type="file"
               accept="image/*"
@@ -217,8 +223,12 @@ export default function EditProfile() {
               className="hidden"
               disabled={uploading.brandImage}
             />
-            <span className="font-akshar px-4 py-1.5 text-sm rounded-full bg-white/60 backdrop-blur-sm border border-gray-200 text-gray-700 hover:bg-white/75 transition-colors">
-              {uploading.brandImage ? "Uploading..." : "Edit cover photo"}
+            <span className="font-akshar px-4 py-1.5 text-sm rounded-full bg-white/80 backdrop-blur-sm border border-gray-200 text-gray-700 hover:bg-white transition-colors shadow-sm">
+              {uploading.brandImage
+                ? "Uploading..."
+                : brand?.brandImageUrl
+                ? "Edit cover photo"
+                : "Add cover photo"}
             </span>
           </label>
         </div>

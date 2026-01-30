@@ -31,14 +31,14 @@ export default function GlobalMessages() {
 
   return (
     <>
-      {/* Messages Button - Fixed position, visible on all pages */}
+      {/* Messages Button - Mobile: below left sidebar icon; Desktop: bottom-right */}
       <button
-        className="fixed bottom-4 right-4 z-40 bg-[#264653] text-white p-4 rounded-full shadow-lg hover:bg-[#1e383e] transition-colors flex items-center justify-center"
+        className="fixed left-0 top-28 z-40 md:left-auto md:right-4 md:top-auto md:bottom-4 w-10 h-10 md:w-14 md:h-14 md:p-4 flex items-center justify-center rounded-r md:rounded-full bg-[#264653] text-white shadow-lg hover:bg-[#1e383e] transition-colors border border-l-0 border-gray-300 md:border-0"
         onClick={() => setShowInbox(true)}
         title="Open Messages"
         aria-label="Open Messages"
       >
-        <MessageCircleMore className="w-6 h-6" />
+        <MessageCircleMore className="w-5 h-5 md:w-6 md:h-6" />
       </button>
 
       {/* Inbox Modal */}
