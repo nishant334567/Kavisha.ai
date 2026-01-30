@@ -86,9 +86,9 @@ export default function BrandContextProvider({ children }) {
             subdomain,
             initialmessage: brand.initialmessage,
             enableCommunityOnboarding: true, // Community is always enabled
-            communityName: brand.communityName || "",
+            communityName: brand.communityName || "Community",
             enableQuiz: brand.enableQuiz || false,
-            quizName: brand.quizName || "",
+            quizName: brand.quizName || "Take quiz/survey",
             services: brand.services,
           };
 

@@ -94,6 +94,7 @@ export default {
       title: "Community Name",
       type: "string",
       description: "Name/label for the community feature (e.g., 'My Community', 'Connect')",
+      initialValue: "Community",
       hidden: ({ parent }) => !parent?.enableCommunityOnboarding,
     },
     {
@@ -109,6 +110,7 @@ export default {
       title: "Quiz/Survey Name",
       type: "string",
       description: "Name/label for the quiz/survey feature (e.g., 'My Quizzes', 'Assessments')",
+      initialValue: "Take quiz/survey",
       hidden: ({ parent }) => !parent?.enableQuiz,
     },
     {

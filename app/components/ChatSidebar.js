@@ -17,14 +17,28 @@ export default function ChatSidebar({
   onNewCommunityChat,
   chatBasePath = "/chats",
   homePath = "/",
+  servicesProvided = [],
+  onSelectService,
+  isCreatingSession = false,
 }) {
   const { user } = useFirebaseSession();
   const [isCollapsed, setIscollapsed] = useState(false);
   const [newChatLoading, setNewChatLoading] = useState(false);
+  const [showNewChatDropdown, setShowNewChatDropdown] = useState(false);
+  const [showCommunityNewDropdown, setShowCommunityNewDropdown] = useState(false);
   const brandContext = useBrandContext();
 
   const [deletingChatId, setDeletingChatId] = useState(null);
   const router = useRouter();
+
+  // Services for dropdown: exclude quiz and community
+  const servicesList = Array.isArray(servicesProvided) ? servicesProvided : [];
+  const chatServices = servicesList.filter(
+    (s) =>
+      s?.name &&
+      s.name.toLowerCase() !== "quiz" &&
+      s.name.toLowerCase() !== "community"
+  );
 
   const formatIST = (iso) => {
     if (!iso) return "";
@@ -157,34 +171,118 @@ export default function ChatSidebar({
                 <div className="py-4 gap-2">
                   {isCommunity ? (
                     <>
-
+                      <div className="relative">
+                        <button
+                          className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors"
+                          onClick={() => setShowCommunityNewDropdown((v) => !v)}
+                        >
+                          New
+                        </button>
+                        {showCommunityNewDropdown && (
+                          <>
+                            <div
+                              className="fixed inset-0 z-[45]"
+                              aria-hidden="true"
+                              onClick={() => setShowCommunityNewDropdown(false)}
+                            />
+                            <div
+                              className="absolute left-0 top-full mt-1 w-full min-w-[160px] rounded-md border border-slate-200 bg-white py-1 shadow-lg z-[50]"
+                              role="listbox"
+                            >
+                              <button
+                                type="button"
+                                className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-slate-700 hover:bg-slate-100 transition-colors"
+                                onClick={() => {
+                                  onNewCommunityChat("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)");
+                                  setShowCommunityNewDropdown(false);
+                                }}
+                              >
+                                Find Jobs
+                              </button>
+                              <button
+                                type="button"
+                                className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-slate-700 hover:bg-slate-100 transition-colors"
+                                onClick={() => {
+                                  onNewCommunityChat("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)");
+                                  setShowCommunityNewDropdown(false);
+                                }}
+                              >
+                                Hire People
+                              </button>
+                              <button
+                                type="button"
+                                className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-slate-700 hover:bg-slate-100 transition-colors"
+                                onClick={() => {
+                                  onNewCommunityChat("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)");
+                                  setShowCommunityNewDropdown(false);
+                                }}
+                              >
+                                Find Friends
+                              </button>
+                            </div>
+                          </>
+                        )}
+                      </div>
                       <button
-                        className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors mb-2"
-                        onClick={() => onNewCommunityChat("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                        type="button"
+                        className="flex gap-2 justify-center text-xs bg-slate-100 text-slate-700 w-full p-2 rounded-md font-medium hover:bg-slate-200 transition-colors mt-2"
+                        onClick={() => router.push("/community")}
                       >
-                        Find Jobs
-                      </button>
-                      <button
-                        className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors mb-2"
-                        onClick={() => onNewCommunityChat("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                      >
-                        Hire People
-                      </button>
-                      <button
-                        className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors"
-                        onClick={() => onNewCommunityChat("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                      >
-                        Find Friends
+                        Community
                       </button>
                     </>
                   ) : (
                     <>
-                      <button
-                        className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors"
-                        onClick={() => newChat()}
-                      >
-                        {!newChatLoading ? "New Chat" : "Creating..."}
-                      </button>
+                      <div className="relative">
+                        <button
+                          className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors"
+                          onClick={() =>
+                            chatServices.length > 0 && onSelectService
+                              ? setShowNewChatDropdown((v) => !v)
+                              : newChat()
+                          }
+                          disabled={isCreatingSession}
+                        >
+                          {!newChatLoading && !isCreatingSession
+                            ? "New Chat"
+                            : "Creating..."}
+                        </button>
+                        {showNewChatDropdown &&
+                          chatServices.length > 0 &&
+                          onSelectService && (
+                            <>
+                              <div
+                                className="fixed inset-0 z-[45]"
+                                aria-hidden="true"
+                                onClick={() => setShowNewChatDropdown(false)}
+                              />
+                              <div
+                                className="absolute left-0 top-full mt-1 w-full min-w-[180px] rounded-md border border-slate-200 bg-white py-1 shadow-lg z-[50] max-h-48 overflow-y-auto"
+                                role="listbox"
+                              >
+                                {chatServices.map((item, idx) => (
+                                  <button
+                                    key={item._key || idx}
+                                    type="button"
+                                    className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-slate-700 hover:bg-slate-100 transition-colors"
+                                    onClick={() => {
+                                      onSelectService(
+                                        item.name,
+                                        item.initialMessage,
+                                        false,
+                                        item.title || item.name,
+                                        item._key
+                                      );
+                                      setShowNewChatDropdown(false);
+                                    }}
+                                  >
+                                    {item.title || item.name}
+                                  </button>
+                                ))}
+                              </div>
+                            </>
+                          )}
+                      </div>
                       <button
                         type="button"
                         className="flex gap-2 justify-center text-xs bg-slate-100 text-slate-700 w-full p-2 rounded-md font-medium hover:bg-slate-200 transition-colors mt-2"

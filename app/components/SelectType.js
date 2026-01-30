@@ -1,5 +1,4 @@
 "use client";
-import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 
 export default function SelectChatType({
@@ -14,69 +13,11 @@ export default function SelectChatType({
   quizName = "",
 }) {
   const router = useRouter();
-  const [showType, setShowtype] = useState(false);
-  useEffect(() => { }, [showType]);
-  const typeOfConnection = [
-    {
-      name: "job_seeker",
-      title: "Looking for work",
-      initialMessage:
-        "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)",
-    },
-    {
-      name: "recruiter",
-      title: "Looking at hiring",
-      initialMessage:
-        "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)",
-    },
-    {
-      name: "friends",
-      title: "Looking for a friend",
-      initialMessage:
-        "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)",
-    },
-  ];
-  const base =
-    "text-slate-600 uppercase font-extralight font-akshar group relative px-6 py-3 text-center transition-all duration-200  hover:font-semibold w-full flex items-center justify-center";
-
-  // const cls = (item) =>
-  //   selectedType === item.name ? "font-semibold" : "font-medium";
 
   return (
     <div className="flex items-center justify-center px-4 h-full min-h-screen">
       <div className="flex flex-col gap-3 w-full max-w-md">
-        {showType && (
-          <div className="flex flex-col gap-3">
-            <button
-              onClick={() => setShowtype(false)}
-              className="mb-4 px-4 py-2 text-sm text-gray-600 hover:text-gray-800 flex items-center justify-start gap-2 self-start"
-            >
-              ← Go Back
-            </button>
-            <p className="text-lg font-medium mb-4 font-akshar uppercase text-center text-slate-700">
-              Why do you want to connect with my community?
-            </p>
-            {typeOfConnection.map((item) => (
-              <button
-                key={item.name}
-                onClick={() =>
-                  selectChatType(
-                    item.name,
-                    item.initialMessage,
-                    true,
-                    item.title
-                  )
-                }
-                className={`${base} `}
-                disabled={isCreating}
-              >
-                {item.title}
-              </button>
-            ))}
-          </div>
-        )}
-        {!showType && (
-          <div className="px-4">
+        <div className="px-4">
             {servicesProvided.length > 0 &&
               servicesProvided.map((item, index) => {
                 const isLastService = index === servicesProvided.length - 1;
@@ -133,13 +74,13 @@ export default function SelectChatType({
                 {enableCommunityOnboarding && (
                   <div className="flex flex-col justify-center items-center">
                     <button
-                      onClick={() => setShowtype(true)}
+                      onClick={() => router.push("/community")}
                       className="flex items-center justify-center w-full"
                       disabled={isCreating}
                     >
                       <div className="flex items-center justify-center">
                         <span className="font-akshar uppercase text-lg font-light">
-                          {communityName || "Connect with other learners"}
+                          {communityName || "Community"}
                         </span>
                       </div>
                     </button>
@@ -157,7 +98,7 @@ export default function SelectChatType({
                     >
                       <div className="flex items-center justify-center">
                         <span className="font-akshar uppercase text-lg font-light">
-                          {quizName}
+                          {quizName || "Take quiz/survey"}
                         </span>
                       </div>
                     </button>
@@ -165,8 +106,7 @@ export default function SelectChatType({
                 )}
               </>
             )}
-          </div>
-        )}
+        </div>
       </div>
     </div>
   );

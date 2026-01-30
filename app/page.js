@@ -179,6 +179,9 @@ export default function HomePage() {
             setCurrentChatType={setCurrentChatType}
             onOpenInbox={() => setShowInbox(true)}
             onCollapsedChange={setIsSidebarCollapsed}
+            servicesProvided={servicesProvided}
+            onSelectService={selectChatType}
+            isCreatingSession={creatingSession}
           />
         </div>
 
