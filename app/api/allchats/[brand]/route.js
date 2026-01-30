@@ -19,11 +19,12 @@ export async function GET(req, { params }) {
           );
         }
         await connectDB();
-        const sessions = await Session.find({
-          userId: user.id,
-          brand: brand,
-        })
-          .select("_id title role updatedAt brand")
+        const { searchParams } = new URL(req.url);
+        const communityOnly = searchParams.get("community") === "true";
+        const filter = { userId: user.id, brand };
+        if (communityOnly) filter.isCommunityChat = true;
+        const sessions = await Session.find(filter)
+          .select("_id title role updatedAt brand allDataCollected")
           .sort({ updatedAt: -1 });
 
         const sessionIds = sessions.map((session) => session._id);
@@ -37,6 +38,7 @@ export async function GET(req, { params }) {
             role: s.role,
             updatedAt: s.updatedAt,
             brand: s.brand,
+            allDataCollected: !!s.allDataCollected,
           };
         });
 

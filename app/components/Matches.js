@@ -7,7 +7,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react";
 export default function Matches({
   currentChatId,
   matches,
-  openDetailsPanel,
+  // openDetailsPanel,
   openChatSession,
 }) {
   const { user } = useFirebaseSession();
@@ -62,7 +62,7 @@ export default function Matches({
                     }
                     matchedUserName={item.matchedUserName}
                     matchedUserEmail={item.matchedUserEmail}
-                    openDetailsPanel={openDetailsPanel}
+                    // openDetailsPanel={openDetailsPanel}
                     openChatSession={openChatSession}
                   />
                 </div>

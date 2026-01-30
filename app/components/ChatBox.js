@@ -6,13 +6,12 @@ import Resume from "./Resume";
 import FormatText from "./FormatText";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { Mic, MicOff, Send, Paperclip } from "lucide-react";
+import Matches from '@/app/components/Matches'
 
 export default function ChatBox({
   currentChatId,
   // currentChatType,
   // updateChatId,
-  // openDetailsPanel,
-  // toggleRightPanel,
   // showInbox,
   // setShowInbox,
 }) {
@@ -693,14 +692,13 @@ export default function ChatBox({
               </div>
             )}
 
-            {/* {hasDatacollected && (
+            {hasDatacollected && (
               <Matches
                 currentChatId={currentChatId}
                 matches={matches}
-                openDetailsPanel={openDetailsPanel}
                 openChatSession={openChatSession}
               />
-            )} */}
+            )}
             <div ref={endOfMessagesRef}></div>
             {/* </div> */}
           </div>

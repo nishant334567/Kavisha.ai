@@ -18,7 +18,7 @@ export default function MatchCard({
   matchedUserName,
   matchedUserEmail,
   senderSession,
-  openDetailsPanel,
+  // openDetailsPanel,
   openChatSession,
 }) {
   const { user } = useFirebaseSession();
@@ -72,7 +72,7 @@ export default function MatchCard({
             <MessageSquare className="w-4 h-4" />
           </button>
         </div>
-        {type != 1 && (
+        {/* {type != 1 && (
           <button
             onClick={() =>
               openDetailsPanel(3, {
@@ -88,7 +88,7 @@ export default function MatchCard({
           >
             View Details
           </button>
-        )}
+        )} */}
       </div>
     </div>
   );

@@ -13,6 +13,10 @@ export default function ChatSidebar({
   currentChatId,
   setCurrentChatType,
   onCollapsedChange,
+  isCommunity = false,
+  onNewCommunityChat,
+  chatBasePath = "/chats",
+  homePath = "/",
 }) {
   const { user } = useFirebaseSession();
   const [isCollapsed, setIscollapsed] = useState(false);
@@ -48,11 +52,15 @@ export default function ChatSidebar({
   }, [isCollapsed, onCollapsedChange]);
 
   const newChat = () => {
-    router.push("/");
+    if (isCommunity && onNewCommunityChat) {
+      onNewCommunityChat();
+      setIscollapsed(true);
+      return;
+    }
+    router.push(homePath);
     updateChatId(null);
     setCurrentChatType(null);
     setIscollapsed(true);
-    return;
   };
 
   const deleteSession = async (chatId, e) => {
@@ -86,7 +94,7 @@ export default function ChatSidebar({
 
       // If the deleted chat is the current chat, redirect to home
       if (currentChatId === chatId) {
-        router.push("/");
+        router.push(homePath);
         updateChatId(null);
         setCurrentChatType(null);
       }
@@ -156,8 +164,22 @@ export default function ChatSidebar({
                     className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8]   w-full p-2 rounded-md font-medium transition-colors"
                     onClick={() => newChat()}
                   >
-                    {!newChatLoading ? "New Chat" : "Creating New Chat..."}
+                    {!newChatLoading
+                      ? isCommunity
+                        ? "+ Create new post"
+                        : "New Chat"
+                      : "Creating..."}
                   </button>
+
+
+                  <button
+                    type="button"
+                    className="flex gap-2 justify-center text-xs bg-slate-100 text-slate-700 w-full p-2 rounded-md font-medium hover:bg-slate-200 transition-colors mt-2"
+                    onClick={() => router.push("/community")}
+                  >
+                    Community
+                  </button>
+
 
                   {brandContext?.isBrandAdmin && (
                     <button
@@ -197,27 +219,26 @@ export default function ChatSidebar({
                           type="button"
                           onClick={() => {
                             const sessionBrand = allChats?.sessions[id]?.brand;
-                            // If kavisha and session belongs to different brand, open in new tab
-                            if (
-                              brandContext?.subdomain === "kavisha" &&
-                              sessionBrand &&
-                              sessionBrand !== "kavisha"
-                            ) {
+                            const isKavisha = brandContext?.subdomain === "kavisha";
+                            const otherBrand =
+                              isKavisha && sessionBrand && sessionBrand !== "kavisha";
+
+                            if (otherBrand) {
                               const hostname =
                                 typeof window !== "undefined"
                                   ? window.location.hostname
                                   : "";
-                              let url;
-                              if (hostname === "localhost" || hostname === "127.0.0.1") {
-                                url = `/chats/${id}?subdomain=${sessionBrand}`;
-                              } else {
-                                url = `https://${sessionBrand}.kavisha.ai/chats/${id}`;
-                              }
+                              const path = isCommunity
+                                ? `/community/${id}`
+                                : `/chats/${id}`;
+                              const url =
+                                hostname === "localhost" || hostname === "127.0.0.1"
+                                  ? `${path}?subdomain=${sessionBrand}`
+                                  : `https://${sessionBrand}.kavisha.ai${path}`;
                               window.open(url, "_blank");
                               return;
                             }
-                            // Normal navigation for same brand
-                            router.push(`/chats/${id}`);
+                            router.push(`${chatBasePath}/${id}`);
                           }}
                         >
                           <div className="font-akshar flex flex-col items-start w-full justify-center">
@@ -232,7 +253,19 @@ export default function ChatSidebar({
                                     allChats.sessions[id].brand.slice(1)}
                                 </span>
                               )}
-                            <div className="flex items-center gap-2 w-full">
+                            {isCommunity && (
+                              <span
+                                className={`inline-block text-[10px] px-1.5 py-0.5 rounded mb-0.5 ${allChats?.sessions[id]?.allDataCollected
+                                  ? "bg-emerald-100 text-emerald-700"
+                                  : "bg-amber-100 text-amber-700"
+                                  }`}
+                              >
+                                {allChats?.sessions[id]?.allDataCollected
+                                  ? "Completed"
+                                  : "In progress"}
+                              </span>
+                            )}
+                            <div className="flex items-center gap-2 w-full min-w-0">
                               <span className="truncate">
                                 {allChats?.sessions[id]?.title ||
                                   `Chat ${idx + 1} `}
