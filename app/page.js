@@ -203,8 +203,6 @@ export default function HomePage() {
                 currentChatId={currentChatId}
                 currentChatType={currentChatType}
                 updateChatId={setCurrentChatId}
-                openDetailsPanel={openDetailsPanel}
-                toggleRightPanel={toggleRightPanel}
                 showInbox={showInbox}
                 setShowInbox={setShowInbox}
               />
