@@ -35,22 +35,29 @@ export async function GET(request) {
         if (brand !== "kavisha") filter.brand = brand;
 
         const sessions = await Session.find(filter)
-          .populate("userId", "name email _id")
-          .select("userId role title chatSummary createdAt")
+          .populate("userId", "name _id")
+          .select("userId role chatSummary createdAt")
           .sort({ createdAt: -1 })
           .lean();
+
+        const maskName = (name) => {
+          if (!name) return "A*****";
+          return name.split(" ").map(word =>
+            word.charAt(0) + "*".repeat(Math.max(4, word.length - 1))
+          ).join(" ");
+        };
 
         const usersMap = new Map();
 
         sessions.forEach((session) => {
           if (!session?.userId?._id) return;
           const userId = session.userId._id.toString();
-          const userName = session.userId?.name;
+          const maskedName = maskName(session.userId?.name);
 
           if (!usersMap.has(userId)) {
             usersMap.set(userId, {
               userId,
-              name: userName,
+              name: maskedName,
               sessions: [],
             });
           }
@@ -58,7 +65,6 @@ export async function GET(request) {
           usersMap.get(userId).sessions.push({
             _id: session._id,
             role: session.role,
-            title: session.title,
             chatSummary: session.chatSummary,
             createdAt: session.createdAt,
           });

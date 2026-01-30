@@ -6,7 +6,6 @@ import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import ChatBox from "@/app/components/ChatBox";
 import ChatSidebar from "@/app/components/ChatSidebar";
-import CommunitySelectionDialog from "@/app/components/CommunitySelectionDialog";
 import Loader from "@/app/components/Loader";
 
 export default function CommunityChatPage() {
@@ -18,7 +17,6 @@ export default function CommunityChatPage() {
   const [allChats, setAllChats] = useState(null);
   const [currentChatType, setCurrentChatType] = useState(null);
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
-  const [dialogOpen, setDialogOpen] = useState(false);
 
   useEffect(() => {
     if (!user || !brandContext) return;
@@ -32,6 +30,36 @@ export default function CommunityChatPage() {
   const updateChatId = (newChatId) => {
     if (newChatId) router.push(`/community/${newChatId}`);
     else router.push("/community");
+  };
+
+  const createCommunityPost = async (type, title, message) => {
+    if (!user?.id || !brandContext?.subdomain) return;
+    
+    const services = brandContext?.services || [];
+    const service = services.find((s) => s.name === type);
+    const serviceKey = service?._key ?? services[0]?._key;
+    if (!serviceKey) return;
+
+    try {
+      const res = await fetch("/api/newchatsession", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: type,
+          brand: brandContext.subdomain,
+          initialmessage: message,
+          isCommunityChat: true,
+          chatName: title,
+          serviceKey,
+        }),
+      });
+      const data = await res.json();
+      if (data?.success && data?.sessionId) {
+        router.push(`/community/${data.sessionId}`);
+      }
+    } catch (e) {
+      console.error("Error creating community session:", e);
+    }
   };
 
   if (loading) return <Loader loadingMessage="Loading..." />;
@@ -61,10 +89,6 @@ export default function CommunityChatPage() {
           )}
         </div>
       </div>
-      <CommunitySelectionDialog
-        isOpen={dialogOpen}
-        onClose={() => setDialogOpen(false)}
-      />
     </div>
   );
 }

@@ -6,14 +6,14 @@ import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import CommunityCard from "@/app/components/CommunityCard";
 import ChatSidebar from "@/app/components/ChatSidebar";
-import CommunitySelectionDialog from "@/app/components/CommunitySelectionDialog";
 import LiveChat from "@/app/components/LiveChat";
 import Loader from "@/app/components/Loader";
+import { ArrowLeft } from "lucide-react";
 
 const ROLE_LABELS = {
-    job_seeker: "Job",
-    recruiter: "Hiring",
-    friends: "Friend",
+    job_seeker: "Jobs",
+    recruiter: "Employees",
+    friends: "Friends",
 };
 
 function formatDate(d) {
@@ -46,7 +46,7 @@ export default function Community() {
     const router = useRouter();
     const brand = useBrandContext();
     const { user, loading: authLoading } = useFirebaseSession();
-    const [dialogOpen, setDialogOpen] = useState(false);
+    const [creating, setCreating] = useState(null);
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -63,6 +63,39 @@ export default function Community() {
         setChatUserB(userB);
         setConnectionId([userA, userB].sort().join("_"));
         setOpenChat(true);
+    };
+
+    const createCommunityPost = async (type, title, message) => {
+        if (!user?.id || !brand?.subdomain) return;
+
+        const services = brand?.services || [];
+        const service = services.find((s) => s.name === type);
+        const serviceKey = service?._key ?? services[0]?._key;
+        if (!serviceKey) return;
+
+        setCreating(type);
+        try {
+            const res = await fetch("/api/newchatsession", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    role: type,
+                    brand: brand.subdomain,
+                    initialmessage: message,
+                    isCommunityChat: true,
+                    chatName: title,
+                    serviceKey,
+                }),
+            });
+            const data = await res.json();
+            if (data?.success && data?.sessionId) {
+                router.push(`/community/${data.sessionId}`);
+            }
+        } catch (e) {
+            console.error("Error creating community session:", e);
+        } finally {
+            setCreating(null);
+        }
     };
 
     useEffect(() => {
@@ -153,28 +186,55 @@ export default function Community() {
                         setCurrentChatType={() => { }}
                         onCollapsedChange={setIsSidebarCollapsed}
                         isCommunity={true}
-                        onNewCommunityChat={() => setDialogOpen(true)}
+                        onNewCommunityChat={createCommunityPost}
                         chatBasePath="/community"
                         homePath="/community"
                     />
                 </div>
                 <div className="w-full min-h-0 overflow-auto">
-                    <div className="mt-16 px-4 pb-8">
-                        <div className="font-fredoka flex justify-between p-4">
+                    <div className="mt-20 px-28 pb-4">
+                        {/* Back button */}
+                        <button
+                            onClick={() => router.push("/")}
+                            className="flex items-center gap-2 text-[#3D5E6B] hover:text-[#2d4e5b] transition-colors px-4"
+                        >
+                            <ArrowLeft className="w-5 h-5" />
+                            <span className="font-fredoka">Back</span>
+                        </button>
+
+                        <div className="font-fredoka flex justify-between px-4 py-4">
                             <div>
                                 <p className="text-[#3D5E6B] text-4xl">Community</p>
                                 <p className="text-md font-extralight">
-                                    Browse through all requirements and find what you need!
+                                    Browse through all connection requests and get connecting!
                                 </p>
                             </div>
-                            <div>
+                            <div className="flex gap-3 flex-wrap items-start">
                                 <button
                                     type="button"
-                                    className="rounded-full bg-[#3D5E6B] text-white px-4 py-1 hover:bg-[#2d4e5b] transition-colors"
-                                    onClick={() => setDialogOpen(true)}
+                                    disabled={creating === "job_seeker"}
+                                    className="rounded-full bg-[#3D5E6B] text-white px-4 py-1 hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                                    onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
                                 >
-                                    + Create new post
+                                    {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
                                 </button>
+                                <button
+                                    type="button"
+                                    disabled={creating === "recruiter"}
+                                    className="rounded-full bg-[#3D5E6B] text-white px-4 py-1 hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                                    onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                >
+                                    {creating === "recruiter" ? "Creating..." : "Hire People"}
+                                </button>
+                                <button
+                                    type="button"
+                                    disabled={creating === "friends"}
+                                    className="rounded-full bg-[#3D5E6B] text-white px-4 py-1 hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                                    onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                >
+                                    {creating === "friends" ? "Creating..." : "Find Friends"}
+                                </button>
+
                             </div>
                         </div>
                         {loading ? (
@@ -205,11 +265,6 @@ export default function Community() {
                     </div>
                 </div>
             </div>
-            <CommunitySelectionDialog
-                isOpen={dialogOpen}
-                onClose={() => setDialogOpen(false)}
-            />
-
             {/* 1-on-1 chat overlay when Connect is clicked */}
             {openChat && chatUserA && chatUserB && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 p-4">

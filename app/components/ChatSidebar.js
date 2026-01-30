@@ -52,11 +52,6 @@ export default function ChatSidebar({
   }, [isCollapsed, onCollapsedChange]);
 
   const newChat = () => {
-    if (isCommunity && onNewCommunityChat) {
-      onNewCommunityChat();
-      setIscollapsed(true);
-      return;
-    }
     router.push(homePath);
     updateChatId(null);
     setCurrentChatType(null);
@@ -160,25 +155,45 @@ export default function ChatSidebar({
 
               <div>
                 <div className="py-4 gap-2">
-                  <button
-                    className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8]   w-full p-2 rounded-md font-medium transition-colors"
-                    onClick={() => newChat()}
-                  >
-                    {!newChatLoading
-                      ? isCommunity
-                        ? "+ Create new post"
-                        : "New Chat"
-                      : "Creating..."}
-                  </button>
+                  {isCommunity ? (
+                    <>
 
-
-                  <button
-                    type="button"
-                    className="flex gap-2 justify-center text-xs bg-slate-100 text-slate-700 w-full p-2 rounded-md font-medium hover:bg-slate-200 transition-colors mt-2"
-                    onClick={() => router.push("/community")}
-                  >
-                    Community
-                  </button>
+                      <button
+                        className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors mb-2"
+                        onClick={() => onNewCommunityChat("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                      >
+                        Find Jobs
+                      </button>
+                      <button
+                        className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors mb-2"
+                        onClick={() => onNewCommunityChat("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                      >
+                        Hire People
+                      </button>
+                      <button
+                        className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors"
+                        onClick={() => onNewCommunityChat("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                      >
+                        Find Friends
+                      </button>
+                    </>
+                  ) : (
+                    <>
+                      <button
+                        className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors"
+                        onClick={() => newChat()}
+                      >
+                        {!newChatLoading ? "New Chat" : "Creating..."}
+                      </button>
+                      <button
+                        type="button"
+                        className="flex gap-2 justify-center text-xs bg-slate-100 text-slate-700 w-full p-2 rounded-md font-medium hover:bg-slate-200 transition-colors mt-2"
+                        onClick={() => router.push("/community")}
+                      >
+                        Community
+                      </button>
+                    </>
+                  )}
 
 
                   {brandContext?.isBrandAdmin && (
