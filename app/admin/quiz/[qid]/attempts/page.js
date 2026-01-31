@@ -76,11 +76,11 @@ export default function QuizAttemptsPage() {
         {/* Header */}
         <div className="mb-6">
           <button
-            onClick={() => router.back()}
+            onClick={() => router.push("/admin/quiz")}
             className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6 text-sm font-medium font-fredoka group"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
-            Back
+            Back to quizzes
           </button>
 
           <div className="mb-6">
@@ -143,7 +143,7 @@ export default function QuizAttemptsPage() {
                         key={attempt.id}
                         onClick={
                           isCompleted
-                            ? () => router.push(`/quiz/${qid}/${attempt.id}`)
+                            ? () => router.push(`/admin/quiz/${qid}/attempts/${attempt.id}`)
                             : undefined
                         }
                         className={`border rounded-lg p-4 flex items-start justify-between gap-4 ${

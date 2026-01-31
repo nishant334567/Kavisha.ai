@@ -17,9 +17,17 @@ export async function GET(req) {
 
     await connectDB();
 
-    // Fetch all assessments with question counts using aggregation
+    // Only show published quizzes to users; treat missing status as published for old data
     const assessments = await Assessments.aggregate([
-      { $match: { brand } },
+      {
+        $match: {
+          brand,
+          $or: [
+            { status: "published" },
+            { status: { $exists: false } },
+          ],
+        },
+      },
       {
         $lookup: {
           from: "questions",

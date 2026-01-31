@@ -23,6 +23,10 @@ export async function GET(req, { params }) {
     if (!assessment) {
       return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
     }
+    // Only published quizzes are visible to users
+    if (assessment.status && assessment.status !== "published") {
+      return NextResponse.json({ error: "Quiz not found" }, { status: 404 });
+    }
 
     // Fetch all questions for this assessment, ordered by the order field
     const questions = await Questions.find({ assessmentId: id })

@@ -19,6 +19,12 @@ const AssessmentSchema = new mongoose.Schema(
       trim: true,
     },
 
+    status: {
+      type: String,
+      enum: ["draft", "published"],
+      default: "draft",
+    },
+
     subtitle: String,
     objective: String,
     instructions: String,

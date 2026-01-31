@@ -63,8 +63,8 @@ export default function AddQuiz() {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          assessment: assessmentData,
-          questions: questions,
+          assessment: { ...assessmentData, status: "published" },
+          questions,
         }),
       });
 
@@ -75,7 +75,7 @@ export default function AddQuiz() {
         return;
       }
 
-      alert("Quiz/Survey created successfully!");
+      alert("Quiz/Survey published!");
       // Redirect to admin dashboard
       router.push(`/admin/${brandContext.subdomain}/v2`);
     } catch (error) {
@@ -90,6 +90,29 @@ export default function AddQuiz() {
     }
   };
 
+
+  const saveDraft = async () => {
+    try {
+      const response = await fetch("/api/admin/quiz", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          assessment: { ...assessmentData, status: "draft" },
+          questions,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        alert(data.error || "Failed to save draft");
+        return;
+      }
+      alert("Draft saved.");
+      router.push("/admin/quiz");
+    } catch (err) {
+      console.error("Error saving draft:", err);
+      alert("Failed to save draft");
+    }
+  };
   return (
     <div className="min-h-screen bg-white pt-20 md:pt-24 pb-8">
       <div className="max-w-3xl mx-auto px-6">
@@ -110,6 +133,7 @@ export default function AddQuiz() {
             onChange={handleAssessmentChange}
             onNext={handleNext}
             onCancel={handleCancel}
+            onSaveDraft={saveDraft}
           />
         )}
 
@@ -122,6 +146,7 @@ export default function AddQuiz() {
             onCancel={handleCancel}
             isQuiz={assessmentData.type === "quiz"}
             brand={assessmentData.brand || brandContext?.subdomain}
+            onSaveDraft={saveDraft}
           />
         )}
       </div>

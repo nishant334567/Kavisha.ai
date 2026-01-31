@@ -48,6 +48,7 @@ export async function GET(req) {
               id: assessment._id.toString(),
               brand: assessment.brand,
               type: assessment.type,
+              status: assessment.status || "draft",
               title: assessment.title,
               subtitle: assessment.subtitle,
               totalMarks: assessment.totalMarks,
@@ -78,7 +79,7 @@ export async function POST(req) {
       try {
         await connectDB();
         const body = await req.json();
-        const { assessment, questions } = body;
+        const { assessment, questions, status } = body;
 
         // Check if requester is admin for this brand
         const isAdmin = await isBrandAdmin(
@@ -100,16 +101,19 @@ export async function POST(req) {
           );
         }
 
-        // Validate questions
-        if (!questions || !Array.isArray(questions) || questions.length === 0) {
+        const isDraft = (assessment.status || status) === "draft";
+        const questionList = Array.isArray(questions) ? questions : [];
+
+        // Published requires at least one question; draft can have 0
+        if (!isDraft && questionList.length === 0) {
           return NextResponse.json(
-            { error: "At least one question is required" },
+            { error: "At least one question is required to publish" },
             { status: 400 }
           );
         }
 
-        // Validate each question
-        for (const q of questions) {
+        // Validate each question when present
+        for (const q of questionList) {
           if (!q.questionText?.trim()) {
             return NextResponse.json(
               { error: "All questions must have text" },
@@ -138,6 +142,7 @@ export async function POST(req) {
           brand: assessment.brand,
           type: assessment.type,
           title: assessment.title,
+          status: assessment.status || status || "draft",
           subtitle: assessment.subtitle || "",
           objective: assessment.objective || "",
           instructions: assessment.instructions || "",
@@ -148,11 +153,10 @@ export async function POST(req) {
           trends: assessment.trends || null,
         });
 
-        // Create questions
-        // Log to debug images
-
-        const questionDocs = await Questions.insertMany(
-          questions.map((q, index) => ({
+        // Create questions (draft can have 0)
+        const questionDocs = questionList.length > 0
+          ? await Questions.insertMany(
+          questionList.map((q, index) => ({
             assessmentId: assessmentDoc._id,
             questionText: q.questionText.trim(),
             questionType: q.questionType,
@@ -167,7 +171,8 @@ export async function POST(req) {
             required: q.required !== undefined ? q.required : true,
             images: q.images || [],
           }))
-        );
+            )
+          : [];
 
         return NextResponse.json(
           {

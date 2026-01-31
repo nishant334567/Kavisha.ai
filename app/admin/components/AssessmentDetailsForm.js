@@ -4,6 +4,7 @@ export default function AssessmentDetailsForm({
   onChange,
   onNext,
   onCancel,
+  onSaveDraft
 }) {
   const inputClass =
     "w-full px-4 py-2 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent font-fredoka";
@@ -27,8 +28,8 @@ export default function AssessmentDetailsForm({
                 type="button"
                 onClick={() => onChange("type", type)}
                 className={`flex-1 py-2.5 rounded-full font-medium text-xs transition-all font-fredoka ${assessmentData.type === type
-                    ? "bg-[#264653] text-white shadow-md"
-                    : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  ? "bg-[#264653] text-white shadow-md"
+                  : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                   }`}
               >
                 {type.charAt(0).toUpperCase() + type.slice(1)}
@@ -124,6 +125,15 @@ export default function AssessmentDetailsForm({
           >
             Next: Add Questions
           </button>
+          {onSaveDraft && typeof onSaveDraft === "function" && (
+            <button
+              type="button"
+              onClick={onSaveDraft}
+              className="px-6 py-3 border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-100 transition-colors font-fredoka"
+            >
+              Save as draft
+            </button>
+          )}
         </div>
       </div>
     </div>

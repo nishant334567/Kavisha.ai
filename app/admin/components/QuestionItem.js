@@ -2,7 +2,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Trash2, Plus, ImagePlus } from "lucide-react";
 
-export default function QuestionItem({ question, index, onChange, isQuiz, brand }) {
+export default function QuestionItem({ question, index, onChange, isQuiz, brand, onDelete }) {
   const [localQuestion, setLocalQuestion] = useState(question);
   const [uploadingImages, setUploadingImages] = useState(false);
   const fileInputRef = useRef(null);
@@ -119,12 +119,29 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand 
     onChange(index, "images", arr);
   };
 
+  const handleDeleteQuestion = () => {
+    if (onDelete && (index === undefined || index >= 0) && confirm("Delete this question? This cannot be undone.")) {
+      onDelete(index);
+    }
+  };
+
   return (
     <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-4 hover:shadow-md transition-shadow">
       <div className="flex items-center justify-between mb-4">
         <span className="text-sm font-semibold text-[#264653] font-fredoka">
-          Question {index + 1}
+          Question {index >= 0 ? index + 1 : "New"}
         </span>
+        {onDelete && index >= 0 && (
+          <button
+            type="button"
+            onClick={handleDeleteQuestion}
+            className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium font-fredoka transition-colors"
+            title="Delete question"
+          >
+            <Trash2 className="w-4 h-4" />
+            Delete question
+          </button>
+        )}
       </div>
 
       {/* Question Type */}

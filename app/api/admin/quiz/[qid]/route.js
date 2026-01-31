@@ -53,6 +53,7 @@ export async function GET(req, { params }) {
             id: assessment._id.toString(),
             brand: assessment.brand,
             type: assessment.type,
+            status: assessment.status || "draft",
             title: assessment.title,
             subtitle: assessment.subtitle,
             objective: assessment.objective,
@@ -133,28 +134,33 @@ export async function PATCH(req, { params }) {
           );
         }
 
-        // Update assessment if provided
+        const status = assessment?.status;
+        if (status === "published") {
+          const questionCount =
+            Array.isArray(questions) && questions.length > 0
+              ? questions.length
+              : await Questions.countDocuments({ assessmentId: qid });
+          if (questionCount < 1) {
+            return NextResponse.json(
+              { error: "Cannot publish: at least one question is required." },
+              { status: 400 }
+            );
+          }
+        }
+
+        // Update assessment from payload
         if (assessment) {
           const updateData = {};
-          if (assessment.title !== undefined)
-            updateData.title = assessment.title;
-          if (assessment.subtitle !== undefined)
-            updateData.subtitle = assessment.subtitle;
-          if (assessment.objective !== undefined)
-            updateData.objective = assessment.objective;
-          if (assessment.instructions !== undefined)
-            updateData.instructions = assessment.instructions;
-          if (assessment.totalMarks !== undefined)
-            updateData.totalMarks = assessment.totalMarks;
-          if (assessment.durationInMinutes !== undefined)
-            updateData.durationInMinutes = assessment.durationInMinutes;
-          if (assessment.legend !== undefined)
-            updateData.legend = assessment.legend;
-          if (assessment.scoringInfo !== undefined)
-            updateData.scoringInfo = assessment.scoringInfo;
-          if (assessment.trends !== undefined)
-            updateData.trends = assessment.trends;
-
+          if (assessment.title !== undefined) updateData.title = assessment.title;
+          if (assessment.subtitle !== undefined) updateData.subtitle = assessment.subtitle;
+          if (assessment.objective !== undefined) updateData.objective = assessment.objective;
+          if (assessment.instructions !== undefined) updateData.instructions = assessment.instructions;
+          if (assessment.totalMarks !== undefined) updateData.totalMarks = assessment.totalMarks;
+          if (assessment.durationInMinutes !== undefined) updateData.durationInMinutes = assessment.durationInMinutes;
+          if (assessment.legend !== undefined) updateData.legend = assessment.legend;
+          if (assessment.scoringInfo !== undefined) updateData.scoringInfo = assessment.scoringInfo;
+          if (assessment.trends !== undefined) updateData.trends = assessment.trends;
+          if (status === "draft" || status === "published") updateData.status = status;
           await Assessments.findByIdAndUpdate(qid, updateData);
         }
 
@@ -170,9 +176,9 @@ export async function PATCH(req, { params }) {
                 assessmentId: qid,
                 questionText: q.questionText.trim(),
                 questionType: q.questionType,
-                options: q.options.map((opt) => ({
-                  id: opt.id || `opt_${Date.now()}_${Math.random()}`,
-                  text: opt.text.trim(),
+                options: (q.options || []).map((opt) => ({
+                  id: (opt && opt.id) || `opt_${Date.now()}_${Math.random()}`,
+                  text: (opt && opt.text) ? String(opt.text).trim() : "",
                 })),
                 correctAnswer: q.correctAnswer || null,
                 evaluationHint: q.evaluationHint || "",
@@ -197,6 +203,7 @@ export async function PATCH(req, { params }) {
             id: updatedAssessment._id.toString(),
             brand: updatedAssessment.brand,
             type: updatedAssessment.type,
+            status: updatedAssessment.status || "draft",
             title: updatedAssessment.title,
             subtitle: updatedAssessment.subtitle,
             objective: updatedAssessment.objective,

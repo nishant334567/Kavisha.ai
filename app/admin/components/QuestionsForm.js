@@ -8,9 +8,11 @@ export default function QuestionsForm({
   onChange,
   onBack,
   onSubmit,
+  onSaveDraft,
   onCancel,
   isQuiz,
   brand,
+  editMode = false,
 }) {
   const [addQues, setAddQues] = useState(false);
   const [newQuestionData, setNewQuestionData] = useState({
@@ -29,6 +31,10 @@ export default function QuestionsForm({
     const updatedQuestions = [...questions];
     updatedQuestions[index] = { ...updatedQuestions[index], [key]: value };
     onChange(updatedQuestions);
+  };
+
+  const removeQuestion = (indexToRemove) => {
+    onChange(questions.filter((_, i) => i !== indexToRemove));
   };
 
   const addQuestion = () => {
@@ -177,10 +183,11 @@ export default function QuestionsForm({
         <div className="mb-6">
           {questions.map((item, index) => (
             <QuestionItem
-              key={index}
+              key={item.id || index}
               question={item}
               index={index}
               onChange={updateQuestion}
+              onDelete={removeQuestion}
               isQuiz={isQuiz}
               brand={brand}
             />
@@ -248,34 +255,47 @@ export default function QuestionsForm({
         </div>
       )}
 
-      {/* Action Buttons */}
-      <div className="flex justify-between items-center pt-6 border-t border-gray-200 gap-3">
-        <div className="flex gap-3">
-          {onCancel && (
+      {/* Action Buttons - hidden in editMode (parent has Save draft / Publish) */}
+      {!editMode && (
+        <div className="flex justify-between items-center pt-6 border-t border-gray-200 gap-3">
+          <div className="flex gap-3">
+            {onCancel && (
+              <button
+                type="button"
+                onClick={onCancel}
+                className="px-6 py-3 border border-red-300 text-red-700 rounded-full font-medium hover:bg-red-50 transition-colors font-fredoka"
+              >
+                Cancel
+              </button>
+            )}
+            {onBack && (
+              <button
+                type="button"
+                onClick={onBack}
+                className="px-6 py-3 border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors font-fredoka"
+              >
+                Back
+              </button>
+            )}
+          </div>
+          {onSaveDraft && (
             <button
               type="button"
-              onClick={onCancel}
-              className="px-6 py-3 border border-red-300 text-red-700 rounded-full font-medium hover:bg-red-50 transition-colors font-fredoka"
+              onClick={onSaveDraft}
+              className="px-6 py-3 border border-amber-500 text-amber-700 rounded-full font-medium hover:bg-amber-50 transition-colors font-fredoka"
             >
-              Cancel
+              Save as draft
             </button>
           )}
           <button
             type="button"
-            onClick={onBack}
-            className="px-6 py-3 border border-gray-300 text-gray-700 rounded-full font-medium hover:bg-gray-50 transition-colors font-fredoka"
+            onClick={handleSubmit}
+            className="px-6 py-3 bg-[#264653] text-white rounded-full font-medium hover:bg-[#1e383e] transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 font-fredoka"
           >
-            Back
+            Publish
           </button>
         </div>
-        <button
-          type="button"
-          onClick={handleSubmit}
-          className="px-6 py-3 bg-[#264653] text-white rounded-full font-medium hover:bg-[#1e383e] transition-colors focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2 font-fredoka"
-        >
-          Submit Quiz/Survey
-        </button>
-      </div>
+      )}
     </div>
   );
 }

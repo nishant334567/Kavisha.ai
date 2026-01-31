@@ -3,6 +3,7 @@ import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { getUserFromDB } from "@/app/lib/firebase/get-user";
 import { connectDB } from "@/app/lib/db";
 import Attempts from "@/app/models/Attempt";
+import Assessments from "@/app/models/Assessment";
 
 export async function POST(request) {
   return withAuth(request, {
@@ -26,6 +27,20 @@ export async function POST(request) {
         }
 
         await connectDB();
+
+        const assessment = await Assessments.findById(assessmentId).lean();
+        if (!assessment) {
+          return NextResponse.json(
+            { error: "Assessment not found" },
+            { status: 404 }
+          );
+        }
+        if (assessment.status && assessment.status !== "published") {
+          return NextResponse.json(
+            { error: "This quiz is not available" },
+            { status: 403 }
+          );
+        }
 
         // Check if there's already an in-progress attempt for this user and assessment
         let attempt = await Attempts.findOne({
