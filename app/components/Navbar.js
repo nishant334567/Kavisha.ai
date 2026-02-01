@@ -135,7 +135,7 @@ export default function Navbar() {
                   {signingIn ? "Signing in..." : "SIGN IN"}
                 </button>
                 {popupBlockedHint && (
-                  <p className="text-xs text-amber-200 mt-1 text-right max-w-[200px]">Popup was blocked. Click Sign in again — it&apos;ll work.</p>
+                  <p className="text-xs text-amber-200 mt-1 text-right max-w-[200px]">Popup was blocked. Try again — it&apos;ll work.</p>
                 )}
               </div>
             ) : (
@@ -223,7 +223,7 @@ export default function Navbar() {
                     {signingIn ? "Signing in..." : "Sign In"}
                   </button>
                   {popupBlockedHint && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Popup was blocked. Click Sign in again — it&apos;ll work.</p>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Popup was blocked. Try again — it&apos;ll work.</p>
                   )}
                 </div>
               ) : (

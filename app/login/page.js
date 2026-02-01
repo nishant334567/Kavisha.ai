@@ -163,7 +163,7 @@ export default function LoginPage() {
 
       {popupBlocked && (
         <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 rounded-lg max-w-md mx-auto text-sm text-center">
-          Popup was blocked. Click Sign in again — it&apos;ll work.
+          Popup was blocked. Try again — it&apos;ll work.
         </div>
       )}
 
