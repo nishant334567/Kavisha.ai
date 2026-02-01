@@ -65,10 +65,12 @@ export default function Homepage() {
   const sliderRef = useRef(null);
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState("");
+  const [popupBlocked, setPopupBlocked] = useState(false);
 
   const handleSignIn = async (redirectPath = null) => {
     setSigningIn(true);
     setError("");
+    setPopupBlocked(false);
     try {
       if (redirectPath && typeof window !== "undefined") {
         // Ensure redirectPath is a string and starts with /
@@ -81,7 +83,11 @@ export default function Homepage() {
       await refresh();
       // State will update and root page will show logged-in UI
     } catch (e) {
-      setError(e.message || "Sign in failed");
+      if (e?.code === "auth/popup-blocked") {
+        setPopupBlocked(true);
+      } else {
+        setError(e.message || "Sign in failed");
+      }
     } finally {
       setSigningIn(false);
     }
@@ -134,6 +140,12 @@ export default function Homepage() {
       {error && (
         <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg max-w-md mx-auto text-sm text-center">
           {error}
+        </div>
+      )}
+
+      {popupBlocked && (
+        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 rounded-lg max-w-md mx-auto text-sm text-center">
+          Popup was blocked. Click Sign in again — it&apos;ll work.
         </div>
       )}
 

@@ -243,7 +243,7 @@ export default function Community() {
                         ) : error ? (
                             <div className="p-4 sm:p-8 text-center text-red-600 text-sm sm:text-base">{error}</div>
                         ) : requirements.length === 0 ? (
-                            <div className="p-4 sm:p-8 text-center text-gray-500 text-sm sm:text-base">
+                            <div className="p-4 sm:p-8 text-center text-muted text-sm sm:text-base">
                                 No community posts yet.
                             </div>
                         ) : (
@@ -267,7 +267,7 @@ export default function Community() {
             {/* 1-on-1 chat overlay when Connect is clicked */}
             {openChat && chatUserA && chatUserB && (
                 <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 p-0 sm:p-4">
-                    <div className="bg-white w-full sm:max-w-lg h-[85vh] sm:h-[80vh] max-h-[100vh] border border-slate-200 shadow-2xl flex flex-col overflow-hidden rounded-t-xl sm:rounded-xl">
+                    <div className="bg-background w-full sm:max-w-lg h-[85vh] sm:h-[80vh] max-h-[100vh] border border-border shadow-2xl flex flex-col overflow-hidden rounded-t-xl sm:rounded-xl">
                         <LiveChat
                             userA={chatUserA}
                             userB={chatUserB}

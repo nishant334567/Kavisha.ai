@@ -24,9 +24,9 @@ export default function MatchCard({
   const { user } = useFirebaseSession();
 
   return (
-    <div className="relative g-white border border-slate-200 rounded-lg p-4 flex flex-col gap-2 min-h-[120px] w-full relative">
+    <div className="relative bg-card border border-border rounded-lg p-4 flex flex-col gap-2 min-h-[120px] w-full">
       <div className="flex items-center justify-between">
-        <span className="font-semibold text-slate-800 text-sm">
+        <span className="font-semibold text-foreground text-sm">
           Match: {matchPercentage || "-"}
         </span>
       </div>
@@ -36,7 +36,7 @@ export default function MatchCard({
         </div>
       )}
       {matchedUserEmail && (
-        <div className="text-xs text-gray-600">📧 {matchedUserEmail}</div>
+        <div className="text-xs text-muted">📧 {matchedUserEmail}</div>
       )}
       {matchTitle && (
         <div className="text-xs text-green-700 font-medium">{matchTitle}</div>
@@ -57,7 +57,7 @@ export default function MatchCard({
         </div>
       )}
       {createdAt && (
-        <div className="text-[10px] text-slate-500 mt-1">
+        <div className="text-[10px] text-muted mt-1">
           Matched on: {new Date(createdAt).toLocaleDateString()}
         </div>
       )}
@@ -84,7 +84,7 @@ export default function MatchCard({
                 mismatchReason,
               })
             }
-            className="w-full px-2 py-1 border-2 bg-white text-gray-600 rounded-md hover:bg-gray-50"
+            className="w-full px-2 py-1 border-2 bg-card text-foreground rounded-md hover:bg-muted-bg border-border"
           >
             View Details
           </button>

@@ -25,15 +25,15 @@ export default function Matches({
       {matches.length > 0 && (
         <div className="mt-8 ">
           {matches.length > 0 && (
-            <p className="text-black font-semibold mb-2">Eligible Matches:</p>
+            <p className="text-foreground font-semibold mb-2">Eligible Matches:</p>
           )}
           <div className="relative">
             <div className="absolute top-1/3 -left-4 z-10">
               <button
-                className="bg-white rounded-full p-2 shadow-md hover:bg-gray-50"
+                className="bg-card rounded-full p-2 shadow-md hover:bg-muted-bg border border-border"
                 onClick={() => scrollBy(-200)}
               >
-                <ChevronLeft size={24} color="black" />
+                <ChevronLeft size={24} className="text-foreground" />
               </button>
             </div>
             <div
@@ -70,10 +70,10 @@ export default function Matches({
             </div>
             <div className="absolute top-1/3 -right-4 z-10">
               <button
-                className="bg-white rounded-full p-2 shadow-md hover:bg-gray-50"
+                className="bg-card rounded-full p-2 shadow-md hover:bg-muted-bg border border-border"
                 onClick={() => scrollBy(200)}
               >
-                <ChevronRight size={24} color="black" />
+                <ChevronRight size={24} className="text-foreground" />
               </button>
             </div>
           </div>

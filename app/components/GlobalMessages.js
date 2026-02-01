@@ -33,7 +33,7 @@ export default function GlobalMessages() {
     <>
       {/* Messages Button - Mobile: below left sidebar icon; Desktop: bottom-right */}
       <button
-        className="fixed left-0 top-28 z-40 md:left-auto md:right-4 md:top-auto md:bottom-4 w-10 h-10 md:w-14 md:h-14 md:p-4 flex items-center justify-center rounded-r md:rounded-full bg-[#264653] text-white shadow-lg hover:bg-[#1e383e] transition-colors border border-l-0 border-gray-300 md:border-0"
+        className="fixed left-0 top-28 z-40 md:left-auto md:right-4 md:top-auto md:bottom-4 w-10 h-10 md:w-14 md:h-14 md:p-4 flex items-center justify-center rounded-r md:rounded-full bg-[#264653] text-white shadow-lg hover:bg-[#1e383e] transition-colors border border-l-0 border-border md:border-0"
         onClick={() => setShowInbox(true)}
         title="Open Messages"
         aria-label="Open Messages"
@@ -47,7 +47,7 @@ export default function GlobalMessages() {
           {/* Desktop: Show chat to the left of inbox if open */}
           {openChat && userA && userB && (
             <div className="hidden md:flex md:mr-4 md:mb-6">
-              <div className="bg-white w-[500px] h-[80vh] border border-slate-200 shadow-2xl flex flex-col overflow-hidden rounded-xl">
+              <div className="bg-background w-[500px] h-[80vh] border border-border shadow-2xl flex flex-col overflow-hidden rounded-xl">
                 <LiveChat
                   userA={userA}
                   userB={userB}
@@ -60,7 +60,7 @@ export default function GlobalMessages() {
             </div>
           )}
           {/* Inbox - always at bottom right on desktop */}
-          <div className="w-full h-full md:w-80 md:h-auto md:max-h-[60vh] md:mx-0 md:mr-6 md:mb-6 overflow-hidden shadow-2xl bg-white border border-slate-200 flex flex-col rounded-xl">
+          <div className="w-full h-full md:w-80 md:h-auto md:max-h-[60vh] md:mx-0 md:mr-6 md:mb-6 overflow-hidden shadow-2xl bg-background border border-border flex flex-col rounded-xl">
             <Inbox
               onOpenChat={openChatSession}
               onClose={() => setShowInbox(false)}

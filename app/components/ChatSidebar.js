@@ -140,9 +140,9 @@ export default function ChatSidebar({
               onClick={() => toggleLeftSideBar()}
             ></div>
 
-            <div className="h-full md:mt-12 fixed top-0 left-0 z-40 flex flex-col  p-4 border-r border-slate-200 bg-[#F8F8F8] shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div className="h-full md:mt-12 fixed top-0 left-0 z-40 flex flex-col  p-4 border-r border-border bg-muted-bg shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
               <div className="font-akshar flex items-center gap-3 mb-6 p-3 rounded-xl bg-[#3D5E6B] text-[#FFEED8] ">
-                <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm font-semibold overflow-hidden flex-shrink-0">
+                <div className="w-8 h-8 rounded-full bg-background/20 flex items-center justify-center text-sm font-semibold overflow-hidden flex-shrink-0">
                   {user?.image ? (
                     <img
                       src={user.image}
@@ -186,12 +186,12 @@ export default function ChatSidebar({
                               onClick={() => setShowCommunityNewDropdown(false)}
                             />
                             <div
-                              className="absolute left-0 top-full mt-1 w-full min-w-[160px] rounded-md border border-slate-200 bg-white py-1 shadow-lg z-[50]"
+                              className="absolute left-0 top-full mt-1 w-full min-w-[160px] rounded-md border border-border bg-card py-1 shadow-lg z-[50]"
                               role="listbox"
                             >
                               <button
                                 type="button"
-                                className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-slate-700 hover:bg-slate-100 transition-colors"
+                                className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-foreground hover:bg-muted-bg transition-colors"
                                 onClick={() => {
                                   onNewCommunityChat("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)");
                                   setShowCommunityNewDropdown(false);
@@ -201,7 +201,7 @@ export default function ChatSidebar({
                               </button>
                               <button
                                 type="button"
-                                className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-slate-700 hover:bg-slate-100 transition-colors"
+                                className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-foreground hover:bg-muted-bg transition-colors"
                                 onClick={() => {
                                   onNewCommunityChat("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)");
                                   setShowCommunityNewDropdown(false);
@@ -211,7 +211,7 @@ export default function ChatSidebar({
                               </button>
                               <button
                                 type="button"
-                                className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-slate-700 hover:bg-slate-100 transition-colors"
+                                className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-foreground hover:bg-muted-bg transition-colors"
                                 onClick={() => {
                                   onNewCommunityChat("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)");
                                   setShowCommunityNewDropdown(false);
@@ -225,7 +225,7 @@ export default function ChatSidebar({
                       </div>
                       <button
                         type="button"
-                        className="flex gap-2 justify-center text-xs bg-slate-100 text-slate-700 w-full p-2 rounded-md font-medium hover:bg-slate-200 transition-colors mt-2"
+                        className="flex gap-2 justify-center text-xs bg-muted-bg text-foreground w-full p-2 rounded-md font-medium hover:bg-muted-bg/80 transition-colors mt-2"
                         onClick={() => router.push("/community")}
                       >
                         Community
@@ -257,14 +257,14 @@ export default function ChatSidebar({
                                 onClick={() => setShowNewChatDropdown(false)}
                               />
                               <div
-                                className="absolute left-0 top-full mt-1 w-full min-w-[180px] rounded-md border border-slate-200 bg-white py-1 shadow-lg z-[50] max-h-48 overflow-y-auto"
+                                className="absolute left-0 top-full mt-1 w-full min-w-[180px] rounded-md border border-border bg-card py-1 shadow-lg z-[50] max-h-48 overflow-y-auto"
                                 role="listbox"
                               >
                                 {chatServices.map((item, idx) => (
                                   <button
                                     key={item._key || idx}
                                     type="button"
-                                    className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-slate-700 hover:bg-slate-100 transition-colors"
+                                    className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-foreground hover:bg-muted-bg transition-colors"
                                     onClick={() => {
                                       onSelectService(
                                         item.name,
@@ -285,7 +285,7 @@ export default function ChatSidebar({
                       </div>
                       <button
                         type="button"
-                        className="flex gap-2 justify-center text-xs bg-slate-100 text-slate-700 w-full p-2 rounded-md font-medium hover:bg-slate-200 transition-colors mt-2"
+                        className="flex gap-2 justify-center text-xs bg-muted-bg text-foreground w-full p-2 rounded-md font-medium hover:bg-muted-bg/80 transition-colors mt-2"
                         onClick={() => router.push("/community")}
                       >
                         Community
@@ -296,7 +296,7 @@ export default function ChatSidebar({
 
                   {brandContext?.isBrandAdmin && (
                     <button
-                      className="flex items-center gap-2 justify-center text-xs bg-slate-50 w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-slate-700 border border-slate-200"
+                      className="flex items-center gap-2 justify-center text-xs bg-muted-bg w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-foreground border border-border"
                       onClick={() => {
                         const target = `/admin/${(brandContext?.subdomain || "").toLowerCase()}`;
                         router.push(target);
@@ -311,7 +311,7 @@ export default function ChatSidebar({
                     <div className="flex items-center justify-center h-full">
                       <div className="flex flex-col items-center gap-3">
                         <div className="relative">
-                          <div className="w-6 h-6 border-2 border-gray-200 rounded-full"></div>
+                          <div className="w-6 h-6 border-2 border-border rounded-full"></div>
                           <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-t-[#59646F] rounded-full animate-spin"></div>
                         </div>
                         <div className="text-[#59646F] text-xs font-medium">
@@ -322,11 +322,11 @@ export default function ChatSidebar({
                   ) : allChats?.sessionIds?.length > 0 ? (
                     allChats.sessionIds.map((id, idx) => (
                       <div
-                        className="flex justify-center items-center w-full gap-2 border-b-2 border-slate-200"
+                        className="flex justify-center items-center w-full gap-2 border-b-2 border-border"
                         key={id}
                       >
                         <button
-                          className={`text-slate-600 px-2 py-4 flex-1 text-left
+                          className={`text-muted px-2 py-4 flex-1 text-left
                     ${currentChatId === id && "font-semibold"}
                   `}
                           type="button"
@@ -359,7 +359,7 @@ export default function ChatSidebar({
                             {brandContext?.subdomain === "kavisha" &&
                               allChats?.sessions[id]?.brand &&
                               allChats.sessions[id].brand !== "kavisha" && (
-                                <span className="text-[10px] text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded mb-0.5 whitespace-nowrap">
+                                <span className="text-[10px] text-muted bg-muted-bg px-1.5 py-0.5 rounded mb-0.5 whitespace-nowrap">
                                   {allChats.sessions[id].brand
                                     .charAt(0)
                                     .toUpperCase() +
@@ -385,7 +385,7 @@ export default function ChatSidebar({
                               </span>
                             </div>
                             {allChats?.sessions[id]?.updatedAt && (
-                              <span className="text-[10px] text-slate-500 mt-1">
+                              <span className="text-[10px] text-muted mt-1">
                                 {formatIST(allChats?.sessions[id]?.updatedAt)}
                               </span>
                             )}
@@ -400,14 +400,14 @@ export default function ChatSidebar({
                           {deletingChatId === id ? (
                             <div className="w-4 h-4 border-2 border-red-300 border-t-red-600 rounded-full animate-spin"></div>
                           ) : (
-                            <Trash2 className="w-4 h-4 text-slate-600 hover:text-red-600" />
+                            <Trash2 className="w-4 h-4 text-muted hover:text-red-600" />
                           )}
                         </button>
                       </div>
                     ))
                   ) : (
                     <div className="flex items-center justify-center h-full">
-                      <span className="text-xs text-slate-500">
+                      <span className="text-xs text-muted">
                         No chats yet
                       </span>
                     </div>
@@ -423,7 +423,7 @@ export default function ChatSidebar({
             <div className=" fixed top-16 z-40">
               <button
                 onClick={() => toggleLeftSideBar()}
-                className="w-10 h-10 flex items-center justify-center rounded-r text-[#59646F] shadow-xl border border-gray-300 hover:bg-[#59646F] hover:text-[#FFEED8] transition-colors"
+                className="w-10 h-10 flex items-center justify-center rounded-r text-foreground shadow-xl border border-border hover:bg-[#59646F] hover:text-[#FFEED8] transition-colors"
                 title="Open sidebar"
               >
                 <ChevronsRight className="w-5 h-5" />

@@ -86,6 +86,7 @@ export default function LoginPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState("");
+  const [popupBlocked, setPopupBlocked] = useState(false);
 
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
@@ -101,12 +102,17 @@ export default function LoginPage() {
   const handleSignIn = async () => {
     setSigningIn(true);
     setError("");
+    setPopupBlocked(false);
     try {
       await signIn();
       await refresh();
       // The useEffect will handle redirect when user state updates
     } catch (e) {
-      setError(e.message || "Sign in failed");
+      if (e?.code === "auth/popup-blocked") {
+        setPopupBlocked(true);
+      } else {
+        setError(e.message || "Sign in failed");
+      }
     } finally {
       setSigningIn(false);
     }
@@ -152,6 +158,12 @@ export default function LoginPage() {
       {error && (
         <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg max-w-md mx-auto text-sm text-center">
           {error}
+        </div>
+      )}
+
+      {popupBlocked && (
+        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 rounded-lg max-w-md mx-auto text-sm text-center">
+          Popup was blocked. Click Sign in again — it&apos;ll work.
         </div>
       )}
 

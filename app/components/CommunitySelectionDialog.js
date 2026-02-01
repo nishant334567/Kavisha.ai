@@ -82,19 +82,19 @@ export default function CommunitySelectionDialog({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40">
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md p-6 relative">
+      <div className="bg-card rounded-xl shadow-xl w-full max-w-md p-6 relative border border-border">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-4 text-gray-500 hover:text-gray-700"
+          className="absolute top-4 right-4 text-muted hover:text-foreground"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>
-        <h2 className="text-lg font-semibold text-gray-900 mb-1 pr-8">
+        <h2 className="text-lg font-semibold text-foreground mb-1 pr-8">
           Why do you want to connect with the community?
         </h2>
-        <p className="text-sm text-gray-500 mb-6">
+        <p className="text-sm text-muted mb-6">
           Choose one option to start a new community chat.
         </p>
         {error && (
@@ -111,11 +111,11 @@ export default function CommunitySelectionDialog({ isOpen, onClose }) {
                 type="button"
                 onClick={() => handleSelect(item)}
                 disabled={!!creating}
-                className="w-full text-left px-4 py-3 rounded-lg border border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300 transition-colors font-akshar uppercase text-sm font-light disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full text-left px-4 py-3 rounded-lg border border-border text-foreground hover:bg-muted-bg transition-colors font-akshar uppercase text-sm font-light disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isThisCreating ? (
                   <span className="inline-flex items-center gap-2">
-                    <span className="inline-block w-4 h-4 rounded-full border-2 border-gray-300 border-t-gray-600 animate-spin" />
+                    <span className="inline-block w-4 h-4 rounded-full border-2 border-border border-t-foreground animate-spin" />
                     Starting…
                   </span>
                 ) : (

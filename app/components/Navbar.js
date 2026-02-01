@@ -12,6 +12,7 @@ export default function Navbar() {
   const brand = useBrandContext();
   const router = useRouter();
   const [signingIn, setSigningIn] = useState(false);
+  const [popupBlockedHint, setPopupBlockedHint] = useState(false);
   const [openMenu, setOpenmenu] = useState(false);
   const [showSettingDropdown, setShowsettingDropdown] = useState(false);
   const settingDropdownRef = useRef(null);
@@ -43,6 +44,7 @@ export default function Navbar() {
 
   const handleSignIn = async (redirectPath) => {
     setSigningIn(true);
+    setPopupBlockedHint(false);
     try {
       if (redirectPath && typeof window !== "undefined") {
         // Ensure redirectPath is a string and starts with /
@@ -55,6 +57,9 @@ export default function Navbar() {
       refresh();
       // router.push("/");
     } catch (e) {
+      if (e?.code === "auth/popup-blocked") {
+        setPopupBlockedHint(true);
+      }
     } finally {
       setSigningIn(false);
     }
@@ -119,15 +124,20 @@ export default function Navbar() {
               </button>
             )}
             {loading ? (
-              <div className=" text-sm text-gray-500">Loading...</div>
+              <div className=" text-sm text-muted">Loading...</div>
             ) : !user ? (
-              <button
-                onClick={handleSignIn}
-                disabled={signingIn}
-                className=" font-akshar"
-              >
-                {signingIn ? "Signing in..." : "SIGN IN"}
-              </button>
+              <div className="flex flex-col items-end">
+                <button
+                  onClick={handleSignIn}
+                  disabled={signingIn}
+                  className=" font-akshar"
+                >
+                  {signingIn ? "Signing in..." : "SIGN IN"}
+                </button>
+                {popupBlockedHint && (
+                  <p className="text-xs text-amber-200 mt-1 text-right max-w-[200px]">Popup was blocked. Click Sign in again — it&apos;ll work.</p>
+                )}
+              </div>
             ) : (
               <button onClick={signOut} className="font-akshar">
                 SIGN OUT
@@ -138,12 +148,12 @@ export default function Navbar() {
                 <Settings className="w-4 h-4 text-[#FFEED8] stroke-2" />
               </button>
               {showSettingDropdown && (
-                <div className="absolute top-full right-0 mt-4 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[180px] z-50">
+                <div className="absolute top-full right-0 mt-4 bg-card rounded-lg shadow-lg border border-border min-w-[180px] z-50">
                   {settingOptions.map((item, index) => {
                     return (
                       <button
                         key={index}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg transition-colors"
+                        className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted-bg first:rounded-t-lg last:rounded-b-lg transition-colors"
                         onClick={() => {
                           setShowsettingDropdown(false);
                           router.push(item?.path);
@@ -160,7 +170,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <nav className="md:hidden bg-white border border-b-2 border-gray-200 py-4 px-4">
+      <nav className="md:hidden bg-background border border-b-2 border-border py-4 px-4">
         <div className="flex gap-2 items-center">
           <button onClick={() => setOpenmenu((prev) => !prev)}>
             <Menu />
@@ -176,7 +186,7 @@ export default function Navbar() {
       </nav>
 
       {openMenu && (
-        <div className="w-50% z-50 absolute left-0 top-14 py-2 px-8 bg-gray-50 rounded-md" ref={mobileMenuRef}>
+        <div className="w-50% z-50 absolute left-0 top-14 py-2 px-8 bg-muted-bg rounded-md" ref={mobileMenuRef}>
           <ul className="space-y-4 font-akshar">
             <li>
               <button onClick={() => { setOpenmenu(false); router.push("/help"); }}>Help</button>
@@ -208,9 +218,14 @@ export default function Navbar() {
               {loading ? (
                 <button disabled>Loading...</button>
               ) : !user ? (
-                <button onClick={handleSignIn} disabled={signingIn}>
-                  {signingIn ? "Signing in..." : "Sign In"}
-                </button>
+                <div>
+                  <button onClick={handleSignIn} disabled={signingIn}>
+                    {signingIn ? "Signing in..." : "Sign In"}
+                  </button>
+                  {popupBlockedHint && (
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Popup was blocked. Click Sign in again — it&apos;ll work.</p>
+                  )}
+                </div>
               ) : (
                 <button onClick={signOut}>Sign Out</button>
               )}

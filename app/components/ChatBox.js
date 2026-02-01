@@ -506,10 +506,10 @@ export default function ChatBox({
 
   if (chatLoading) {
     return (
-      <div className="h-full mx-auto w-full lg:w-3/5 bg-white rounded-xl p-4 flex items-center justify-center">
+      <div className="h-full mx-auto w-full lg:w-3/5 bg-background rounded-xl p-4 flex items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
-            <div className="w-6 h-6 border-2 border-gray-200 rounded-full"></div>
+            <div className="w-6 h-6 border-2 border-border rounded-full"></div>
             <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-t-[#59646F] rounded-full animate-spin"></div>
           </div>
           <div className="text-[#59646F] text-xs font-medium">
@@ -521,10 +521,10 @@ export default function ChatBox({
   }
 
   return (
-    <div className="w-full max-w-full md:w-3/5 flex bg-white rounded-xl p-2 md:p-4 h-full min-h-0 mx-2 md:mx-4 overflow-hidden">
+    <div className="w-full max-w-full md:w-3/5 flex bg-background rounded-xl p-2 md:p-4 h-full min-h-0 mx-2 md:mx-4 overflow-hidden">
       <div className="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
         <div className="rounded-xl w-full p-1 md:p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
-          <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-white sm:bg-gray-100 z-10"></div>
+          <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-card sm:bg-muted-bg z-10"></div>
           {/* Logo Section - flex-1 */}
           <div className="flex-2 flex flex-col md:flex-row justify-center items-center md:gap-4 md:items-start md:mb-8 my-4 min-h-0  md:mt-16 md:px-2">
             <img
@@ -535,9 +535,9 @@ export default function ChatBox({
               <p className="font-akshar font-medium mt-2 md:mt-0">
                 {brandContext?.brandName.toUpperCase() || ""}
               </p>
-              <div className="flex font-akshar border border-gray-600 my-2">
+              <div className="flex font-akshar border border-border my-2">
                 <button
-                  className="bg-black text-white px-1.5 py-0.5 cursor-default"
+                  className="bg-foreground text-background px-1.5 py-0.5 cursor-default"
                   disabled
                 >
                   {(() => {
@@ -550,7 +550,7 @@ export default function ChatBox({
                   })()}
                 </button>
                 <button
-                  className="bg-white text-black px-1.5 py-0.5 cursor-default"
+                  className="bg-background text-foreground px-1.5 py-0.5 cursor-default border border-border"
                   disabled
                 >
                   {(() => {
@@ -624,7 +624,7 @@ export default function ChatBox({
                           className="rounded-full w-[32px] h-[32px] md:w-[40px] md:h-[40px] min-w-[32px] min-h-[32px] md:min-w-[40px] md:min-h-[40px] object-cover shadow-sm flex-shrink-0"
                         />
                       </div>
-                      <div className="font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-[#F8F8F8] min-w-0">
+                      <div className="font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-muted-bg min-w-0">
                         <FormatText text={m.message} />
                       </div>
                     </div>
@@ -633,7 +633,7 @@ export default function ChatBox({
                   {/* Show requery for user messages */}
                   {m.role === "user" && m.requery && (
                     <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0">
-                      <p className="text-xs text-gray-500 italic break-words">
+                      <p className="text-xs text-muted italic break-words">
                         🔍 {m.requery}
                       </p>
                     </div>
@@ -641,7 +641,7 @@ export default function ChatBox({
                   {/* Show sources for assistant messages */}
                   {m.role === "assistant" && m.sourceUrls?.length > 0 && (
                     <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0 flex flex-wrap gap-1.5">
-                      <span className="text-xs text-gray-500">
+                      <span className="text-xs text-muted">
                         📚 Sources:
                       </span>
                       {m.sourceUrls.map((url, idx) => (
@@ -666,7 +666,7 @@ export default function ChatBox({
                         <img
                           src={brandContext.paymentQrUrl}
                           alt="Payment QR Code"
-                          className="w-48 h-48 object-contain border border-gray-300 rounded-lg shadow-sm bg-white p-2"
+                          className="w-48 h-48 object-contain border border-border rounded-lg shadow-sm bg-card p-2"
                         />
                       </div>
                     )}
@@ -706,7 +706,7 @@ export default function ChatBox({
             {/* </div> */}
           </div>
           {/* Textarea Section - flex-1 */}
-          <div className="flex-1 min-h-0 flex flex-col border-slate-200 pt-2">
+          <div className="flex-1 min-h-0 flex flex-col border-border pt-2">
             <form
               className="relative w-full flex-1 flex flex-col min-h-0"
               onSubmit={(e) => {
@@ -715,7 +715,7 @@ export default function ChatBox({
               }}
             >
               <textarea
-                className="px-12 py-3 w-full flex-1 border border-slate-300 rounded-xl focus:outline-none focus:ring-0 focus:border-[#59646F] transition bg-white text-slate-800 leading-6 resize-none placeholder-transparent min-h-0"
+                className="px-12 py-3 w-full flex-1 border border-border rounded-xl focus:outline-none focus:ring-0 focus:border-ring transition bg-input text-foreground leading-6 resize-none placeholder-transparent min-h-0"
                 value={input}
                 onChange={(e) => setInput(e.target.value)}
                 onKeyDown={(e) => {
@@ -729,12 +729,12 @@ export default function ChatBox({
               />
 
               {(!input || input.trim().length === 0) && (
-                <div className="pointer-events-none absolute inset-y-0 left-12 right-20 flex items-center text-slate-400 text-sm">
+                <div className="pointer-events-none absolute inset-y-0 left-12 right-20 flex items-center text-muted text-sm">
                   Message {brandContext?.brandName}…
                 </div>
               )}
 
-              <label className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer text-slate-500 hover:text-[#59646F] transition-colors">
+              <label className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted hover:text-foreground transition-colors">
                 <input
                   type="file"
                   accept=".pdf,.docx"
@@ -759,27 +759,27 @@ export default function ChatBox({
                 <div className="relative">
                   {isTranscribing && (
                     <div className="absolute bottom-full mb-2 right-0 z-10">
-                      <div className="relative bg-white border border-slate-200 rounded-md shadow px-3 py-1.5 text-xs text-slate-600">
+                      <div className="relative bg-card border border-border rounded-md shadow px-3 py-1.5 text-xs text-foreground">
                         Transcribing…
-                        <div className="absolute right-3 top-full w-3 h-3 bg-white border-r border-b border-slate-200 rotate-45"></div>
+                        <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-border rotate-45"></div>
                       </div>
                     </div>
                   )}
                   {transcribeError && (
                     <div className="absolute bottom-full mb-2 right-0 z-10">
-                      <div className="relative bg-white border border-red-300 rounded-md shadow px-3 py-1.5 text-xs text-red-600">
+                      <div className="relative bg-card border border-red-300 rounded-md shadow px-3 py-1.5 text-xs text-red-600">
                         {transcribeError}
-                        <div className="absolute right-3 top-full w-3 h-3 bg-white border-r border-b border-red-300 rotate-45"></div>
+                        <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-red-300 rotate-45"></div>
                       </div>
                     </div>
                   )}
                   {transcriptText && (
                     <div className="absolute bottom-full mb-2 right-0 z-10 w-[min(80vw,28rem)]">
-                      <div className="relative bg-white border border-slate-200 rounded-lg p-3 shadow">
-                        <div className="text-xs text-slate-500 mb-1">
+                      <div className="relative bg-card border border-border rounded-lg p-3 shadow">
+                        <div className="text-xs text-muted mb-1">
                           Voice transcript
                         </div>
-                        <div className="text-slate-800 text-sm whitespace-pre-wrap break-words max-h-40 overflow-auto">
+                        <div className="text-foreground text-sm whitespace-pre-wrap break-words max-h-40 overflow-auto">
                           {transcriptText}
                         </div>
                         <div className="mt-2 flex gap-2 justify-end">
@@ -792,13 +792,13 @@ export default function ChatBox({
                           </button>
                           <button
                             onClick={() => setTranscriptText("")}
-                            className="px-3 py-1.5 rounded-md border border-slate-300 text-slate-700 hover:bg-slate-50 text-xs"
+                            className="px-3 py-1.5 rounded-md border border-border text-foreground hover:bg-muted-bg text-xs"
                             type="button"
                           >
                             Discard
                           </button>
                         </div>
-                        <div className="absolute right-3 top-full w-3 h-3 bg-white border-r border-b border-slate-200 rotate-45"></div>
+                        <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-border rotate-45"></div>
                       </div>
                     </div>
                   )}
@@ -807,13 +807,13 @@ export default function ChatBox({
                     onClick={() =>
                       isRecording ? stopRecording() : startRecording()
                     }
-                    className="p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                    className="p-2 rounded-lg hover:bg-muted-bg transition-colors"
                     title={isRecording ? "Stop recording" : "Start recording"}
                   >
                     {isRecording ? (
                       <Mic className="w-5 h-5 text-red-600" />
                     ) : (
-                      <MicOff className="w-5 h-5 text-slate-500" />
+                      <MicOff className="w-5 h-5 text-muted" />
                     )}
                   </button>
                 </div>
@@ -821,7 +821,7 @@ export default function ChatBox({
                   type="submit"
                   disabled={!input.trim() || messageLoading}
                   className={`inline-flex items-center justify-center p-2 rounded-lg ${!input.trim() || messageLoading
-                    ? "bg-slate-200 text-slate-400 cursor-not-allowed"
+                    ? "bg-muted-bg text-muted cursor-not-allowed"
                     : "bg-[#59646F] text-[#FFEED8] hover:bg-[#4a5568] active:scale-95"
                     } transition-all`}
                   title="Send message"
