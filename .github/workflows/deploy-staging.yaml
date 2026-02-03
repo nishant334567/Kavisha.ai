@@ -39,6 +39,7 @@ jobs:
       - name: Build image (once)
         run: |
           docker build -t $IMAGE \
+            --build-arg NEXT_PUBLIC_SANITY_DATASET=test-dataset \
             --build-arg NEXT_PUBLIC_FIREBASE_API_KEY="${{ secrets.NEXT_PUBLIC_FIREBASE_API_KEY }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN="${{ secrets.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_PROJECT_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_PROJECT_ID }}" \
