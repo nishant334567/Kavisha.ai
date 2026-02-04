@@ -159,7 +159,7 @@ export default function ChatBox({
         setMatches([]);
       }
     };
-    
+
     fetchMatches();
   }, [currentChatId]);
   useEffect(() => {
@@ -269,7 +269,6 @@ export default function ChatBox({
             sessionId: currentChatId,
             resume: newResumeData,
             type: currentChatType,
-            prompt: getServicePrompt(),
             userId: user?.id,
           }),
         });
@@ -409,7 +408,6 @@ export default function ChatBox({
           sessionId,
           resume: resumeData?.resumeSummary || "",
           type: currentChatType,
-          prompt: getServicePrompt() || "",
           userId: user?.id,
         }),
       });
@@ -420,8 +418,6 @@ export default function ChatBox({
           history: historyToUse,
           userMessage: messageText,
           sessionId,
-          brand: brandContext.subdomain,
-          prompt: getServicePrompt(),
           summary: summaryUptilnow,
         }),
       });

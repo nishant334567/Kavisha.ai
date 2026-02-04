@@ -7,9 +7,9 @@ import { withAuth } from "../../lib/firebase/auth-middleware";
 import { getUserFromDB } from "../../lib/firebase/get-user";
 import { SYSTEM_PROMPT_LEAD } from "../../lib/systemPrompt.js";
 import { buildLeadRewritePrompt } from "../../lib/rewriteLeadQueryPrompt.js";
+import { getLeadPromptFromSanity } from "../../lib/getLeadPromptFromSanity.js";
 import getGeminiModel from "../../lib/getAiModel.js";
 import { connectDB } from "../../lib/db.js";
-import { client } from "../../lib/sanity.js";
 
 // Simple token estimation: words * 1.33
 function estimateTokens(text) {
@@ -21,15 +21,43 @@ function estimateTokens(text) {
 export async function POST(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
-      const { userMessage, history, sessionId, brand, prompt, summary } =
-        await req.json();
+      const { userMessage, history, sessionId, summary } = await req.json();
       const user = await getUserFromDB(decodedToken.email);
       if (!user) {
         return NextResponse.json({ error: "User not found" }, { status: 404 });
       }
+      if (!sessionId) {
+        return NextResponse.json(
+          { error: "Missing sessionId" },
+          { status: 400 }
+        );
+      }
+      await connectDB();
+
+      // Get brand and serviceKey from session (single source of truth; no client override)
+      const session = await Session.findById(sessionId)
+        .select("brand serviceKey")
+        .lean();
+      if (!session) {
+        return NextResponse.json(
+          { error: "Session not found" },
+          { status: 404 }
+        );
+      }
+      const brand = session.brand;
+      const serviceKey = session.serviceKey;
+      if (!brand || !serviceKey) {
+        return NextResponse.json(
+          { error: "Session missing brand or serviceKey" },
+          { status: 400 }
+        );
+      }
+
+      const prompt = await getLeadPromptFromSanity(brand, serviceKey);
+      console.log("[lead-journey] Fetched prompt (brand=%s, serviceKey=%s):", brand, serviceKey, prompt || "(empty)");
+
       let inputToken = 0;
       let outputToken = 0;
-      await connectDB();
       let sourceChunkIds = [];
       let sourceUrls = [];
       const model = getGeminiModel(process.env.AI_MODEL ?? "gemini-2.5-flash");
@@ -89,79 +117,15 @@ export async function POST(req) {
       try {
         parsedResponse = JSON.parse(jsonText);
       } catch (error) {
-        parsedResponse = {
-          changeIntent: false,
-          requery: userMessage,
-        };
+        parsedResponse = { requery: userMessage };
       }
 
-      const { changeIntent, requery, intent } = parsedResponse;
-
-      if (changeIntent === true) {
-        let redirectMessage;
-        if (intent === "community_onboarding") {
-          redirectMessage = `I'd be happy to help you with that! To join our community, connect with members, explore job opportunities, hire talent, or find friends, please start a new chat session with our community chatbot. They'll guide you through everything you need to know.`;
-        }
-        if (intent === "personal_call") {
-          // Fetch acceptPayment setting from Sanity
-          let acceptPayment = false;
-          try {
-            const brandData = await client.fetch(
-              `*[_type == "brand" && subdomain == "${brand}"]{
-                acceptPayment
-              }[0]`
-            );
-            acceptPayment = brandData?.acceptPayment || false;
-          } catch (error) { }
-
-          if (acceptPayment) {
-            redirectMessage = `I'd love to have a one-on-one conversation with you! To schedule a personal call with me, please complete a payment of ₹500 using the QR code below. Once the payment is confirmed, we can set up a time that works for both of us. Looking forward to our conversation!`;
-          } else {
-            redirectMessage = `I appreciate your interest in having a one-on-one call with me! However, my current schedule doesn't allow for personal calls right now. But don't worry - my avatar is here to help you with any questions or assistance you need. Feel free to continue our conversation, and I'll do my best to support you!`;
-          }
-        }
-
-        setImmediate(async () => {
-          try {
-            await Logs.create({
-              message: userMessage || "",
-              sessionId: sessionId,
-              userId: user.id,
-              role: "user",
-            });
-            await Logs.create({
-              message: redirectMessage,
-              sessionId: sessionId,
-              userId: user.id,
-              role: "assistant",
-            });
-            // Update session with token counts
-            await Session.updateOne(
-              { _id: sessionId },
-              {
-                $inc: {
-                  totalInputTokens: inputToken,
-                  totalOutputTokens: outputToken,
-                },
-              }
-            );
-          } catch (error) { }
-        });
-
-        return NextResponse.json({
-          reply: redirectMessage,
-          summary: summary || "",
-          title: "Community Chat",
-          intent: intent,
-          sources: [],
-          sourceUrls: [],
-          inputTokens: inputToken,
-          outputTokens: outputToken,
-          totalTokens: inputToken + outputToken,
-        });
-      }
-
-      let betterQuery = requery || userMessage;
+      const requery = parsedResponse?.requery;
+      let betterQuery =
+        requery !== undefined && requery !== null
+          ? String(requery).trim()
+          : userMessage;
+      console.log("[lead-journey] Rewriter – userMessage:", userMessage, "| requery:", requery, "| betterQuery:", betterQuery);
 
       let context = "";
       const uniqueContext = new Map(); // Declare at higher scope so it's always available

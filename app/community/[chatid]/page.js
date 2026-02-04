@@ -76,7 +76,7 @@ export default function CommunityChatPage() {
             setCurrentChatType={setCurrentChatType}
             onCollapsedChange={setIsSidebarCollapsed}
             isCommunity={true}
-            onNewCommunityChat={() => setDialogOpen(true)}
+            onNewCommunityChat={createCommunityPost}
             chatBasePath="/community"
             homePath="/community"
           />

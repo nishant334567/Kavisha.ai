@@ -33,19 +33,19 @@ export async function GET(request) {
 }
 
 const finalSystemPrompt = (prompt, type) => {
-  if (prompt === "") {
-    if (type === "job_seeker" || type === "JOB_SEEKER") {
-      return SYSTEM_PROMPT + JOB_SEEKER_PROMPT;
-    }
-    if (type === "recruiter" || type === "RECRUITER") {
-      return SYSTEM_PROMPT + RECRUITER_PROMPT;
-    }
-    if (type === "friends") {
-      return SYSTEM_PROMPT + MAKE_FRIENDS_PROMPT;
-    }
+
+  if (type === "job_seeker" || type === "JOB_SEEKER") {
+    return SYSTEM_PROMPT + JOB_SEEKER_PROMPT;
+  }
+  if (type === "recruiter" || type === "RECRUITER") {
+    return SYSTEM_PROMPT + RECRUITER_PROMPT;
+  }
+  if (type === "friends" || type === "dating") {
+    return SYSTEM_PROMPT + MAKE_FRIENDS_PROMPT;
+
   }
 
-  return prompt + SYSTEM_PROMPT;
+  return "";
 };
 export async function POST(request) {
   return withAuth(request, {
@@ -73,7 +73,6 @@ export async function POST(request) {
           sessionId,
           resume,
           type,
-          prompt,
           userId,
         } = body;
 
@@ -90,8 +89,15 @@ export async function POST(request) {
 
         const geminiContents = [];
 
-        let systemPromptText = finalSystemPrompt(prompt, type);
-        // If data is already collected, instruct AI to preserve the existing summary
+        // Prompt resolved at API by type: job_seeker, recruiter, friends use hardcoded prompts from code
+        let systemPromptText = finalSystemPrompt("", type);
+        if (!systemPromptText) {
+          return NextResponse.json(
+            { error: "Unsupported chat type", details: `No prompt for type: ${type || "(missing)"}` },
+            { status: 400 }
+          );
+        }
+
         if (isDataAlreadyCollected && existingSummary) {
           systemPromptText += `\n\nCRITICAL: All required data has already been collected. In your response, you MUST return the EXACT same summary: "${existingSummary}". Do not modify, update, or change this summary in any way. This summary is used for matching and must remain unchanged. Only update your reply message (part 1), but keep the summary (part 2) exactly as shown above.`;
         }
@@ -225,7 +231,7 @@ export async function POST(request) {
               },
               { upsert: true }
             );
-          } catch (error) {}
+          } catch (error) { }
         });
 
         return NextResponse.json({
