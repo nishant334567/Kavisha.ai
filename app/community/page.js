@@ -206,7 +206,7 @@ export default function Community() {
                             <div className="min-w-0">
                                 <p className="text-[#3D5E6B] text-2xl sm:text-3xl lg:text-4xl">Community</p>
                                 <p className="text-sm sm:text-base font-extralight mt-1">
-                                    Browse through all connection requests and get connecting. Or create your own!:)
+                                    Browse through all connection requests and get connecting. Or create your own! :)
                                 </p>
                             </div>
                             <div className="flex flex-wrap gap-2 sm:gap-3 items-center shrink-0">
