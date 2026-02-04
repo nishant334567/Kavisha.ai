@@ -182,7 +182,7 @@ export default function ChatRequests() {
             selectedSessionLogs={selectedSessionLogs}
             setShowLogsModal={setShowLogsModal}
             setSelectedSessionLogs={setSelectedSessionLogs}
-          //   loadingLogs={loadingLogs}
+            brand={brandContext?.subdomain}
           />
         )}
 

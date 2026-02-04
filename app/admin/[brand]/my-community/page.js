@@ -135,6 +135,7 @@ export default function MyCommunity() {
           selectedSessionLogs={selectedSessionLogs}
           setShowLogsModal={setShowLogsModal}
           setSelectedSessionLogs={setSelectedSessionLogs}
+          brand={brandContext?.subdomain}
         />
       )}
 

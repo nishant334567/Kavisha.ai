@@ -465,6 +465,7 @@ export async function POST(req) {
                 userId: user.id,
                 role: "assistant",
                 sourceUrls: Array.isArray(sourceUrls) ? sourceUrls : [],
+                sourceChunkIds: Array.isArray(sourceChunkIds) ? sourceChunkIds : [],
               });
 
               await Session.updateOne(

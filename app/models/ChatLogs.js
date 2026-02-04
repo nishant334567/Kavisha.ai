@@ -14,6 +14,10 @@ const LogsSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    sourceChunkIds: {
+      type: [String],
+      default: [],
+    },
     sessionId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "ChatSessions",

@@ -53,6 +53,8 @@ export async function GET(req, { params }) {
             message: log.message,
             role: log.role,
             createdAt: log.createdAt,
+            sourceUrls: log.sourceUrls || [],
+            sourceChunkIds: log.sourceChunkIds || [],
           })),
           total: logs.length,
         });

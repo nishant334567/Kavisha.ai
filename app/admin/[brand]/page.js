@@ -477,21 +477,19 @@ export default function BrandAdminPage() {
                     <button
                       key={role}
                       onClick={() => setFilters((prev) => ({ ...prev, role }))}
-                      className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
-                        filters.role === role
+                      className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${filters.role === role
                           ? "bg-blue-600 text-white shadow-sm"
                           : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                      }`}
+                        }`}
                     >
                       <span>
                         {role === "all" ? "All" : role.replace("_", " ")}
                       </span>
                       <span
-                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                          filters.role === role
+                        className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${filters.role === role
                             ? "bg-white/20 text-white"
                             : "bg-gray-100 text-gray-600"
-                        }`}
+                          }`}
                       >
                         {getRoleCount(role)}
                       </span>
@@ -514,19 +512,17 @@ export default function BrandAdminPage() {
                   <button
                     key={status}
                     onClick={() => setFilters((prev) => ({ ...prev, status }))}
-                    className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${
-                      filters.status === status
+                    className={`px-3 py-1.5 text-xs font-medium rounded-lg flex items-center gap-1.5 transition-colors ${filters.status === status
                         ? "bg-green-600 text-white shadow-sm"
                         : "bg-white text-gray-700 hover:bg-gray-50 border border-gray-200"
-                    }`}
+                      }`}
                   >
                     <span>{status}</span>
                     <span
-                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${
-                        filters.status === status
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-medium ${filters.status === status
                           ? "bg-white/20 text-white"
                           : "bg-gray-100 text-gray-600"
-                      }`}
+                        }`}
                     >
                       {getStatusCount(status)}
                     </span>
@@ -902,7 +898,7 @@ export default function BrandAdminPage() {
           selectedSessionLogs={selectedSessionLogs}
           setShowLogsModal={setShowLogsModal}
           setSelectedSessionLogs={setSelectedSessionLogs}
-          loadingLogs={loadingLogs}
+          brand={brand}
         />
       )}
     </div>

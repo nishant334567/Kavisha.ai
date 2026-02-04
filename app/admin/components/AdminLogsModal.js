@@ -1,13 +1,41 @@
 "use client";
+
+import { useState, useCallback } from "react";
 import FormatText from "@/app/components/FormatText";
 import { X, FileText } from "lucide-react";
+import ChunkDetailModal from "./ChunkDetailModal";
 
 export default function AdminLogsModal({
   selectedSessionLogs,
   setShowLogsModal,
   setSelectedSessionLogs,
+  brand: brandProp,
   //   loadingLogs,
 }) {
+  const brand = brandProp || selectedSessionLogs?.brand || "";
+  const [chunkDetail, setChunkDetail] = useState(null);
+  const [chunkLoading, setChunkLoading] = useState(false);
+
+  const openChunkDetail = useCallback(
+    async (chunkId) => {
+      if (!chunkId || !brand) return;
+      setChunkLoading(true);
+      setChunkDetail(null);
+      try {
+        const res = await fetch(
+          `/api/admin/fetch-chunk?chunkId=${encodeURIComponent(chunkId)}&brand=${encodeURIComponent(brand)}`
+        );
+        const data = await res.json();
+        if (data.chunk) setChunkDetail(data.chunk);
+        else setChunkDetail({ id: chunkId, title: "", text: "Chunk not found." });
+      } catch {
+        setChunkDetail({ id: chunkId, title: "", text: "Failed to load chunk." });
+      } finally {
+        setChunkLoading(false);
+      }
+    },
+    [brand]
+  );
   const formatTime = (dateString) => {
     const date = new Date(dateString);
     return date.toLocaleString("en-US", {
@@ -120,6 +148,47 @@ export default function AdminLogsModal({
                     <div className="text-sm whitespace-pre-wrap break-words leading-relaxed">
                       <FormatText text={log?.message} />
                     </div>
+                    {log.role === "assistant" && (
+                      <>
+                        {Array.isArray(log.sourceUrls) && log.sourceUrls.length > 0 && (
+                          <div className="mt-2 pt-2 border-t border-blue-300/50">
+                            <p className="text-xs text-gray-600 mb-1.5">Source URLs:</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {log.sourceUrls.map((url) => (
+                                <a
+                                  key={url}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="text-xs px-2 py-1 rounded-md bg-blue-50 hover:bg-blue-100 text-blue-700 underline truncate max-w-[180px] sm:max-w-[280px]"
+                                  title={url}
+                                >
+                                  {url}
+                                </a>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                        {Array.isArray(log.sourceChunkIds) && log.sourceChunkIds.length > 0 && (
+                          <div className="mt-2 pt-2 border-t border-blue-300/50">
+                            <p className="text-xs text-gray-600 mb-1.5">Source chunks:</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {log.sourceChunkIds.map((id) => (
+                                <button
+                                  key={id}
+                                  type="button"
+                                  onClick={() => openChunkDetail(id)}
+                                  className="text-xs px-2 py-1 rounded-md bg-blue-100 hover:bg-blue-200 text-blue-800 truncate max-w-[180px] sm:max-w-[240px]"
+                                  title={id}
+                                >
+                                  {id}
+                                </button>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </>
+                    )}
                     <div className="text-xs mt-2 text-gray-500">
                       {formatTime(log.createdAt)}
                     </div>
@@ -152,6 +221,13 @@ export default function AdminLogsModal({
           </div>
         </div>
       </div>
+
+      <ChunkDetailModal
+        open={!!chunkDetail || chunkLoading}
+        loading={chunkLoading}
+        chunk={chunkDetail}
+        onClose={() => setChunkDetail(null)}
+      />
     </div>
   );
 }
