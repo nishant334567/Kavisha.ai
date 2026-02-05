@@ -21,8 +21,8 @@ export default function ServiceModal({
     serviceName: "",
     welcomingMessage: "",
     intro: "",
-    voice: "",
     behaviour: "",
+    introquestions: [],
   });
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
@@ -32,35 +32,33 @@ export default function ServiceModal({
   useEffect(() => {
     if (service) {
       if (addNewservice) {
-        // For new service, pre-populate only title and name, leave rest blank
         setFormData({
           serviceTitle: service.title || "",
           serviceName: service.name || "",
           welcomingMessage: "",
           intro: "",
-          voice: "",
           behaviour: "",
+          introquestions: [],
         });
       } else {
-        // For editing existing service, populate all fields
+        const qs = Array.isArray(service.introquestions) ? service.introquestions.slice(0, 5) : [];
         setFormData({
           serviceTitle: service.title || "",
           serviceName: service.name || "",
           welcomingMessage: service.initialMessage || "",
           intro: service.intro || "",
-          voice: service.voice || "",
           behaviour: service.behaviour || "",
+          introquestions: qs,
         });
       }
     } else {
-      // Reset form for new service
       setFormData({
         serviceTitle: "",
         serviceName: "",
         welcomingMessage: "",
         intro: "",
-        voice: "",
         behaviour: "",
+        introquestions: [],
       });
     }
   }, [service, addNewservice]);
@@ -77,8 +75,8 @@ export default function ServiceModal({
         title: formData.serviceTitle,
         initialMessage: formData.welcomingMessage,
         intro: formData.intro,
-        voice: formData.voice,
         behaviour: formData.behaviour,
+        introquestions: (formData.introquestions || []).slice(0, 5).filter((q) => typeof q === "string" && q.trim() !== ""),
       };
 
       const payload = {
@@ -222,31 +220,19 @@ export default function ServiceModal({
                 <div className="flex gap-2 mb-4">
                   <button
                     onClick={() => setPersonalitytype("intro")}
-                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${
-                      personalitytype === "intro"
-                        ? "bg-purple-900 text-white shadow-md"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${personalitytype === "intro"
+                      ? "bg-purple-900 text-white shadow-md"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
                   >
                     Intro
                   </button>
                   <button
-                    onClick={() => setPersonalitytype("voice")}
-                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${
-                      personalitytype === "voice"
-                        ? "bg-purple-900 text-white shadow-md"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
-                  >
-                    Voice
-                  </button>
-                  <button
                     onClick={() => setPersonalitytype("behaviour")}
-                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${
-                      personalitytype === "behaviour"
-                        ? "bg-purple-900 text-white shadow-md"
-                        : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                    }`}
+                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${personalitytype === "behaviour"
+                      ? "bg-purple-900 text-white shadow-md"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
                   >
                     Behaviour
                   </button>
@@ -259,6 +245,62 @@ export default function ServiceModal({
                 rows={10}
                 placeholder={`Enter ${personalitytype}...`}
               />
+
+              {/* Initial Questions (up to 5) */}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Initial Questions (up to 5)
+                </label>
+                <p className="text-xs text-gray-500 mb-2">
+                  Shown as quick prompts when the chat has 0–1 messages. Users can tap to send.
+                </p>
+                {(formData.introquestions || []).map((q, i) => (
+                  <div key={i} className="flex gap-2 mb-2">
+                    <input
+                      type="text"
+                      value={q}
+                      onChange={(e) =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          introquestions: (prev.introquestions || []).map((v, j) =>
+                            j === i ? e.target.value : v
+                          ),
+                        }))
+                      }
+                      className="flex-1 px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 text-sm"
+                      placeholder={`Question ${i + 1}`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() =>
+                        setFormData((prev) => ({
+                          ...prev,
+                          introquestions: (prev.introquestions || []).filter((_, j) => j !== i),
+                        }))
+                      }
+                      className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                      aria-label="Remove question"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+                {(formData.introquestions || []).length < 5 && (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setFormData((prev) => ({
+                        ...prev,
+                        introquestions: [...(prev.introquestions || []), ""].slice(0, 5),
+                      }))
+                    }
+                    className="mt-1 px-3 py-1.5 text-sm border border-gray-300 rounded bg-gray-50 hover:bg-gray-100 text-gray-700 transition-colors"
+                  >
+                    + Add question
+                  </button>
+                )}
+              </div>
+
               {/* Error message */}
               {error && <div className="text-red-600 text-sm">{error}</div>}
 
@@ -266,22 +308,22 @@ export default function ServiceModal({
               <div className="flex justify-between pt-4">
                 {(service?.name === "buy_my_product" ||
                   formData.serviceName === "buy_my_product") && (
-                  <button
-                    onClick={() => setShowProductModal(true)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
-                  >
-                    My Products
-                  </button>
-                )}
+                    <button
+                      onClick={() => setShowProductModal(true)}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                    >
+                      My Products
+                    </button>
+                  )}
                 {(service?.name === "buy_my_service" ||
                   formData.serviceName === "buy_my_service") && (
-                  <button
-                    onClick={() => setShowServiceModalForBuy(true)}
-                    className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
-                  >
-                    My Services
-                  </button>
-                )}
+                    <button
+                      onClick={() => setShowServiceModalForBuy(true)}
+                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                    >
+                      My Services
+                    </button>
+                  )}
                 <button
                   onClick={handleSave}
                   disabled={loading}

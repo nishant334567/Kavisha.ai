@@ -1,5 +1,7 @@
 import { NextResponse } from "next/server";
 import pc from "@/app/lib/pinecone";
+import { connectDB } from "@/app/lib/db";
+import TrainingData from "@/app/models/TrainingData";
 
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
@@ -8,7 +10,7 @@ export async function GET(req) {
 
   if (!chunkId || !brand) {
     return NextResponse.json(
-      { error: "Chunk ID and brand are required" },
+      { error: "chunkId and brand are required" },
       { status: 400 }
     );
   }
@@ -18,26 +20,28 @@ export async function GET(req) {
     .namespace(brand)
     .fetch([chunkId]);
 
-  let chunk = result.records?.[chunkId];
-  // Sparse index fetch commented out - not using sparse for responses
-  // if (!chunk) {
-  //   try {
-  //     const sparseResult = await pc
-  //       .index("kavisha-sparse")
-  //       .namespace(brand)
-  //       .fetch([chunkId]);
-  //     chunk = sparseResult.records?.[chunkId];
-  //   } catch (err) {}
-  // }
-
-  if (!chunk) {
+  const record = result.records?.[chunkId];
+  if (!record) {
     return NextResponse.json({ error: "Chunk not found" }, { status: 404 });
   }
-  return NextResponse.json({
-    chunk: {
-      id: chunk.id,
-      text: chunk.metadata?.text || chunk.text || "",
-      title: chunk.metadata?.title || chunk.title || "",
-    },
-  });
+
+  const chunk = {
+    id: record.id,
+    text: record.metadata?.text || record.text || "",
+    title: record.metadata?.title || record.title || "",
+  };
+
+  let document = null;
+  let docid = record.metadata?.docid ?? record.docid ?? null;
+  if (!docid && chunkId && typeof chunkId === "string") {
+    const i = chunkId.lastIndexOf("_");
+    if (i !== -1 && /^\d+$/.test(chunkId.slice(i + 1))) docid = chunkId.slice(0, i);
+  }
+  if (docid) {
+    await connectDB();
+    const doc = await TrainingData.findOne({ docid, brand }).select("title text").lean();
+    if (doc) document = { title: doc.title || "", text: doc.text || "" };
+  }
+
+  return NextResponse.json({ chunk, document });
 }

@@ -148,14 +148,6 @@ export default {
               validation: (Rule) => Rule.required(),
             },
             {
-              name: "voice",
-              title: "Voice",
-              type: "text",
-              rows: 25,
-              description: "AI prompt or description for this service",
-              // validation: (Rule) => Rule.required(),
-            },
-            {
               name: "behaviour",
               title: "Behaviour",
               type: "text",
@@ -172,6 +164,13 @@ export default {
                 hotspot: true,
               },
             },
+            {
+              name: "introquestions",
+              title: "Initial Questions",
+              type: "array",
+              of: [{ type: "string" }],
+              validation: (Rule) => Rule.max(5).error("Maximum 5 initial questions allowed."),
+            },
           ],
           preview: {
             select: {
@@ -183,6 +182,7 @@ export default {
         },
       ],
     },
+
     {
       name: "admins",
       title: "Admins",
