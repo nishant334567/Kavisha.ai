@@ -82,6 +82,13 @@ export default {
       validation: (Rule) => Rule.required(),
     },
     {
+      name: "featuredAvatar",
+      title: "Featured on homepage",
+      type: "boolean",
+      description: "Show this avatar in the featured section on the Kavisha homepage",
+      initialValue: false,
+    },
+    {
       name: "enableCommunityOnboarding",
       title: "Enable Community Onboarding",
       type: "boolean",

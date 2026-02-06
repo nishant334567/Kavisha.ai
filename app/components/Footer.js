@@ -1,8 +1,42 @@
 "use client";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
+import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
+import { signIn } from "../lib/firebase/sign-in";
 import { Twitter, Linkedin } from "lucide-react";
 
 export default function Footer() {
+  const router = useRouter();
+  const { user, refresh } = useFirebaseSession();
+
+  const handleSignIn = async (redirectPath) => {
+    try {
+      if (redirectPath && typeof window !== "undefined") {
+        const path = typeof redirectPath === "string" && redirectPath.startsWith("/") ? redirectPath : "/";
+        localStorage.setItem("redirectAfterLogin", path);
+      }
+      await signIn();
+      await refresh();
+    } catch (e) {
+      // popup blocked etc. – user can retry
+    }
+  };
+
+  const authLink = (href, label) =>
+    user ? (
+      <Link href={href} className="hover:underline">
+        {label}
+      </Link>
+    ) : (
+      <button
+        type="button"
+        onClick={() => handleSignIn(href)}
+        className="hover:underline text-left font-normal bg-transparent border-0 p-0 cursor-pointer font-fredoka"
+      >
+        {label}
+      </button>
+    );
+
   return (
     <footer className="bg-[#F9F9F9] py-12 px-4 font-fredoka border-t border-gray-200">
       <div className="max-w-6xl mx-auto">
@@ -12,11 +46,7 @@ export default function Footer() {
           <div>
             <h3 className="font-medium mb-4">Kavisha</h3>
             <ul className="space-y-2 font-normal">
-              <li>
-                <Link href="/about" className="hover:underline">
-                  About
-                </Link>
-              </li>
+
               <li>
                 <Link href="/tnc" className="hover:underline">
                   Terms and conditions
@@ -27,11 +57,7 @@ export default function Footer() {
                   Privacy policy
                 </Link>
               </li>
-              <li>
-                <Link href="/copyright" className="hover:underline">
-                  Copyright
-                </Link>
-              </li>
+
               <li>
                 <Link href="/help" className="hover:underline">
                   Help
@@ -45,20 +71,12 @@ export default function Footer() {
             <h3 className="font-medium mb-4">Features</h3>
             <ul className="space-y-2 font-normal">
               <li>
-                <Link href="/make-avatar/v2" className="hover:underline">
-                  Make my Avataar
-                </Link>
+                {authLink("/make-avatar/v2", "Make my Avataar")}
               </li>
               <li>
-                <Link href="/talk-to-avatar" className="hover:underline">
-                  Talk to Avataars
-                </Link>
+                {authLink("/talk-to-avatar", "Talk to Avataars")}
               </li>
-              <li>
-                <Link href="/connect" className="hover:underline">
-                  Connect with people
-                </Link>
-              </li>
+
             </ul>
           </div>
 
@@ -67,7 +85,7 @@ export default function Footer() {
             <ul className="space-y-3 font-normal">
               <li>
                 <a
-                  href="https://twitter.com/kavishaai"
+                  href="https://x.com/kavishaai"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 hover:underline"
@@ -78,7 +96,7 @@ export default function Footer() {
               </li>
               <li>
                 <a
-                  href="https://linkedin.com/company/kavishaai"
+                  href="https://www.linkedin.com/company/kavisha-ai/"
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center gap-2 hover:underline"
