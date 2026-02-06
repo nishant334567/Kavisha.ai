@@ -31,32 +31,12 @@ const cards = [
   },
 ];
 
-const avatars = [
-  {
-    id: 1,
-    name: "Nishant Mittal",
-    title: "Entrepreneur & Musician",
-    subtitle: "2M+ Followers",
-    image: "/nm.png",
-    link: "https://nishantmittal.kavisha.ai", // Add avatar URL to redirect on click (e.g. "/" or "https://...")
-  },
-  {
-    id: 2,
-    name: "Sanjeev Bikhchandani",
-    title: "Indian internet entrepreneur and investor",
-    subtitle: "1.5M+ Followers",
-    image: "sb.png",
-    link: "https://sanjeevbikhchandani.kavisha.ai", // Add avatar URL to redirect on click
-  },
-  {
-    id: 3,
-    name: "Jitendra Chouksey",
-    title: "Indian Entrepreneur in Health and Fitness",
-    subtitle: "800K+ Followers",
-    image: "jc.png",
-    link: "https://jitendrachouksey.kavisha.ai", // Add avatar URL to redirect on click
-  },
-];
+async function fetchFeaturedAvatars() {
+  const res = await fetch("/api/brands?featured=true");
+  if (!res.ok) throw new Error("Failed to fetch featured avatars");
+  const data = await res.json();
+  return data.brands || [];
+}
 
 export default function Homepage() {
   const router = useRouter();
@@ -66,6 +46,9 @@ export default function Homepage() {
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState("");
   const [popupBlocked, setPopupBlocked] = useState(false);
+  const [avatars, setAvatars] = useState([]);
+  const [avatarsLoading, setAvatarsLoading] = useState(true);
+  const [avatarsError, setAvatarsError] = useState(null);
 
   const handleSignIn = async (redirectPath = null) => {
     setSigningIn(true);
@@ -104,12 +87,27 @@ export default function Homepage() {
   const [visibleCount, setVisibleCount] = useState(3);
 
   useEffect(() => {
-    const handleResize = () => {
-      setVisibleCount(getVisibleCount());
-    };
+    const handleResize = () => setVisibleCount(getVisibleCount());
     handleResize();
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
+  }, []);
+
+  useEffect(() => {
+    let cancelled = false;
+    setAvatarsLoading(true);
+    setAvatarsError(null);
+    (async () => {
+      try {
+        const list = await fetchFeaturedAvatars();
+        if (!cancelled) setAvatars(list);
+      } catch (e) {
+        if (!cancelled) setAvatarsError(e.message || "Failed to load avatars");
+      } finally {
+        if (!cancelled) setAvatarsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   const maxIndex = Math.max(0, avatars.length - visibleCount);
@@ -180,7 +178,7 @@ export default function Homepage() {
             if (user) {
               router.push("/talk-to-avatar");
             } else {
-              handleSignIn("/talk-to-avatar");
+              handleSignIn("/community");
             }
           }}
           disabled={signingIn}
@@ -227,9 +225,14 @@ export default function Homepage() {
         <div className="flex-1 h-[1px] bg-[#6B6B6B]"></div>
       </div>
       <div className="max-w-6xl mx-auto px-4 mt-8 md:mt-12">
-        {avatars.length > 0 ? (
+        {avatarsLoading ? (
+          <p className="text-center text-gray-500">Loading avatars…</p>
+        ) : avatarsError ? (
+          <p className="text-center text-red-600">{avatarsError}</p>
+        ) : avatars.length === 0 ? (
+          <p className="text-center text-gray-500">No featured avatars yet.</p>
+        ) : (
           <div>
-            {/* Slider Container */}
             <div className="overflow-hidden px-2 pb-4" ref={sliderRef}>
               <div
                 className="flex transition-transform duration-300 ease-in-out"
@@ -249,6 +252,8 @@ export default function Homepage() {
                     {avatar.link ? (
                       <a
                         href={avatar.link}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         className="block w-full cursor-pointer hover:opacity-95 active:opacity-90 transition-opacity rounded-2xl focus:outline-none"
                       >
                         <AvatarCard
@@ -270,8 +275,6 @@ export default function Homepage() {
                 ))}
               </div>
             </div>
-
-            {/* Navigation Arrows - Centered Below */}
             {avatars.length > visibleCount && (
               <div className="flex justify-center gap-4 mt-8">
                 <button
@@ -297,8 +300,6 @@ export default function Homepage() {
               </div>
             )}
           </div>
-        ) : (
-          <p className="text-center text-gray-500">No avatars available</p>
         )}
       </div>
 
@@ -340,7 +341,7 @@ export default function Homepage() {
 
           {/* Right - Cream section */}
           <div className="font-assistant md:flex-[6] bg-[#f7f0dd] text-[#264653] px-6 md:px-10 py-8 md:py-12 flex items-center">
-            <p className="text-lg md:text-2xl lg:text-3xl leading-relaxed font-assistant">
+            <p className="text-lg leading-relaxed font-assistant">
               Your Digital Avataar doesn't just enable conversations between you
               and your fans, it also gives your fans a chance to connect with
               each other. This makes <span className="font-semibold">you</span>{" "}

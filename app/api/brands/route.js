@@ -1,7 +1,7 @@
 import { client, urlFor } from "@/app/lib/sanity";
 import { NextResponse } from "next/server";
 
-export async function GET() {
+export async function GET(req) {
   try {
     if (!client) {
       return NextResponse.json(
@@ -10,8 +10,15 @@ export async function GET() {
       );
     }
 
+    const { searchParams } = new URL(req.url);
+    const featuredOnly = searchParams.get("featured") === "true";
+    const baseFilter = '_type == "brand" && subdomain != "kavisha" && !(_id in path("drafts.**"))';
+    const filter = featuredOnly
+      ? `${baseFilter} && featuredAvatar == true`
+      : baseFilter;
+
     const brands = await client.fetch(
-      `*[_type == "brand" && subdomain != "kavisha" && !(_id in path("drafts.**"))] {
+      `*[${filter}] {
         _id,
         brandName,
         title,
