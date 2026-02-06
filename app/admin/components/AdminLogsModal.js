@@ -26,10 +26,19 @@ export default function AdminLogsModal({
           `/api/admin/fetch-chunk?chunkId=${encodeURIComponent(chunkId)}&brand=${encodeURIComponent(brand)}`
         );
         const data = await res.json();
-        if (data.chunk) setChunkDetail(data.chunk);
-        else setChunkDetail({ id: chunkId, title: "", text: "Chunk not found." });
+        if (data.chunk) {
+          setChunkDetail({ chunk: data.chunk, document: data.document ?? null });
+        } else {
+          setChunkDetail({
+            chunk: { id: chunkId, title: "", text: "Chunk not found." },
+            document: null,
+          });
+        }
       } catch {
-        setChunkDetail({ id: chunkId, title: "", text: "Failed to load chunk." });
+        setChunkDetail({
+          chunk: { id: chunkId, title: "", text: "Failed to load chunk." },
+          document: null,
+        });
       } finally {
         setChunkLoading(false);
       }
@@ -141,8 +150,8 @@ export default function AdminLogsModal({
                 >
                   <div
                     className={`max-w-[85%] rounded-2xl px-4 py-3 ${log.role === "user"
-                        ? "bg-white text-gray-800"
-                        : "bg-blue-200 text-gray-800 border border-blue-300"
+                      ? "bg-white text-gray-800"
+                      : "bg-blue-200 text-gray-800 border border-blue-300"
                       }`}
                   >
                     <div className="text-sm whitespace-pre-wrap break-words leading-relaxed">
@@ -225,7 +234,8 @@ export default function AdminLogsModal({
       <ChunkDetailModal
         open={!!chunkDetail || chunkLoading}
         loading={chunkLoading}
-        chunk={chunkDetail}
+        chunk={chunkDetail?.chunk}
+        document={chunkDetail?.document}
         onClose={() => setChunkDetail(null)}
       />
     </div>

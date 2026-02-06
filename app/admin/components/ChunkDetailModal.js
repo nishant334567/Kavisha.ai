@@ -1,14 +1,27 @@
 "use client";
 
-import { X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { X, FileText } from "lucide-react";
 
 export default function ChunkDetailModal({
   open,
   loading,
   chunk,
+  document: doc,
   onClose,
 }) {
+  const [showFullText, setShowFullText] = useState(false);
+
+  useEffect(() => {
+    if (!open || !chunk) setShowFullText(false);
+  }, [open, chunk?.id]);
+
   if (!open) return null;
+
+  const hasDoc = doc?.text != null && doc.text !== "";
+  const displayChunk = !showFullText || !hasDoc;
+  const displayText = displayChunk ? (chunk?.text || "—") : doc.text;
+  const displayTitle = displayChunk ? chunk?.title : doc?.title;
 
   return (
     <div
@@ -22,7 +35,9 @@ export default function ChunkDetailModal({
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-center justify-between p-3 sm:p-4 border-b border-gray-200">
-          <h3 className="text-sm font-semibold text-gray-900">Chunk details</h3>
+          <h3 className="text-sm font-semibold text-gray-900">
+            {displayChunk ? "Chunk details" : "Full document"}
+          </h3>
           <button
             type="button"
             onClick={onClose}
@@ -44,25 +59,36 @@ export default function ChunkDetailModal({
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">ID</p>
                 <p className="mt-0.5 break-all font-mono text-xs">{chunk.id}</p>
               </div>
-              {chunk.title != null && chunk.title !== "" && (
+              {displayTitle != null && displayTitle !== "" && (
                 <div className="mb-3">
                   <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Title</p>
-                  <p className="mt-0.5">{chunk.title}</p>
+                  <p className="mt-0.5">{displayTitle}</p>
                 </div>
               )}
               <div>
                 <p className="text-xs font-medium text-gray-500 uppercase tracking-wide">Text</p>
-                <p className="mt-0.5 whitespace-pre-wrap break-words">{chunk.text || "—"}</p>
+                <p className="mt-0.5 whitespace-pre-wrap break-words">{displayText}</p>
               </div>
             </>
           ) : null}
         </div>
         {chunk && !loading && (
-          <div className="p-3 sm:p-4 border-t border-gray-200">
+          <div className="p-3 sm:p-4 border-t border-gray-200 flex gap-2">
+            {hasDoc && (
+              <button
+                type="button"
+                onClick={() => setShowFullText((v) => !v)}
+                className="flex-1 py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium flex items-center justify-center gap-1.5"
+                aria-label={showFullText ? "Show chunk text only" : "Show full document text"}
+              >
+                <FileText className="w-4 h-4" />
+                {showFullText ? "Show chunk text" : "Show full text"}
+              </button>
+            )}
             <button
               type="button"
               onClick={onClose}
-              className="w-full py-2 px-4 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium"
+              className="py-2 px-4 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-800 text-sm font-medium"
             >
               Close
             </button>

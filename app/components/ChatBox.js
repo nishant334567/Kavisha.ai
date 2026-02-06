@@ -31,7 +31,6 @@ export default function ChatBox({
   const [userA, setUserA] = useState(null);
   const [userB, setUserB] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
-  //voice model contants
   const [isRecording, setIsRecording] = useState(false);
   const timerRef = useRef(null);
   const [seconds, setSeconds] = useState(0);
@@ -48,14 +47,16 @@ export default function ChatBox({
   const [currentChatType, setCurrentChatType] = useState(null);
   const [sessionName, setSessionName] = useState(null);
   const [serviceKey, setServiceKey] = useState(null);
+  const [sessionMessageCount, setSessionMessageCount] = useState(0);
 
-  //voice effects
+
 
   // Fetch chat type from chat ID
   useEffect(() => {
     if (!currentChatId) {
       setCurrentChatType(null);
       setServiceKey(null);
+      setSessionMessageCount(0);
       return;
     }
 
@@ -67,6 +68,7 @@ export default function ChatBox({
           setCurrentChatType(data.role || null);
           setSessionName(data.name || null);
           setServiceKey(data.serviceKey || null);
+          setSessionMessageCount(typeof data.messageCount === "number" ? data.messageCount : 0);
         }
       } catch (error) {
         console.error("Error fetching chat type:", error);
@@ -328,7 +330,6 @@ export default function ChatBox({
 
     const parts = [];
     if (service.intro) parts.push(`Introduction: ${service.intro}`);
-    if (service.voice) parts.push(`Voice and Style: ${service.voice}`);
     if (service.behaviour) parts.push(`Behaviour: ${service.behaviour}`);
 
     return parts.length > 0 ? parts.join(". ") + " " : "";
@@ -701,6 +702,26 @@ export default function ChatBox({
             <div ref={endOfMessagesRef}></div>
             {/* </div> */}
           </div>
+          {/* Initial questions: show when 0 or 1 message, then hide */}
+          {messages.length <= 1 && (() => {
+            const service = brandContext?.services?.find((s) => s._key === serviceKey);
+            const questions = (service?.introquestions || []).slice(0, 5).filter(Boolean);
+            if (questions.length === 0) return null;
+            return (
+              <div className="flex flex-wrap gap-2 py-2 px-0">
+                {questions.map((q, i) => (
+                  <button
+                    key={i}
+                    type="button"
+                    onClick={() => handleSubmit(String(q).trim())}
+                    className="text-left px-3 py-2 rounded-xl border border-border bg-muted-bg hover:bg-border/30 text-foreground text-sm transition-colors"
+                  >
+                    {q}
+                  </button>
+                ))}
+              </div>
+            );
+          })()}
           {/* Textarea Section - flex-1 */}
           <div className="flex-1 min-h-0 flex flex-col border-border pt-2">
             <form

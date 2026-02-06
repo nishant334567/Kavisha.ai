@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
+import Logs from "@/app/models/ChatLogs";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 
 export async function GET(req, { params }) {
@@ -19,11 +20,14 @@ export async function GET(req, { params }) {
           );
         }
 
+        const messageCount = await Logs.countDocuments({ sessionId });
+
         return NextResponse.json({
           role: session.role,
           title: session.title,
           name: session.name,
           serviceKey: session.serviceKey || null,
+          messageCount,
         });
       } catch (err) {
         return NextResponse.json(
