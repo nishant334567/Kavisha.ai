@@ -11,7 +11,7 @@ export async function GET() {
     }
 
     const brands = await client.fetch(
-      `*[_type == "brand" && subdomain != "kavisha"] {
+      `*[_type == "brand" && subdomain != "kavisha" && !(_id in path("drafts.**"))] {
         _id,
         brandName,
         title,
