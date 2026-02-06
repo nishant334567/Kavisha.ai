@@ -71,7 +71,9 @@ export default function Footer() {
             <h3 className="font-medium mb-4">Features</h3>
             <ul className="space-y-2 font-normal">
               <li>
-                {authLink("/make-avatar/v2", "Make my Avataar")}
+                <Link href="/make-avatar" className="hover:underline">
+                  Make my Avataar
+                </Link>
               </li>
               <li>
                 {authLink("/talk-to-avatar", "Talk to Avataars")}
