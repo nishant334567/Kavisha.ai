@@ -111,13 +111,7 @@ export default function Navbar() {
             )}
             {isMainDomain && (
               <button
-                onClick={() => {
-                  if (user) {
-                    router.push("/make-avatar/v2");
-                  } else {
-                    handleSignIn("/make-avatar/v2");
-                  }
-                }}
+                onClick={() => router.push("/make-avatar")}
               // className="px-3 py-1.5 rounded-md text-sm bg-blue-600 hover:bg-blue-700 transition-colors"
               >
                 MAKE MY AVATAAR
@@ -199,14 +193,7 @@ export default function Navbar() {
             </li>
             {brand?.subdomain === "kavisha" && (
               <li>
-                <button onClick={() => {
-                  setOpenmenu(false);
-                  if (user) {
-                    router.push("/make-avatar/v2");
-                  } else {
-                    handleSignIn("/make-avatar/v2");
-                  }
-                }}>Make my Avataar</button>
+                <button onClick={() => { setOpenmenu(false); router.push("/make-avatar"); }}>Make my Avataar</button>
               </li>
             )}
             {brand?.subdomain === "kavisha" && (

@@ -162,13 +162,7 @@ export default function Homepage() {
           {signingIn ? "Signing in..." : "Talk to Avataars"}
         </button>
         <button
-          onClick={() => {
-            if (user) {
-              router.push("/make-avatar/v2");
-            } else {
-              handleSignIn("/make-avatar/v2");
-            }
-          }}
+          onClick={() => router.push("/make-avatar")}
           className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#3D5E6B] text-white shadow-md hover:bg-[#2d4752] transition-colors"
         >
           Make my Avataar
