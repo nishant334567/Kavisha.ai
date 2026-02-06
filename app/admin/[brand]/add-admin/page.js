@@ -2,7 +2,12 @@
 import { useState, useEffect } from "react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
-import { ArrowLeft,Trash2 } from "lucide-react";
+import { ArrowLeft, Loader2, Trash2 } from "lucide-react";
+
+async function api(url, opts) {
+  const r = await fetch(url, opts);
+  return r.json();
+}
 
 export default function AddAdminPage() {
   const brand = useBrandContext();
@@ -14,40 +19,57 @@ export default function AddAdminPage() {
   const [loadingList, setLoadingList] = useState(true);
   const [deleting, setDeleting] = useState(null);
   const [msg, setMsg] = useState("");
-
   const sub = brand?.subdomain;
 
   useEffect(() => {
     if (!sub) return;
+    let cancelled = false;
     setLoadingList(true);
-    fetch(`/api/admin/add-admin?brand=${sub}`)
-      .then((r) => r.json())
-      .then((d) => setAdmins(d.admins || []))
-      .finally(() => setLoadingList(false));
+    (async () => {
+      try {
+        const d = await api(`/api/admin/add-admin?brand=${sub}`);
+        if (!cancelled) setAdmins(d.admins || []);
+      } finally {
+        if (!cancelled) setLoadingList(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, [sub]);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!sub || !email?.trim()) return;
     setLoading(true);
     setMsg("");
-    fetch("/api/admin/add-admin", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: name.trim(), email: email.trim(), brand: sub }),
-    })
-      .then((r) => r.json())
-      .then((d) => {
-        if (d.error) {
-          setMsg(d.error);
-          return;
-        }
-        setAdmins(d.admins || []);
-        setName("");
-        setEmail("");
-        setMsg("Admin added. Notification email sent.");
-      })
-      .finally(() => setLoading(false));
+    try {
+      const d = await api("/api/admin/add-admin", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name.trim(), email: email.trim(), brand: sub }),
+      });
+      if (d.error) return setMsg(d.error);
+      setAdmins(d.admins || []);
+      setName("");
+      setEmail("");
+      setMsg("Admin added. Notification email sent.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleDelete = async (adminEmail) => {
+    if (!sub || !adminEmail) return;
+    setDeleting(adminEmail);
+    setMsg("");
+    try {
+      const params = new URLSearchParams({ brand: sub, email: adminEmail });
+      const d = await api(`/api/admin/add-admin?${params}`, { method: "DELETE" });
+      if (d.error) return setMsg(d.error);
+      setAdmins(d.admins || []);
+      setMsg("Admin removed.");
+    } finally {
+      setDeleting(null);
+    }
   };
 
   if (!brand) return null;
@@ -105,17 +127,21 @@ export default function AddAdminPage() {
             <p className="text-gray-500 text-sm">No admins yet.</p>
           ) : (
             <ul className="space-y-1.5">
-              {admins.map((a) => (
-                <li key={a} className="flex items-center justify-between gap-2 group">
-                  <span className="text-gray-700 font-mono text-sm truncate">{a}</span>
+              {admins.map((adminEmail) => (
+                <li key={adminEmail} className="flex items-center justify-between gap-2 group">
+                  <span className="text-gray-700 font-mono text-sm truncate">{adminEmail}</span>
                   <button
                     type="button"
-                    onClick={() => handleDelete(a)}
-                    disabled={deleting === a}
+                    onClick={() => handleDelete(adminEmail)}
+                    disabled={deleting === adminEmail}
                     className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
                     title="Remove admin"
                   >
-                    <Trash2 className="w-4 h-4" />
+                    {deleting === adminEmail ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Trash2 className="w-4 h-4" />
+                    )}
                   </button>
                 </li>
               ))}
