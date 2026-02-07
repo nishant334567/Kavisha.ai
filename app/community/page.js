@@ -8,6 +8,7 @@ import CommunityCard from "@/app/components/CommunityCard";
 import ChatSidebar from "@/app/components/ChatSidebar";
 import LiveChat from "@/app/components/LiveChat";
 import Loader from "@/app/components/Loader";
+import PoweredByKavisha from "@/app/components/PoweredByKavisha";
 import { ArrowLeft } from "lucide-react";
 
 const ROLE_LABELS = {
@@ -176,8 +177,8 @@ export default function Community() {
     if (!user) return null;
 
     return (
-        <div className="h-[calc(100vh-64px)] overflow-hidden">
-            <div className="flex h-full overflow-hidden">
+        <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden">
+            <div className="flex flex-1 min-h-0 overflow-hidden">
                 <div>
                     <ChatSidebar
                         allChats={allChats}
@@ -189,80 +190,83 @@ export default function Community() {
                         onNewCommunityChat={createCommunityPost}
                         chatBasePath="/community"
                         homePath="/community"
-                        defaultCollapsed={false}
+                        defaultCollapsed={true}
                     />
                 </div>
-                <div className="w-full min-h-0 overflow-auto flex-1 min-w-0">
-                    <div className="mt-14 px-4 sm:px-6 md:px-12 lg:px-28 pb-4">
-                        {/* Back button */}
-                        <button
-                            onClick={() => router.push("/")}
-                            className="flex items-center gap-2 text-[#3D5E6B] hover:text-[#2d4e5b] transition-colors py-1 -mb-1"
-                        >
-                            <ArrowLeft className="w-5 h-5 flex-shrink-0" />
-                            <span className="font-fredoka text-sm sm:text-base">Back</span>
-                        </button>
+                <div className="w-full flex flex-col flex-1 min-h-0 min-w-0">
+                    <div className="flex-1 min-h-0 overflow-auto">
+                        <div className="mt-14 pl-12 pr-4 sm:pl-14 sm:pr-6 md:px-12 lg:px-28 pb-4">
+                            {/* Back button - pl-12/pl-14 reserves space for collapsed sidebar toggle */}
+                            <button
+                                onClick={() => router.push("/")}
+                                className="flex items-center gap-2 text-[#3D5E6B] hover:text-[#2d4e5b] transition-colors py-1 -mb-1"
+                            >
+                                <ArrowLeft className="w-5 h-5 flex-shrink-0" />
+                                <span className="font-fredoka text-sm sm:text-base">Back</span>
+                            </button>
 
-                        <div className="font-fredoka flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-2 sm:py-3">
-                            <div className="min-w-0">
-                                <p className="text-[#3D5E6B] text-2xl sm:text-3xl lg:text-4xl">Community</p>
-                                <p className="text-sm sm:text-base font-extralight mt-1">
-                                    Browse through all connection requests and get connecting. Or create your own! :)
-                                </p>
+                            <div className="font-fredoka flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-2 sm:py-3">
+                                <div className="min-w-0">
+                                    <p className="text-[#3D5E6B] text-2xl sm:text-3xl lg:text-4xl">Community</p>
+                                    <p className="text-sm sm:text-base font-extralight mt-1">
+                                        Browse through all connection requests and get connecting. Or create your own! :)
+                                    </p>
+                                </div>
+                                <div className="flex flex-wrap gap-2 sm:gap-3 items-center shrink-0">
+                                    <button
+                                        type="button"
+                                        disabled={creating === "job_seeker"}
+                                        className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                                        onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                    >
+                                        {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={creating === "recruiter"}
+                                        className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                                        onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                    >
+                                        {creating === "recruiter" ? "Creating..." : "Hire People"}
+                                    </button>
+                                    <button
+                                        type="button"
+                                        disabled={creating === "friends"}
+                                        className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                                        onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                    >
+                                        {creating === "friends" ? "Creating..." : "Find Friends"}
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex flex-wrap gap-2 sm:gap-3 items-center shrink-0">
-                                <button
-                                    type="button"
-                                    disabled={creating === "job_seeker"}
-                                    className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
-                                    onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                >
-                                    {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
-                                </button>
-                                <button
-                                    type="button"
-                                    disabled={creating === "recruiter"}
-                                    className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
-                                    onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                >
-                                    {creating === "recruiter" ? "Creating..." : "Hire People"}
-                                </button>
-                                <button
-                                    type="button"
-                                    disabled={creating === "friends"}
-                                    className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
-                                    onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                >
-                                    {creating === "friends" ? "Creating..." : "Find Friends"}
-                                </button>
-                            </div>
+                            {loading ? (
+                                <div className="p-4 sm:p-8 flex justify-center">
+                                    <Loader loadingMessage="Loading community..." />
+                                </div>
+                            ) : error ? (
+                                <div className="p-4 sm:p-8 text-center text-red-600 text-sm sm:text-base">{error}</div>
+                            ) : requirements.length === 0 ? (
+                                <div className="p-4 sm:p-8 text-center text-muted text-sm sm:text-base">
+                                    No community posts yet.
+                                </div>
+                            ) : (
+                                <div className="py-4 px-2 sm:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                    {requirements.map((r) => (
+                                        <CommunityCard
+                                            key={r.id}
+                                            name={r.name}
+                                            date={r.date}
+                                            description={r.description}
+                                            requirement={r.requirement}
+                                            onConnect={() => openChatSession(user.id, r.userId)}
+                                            connectLabel={connectedUserIds.has(r.userId) ? "Message" : "Connect"}
+                                        />
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        {loading ? (
-                            <div className="p-4 sm:p-8 flex justify-center">
-                                <Loader loadingMessage="Loading community..." />
-                            </div>
-                        ) : error ? (
-                            <div className="p-4 sm:p-8 text-center text-red-600 text-sm sm:text-base">{error}</div>
-                        ) : requirements.length === 0 ? (
-                            <div className="p-4 sm:p-8 text-center text-muted text-sm sm:text-base">
-                                No community posts yet.
-                            </div>
-                        ) : (
-                            <div className="p-4 sm:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                                {requirements.map((r) => (
-                                    <CommunityCard
-                                        key={r.id}
-                                        name={r.name}
-                                        date={r.date}
-                                        description={r.description}
-                                        requirement={r.requirement}
-                                        onConnect={() => openChatSession(user.id, r.userId)}
-                                        connectLabel={connectedUserIds.has(r.userId) ? "Message" : "Connect"}
-                                    />
-                                ))}
-                            </div>
-                        )}
                     </div>
+                    <PoweredByKavisha />
                 </div>
             </div>
             {/* 1-on-1 chat overlay when Connect is clicked */}

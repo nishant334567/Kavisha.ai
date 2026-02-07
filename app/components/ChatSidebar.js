@@ -20,7 +20,7 @@ export default function ChatSidebar({
   servicesProvided = [],
   onSelectService,
   isCreatingSession = false,
-  defaultCollapsed = false,
+  defaultCollapsed = true,
 }) {
   const { user } = useFirebaseSession();
   const [isCollapsed, setIscollapsed] = useState(defaultCollapsed);

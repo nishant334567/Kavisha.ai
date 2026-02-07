@@ -7,6 +7,7 @@ import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import ChatBox from "@/app/components/ChatBox";
 import ChatSidebar from "@/app/components/ChatSidebar";
 import Loader from "@/app/components/Loader";
+import PoweredByKavisha from "@/app/components/PoweredByKavisha";
 
 export default function CommunityChatPage() {
   const params = useParams();
@@ -66,8 +67,8 @@ export default function CommunityChatPage() {
   if (!user) return null;
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-hidden">
-      <div className="flex h-full overflow-hidden">
+    <div className="min-h-[calc(100vh-64px)] h-[calc(100vh-64px)] flex flex-col overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         <div>
           <ChatSidebar
             allChats={allChats}
@@ -90,6 +91,7 @@ export default function CommunityChatPage() {
           )}
         </div>
       </div>
+      <PoweredByKavisha />
     </div>
   );
 }
