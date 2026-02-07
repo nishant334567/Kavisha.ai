@@ -329,8 +329,9 @@ export default function ChatBox({
     if (!service) return "";
 
     const parts = [];
-    if (service.intro) parts.push(`Introduction: ${service.intro}`);
-    if (service.behaviour) parts.push(`Behaviour: ${service.behaviour}`);
+    if (service.about?.trim()) parts.push(`About the person you represent (real world): ${service.about.trim()}`);
+    if (service.rules?.trim()) parts.push(`Rules to follow: ${service.rules.trim()}`);
+    if (service.behaviour?.trim()) parts.push(`How to behave as this avatar: ${service.behaviour.trim()}`);
 
     return parts.length > 0 ? parts.join(". ") + " " : "";
   };

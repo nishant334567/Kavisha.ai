@@ -28,12 +28,16 @@ export default function MakeAvatar() {
     name: "",
     admin_email: "",
     subdomain: "",
-    personality: "",
+    about: "",
     bio_title: "",
     bio_subtitle: "",
   });
 
+  const [suggestedTitles, setSuggestedTitles] = useState([]);
+  const [suggestedSubtitles, setSuggestedSubtitles] = useState([]);
   const [suggestedSubdomains, setSuggestedSubdomains] = useState([]);
+  const [hasCreatedAvatar, setHasCreatedAvatar] = useState(false);
+  const [checkingAvatar, setCheckingAvatar] = useState(true);
 
   const handleAboutUserChange = (field, value) => {
     setAboutUser((prev) => ({ ...prev, [field]: value }));
@@ -56,8 +60,14 @@ export default function MakeAvatar() {
   };
 
   const validateStep2 = () => {
-    if (!avatarData.subdomain?.trim()) {
-      alert("Please enter a subdomain");
+    const raw = avatarData.subdomain?.trim() ?? "";
+    const normalized = raw.toLowerCase().replace(/\.kavisha\.ai$/i, "");
+    if (!normalized) {
+      alert("Please enter a subdomain (e.g. myname for myname.kavisha.ai)");
+      return false;
+    }
+    if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(normalized)) {
+      alert("Subdomain can only contain letters, numbers and hyphens.");
       return false;
     }
     if (!avatarData.admin_email?.trim()) {
@@ -69,8 +79,8 @@ export default function MakeAvatar() {
       alert("Please enter a valid email address");
       return false;
     }
-    if (!avatarData.personality?.trim()) {
-      alert("Please add at least some personality description");
+    if (!avatarData.about?.trim()) {
+      alert("Please tell us about yourself");
       return false;
     }
     return true;
@@ -86,7 +96,10 @@ export default function MakeAvatar() {
 
     setSubmitting(true);
     try {
-      let subdomain = avatarData.subdomain.trim().replace(".kavisha.ai", "");
+      const subdomain = (avatarData.subdomain ?? "")
+        .trim()
+        .toLowerCase()
+        .replace(/\.kavisha\.ai$/i, "");
 
       const formData = new FormData();
       formData.append("subdomain", subdomain);
@@ -95,7 +108,7 @@ export default function MakeAvatar() {
       formData.append("title", avatarData.bio_title?.trim() || "");
       formData.append("subtitle", avatarData.bio_subtitle?.trim() || "");
       formData.append("email", avatarData.admin_email?.trim() || "");
-      formData.append("personality", avatarData.personality?.trim() || "");
+      formData.append("about", avatarData.about?.trim() || "");
 
       if (coverImage) {
         formData.append("image", coverImage);
@@ -109,17 +122,14 @@ export default function MakeAvatar() {
       const data = await response.json();
       if (response.ok && data.success) {
         alert(
-          `Avatar created successfully! Your domain will be available at: ${data.domainName}`
+          `Avatar created successfully! Your domain will be available at: ${data.domainName || "your subdomain"}`
         );
-        window.location.href = "/";
+        router.replace("/");
       } else {
-        alert(
-          data.error ||
-            data.message ||
-            "Failed to create avatar. Please try again."
-        );
+        const message = data.error || data.message || "Failed to create avatar. Please try again.";
+        alert(message);
       }
-    } catch (error) {
+    } catch (err) {
       alert("An error occurred while creating your avatar. Please try again.");
     } finally {
       setSubmitting(false);
@@ -146,30 +156,27 @@ export default function MakeAvatar() {
       const data = await response.json();
 
       if (data.success && data?.fetchedpersonality) {
-        setSuggestedSubdomains(data.subdomains || []);
-
-        setAvatarData({
-          name: aboutUser.name,
-          admin_email: "",
-          subdomain: data.subdomains?.[0] || "",
-          personality: data.personality || "",
-          bio_title: data.titles?.[0] || "",
-          bio_subtitle: data.subtitles?.[0] || "",
-        });
-
-        setCurrentStep(stages.CUSTOMIZE);
-      } else {
+        const titles = data.titles || [];
+        const subtitles = data.subtitles || [];
+        const subdomains = data.subdomains || [];
+        setSuggestedTitles(titles);
+        setSuggestedSubtitles(subtitles);
+        setSuggestedSubdomains(subdomains);
         setAvatarData((prev) => ({
           ...prev,
           name: aboutUser.name,
+          about: data.personality ?? prev.about,
+          bio_title: titles[0] ?? prev.bio_title,
+          bio_subtitle: subtitles[0] ?? prev.bio_subtitle,
+          subdomain: subdomains[0] ?? prev.subdomain ?? "",
         }));
+        setCurrentStep(stages.CUSTOMIZE);
+      } else {
+        setAvatarData((prev) => ({ ...prev, name: aboutUser.name }));
         setCurrentStep(stages.CUSTOMIZE);
       }
     } catch (error) {
-      setAvatarData((prev) => ({
-        ...prev,
-        name: aboutUser.name,
-      }));
+      setAvatarData((prev) => ({ ...prev, name: aboutUser.name }));
       setCurrentStep(stages.CUSTOMIZE);
     } finally {
       setLoading(false);
@@ -179,25 +186,22 @@ export default function MakeAvatar() {
   const StepIndicator = () => (
     <div className="flex items-center justify-center gap-2 mb-8 font-akshar">
       <span
-        className={`text-sm md:text-base font-medium ${
-          currentStep === stages.BASIC_INFO ? "text-[#00838F]" : "text-gray-500"
-        }`}
+        className={`text-sm md:text-base font-medium ${currentStep === stages.BASIC_INFO ? "text-[#00838F]" : "text-gray-500"
+          }`}
       >
         Basic info
       </span>
       <div className="w-16 md:w-24 h-[1px] bg-gray-300"></div>
       <span
-        className={`text-sm md:text-base font-medium ${
-          currentStep === stages.CUSTOMIZE ? "text-[#00838F]" : "text-gray-500"
-        }`}
+        className={`text-sm md:text-base font-medium ${currentStep === stages.CUSTOMIZE ? "text-[#00838F]" : "text-gray-500"
+          }`}
       >
         Customize
       </span>
       <div className="w-16 md:w-24 h-[1px] bg-gray-300"></div>
       <span
-        className={`text-sm md:text-base font-medium ${
-          currentStep === stages.REVIEW ? "text-[#00838F]" : "text-gray-500"
-        }`}
+        className={`text-sm md:text-base font-medium ${currentStep === stages.REVIEW ? "text-[#00838F]" : "text-gray-500"
+          }`}
       >
         Review
       </span>
@@ -276,6 +280,23 @@ export default function MakeAvatar() {
     }
   }, [brandContext, router]);
 
+  // Check if user has already created an avatar
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/user");
+        const data = res.ok ? await res.json() : null;
+        if (!cancelled && data?.user?.hasCreatedAvatar) setHasCreatedAvatar(true);
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setCheckingAvatar(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, []);
+
   if (!brandContext) {
     return <Loader loadingMessage="Loading..." />;
   }
@@ -283,6 +304,50 @@ export default function MakeAvatar() {
   if (brandContext.subdomain !== "kavisha") {
     return <Loader loadingMessage="Redirecting..." />;
   }
+
+  if (submitting) {
+    return <Loader loadingMessage="Creating..." />;
+  }
+
+  if (checkingAvatar) {
+    return <Loader loadingMessage="Loading..." />;
+  }
+
+  if (hasCreatedAvatar) {
+    return (
+      <div className="min-h-screen bg-white flex flex-col">
+        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
+          <div className="w-10 h-10 rounded-full bg-[#E0F7FA] flex items-center justify-center">
+            <User className="w-5 h-5 text-[#00838F]" />
+          </div>
+        </div>
+        <div className="flex-1 px-4 py-6 md:py-10 flex flex-col items-center justify-center text-center">
+          <button
+            type="button"
+            onClick={() => router.push("/make-avatar")}
+            className="mb-6 p-2 -ml-2 self-start hover:bg-gray-100 rounded-full transition-colors"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-600" />
+          </button>
+          <p className="text-sm text-amber-700 max-w-sm">
+            Sorry — one avatar per email. You&apos;ve already created yours with this account.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push("/make-avatar")}
+            className="mt-6 px-6 py-2.5 bg-[#3D5A5E] text-white rounded-full font-medium hover:bg-[#2d4448] transition-colors"
+          >
+            Back to Make Avataar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  const subdomainNorm = (avatarData.subdomain ?? "")
+    .trim()
+    .toLowerCase()
+    .replace(/\.kavisha\.ai$/i, "");
 
   return (
     <div className="min-h-screen bg-white flex flex-col">
@@ -419,20 +484,41 @@ export default function MakeAvatar() {
                     Subdomain<span className="text-red-500">*</span>
                   </label>
                   {suggestedSubdomains.length > 0 ? (
-                    <select
-                      value={avatarData.subdomain}
-                      onChange={(e) =>
-                        handleAvatarDataChange("subdomain", e.target.value)
-                      }
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
-                    >
-                      <option value="">Select a subdomain</option>
-                      {suggestedSubdomains.map((item, index) => (
-                        <option key={index} value={item}>
-                          {item}
-                        </option>
-                      ))}
-                    </select>
+                    <>
+                      <select
+                        value={
+                          suggestedSubdomains.includes(subdomainNorm)
+                            ? subdomainNorm
+                            : "__other__"
+                        }
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          handleAvatarDataChange(
+                            "subdomain",
+                            v === "__other__" ? "" : v
+                          );
+                        }}
+                        className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                      >
+                        {suggestedSubdomains.map((s) => (
+                          <option key={s} value={s}>
+                            {s}.kavisha.ai
+                          </option>
+                        ))}
+                        <option value="__other__">Other (type below)</option>
+                      </select>
+                      {!suggestedSubdomains.includes(subdomainNorm) && (
+                        <input
+                          type="text"
+                          value={avatarData.subdomain ?? ""}
+                          onChange={(e) =>
+                            handleAvatarDataChange("subdomain", e.target.value)
+                          }
+                          placeholder="e.g., myname or myname.kavisha.ai"
+                          className="mt-2 w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                        />
+                      )}
+                    </>
                   ) : (
                     <input
                       type="text"
@@ -440,32 +526,32 @@ export default function MakeAvatar() {
                       onChange={(e) =>
                         handleAvatarDataChange("subdomain", e.target.value)
                       }
-                      placeholder="e.g., myname.kavisha.ai or just myname"
+                      placeholder="e.g., myname or myname.kavisha.ai"
                       className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
                     />
                   )}
                   <p className="mt-2 text-xs text-gray-500">
-                    Enter your entire subdomain. If you enter just the name
-                    (e.g., "myname"), it will become "myname.kavisha.ai"
+                    {avatarData.subdomain?.trim()
+                      ? `It will become ${avatarData.subdomain.trim().toLowerCase().replace(/\.kavisha\.ai$/i, "")}.kavisha.ai`
+                      : 'Enter a name (e.g. "myname") — it will become myname.kavisha.ai'}
                   </p>
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Personality<span className="text-red-500">*</span>
+                    About you<span className="text-red-500">*</span>
                   </label>
                   <textarea
                     rows={4}
-                    value={avatarData.personality}
+                    value={avatarData.about}
                     onChange={(e) =>
-                      handleAvatarDataChange("personality", e.target.value)
+                      handleAvatarDataChange("about", e.target.value)
                     }
-                    placeholder="Personality description..."
+                    placeholder="E.g. I am a professor at IIM Ahmedabad with 10 years of teaching experience. I like to play football and I am also a singer."
                     className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent resize-none"
                   />
                   <p className="mt-2 text-xs text-gray-500">
-                    How the Avataar communicates - tone, styles, and speaking
-                    patterns
+                    Your background, expertise, interests and how you’d like your Avataar to sound
                   </p>
                 </div>
 
@@ -493,30 +579,92 @@ export default function MakeAvatar() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Title
                   </label>
-                  <input
-                    type="text"
-                    value={avatarData.bio_title}
-                    onChange={(e) =>
-                      handleAvatarDataChange("bio_title", e.target.value)
-                    }
-                    placeholder="Enter a title for avataar"
-                    className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
-                  />
+                  {suggestedTitles.length > 0 ? (
+                    <>
+                      <select
+                        value={suggestedTitles.includes(avatarData.bio_title) ? avatarData.bio_title : "__other__"}
+                        onChange={(e) =>
+                          handleAvatarDataChange(
+                            "bio_title",
+                            e.target.value === "__other__" ? "" : e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                      >
+                        {suggestedTitles.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                        <option value="__other__">Other (type below)</option>
+                      </select>
+                      {(!avatarData.bio_title || !suggestedTitles.includes(avatarData.bio_title)) && (
+                        <input
+                          type="text"
+                          value={avatarData.bio_title}
+                          onChange={(e) =>
+                            handleAvatarDataChange("bio_title", e.target.value)
+                          }
+                          placeholder="Or enter your own title"
+                          className="w-full mt-2 px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={avatarData.bio_title}
+                      onChange={(e) =>
+                        handleAvatarDataChange("bio_title", e.target.value)
+                      }
+                      placeholder="Enter a title for avataar"
+                      className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                    />
+                  )}
                 </div>
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Subtitle
                   </label>
-                  <input
-                    type="text"
-                    value={avatarData.bio_subtitle}
-                    onChange={(e) =>
-                      handleAvatarDataChange("bio_subtitle", e.target.value)
-                    }
-                    placeholder="Enter a subtitle for avataar"
-                    className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
-                  />
+                  {suggestedSubtitles.length > 0 ? (
+                    <>
+                      <select
+                        value={suggestedSubtitles.includes(avatarData.bio_subtitle) ? avatarData.bio_subtitle : "__other__"}
+                        onChange={(e) =>
+                          handleAvatarDataChange(
+                            "bio_subtitle",
+                            e.target.value === "__other__" ? "" : e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                      >
+                        {suggestedSubtitles.map((s, i) => (
+                          <option key={`sub-${i}`} value={s}>{s.length > 60 ? s.slice(0, 60) + "…" : s}</option>
+                        ))}
+                        <option value="__other__">Other (type below)</option>
+                      </select>
+                      {(!avatarData.bio_subtitle || !suggestedSubtitles.includes(avatarData.bio_subtitle)) && (
+                        <textarea
+                          rows={2}
+                          value={avatarData.bio_subtitle}
+                          onChange={(e) =>
+                            handleAvatarDataChange("bio_subtitle", e.target.value)
+                          }
+                          placeholder="Or enter your own subtitle"
+                          className="w-full mt-2 px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent resize-none"
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={avatarData.bio_subtitle}
+                      onChange={(e) =>
+                        handleAvatarDataChange("bio_subtitle", e.target.value)
+                      }
+                      placeholder="Enter a subtitle for avataar"
+                      className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                    />
+                  )}
                 </div>
 
                 <div className="flex justify-center gap-4 pt-4">
@@ -564,7 +712,7 @@ export default function MakeAvatar() {
                     Subdomain
                   </label>
                   <p className="text-gray-900 font-mono">
-                    {avatarData.subdomain || "-"}
+                    {subdomainNorm ? `${subdomainNorm}.kavisha.ai` : "-"}
                   </p>
                 </div>
 
@@ -579,10 +727,10 @@ export default function MakeAvatar() {
 
                 <div className="border-b border-gray-200 pb-4">
                   <label className="block text-sm font-medium text-gray-500 mb-1">
-                    Personality
+                    About you
                   </label>
                   <p className="text-gray-900 whitespace-pre-wrap">
-                    {avatarData.personality || "-"}
+                    {avatarData.about || "-"}
                   </p>
                 </div>
 

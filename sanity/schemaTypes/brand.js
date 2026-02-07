@@ -147,8 +147,8 @@ export default {
               validation: (Rule) => Rule.required(),
             },
             {
-              name: "intro",
-              title: "Introduction",
+              name: "about",
+              title: "About You",
               type: "text",
               rows: 25,
               description: "Introduction",
@@ -156,10 +156,18 @@ export default {
             },
             {
               name: "behaviour",
-              title: "Behaviour",
+              title: "AI Chatbot behaviour",
               type: "text",
               rows: 25,
-              description: "AI prompt or description for this service",
+              description: "How this chat bot should behave.",
+              // validation: (Rule) => Rule.required(),
+            },
+            {
+              name: "rules",
+              title: "Rules, restrictions and guideline for your AI chatbot.",
+              type: "text",
+              rows: 25,
+              description: "Does and dont's for the chatbot ",
               // validation: (Rule) => Rule.required(),
             },
             {

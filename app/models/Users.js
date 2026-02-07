@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    hasCreatedAvatar: {
+      type: Boolean,
+      default: false,
+    },
   },
   { timestamps: true }
 );

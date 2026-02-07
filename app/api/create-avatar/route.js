@@ -1,8 +1,10 @@
 import { NextResponse } from "next/server";
 import { GoogleAuth } from "google-auth-library";
-import path from "path";
 import { client as sanityClient } from "@/app/lib/sanity";
 import { Resend } from "resend";
+import { withAuth } from "@/app/lib/firebase/auth-middleware";
+import { connectDB } from "@/app/lib/db";
+import User from "@/app/models/Users";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -16,17 +18,12 @@ const ROOT_DOMAIN = "kavisha.ai";
 const auth = new GoogleAuth({
   ...(process.env.GCP_CLIENT_EMAIL && process.env.GCP_PRIVATE_KEY
     ? {
-        credentials: {
-          client_email: process.env.GCP_CLIENT_EMAIL,
-          private_key: process.env.GCP_PRIVATE_KEY.replace(/\\n/g, "\n"),
-        },
-      }
-    : {
-        keyFile: path.join(
-          process.cwd(),
-          "app/secrets/service-account-key.json"
-        ),
-      }),
+      credentials: {
+        client_email: process.env.GCP_CLIENT_EMAIL,
+        private_key: process.env.GCP_PRIVATE_KEY.replace(/\\n/g, "\n"),
+      },
+    }
+    : {}),
   scopes: "https://www.googleapis.com/auth/cloud-platform",
 });
 
@@ -34,10 +31,55 @@ const deleteBrand = async (brandId) => {
   if (!brandId) return;
   try {
     await sanityClient.delete(brandId);
-  } catch (error) {}
+  } catch (error) { }
 };
 
 export async function POST(request) {
+  return withAuth(request, {
+    onAuthenticated: async ({ decodedToken }) => {
+      const creatorEmail = decodedToken?.email;
+      if (!creatorEmail) {
+        return NextResponse.json(
+          { error: "Please sign in to create an avatar." },
+          { status: 401 }
+        );
+      }
+
+      try {
+        await connectDB();
+      } catch (dbErr) {
+        console.error("create-avatar: connectDB failed", dbErr);
+        return NextResponse.json(
+          { error: "Service temporarily unavailable. Please try again later." },
+          { status: 503 }
+        );
+      }
+      const user = await User.findOne({ email: creatorEmail });
+      if (!user) {
+        return NextResponse.json(
+          { error: "Session incomplete. Please sign out and sign in again." },
+          { status: 403 }
+        );
+      }
+      if (user.hasCreatedAvatar) {
+        return NextResponse.json(
+          { error: "You can only create one avatar per account. You have already created one." },
+          { status: 400 }
+        );
+      }
+
+      return runCreateAvatar(request, creatorEmail);
+    },
+    onUnauthenticated: async () => {
+      return NextResponse.json(
+        { error: "Please sign in to create an avatar." },
+        { status: 401 }
+      );
+    },
+  });
+}
+
+async function runCreateAvatar(request, creatorEmail) {
   let brandId = null;
 
   try {
@@ -49,58 +91,89 @@ export async function POST(request) {
     const title = formData.get("title");
     const subtitle = formData.get("subtitle");
     const email = formData.get("email");
-    const personality = formData.get("personality");
+    const about = formData.get("about");
     const imageFile = formData.get("image");
 
-    if (!subdomain) {
+    if (!subdomain || !String(subdomain).trim()) {
       return NextResponse.json(
-        { message: "Subdomain is required" },
+        { error: "Subdomain is required." },
         { status: 400 }
+      );
+    }
+    const normalizedSubdomain = String(subdomain).trim().toLowerCase().replace(/\.kavisha\.ai$/i, "");
+
+    if (!normalizedSubdomain) {
+      return NextResponse.json(
+        { error: "Subdomain is required." },
+        { status: 400 }
+      );
+    }
+
+    // Subdomain: only lowercase letters, numbers, hyphens (DNS-safe)
+    if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(normalizedSubdomain)) {
+      return NextResponse.json(
+        { error: "Subdomain can only contain letters, numbers and hyphens." },
+        { status: 400 }
+      );
+    }
+
+    if (!sanityClient) {
+      return NextResponse.json(
+        { error: "Service temporarily unavailable. Please try again later." },
+        { status: 503 }
       );
     }
 
     const existingBrand = await sanityClient.fetch(
-      `*[_type == "brand" && subdomain == "${subdomain}"][0]`
+      `*[_type == "brand" && subdomain == $sub][0]`,
+      { sub: normalizedSubdomain }
     );
 
     if (existingBrand) {
       return NextResponse.json(
-        { error: "Brand with this subdomain already exists" },
+        { error: "This subdomain is already taken. Please choose another." },
         { status: 400 }
       );
     }
 
-    // Upload image to Sanity if provided
+    // Upload image to Sanity if provided (non-blocking: avatar works without image)
     let imageAsset = null;
     if (imageFile && imageFile.size > 0) {
-      const buffer = Buffer.from(await imageFile.arrayBuffer());
-      imageAsset = await sanityClient.assets.upload("image", buffer, {
-        filename: imageFile.name || "avatar-image.jpg",
-      });
+      try {
+        const buffer = Buffer.from(await imageFile.arrayBuffer());
+        imageAsset = await sanityClient.assets.upload("image", buffer, {
+          filename: (imageFile.name && String(imageFile.name).trim()) || "avatar-image.jpg",
+        });
+      } catch (uploadErr) {
+        console.warn("create-avatar: image upload failed", uploadErr?.message || uploadErr);
+      }
     }
 
-    // Create lead_journey service with personality in intro field
-    const services = [];
-    if (personality?.trim()) {
-      services.push({
-        _key: `lead_journey_${Date.now()}`,
-        name: "lead_journey",
-        title: "Talk to me",
-        initialMessage: "Hello, How can I assist you today?",
-        intro: personality.trim(),
-      });
-    }
+    // Create lead_journey service with about, default behaviour and rules
+    const avatarName = String(brandName || normalizedSubdomain).trim() || "this person";
+    const defaultBehaviour = `You are ${avatarName}'s digital avatar.`;
+    const defaultRules = "Don't use abusive language. Be calm and polite.";
+
+    const services = [{
+      _key: `lead_journey_${Date.now()}`,
+      name: "lead_journey",
+      title: "Talk to me",
+      initialMessage: "Hello, How can I assist you today?",
+      about: (about && String(about).trim()) ? String(about).trim() : "No description provided.",
+      behaviour: defaultBehaviour,
+      rules: defaultRules,
+    }];
 
     // Build brand document
     const brandDoc = {
       _type: "brand",
-      brandName: brandName || subdomain,
+      brandName: brandName || normalizedSubdomain,
       loginButtonText: loginButtonText || "Talk to me now",
-      title: title || `Welcome to ${subdomain}`,
+      title: title || `Welcome to ${normalizedSubdomain}`,
       subtitle: subtitle || "",
-      subdomain,
-      admins: email?.trim() ? [email] : [],
-      services: services,
+      subdomain: normalizedSubdomain,
+      admins: email?.trim() ? [String(email).trim()] : [],
+      services,
     };
 
     // Add brandImage and logo if uploaded (same image for both)
@@ -124,7 +197,7 @@ export async function POST(request) {
     const brand = await sanityClient.create(brandDoc);
     brandId = brand._id;
 
-    const domainName = `${subdomain}.${ROOT_DOMAIN}`;
+    const domainName = `${normalizedSubdomain}.${ROOT_DOMAIN}`;
     const gcpClient = await auth.getClient();
     const token = (await gcpClient.getAccessToken()).token;
 
@@ -145,31 +218,36 @@ export async function POST(request) {
       }
     );
 
-    const data = await response.json();
+    let data = {};
+    try {
+      const text = await response.text();
+      if (text) data = JSON.parse(text);
+    } catch {
+      // ignore parse error
+    }
 
     if (!response.ok) {
       await deleteBrand(brandId);
+      const msg = (data?.error && String(data.error)) || "We couldn't set up your domain right now. Please try again later.";
       return NextResponse.json(
-        {
-          error: data.error?.message || "Failed to create domain mapping.",
-        },
-        { status: 400 }
+        { error: msg },
+        { status: 502 }
       );
     }
 
     if (email?.trim() && resend) {
       try {
-        const editProfileUrl = `https://${domainName}/admin/${subdomain}/edit-profile`;
-        const trainUrl = `https://${domainName}/admin/${subdomain}/train/v2`;
+        const editProfileUrl = `https://${domainName}/admin/${normalizedSubdomain}/edit-profile`;
+        const trainUrl = `https://${domainName}/admin/${normalizedSubdomain}/train/v2`;
 
         await resend.emails.send({
           from: "hello@kavisha.ai",
           to: email.trim(),
-          subject: `AI Avatar Created for ${brandName || subdomain}`,
+          subject: `AI Avatar Created for ${brandName || normalizedSubdomain}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h2>Hello!</h2>
-              <p>Your AI avatar for <strong>${brandName || subdomain}</strong> has been created successfully!</p>
+              <p>Your AI avatar for <strong>${brandName || normalizedSubdomain}</strong> has been created successfully!</p>
               <p>Domain mapping is currently in progress. You can check your domain after 30 minutes at:</p>
               <p><a href="https://${domainName}" style="color: #2563eb; text-decoration: none;">https://${domainName}</a></p>
               
@@ -201,14 +279,29 @@ export async function POST(request) {
             </div>
           `,
         });
-      } catch (emailError) {}
+      } catch (emailError) { }
+    }
+
+    try {
+      await User.updateOne(
+        { email: creatorEmail },
+        { $set: { hasCreatedAvatar: true } }
+      );
+    } catch (updateErr) {
+      console.error("create-avatar: User.updateOne failed", updateErr);
+      // Don't delete brand: avatar and domain are already created; support can fix the flag
+      return NextResponse.json(
+        { error: "Your avatar was created but we couldn't complete your account update. Please contact support." },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json({ success: true, domainName }, { status: 201 });
   } catch (error) {
     await deleteBrand(brandId);
+    console.error("create-avatar:", error);
     return NextResponse.json(
-      { error: error.message || "Failed to create avatar" },
+      { error: "Something went wrong. Please try again." },
       { status: 500 }
     );
   }

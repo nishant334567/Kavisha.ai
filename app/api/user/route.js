@@ -15,6 +15,7 @@ export async function GET(request) {
         image: dbUser.image,
         profileType: dbUser.profileType,
         isAdmin: dbUser.isAdmin || false,
+        hasCreatedAvatar: dbUser.hasCreatedAvatar || false,
       };
 
       return NextResponse.json({ user });

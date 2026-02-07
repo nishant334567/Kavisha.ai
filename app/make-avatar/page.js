@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
@@ -10,8 +10,31 @@ export default function MakeAvatarLandingPage() {
   const router = useRouter();
   const { user, refresh } = useFirebaseSession();
   const [signingIn, setSigningIn] = useState(false);
+  const [hasCreatedAvatar, setHasCreatedAvatar] = useState(false);
+  const [checkingAvatar, setCheckingAvatar] = useState(true);
+
+  useEffect(() => {
+    if (!user?.email) {
+      setCheckingAvatar(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch("/api/user");
+        const data = res.ok ? await res.json() : null;
+        if (!cancelled && data?.user?.hasCreatedAvatar) setHasCreatedAvatar(true);
+      } catch {
+        // ignore
+      } finally {
+        if (!cancelled) setCheckingAvatar(false);
+      }
+    })();
+    return () => { cancelled = true; };
+  }, [user?.email]);
 
   const handleGetStarted = async () => {
+    if (hasCreatedAvatar) return;
     if (user) {
       router.push("/make-avatar/v2");
       return;
@@ -93,12 +116,17 @@ export default function MakeAvatarLandingPage() {
             <button
               type="button"
               onClick={handleGetStarted}
-              disabled={signingIn}
-              className="w-full py-3 rounded-lg border-2 border-white/50 text-white font-medium hover:bg-white/10 transition-colors disabled:opacity-60"
+              disabled={signingIn || hasCreatedAvatar || checkingAvatar}
+              className="w-full py-3 rounded-lg border-2 border-white/50 text-white font-medium hover:bg-white/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
             >
-              {signingIn ? "Signing in…" : "Get started"}
+              {signingIn ? "Signing in…" : checkingAvatar ? "Checking…" : "Get started"}
             </button>
-            <p className="text-xs text-white/80 mt-3 text-center">*Rs. 3/chat beyond 500 chats</p>
+            {hasCreatedAvatar && (
+              <p className="text-xs text-amber-200 mt-3 text-center">
+                Sorry — one avatar per email. You’ve already created yours with this account.
+              </p>
+            )}
+            {!hasCreatedAvatar && <p className="text-xs text-white/80 mt-3 text-center">*Rs. 3/chat beyond 500 chats</p>}
           </div>
 
           {/* White glove card - cream */}

@@ -15,13 +15,14 @@ export default function ServiceModal({
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [showServiceModalForBuy, setShowServiceModalForBuy] = useState(false);
-  const [personalitytype, setPersonalitytype] = useState("intro");
+  const [personalitytype, setPersonalitytype] = useState("about");
   const [formData, setFormData] = useState({
     serviceTitle: "",
     serviceName: "",
     welcomingMessage: "",
-    intro: "",
+    about: "",
     behaviour: "",
+    rules: "",
     introquestions: [],
   });
   const [loading, setLoading] = useState(false);
@@ -36,8 +37,9 @@ export default function ServiceModal({
           serviceTitle: service.title || "",
           serviceName: service.name || "",
           welcomingMessage: "",
-          intro: "",
+          about: "",
           behaviour: "",
+          rules: "",
           introquestions: [],
         });
       } else {
@@ -46,8 +48,9 @@ export default function ServiceModal({
           serviceTitle: service.title || "",
           serviceName: service.name || "",
           welcomingMessage: service.initialMessage || "",
-          intro: service.intro || "",
+          about: service.about || "",
           behaviour: service.behaviour || "",
+          rules: service.rules || "",
           introquestions: qs,
         });
       }
@@ -56,8 +59,9 @@ export default function ServiceModal({
         serviceTitle: "",
         serviceName: "",
         welcomingMessage: "",
-        intro: "",
+        about: "",
         behaviour: "",
+        rules: "",
         introquestions: [],
       });
     }
@@ -74,8 +78,9 @@ export default function ServiceModal({
         name: service?.name || formData.serviceName,
         title: formData.serviceTitle,
         initialMessage: formData.welcomingMessage,
-        intro: formData.intro,
+        about: formData.about,
         behaviour: formData.behaviour,
+        rules: formData.rules,
         introquestions: (formData.introquestions || []).slice(0, 5).filter((q) => typeof q === "string" && q.trim() !== ""),
       };
 
@@ -219,13 +224,13 @@ export default function ServiceModal({
                 </p>
                 <div className="flex gap-2 mb-4">
                   <button
-                    onClick={() => setPersonalitytype("intro")}
-                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${personalitytype === "intro"
+                    onClick={() => setPersonalitytype("about")}
+                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${personalitytype === "about"
                       ? "bg-purple-900 text-white shadow-md"
                       : "bg-gray-100 text-gray-700 hover:bg-gray-200"
                       }`}
                   >
-                    Intro
+                    About
                   </button>
                   <button
                     onClick={() => setPersonalitytype("behaviour")}
@@ -235,6 +240,15 @@ export default function ServiceModal({
                       }`}
                   >
                     Behaviour
+                  </button>
+                  <button
+                    onClick={() => setPersonalitytype("rules")}
+                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${personalitytype === "rules"
+                      ? "bg-purple-900 text-white shadow-md"
+                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                      }`}
+                  >
+                    Rules
                   </button>
                 </div>
               </div>

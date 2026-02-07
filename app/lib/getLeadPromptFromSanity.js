@@ -2,7 +2,7 @@ import { client } from "@/app/lib/sanity";
 
 /**
  * Fetches the lead-journey service prompt from Sanity by brand (subdomain) and serviceKey.
- * Returns a string built from the service's intro and behaviour (same as client getServicePrompt).
+ * Returns a string built from the service's about, behaviour, and rules.
  * @param {string} brand - Brand subdomain
  * @param {string} serviceKey - Service _key
  * @returns {Promise<string>} Prompt string or ""
@@ -14,8 +14,9 @@ export async function getLeadPromptFromSanity(brand, serviceKey) {
     const data = await client.fetch(
       `*[_type == "brand" && subdomain == $brand][0]{
         "service": services[_key == $serviceKey][0]{
-          intro,
-          behaviour
+          about,
+          behaviour,
+          rules
         }
       }`,
       { brand: String(brand).trim(), serviceKey: String(serviceKey).trim() }
@@ -25,8 +26,9 @@ export async function getLeadPromptFromSanity(brand, serviceKey) {
     if (!service) return "";
 
     const parts = [];
-    if (service.intro) parts.push(`Introduction: ${service.intro}`);
-    if (service.behaviour) parts.push(`Behaviour: ${service.behaviour}`);
+    if (service.about?.trim()) parts.push(`About the person you represent (real world): ${service.about.trim()}`);
+    if (service.rules?.trim()) parts.push(`Rules to follow: ${service.rules.trim()}`);
+    if (service.behaviour?.trim()) parts.push(`How to behave as this avatar: ${service.behaviour.trim()}`);
 
     return parts.length > 0 ? parts.join(". ") + " " : "";
   } catch (error) {
