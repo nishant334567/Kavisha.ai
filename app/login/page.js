@@ -128,15 +128,6 @@ export default function LoginPage() {
             )}
           </button>
         )}
-
-        {isBlocked && (
-          <button
-            disabled
-            className="px-6 py-3 bg-gray-300 text-gray-500 rounded-md text-lg font-medium cursor-not-allowed"
-          >
-            🔒 Sign-in Blocked in App Browser
-          </button>
-        )}
       </div>
     </div>
   );

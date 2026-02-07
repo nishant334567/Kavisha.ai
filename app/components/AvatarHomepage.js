@@ -105,7 +105,7 @@ export default function AvatarHomepage() {
         )}
 
         {/* Button in normal flow for both mobile and desktop; hide when in-app browser on mobile */}
-        <div className="flex flex-col items-center justify-center py-6 gap-4">
+        <div className="flex justify-center py-6">
           {!(isInAppBrowser && isMobile) && (
             <button
               onClick={handleSignIn}
@@ -117,14 +117,6 @@ export default function AvatarHomepage() {
               ) : (
                 brand?.loginButtonText?.toUpperCase() || "TALK TO ME NOW"
               )}
-            </button>
-          )}
-          {isInAppBrowser && isMobile && (
-            <button
-              disabled
-              className="px-6 py-3 bg-gray-300 dark:bg-gray-700 text-gray-500 dark:text-gray-400 rounded-md text-lg font-medium cursor-not-allowed"
-            >
-              🔒 Sign-in Blocked in App Browser
             </button>
           )}
         </div>
