@@ -18,6 +18,8 @@ export default function MakeAvatarLandingPage() {
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [popupBlockedHint, setPopupBlockedHint] = useState(false);
+  const [hasCreatedAvatar, setHasCreatedAvatar] = useState(false);
+  const [checkingAvatar, setCheckingAvatar] = useState(true);
 
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
@@ -25,8 +27,6 @@ export default function MakeAvatarLandingPage() {
   }, []);
 
   const isBlocked = isInAppBrowser && isMobile;
-  const [hasCreatedAvatar, setHasCreatedAvatar] = useState(false);
-  const [checkingAvatar, setCheckingAvatar] = useState(true);
 
   useEffect(() => {
     if (!user?.email) {
