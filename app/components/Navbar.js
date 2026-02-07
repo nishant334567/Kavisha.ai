@@ -6,6 +6,11 @@ import { signOut } from "../lib/firebase/logout";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
 import { Cross, Menu, X, Settings } from "lucide-react";
+import {
+  detectInAppBrowser,
+  isMobileDevice,
+  openInChrome,
+} from "../lib/in-app-browser";
 
 export default function Navbar() {
   const { user, loading, refresh } = useFirebaseSession();
@@ -15,8 +20,15 @@ export default function Navbar() {
   const [popupBlockedHint, setPopupBlockedHint] = useState(false);
   const [openMenu, setOpenmenu] = useState(false);
   const [showSettingDropdown, setShowsettingDropdown] = useState(false);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
   const settingDropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
+
+  useEffect(() => {
+    setIsInAppBrowser(detectInAppBrowser());
+    setIsMobile(isMobileDevice());
+  }, []);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -41,6 +53,8 @@ export default function Navbar() {
     typeof window !== "undefined" &&
     (brand?.subdomain === "kavisha" ||
       window.location.hostname.replace(/^www\./, "").split(".").length === 2);
+
+  const isBlocked = isInAppBrowser && isMobile;
 
   const handleSignIn = async (redirectPath) => {
     setSigningIn(true);
@@ -100,11 +114,12 @@ export default function Navbar() {
                 onClick={() => {
                   if (user) {
                     router.push("/talk-to-avatar");
-                  } else {
+                  } else if (!isBlocked) {
                     handleSignIn("/talk-to-avatar");
                   }
                 }}
-              // className="px-3 py-1.5 rounded-md text-sm bg-blue-600 hover:bg-blue-700 transition-colors"
+                disabled={isBlocked}
+                className={isBlocked ? "opacity-60 cursor-not-allowed" : ""}
               >
                 TALK TO AVATAARS
               </button>
@@ -121,14 +136,23 @@ export default function Navbar() {
               <div className=" text-sm text-muted">Loading...</div>
             ) : !user ? (
               <div className="flex flex-col items-end">
-                <button
-                  onClick={handleSignIn}
-                  disabled={signingIn}
-                  className=" font-akshar"
-                >
-                  {signingIn ? "Signing in..." : "SIGN IN"}
-                </button>
-                {popupBlockedHint && (
+                {isBlocked ? (
+                  <button
+                    onClick={openInChrome}
+                    className="font-akshar text-sm text-amber-200 hover:underline"
+                  >
+                    Open in Chrome to sign in
+                  </button>
+                ) : (
+                  <button
+                    onClick={handleSignIn}
+                    disabled={signingIn}
+                    className=" font-akshar"
+                  >
+                    {signingIn ? "Signing in..." : "SIGN IN"}
+                  </button>
+                )}
+                {popupBlockedHint && !isBlocked && (
                   <p className="text-xs text-amber-200 mt-1 text-right max-w-[200px]">Popup was blocked. Try again — it&apos;ll work.</p>
                 )}
               </div>
@@ -206,10 +230,16 @@ export default function Navbar() {
                 <button disabled>Loading...</button>
               ) : !user ? (
                 <div>
-                  <button onClick={handleSignIn} disabled={signingIn}>
-                    {signingIn ? "Signing in..." : "Sign In"}
-                  </button>
-                  {popupBlockedHint && (
+                  {isBlocked ? (
+                    <button onClick={openInChrome} className="text-left">
+                      Open in Chrome to sign in
+                    </button>
+                  ) : (
+                    <button onClick={handleSignIn} disabled={signingIn}>
+                      {signingIn ? "Signing in..." : "Sign In"}
+                    </button>
+                  )}
+                  {popupBlockedHint && !isBlocked && (
                     <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Popup was blocked. Try again — it&apos;ll work.</p>
                   )}
                 </div>

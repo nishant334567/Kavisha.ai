@@ -5,7 +5,7 @@ import { signOut } from "../lib/firebase/logout";
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { X, ChevronsRight, ChevronLeft, Trash2 } from "lucide-react";
+import { X, ChevronsRight, PanelLeftClose, Trash2 } from "lucide-react";
 
 export default function ChatSidebar({
   allChats,
@@ -20,9 +20,10 @@ export default function ChatSidebar({
   servicesProvided = [],
   onSelectService,
   isCreatingSession = false,
+  defaultCollapsed = false,
 }) {
   const { user } = useFirebaseSession();
-  const [isCollapsed, setIscollapsed] = useState(false);
+  const [isCollapsed, setIscollapsed] = useState(defaultCollapsed);
   const [newChatLoading, setNewChatLoading] = useState(false);
   const [showNewChatDropdown, setShowNewChatDropdown] = useState(false);
   const [showCommunityNewDropdown, setShowCommunityNewDropdown] = useState(false);
@@ -162,8 +163,8 @@ export default function ChatSidebar({
               </div>
               <div className="flex justify-between">
                 <p className="font-semibold text-slate-600">Your Chats</p>
-                <button className="p-1" onClick={() => toggleLeftSideBar()}>
-                  <ChevronLeft className="w-5 h-5" />
+                <button className="p-1" onClick={() => toggleLeftSideBar()} title="Close sidebar" aria-label="Close sidebar">
+                  <PanelLeftClose className="w-5 h-5" />
                 </button>
               </div>
 
@@ -349,9 +350,13 @@ export default function ChatSidebar({
                                   ? `${path}?subdomain=${sessionBrand}`
                                   : `https://${sessionBrand}.kavisha.ai${path}`;
                               window.open(url, "_blank");
+                              setIscollapsed(true);
+                              onCollapsedChange?.(true);
                               return;
                             }
                             router.push(`${chatBasePath}/${id}`);
+                            setIscollapsed(true);
+                            onCollapsedChange?.(true);
                           }}
                         >
                           <div className="font-akshar flex flex-col items-start w-full justify-center">

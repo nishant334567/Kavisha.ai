@@ -1,22 +1,42 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { signIn } from "../lib/firebase/sign-in";
+import {
+  detectInAppBrowser,
+  isMobileDevice,
+  openInChrome,
+} from "../lib/in-app-browser";
 
 export default function MakeAvatarLandingPage() {
   const router = useRouter();
   const { user, refresh } = useFirebaseSession();
   const [signingIn, setSigningIn] = useState(false);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const [popupBlockedHint, setPopupBlockedHint] = useState(false);
+
+  useEffect(() => {
+    setIsInAppBrowser(detectInAppBrowser());
+    setIsMobile(isMobileDevice());
+  }, []);
+
+  const isBlocked = isInAppBrowser && isMobile;
 
   const handleGetStarted = async () => {
     if (user) {
       router.push("/make-avatar/v2");
       return;
     }
+    if (isBlocked) {
+      openInChrome();
+      return;
+    }
     setSigningIn(true);
+    setPopupBlockedHint(false);
     try {
       if (typeof window !== "undefined") {
         localStorage.setItem("redirectAfterLogin", "/make-avatar/v2");
@@ -26,7 +46,7 @@ export default function MakeAvatarLandingPage() {
       router.push("/make-avatar/v2");
     } catch (e) {
       if (e?.code === "auth/popup-blocked") {
-        // could show hint
+        setPopupBlockedHint(true);
       }
     } finally {
       setSigningIn(false);
@@ -59,6 +79,23 @@ export default function MakeAvatarLandingPage() {
         <p className="text-center text-gray-600 text-base md:text-lg max-w-xl mx-auto mb-10">
           Create your Avataar and give your fans/customers the pleasure of personal conversations with you. 24x7x365.
         </p>
+
+        {isBlocked && (
+          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg max-w-md mx-auto text-center">
+            <p className="text-sm text-amber-800 mb-2">Please open this page in Chrome to sign in and continue.</p>
+            <button
+              type="button"
+              onClick={openInChrome}
+              className="py-2 px-4 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm font-medium"
+            >
+              Open in Chrome
+            </button>
+          </div>
+        )}
+
+        {popupBlockedHint && !isBlocked && (
+          <p className="text-center text-amber-600 text-sm mb-4">Popup was blocked. Try again — it&apos;ll work.</p>
+        )}
 
         {/* Cards */}
         <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -96,7 +133,7 @@ export default function MakeAvatarLandingPage() {
               disabled={signingIn}
               className="w-full py-3 rounded-lg border-2 border-white/50 text-white font-medium hover:bg-white/10 transition-colors disabled:opacity-60"
             >
-              {signingIn ? "Signing in…" : "Get started"}
+              {signingIn ? "Signing in…" : isBlocked ? "Open in Chrome to continue" : "Get started"}
             </button>
             <p className="text-xs text-white/80 mt-3 text-center">*Rs. 3/chat beyond 500 chats</p>
           </div>

@@ -1,13 +1,28 @@
 "use client";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useState, useEffect } from "react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { signIn } from "../lib/firebase/sign-in";
 import { Twitter, Linkedin } from "lucide-react";
+import {
+  detectInAppBrowser,
+  isMobileDevice,
+  openInChrome,
+} from "../lib/in-app-browser";
 
 export default function Footer() {
   const router = useRouter();
   const { user, refresh } = useFirebaseSession();
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsInAppBrowser(detectInAppBrowser());
+    setIsMobile(isMobileDevice());
+  }, []);
+
+  const isBlocked = isInAppBrowser && isMobile;
 
   const handleSignIn = async (redirectPath) => {
     try {
@@ -27,6 +42,14 @@ export default function Footer() {
       <Link href={href} className="hover:underline">
         {label}
       </Link>
+    ) : isBlocked ? (
+      <button
+        type="button"
+        onClick={openInChrome}
+        className="hover:underline text-left font-normal bg-transparent border-0 p-0 cursor-pointer font-fredoka"
+      >
+        Open in Chrome to sign in
+      </button>
     ) : (
       <button
         type="button"

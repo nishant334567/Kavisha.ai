@@ -34,7 +34,7 @@ export default function CommunityChatPage() {
 
   const createCommunityPost = async (type, title, message) => {
     if (!user?.id || !brandContext?.subdomain) return;
-    
+
     const services = brandContext?.services || [];
     const service = services.find((s) => s.name === type);
     const serviceKey = service?._key ?? services[0]?._key;
@@ -79,6 +79,7 @@ export default function CommunityChatPage() {
             onNewCommunityChat={createCommunityPost}
             chatBasePath="/community"
             homePath="/community"
+            defaultCollapsed={true}
           />
         </div>
         <div className="w-full h-full flex flex-col overflow-hidden">

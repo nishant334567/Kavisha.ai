@@ -3,6 +3,11 @@ import { useState, useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { signIn } from "../lib/firebase/sign-in";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
+import {
+  detectInAppBrowser,
+  isMobileDevice,
+  openInChrome,
+} from "../lib/in-app-browser";
 import InfoCard from "./InfoCard";
 import AvatarCard from "./AvatarCard";
 import { ChevronLeft, ChevronRight } from "lucide-react";
@@ -49,6 +54,15 @@ export default function Homepage() {
   const [avatars, setAvatars] = useState([]);
   const [avatarsLoading, setAvatarsLoading] = useState(true);
   const [avatarsError, setAvatarsError] = useState(null);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsInAppBrowser(detectInAppBrowser());
+    setIsMobile(isMobileDevice());
+  }, []);
+
+  const isBlocked = isInAppBrowser && isMobile;
 
   const handleSignIn = async (redirectPath = null) => {
     setSigningIn(true);
@@ -147,16 +161,30 @@ export default function Homepage() {
         </div>
       )}
 
+      {isBlocked && (
+        <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg max-w-md mx-auto">
+          <p className="text-sm text-gray-700 mb-4 text-center">
+            Please open in Chrome to continue
+          </p>
+          <button
+            onClick={openInChrome}
+            className="w-full py-3 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+          >
+            Open in Chrome
+          </button>
+        </div>
+      )}
+
       <div className="font-akshar gap-2 md:gap-4 flex flex-wrap justify-center items-center mb-8 px-4">
         <button
           onClick={() => {
             if (user) {
               router.push("/talk-to-avatar2");
-            } else {
+            } else if (!isBlocked) {
               handleSignIn("/talk-to-avatar");
             }
           }}
-          disabled={signingIn}
+          disabled={signingIn || isBlocked}
           className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
         >
           {signingIn ? "Signing in..." : "Talk to Avataars"}
@@ -171,11 +199,11 @@ export default function Homepage() {
           onClick={() => {
             if (user) {
               router.push("/talk-to-avatar");
-            } else {
+            } else if (!isBlocked) {
               handleSignIn("/community");
             }
           }}
-          disabled={signingIn}
+          disabled={signingIn || isBlocked}
           className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
         >
           {signingIn ? "Signing in..." : "Connect with people"}
@@ -322,11 +350,11 @@ export default function Homepage() {
               onClick={() => {
                 if (user) {
                   router.push("/talk-to-avatar");
-                } else {
+                } else if (!isBlocked) {
                   handleSignIn("/talk-to-avatar");
                 }
               }}
-              disabled={signingIn}
+              disabled={signingIn || isBlocked}
               className="w-fit px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl font-akshar hover:bg-white hover:text-[#35515b] transition-colors disabled:opacity-50"
             >
               {signingIn ? "Signing in..." : "Connect with people"}
