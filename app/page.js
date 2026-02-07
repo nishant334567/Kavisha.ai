@@ -9,6 +9,7 @@ import ChatSidebar from "./components/ChatSidebar";
 import Loader from "./components/Loader";
 import Homepage from "./components/Homepage";
 import AvatarHomepage from "./components/AvatarHomepage";
+import PoweredByKavisha from "./components/PoweredByKavisha";
 
 export default function HomePage() {
   const { user, loading } = useFirebaseSession();
@@ -168,8 +169,8 @@ export default function HomePage() {
   }
 
   return (
-    <div className="h-[calc(100vh-64px)] overflow-hidden">
-      <div className="flex h-full overflow-hidden">
+    <div className="min-h-[calc(100vh-64px)] h-[calc(100vh-64px)] flex flex-col overflow-hidden">
+      <div className="flex flex-1 min-h-0 overflow-hidden">
         <div>
           <ChatSidebar
             allChats={allChats}
@@ -182,7 +183,7 @@ export default function HomePage() {
             servicesProvided={servicesProvided}
             onSelectService={selectChatType}
             isCreatingSession={creatingSession}
-            defaultCollapsed={false}
+            defaultCollapsed={true}
           />
         </div>
 
@@ -214,6 +215,7 @@ export default function HomePage() {
           )}
         </div>
       </div>
+      <PoweredByKavisha />
     </div>
   );
 }
