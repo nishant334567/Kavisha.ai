@@ -3,7 +3,12 @@ import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
 import { signIn } from "../lib/firebase/sign-in";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  detectInAppBrowser,
+  isMobileDevice,
+  openInChrome,
+} from "../lib/in-app-browser";
 
 export default function AvatarHomepage() {
   const brand = useBrandContext();
@@ -12,6 +17,13 @@ export default function AvatarHomepage() {
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState("");
   const [popupBlocked, setPopupBlocked] = useState(false);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+
+  useEffect(() => {
+    setIsInAppBrowser(detectInAppBrowser());
+    setIsMobile(isMobileDevice());
+  }, []);
 
   const handleSignIn = async () => {
     setSigningIn(true);
@@ -78,19 +90,35 @@ export default function AvatarHomepage() {
           </div>
         )}
 
-        {/* Button in normal flow for both mobile and desktop */}
+        {isInAppBrowser && isMobile && (
+          <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg max-w-md mx-auto">
+            <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 text-center">
+              Please open in Chrome to continue
+            </p>
+            <button
+              onClick={openInChrome}
+              className="w-full py-3 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+            >
+              Open in Chrome
+            </button>
+          </div>
+        )}
+
+        {/* Button in normal flow for both mobile and desktop; hide when in-app browser on mobile */}
         <div className="flex justify-center py-6">
-          <button
-            onClick={handleSignIn}
-            disabled={signingIn}
-            className="font-akshar px-6 py-3 rounded-full bg-[#59646F] dark:bg-muted-bg text-md disabled:opacity-50 flex items-center gap-2 text-[#FFEED8] dark:text-foreground hover:bg-[#4a5568] dark:hover:bg-border transition-colors"
-          >
-            {signingIn ? (
-              <span>Signing in...</span>
-            ) : (
-              brand?.loginButtonText?.toUpperCase() || "TALK TO ME NOW"
-            )}
-          </button>
+          {!(isInAppBrowser && isMobile) && (
+            <button
+              onClick={handleSignIn}
+              disabled={signingIn}
+              className="font-akshar px-6 py-3 rounded-full bg-[#59646F] dark:bg-muted-bg text-md disabled:opacity-50 flex items-center gap-2 text-[#FFEED8] dark:text-foreground hover:bg-[#4a5568] dark:hover:bg-border transition-colors"
+            >
+              {signingIn ? (
+                <span>Signing in...</span>
+              ) : (
+                brand?.loginButtonText?.toUpperCase() || "TALK TO ME NOW"
+              )}
+            </button>
+          )}
         </div>
       </div>
     </div>

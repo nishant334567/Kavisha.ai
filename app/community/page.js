@@ -189,6 +189,7 @@ export default function Community() {
                         onNewCommunityChat={createCommunityPost}
                         chatBasePath="/community"
                         homePath="/community"
+                        defaultCollapsed={false}
                     />
                 </div>
                 <div className="w-full min-h-0 overflow-auto flex-1 min-w-0">

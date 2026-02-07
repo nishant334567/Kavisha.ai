@@ -105,6 +105,7 @@ export default function Chat() {
             servicesProvided={servicesProvided}
             onSelectService={selectChatType}
             isCreatingSession={creatingSession}
+            defaultCollapsed={true}
           />
         </div>
 

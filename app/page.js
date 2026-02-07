@@ -182,6 +182,7 @@ export default function HomePage() {
             servicesProvided={servicesProvided}
             onSelectService={selectChatType}
             isCreatingSession={creatingSession}
+            defaultCollapsed={false}
           />
         </div>
 
