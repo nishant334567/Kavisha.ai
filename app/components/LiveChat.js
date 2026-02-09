@@ -12,6 +12,7 @@ export default function Livechat({
   onClose,
   connectionId,
   isEmbedded = false,
+  otherUserDisplayName = null,
 }) {
   const [message, setMessage] = useState("");
   const { user } = useFirebaseSession();
@@ -24,6 +25,12 @@ export default function Livechat({
   });
 
   const { socket, isOnline } = useSocket();
+
+  // Masked name only when opened from community Connect/Message (parent passes otherUserDisplayName)
+  const displayName =
+    otherUserDisplayName != null && otherUserDisplayName !== ""
+      ? otherUserDisplayName
+      : chatInfo.otherUser || "";
 
   const groupedMessages = useMemo(() => {
     const grouped = {};
@@ -172,7 +179,7 @@ export default function Livechat({
             className="w-12 h-12 rounded-full"
           />
           <div className="uppercase font-baloo font-semibold text-lg py-2 text-foreground">
-            {chatInfo.otherUser}
+            {displayName}
           </div>
         </div>
         <button
@@ -205,7 +212,7 @@ export default function Livechat({
                   const text = typeof m === "string" ? m : m.text;
                   const senderName = isMe
                     ? user?.name || "You"
-                    : chatInfo.otherUser;
+                    : displayName;
                   return (
                     <div key={`${date}-${i}`}>
                       <div className="flex gap-2 px-4 py-2">

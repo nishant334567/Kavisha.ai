@@ -58,11 +58,13 @@ export default function Community() {
     const [chatUserA, setChatUserA] = useState(null);
     const [chatUserB, setChatUserB] = useState(null);
     const [connectionId, setConnectionId] = useState(null);
+    const [chatOtherDisplayName, setChatOtherDisplayName] = useState(null);
 
-    const openChatSession = (userA, userB) => {
+    const openChatSession = (userA, userB, otherDisplayName = null) => {
         setChatUserA(userA);
         setChatUserB(userB);
         setConnectionId([userA, userB].sort().join("_"));
+        setChatOtherDisplayName(otherDisplayName ?? null);
         setOpenChat(true);
     };
 
@@ -258,7 +260,7 @@ export default function Community() {
                                             date={r.date}
                                             description={r.description}
                                             requirement={r.requirement}
-                                            onConnect={() => openChatSession(user.id, r.userId)}
+                                            onConnect={() => openChatSession(user.id, r.userId, r.name)}
                                             connectLabel={connectedUserIds.has(r.userId) ? "Message" : "Connect"}
                                         />
                                     ))}
@@ -280,6 +282,7 @@ export default function Community() {
                             onClose={() => setOpenChat(false)}
                             connectionId={connectionId}
                             isEmbedded={true}
+                            otherUserDisplayName={chatOtherDisplayName}
                         />
                     </div>
                 </div>
