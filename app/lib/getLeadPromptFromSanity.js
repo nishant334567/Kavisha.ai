@@ -27,8 +27,9 @@ export async function getLeadPromptFromSanity(brand, serviceKey) {
 
     const parts = [];
     if (service.about?.trim()) parts.push(`About the person you represent (real world): ${service.about.trim()}`);
-    if (service.rules?.trim()) parts.push(`Rules to follow: ${service.rules.trim()}`);
-    if (service.behaviour?.trim()) parts.push(`How to behave as this avatar: ${service.behaviour.trim()}`);
+    if (service.behaviour?.trim()) parts.push(`How to behave as the avatar: ${service.behaviour.trim()}`);
+    if (service.rules?.trim()) parts.push(`Some special rules to follow: ${service.rules.trim()}`);
+
 
     return parts.length > 0 ? parts.join(". ") + " " : "";
   } catch (error) {
