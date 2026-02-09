@@ -18,21 +18,25 @@ const cards = [
     title: "Unresponded DMs are lost goodwill",
     body: "Influencers get so many messages, that it's impossible to address them all. But each unresponded message is some goodwill lost.",
     variant: "teal",
+    variantMobile: "beige",
   },
   {
     title: "Every inbound is an opportunity",
     body: "Whether it's a harmless pleasantry, or a curious business enquiry, it's all lost in the sea of DMs. That's wasted opportunity.",
     variant: "beige",
+    variantMobile: "teal",
   },
   {
     title: "Your Digital Avataar can unlock value",
     body: "With Kavisha, it's now possible to engage with fans in a much deeper way. Every DM now leads to a force multiplier, a sale, or a happier fan.",
     variant: "beige",
+    variantMobile: "beige",
   },
   {
     title: "Give your fans an experience like never before",
     body: "Your fans now get the gift of your conversations, knowing you're behind them. This is something they'd really appreciate, and never forget.",
     variant: "teal",
+    variantMobile: "teal",
   },
 ];
 
