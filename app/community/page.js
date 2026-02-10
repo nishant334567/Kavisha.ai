@@ -131,7 +131,7 @@ export default function Community() {
             }
         })();
     }, [user?.id]);
-
+    //retrigger
     useEffect(() => {
         const subdomain = brand?.subdomain;
         if (!subdomain) {
