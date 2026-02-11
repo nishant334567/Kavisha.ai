@@ -59,11 +59,13 @@ export default function Community() {
     const [connectionId, setConnectionId] = useState(null);
     const [paidConnectionUserIds, setPaidConnectionUserIds] = useState([]);
     const [connectingToUserId, setConnectingToUserId] = useState(null);
+    const [chatOtherDisplayName, setChatOtherDisplayName] = useState(null);
 
-    const openChatSession = (userA, userB) => {
+    const openChatSession = (userA, userB, otherDisplayName = null) => {
         setChatUserA(userA);
         setChatUserB(userB);
         setConnectionId([userA, userB].sort().join("_"));
+        setChatOtherDisplayName(otherDisplayName ?? null);
         setOpenChat(true);
     };
 
@@ -296,17 +298,17 @@ export default function Community() {
                 </div>
                 <div className="w-full flex flex-col flex-1 min-h-0 min-w-0">
                     <div className="flex-1 min-h-0 overflow-auto">
-                        <div className="mt-14 pl-12 pr-4 sm:pl-14 sm:pr-6 md:px-12 lg:px-28 pb-4">
+                        <div className="mt-14 ">
                             {/* Back button - pl-12/pl-14 reserves space for collapsed sidebar toggle */}
                             <button
                                 onClick={() => router.push("/")}
-                                className="flex items-center gap-2 text-[#3D5E6B] hover:text-[#2d4e5b] transition-colors py-1 -mb-1"
+                                className="flex pl-12 items-center gap-2 text-[#3D5E6B] hover:text-[#2d4e5b] transition-colors py-1 -mb-1"
                             >
                                 <ArrowLeft className="w-5 h-5 flex-shrink-0" />
                                 <span className="font-fredoka text-sm sm:text-base">Back</span>
                             </button>
 
-                            <div className="font-fredoka flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-2 sm:py-3">
+                            <div className="px-8 font-fredoka flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-4 sm:py-3">
                                 <div className="min-w-0">
                                     <p className="text-[#3D5E6B] text-2xl sm:text-3xl lg:text-4xl">Community</p>
                                     <p className="text-sm sm:text-base font-extralight mt-1">
@@ -351,7 +353,7 @@ export default function Community() {
                                     No community posts yet.
                                 </div>
                             ) : (
-                                <div className="py-4 px-2 sm:p-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                <div className="py-4 px-4 sm:px-8 sm:py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
                                     {requirements.map((r) => (
                                         <CommunityCard
                                             key={r.id}
@@ -359,8 +361,8 @@ export default function Community() {
                                             date={r.date}
                                             description={r.description}
                                             requirement={r.requirement}
-                                            onConnect={() => handleConnect(user.id, r.userId)}
-                                            connectLabel={paidConnectedUserIds.has(String(r.userId)) ? "Message" : "Connect"}
+                                            onConnect={() => openChatSession(user.id, r.userId, r.name)}
+                                            connectLabel={connectedUserIds.has(r.userId) ? "Message" : "Connect"}
                                         />
                                     ))}
                                 </div>
@@ -393,6 +395,7 @@ export default function Community() {
                             onClose={() => setOpenChat(false)}
                             connectionId={connectionId}
                             isEmbedded={true}
+                            otherUserDisplayName={chatOtherDisplayName}
                         />
                     </div>
                 </div>

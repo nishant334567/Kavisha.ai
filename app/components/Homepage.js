@@ -18,21 +18,25 @@ const cards = [
     title: "Unresponded DMs are lost goodwill",
     body: "Influencers get so many messages, that it's impossible to address them all. But each unresponded message is some goodwill lost.",
     variant: "teal",
+    variantMobile: "beige",
   },
   {
     title: "Every inbound is an opportunity",
     body: "Whether it's a harmless pleasantry, or a curious business enquiry, it's all lost in the sea of DMs. That's wasted opportunity.",
     variant: "beige",
+    variantMobile: "teal",
   },
   {
     title: "Your Digital Avataar can unlock value",
     body: "With Kavisha, it's now possible to engage with fans in a much deeper way. Every DM now leads to a force multiplier, a sale, or a happier fan.",
     variant: "beige",
+    variantMobile: "beige",
   },
   {
     title: "Give your fans an experience like never before",
     body: "Your fans now get the gift of your conversations, knowing you're behind them. This is something they'd really appreciate, and never forget.",
     variant: "teal",
+    variantMobile: "teal",
   },
 ];
 
@@ -134,8 +138,8 @@ export default function Homepage() {
     setCurrentIndex((prev) => Math.min(maxIndex, prev + 1));
   };
   return (
-    <div className="mt-16">
-      <div className="flex flex-col items-center justify-center py-8">
+    <div className="mt-8 sm:mt-16">
+      <div className="flex flex-col items-center justify-center pt-2 pb-8">
 
         <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
       </div>
@@ -175,7 +179,7 @@ export default function Homepage() {
         </div>
       )}
 
-      <div className="font-akshar gap-2 md:gap-4 flex flex-wrap justify-center items-center mb-8 px-4">
+      <div className="font-akshar gap-2 md:gap-4 flex flex-col md:flex-row flex-wrap justify-center items-center mb-8 px-4">
         <button
           onClick={() => {
             if (user) {
@@ -185,13 +189,13 @@ export default function Homepage() {
             }
           }}
           disabled={signingIn || isBlocked}
-          className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
+          className="w-[80%] md:w-auto min-w-0 px-3 md:px-4 py-2 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
         >
           {signingIn ? "Signing in..." : "Talk to Avataars"}
         </button>
         <button
           onClick={() => router.push("/make-avatar")}
-          className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#3D5E6B] text-white shadow-md hover:bg-[#2d4752] transition-colors"
+          className="w-[80%] md:w-auto min-w-0 px-3 md:px-4 py-2 text-sm md:text-base rounded-lg bg-[#3D5E6B] text-white shadow-md hover:bg-[#2d4752] transition-colors"
         >
           Make my Avataar
         </button>
@@ -204,7 +208,7 @@ export default function Homepage() {
             }
           }}
           disabled={signingIn || isBlocked}
-          className="px-3 md:px-4 py-1 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
+          className="w-[80%] md:w-auto min-w-0 px-4 py-2 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
         >
           {signingIn ? "Signing in..." : "Connect with people"}
         </button>
@@ -215,8 +219,8 @@ export default function Homepage() {
         ))}
       </div>
       <div className="relative">
-        {/* Centered '=' badge */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-1/2 -translate-y-1/2 z-10 bg-[#3D4A52] w-10 h-10 md:w-14 md:h-14 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1">
+        {/* '=' badge: pinned to boundary between cream and teal so it stays vertically consistent on mobile */}
+        <div className="absolute left-1/2 -translate-x-1/2 top-[120px] md:top-[160px] -translate-y-1/2 z-10 bg-[#3D4A52] w-10 h-10 md:w-14 md:h-14 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1">
           <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
           <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
         </div>
@@ -276,7 +280,7 @@ export default function Homepage() {
                         href={avatar.link}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="block w-full cursor-pointer hover:opacity-95 active:opacity-90 transition-opacity rounded-2xl focus:outline-none"
+                        className="flex justify-center w-full cursor-pointer hover:opacity-95 active:opacity-90 transition-opacity rounded-2xl focus:outline-none"
                       >
                         <AvatarCard
                           name={avatar.name}
@@ -337,14 +341,14 @@ export default function Homepage() {
 
         {/* Two column layout */}
         <div className="flex flex-col md:flex-row">
-          {/* Left - Teal section */}
-          <div className="font-akshar md:flex-[4] bg-[#35515b] text-white px-6 md:px-10 py-8 md:py-12 flex flex-col justify-center">
-            <p className="text-3xl md:text-5xl lg:text-6xl font-fredoka leading-snug mb-4 md:mb-6">
-              Your fans can
-              <br />
-              <span className="text-[#f2d75e]">connect</span> with
-              <br />
-              each other
+          {/* Left - Teal section: on mobile full-width paragraph + centered button */}
+          <div className="font-akshar md:flex-[4] bg-[#35515b] text-white px-6 md:px-10 py-8 md:py-12 flex flex-col justify-center text-center md:text-left items-center md:items-start">
+            <p className="w-full max-w-full text-3xl md:text-5xl lg:text-6xl font-fredoka leading-snug mb-4 md:mb-6">
+              <span className="md:block">Your fans can </span>
+              <span className="md:block">
+                <span className="text-[#f2d75e]">connect </span> with
+              </span>
+              <span className="md:block">each other</span>
             </p>
             <button
               onClick={() => {
@@ -355,7 +359,7 @@ export default function Homepage() {
                 }
               }}
               disabled={signingIn || isBlocked}
-              className="w-fit px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl font-akshar hover:bg-white hover:text-[#35515b] transition-colors disabled:opacity-50"
+              className="w-fit mx-auto md:mx-0 px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl font-akshar hover:bg-white hover:text-[#35515b] transition-colors disabled:opacity-50"
             >
               {signingIn ? "Signing in..." : "Connect with people"}
             </button>
