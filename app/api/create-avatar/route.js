@@ -93,6 +93,8 @@ async function runCreateAvatar(request, creatorEmail) {
     const subtitle = formData.get("subtitle");
     const email = formData.get("email");
     const about = formData.get("about");
+    const behaviour = formData.get("behaviour");
+    const rules = formData.get("rules");
     const imageFile = formData.get("image");
 
     if (!subdomain || !String(subdomain).trim()) {
@@ -150,10 +152,12 @@ async function runCreateAvatar(request, creatorEmail) {
       }
     }
 
-    // Create lead_journey service with about, default behaviour and rules
+    // Create lead_journey service with about, behaviour and rules (from form or defaults)
     const avatarName = String(brandName || normalizedSubdomain).trim() || "this person";
     const defaultBehaviour = `You are ${avatarName}'s digital avatar.`;
     const defaultRules = "Don't use abusive language. Be calm and polite.";
+    const behaviourText = (behaviour && String(behaviour).trim()) ? String(behaviour).trim() : defaultBehaviour;
+    const rulesText = (rules && String(rules).trim()) ? String(rules).trim() : defaultRules;
 
     const services = [{
       _key: `lead_journey_${Date.now()}`,
@@ -161,8 +165,8 @@ async function runCreateAvatar(request, creatorEmail) {
       title: "Talk to me",
       initialMessage: "Hello, How can I assist you today?",
       about: (about && String(about).trim()) ? String(about).trim() : "No description provided.",
-      behaviour: defaultBehaviour,
-      rules: defaultRules,
+      behaviour: behaviourText,
+      rules: rulesText,
     }];
 
     // Build brand document

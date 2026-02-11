@@ -5,6 +5,7 @@ import { ArrowLeft, Settings, User, Camera } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "../../context/brand/BrandContextProvider";
 import Loader from "../../components/Loader";
+import { BEHAVIOUR_TEMPLATES } from "./behaviourTemplates";
 
 const stages = {
   BASIC_INFO: 1,
@@ -29,9 +30,12 @@ export default function MakeAvatar() {
     admin_email: "",
     subdomain: "",
     about: "",
+    behaviour: "",
+    rules: "",
     bio_title: "",
     bio_subtitle: "",
   });
+  const [behaviourTemplate, setBehaviourTemplate] = useState("custom");
 
   const [suggestedTitles, setSuggestedTitles] = useState([]);
   const [suggestedSubtitles, setSuggestedSubtitles] = useState([]);
@@ -114,6 +118,8 @@ export default function MakeAvatar() {
       formData.append("subtitle", avatarData.bio_subtitle?.trim() || "");
       formData.append("email", avatarData.admin_email?.trim() || "");
       formData.append("about", avatarData.about?.trim() || "");
+      formData.append("behaviour", avatarData.behaviour?.trim() || "");
+      formData.append("rules", avatarData.rules?.trim() || "");
 
       if (coverImage) {
         formData.append("image", coverImage);
@@ -562,6 +568,64 @@ export default function MakeAvatar() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Behaviour & rules (Talk to me)
+                  </label>
+                  <select
+                    value={behaviourTemplate}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setBehaviourTemplate(value);
+                      if (value === "custom") {
+                        setAvatarData((prev) => ({ ...prev, behaviour: "", rules: "" }));
+                      } else {
+                        const t = BEHAVIOUR_TEMPLATES.find((x) => x.id === value);
+                        if (t) {
+                          setAvatarData((prev) => ({
+                            ...prev,
+                            behaviour: t.behaviour,
+                            rules: t.rules,
+                          }));
+                        }
+                      }
+                    }}
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent mb-3"
+                  >
+                    {BEHAVIOUR_TEMPLATES.map((t) => (
+                      <option key={t.id} value={t.id}>
+                        {t.label}
+                      </option>
+                    ))}
+                    <option value="custom">Custom</option>
+                  </select>
+                  <div className="space-y-3">
+                    <div>
+                      <span className="block text-xs text-gray-500 mb-1">Behaviour</span>
+                      <textarea
+                        rows={6}
+                        value={avatarData.behaviour}
+                        onChange={(e) => handleAvatarDataChange("behaviour", e.target.value)}
+                        placeholder="How your avatar should behave (e.g. tone, style)"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent resize-none"
+                      />
+                    </div>
+                    <div>
+                      <span className="block text-xs text-gray-500 mb-1">Rules</span>
+                      <textarea
+                        rows={6}
+                        value={avatarData.rules}
+                        onChange={(e) => handleAvatarDataChange("rules", e.target.value)}
+                        placeholder="Rules the bot must follow (e.g. don’t use slang, stay on topic)"
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent resize-none"
+                      />
+                    </div>
+                  </div>
+                  <p className="mt-2 text-xs text-gray-500">
+                    Select a personality type or Custom to write your own. You can edit the text above anytime.
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
                     Admin Email<span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center gap-3">
@@ -738,6 +802,26 @@ export default function MakeAvatar() {
                     {avatarData.about || "-"}
                   </p>
                 </div>
+
+                {(avatarData.behaviour || avatarData.rules) ? (
+                  <div className="border-b border-gray-200 pb-4">
+                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                      Behaviour & rules (Talk to me)
+                    </label>
+                    {avatarData.behaviour ? (
+                      <p className="text-gray-900 text-sm mb-2">
+                        <span className="text-gray-500">Behaviour: </span>
+                        {avatarData.behaviour}
+                      </p>
+                    ) : null}
+                    {avatarData.rules ? (
+                      <p className="text-gray-900 text-sm">
+                        <span className="text-gray-500">Rules: </span>
+                        {avatarData.rules}
+                      </p>
+                    ) : null}
+                  </div>
+                ) : null}
 
                 <div className="border-b border-gray-200 pb-4">
                   <label className="block text-sm font-medium text-gray-500 mb-1">
