@@ -6,10 +6,11 @@ import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const ROOT_DOMAIN = "kavisha.ai";
+const ROOT_HOST = process.env.NODE_ENV === "staging" ? "staging.kavisha.ai" : ROOT_DOMAIN;
 
 async function sendAdminAccessEmail(to, name, subdomain) {
   if (!resend) return;
-  const url = `https://${subdomain}.${ROOT_DOMAIN}/admin/${subdomain}/v2`;
+  const url = `https://${subdomain}.${ROOT_HOST}/admin/${subdomain}/v2`;
   await resend.emails.send({
     from: "hello@kavisha.ai",
     to: [to],

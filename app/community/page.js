@@ -262,16 +262,16 @@ export default function Community() {
         }
     };
 
-    const handleConnect = (userA, userB) => {
+    const handleConnect = (userA, userB, otherDisplayName = null) => {
         setConnectingToUserId(String(userB));
         if (paidConnectedUserIds.has(String(userB))) {
-            openChatSession(userA, userB);
+            openChatSession(userA, userB, otherDisplayName);
             setConnectingToUserId(null);
             return;
         }
         initiatePayment(userA, userB, () => {
             refetchPaidConnections();
-            openChatSession(userA, userB);
+            openChatSession(userA, userB, otherDisplayName);
             setConnectingToUserId(null);
         });
     };
@@ -361,7 +361,7 @@ export default function Community() {
                                             date={r.date}
                                             description={r.description}
                                             requirement={r.requirement}
-                                            onConnect={() => openChatSession(user.id, r.userId, r.name)}
+                                            onConnect={() => handleConnect(user.id, r.userId, r.name)}
                                             connectLabel={paidConnectedUserIds.has(String(r.userId)) ? "Message" : "Connect"}
                                         />
                                     ))}

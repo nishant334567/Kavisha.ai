@@ -11,9 +11,10 @@ const resend = process.env.RESEND_API_KEY
   : null;
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-const SERVICE_NAME = "kavisha-ai";
+const SERVICE_NAME = process.env.NODE_ENV === "staging" ? "kavisha-staging" : "kavisha-ai";
 const REGION = "us-central1";
 const ROOT_DOMAIN = "kavisha.ai";
+const ROOT_HOST = process.env.NODE_ENV === "staging" ? "staging.kavisha.ai" : ROOT_DOMAIN;
 
 const auth = new GoogleAuth({
   ...(process.env.GCP_CLIENT_EMAIL && process.env.GCP_PRIVATE_KEY
@@ -197,7 +198,7 @@ async function runCreateAvatar(request, creatorEmail) {
     const brand = await sanityClient.create(brandDoc);
     brandId = brand._id;
 
-    const domainName = `${normalizedSubdomain}.${ROOT_DOMAIN}`;
+    const domainName = `${normalizedSubdomain}.${ROOT_HOST}`;
     const gcpClient = await auth.getClient();
     const token = (await gcpClient.getAccessToken()).token;
 

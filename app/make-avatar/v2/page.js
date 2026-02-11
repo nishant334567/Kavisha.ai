@@ -38,6 +38,11 @@ export default function MakeAvatar() {
   const [suggestedSubdomains, setSuggestedSubdomains] = useState([]);
   const [hasCreatedAvatar, setHasCreatedAvatar] = useState(false);
   const [checkingAvatar, setCheckingAvatar] = useState(true);
+  const [domainSuffix, setDomainSuffix] = useState(".kavisha.ai");
+  useEffect(() => {
+    const onStaging = typeof window !== "undefined" && window.location.hostname.includes(".staging.");
+    setDomainSuffix(onStaging ? ".staging.kavisha.ai" : ".kavisha.ai");
+  }, []);
 
   const handleAboutUserChange = (field, value) => {
     setAboutUser((prev) => ({ ...prev, [field]: value }));
@@ -63,7 +68,7 @@ export default function MakeAvatar() {
     const raw = avatarData.subdomain?.trim() ?? "";
     const normalized = raw.toLowerCase().replace(/\.kavisha\.ai$/i, "");
     if (!normalized) {
-      alert("Please enter a subdomain (e.g. myname for myname.kavisha.ai)");
+      alert(`Please enter a subdomain (e.g. myname for myname${domainSuffix})`);
       return false;
     }
     if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(normalized)) {
@@ -502,7 +507,7 @@ export default function MakeAvatar() {
                       >
                         {suggestedSubdomains.map((s) => (
                           <option key={s} value={s}>
-                            {s}.kavisha.ai
+                            {s}{domainSuffix}
                           </option>
                         ))}
                         <option value="__other__">Other (type below)</option>
@@ -514,7 +519,7 @@ export default function MakeAvatar() {
                           onChange={(e) =>
                             handleAvatarDataChange("subdomain", e.target.value)
                           }
-                          placeholder="e.g., myname or myname.kavisha.ai"
+                          placeholder={`e.g., myname or myname${domainSuffix}`}
                           className="mt-2 w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
                         />
                       )}
@@ -526,14 +531,14 @@ export default function MakeAvatar() {
                       onChange={(e) =>
                         handleAvatarDataChange("subdomain", e.target.value)
                       }
-                      placeholder="e.g., myname or myname.kavisha.ai"
+                      placeholder={`e.g., myname or myname${domainSuffix}`}
                       className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
                     />
                   )}
                   <p className="mt-2 text-xs text-gray-500">
                     {avatarData.subdomain?.trim()
-                      ? `It will become ${avatarData.subdomain.trim().toLowerCase().replace(/\.kavisha\.ai$/i, "")}.kavisha.ai`
-                      : 'Enter a name (e.g. "myname") — it will become myname.kavisha.ai'}
+                      ? `It will become ${avatarData.subdomain.trim().toLowerCase().replace(/\.kavisha\.ai$/i, "").replace(/\.staging\.kavisha\.ai$/i, "")}${domainSuffix}`
+                      : `Enter a name (e.g. "myname") — it will become myname${domainSuffix}`}
                   </p>
                 </div>
 
@@ -712,7 +717,7 @@ export default function MakeAvatar() {
                     Subdomain
                   </label>
                   <p className="text-gray-900 font-mono">
-                    {subdomainNorm ? `${subdomainNorm}.kavisha.ai` : "-"}
+                    {subdomainNorm ? `${subdomainNorm}${domainSuffix}` : "-"}
                   </p>
                 </div>
 
