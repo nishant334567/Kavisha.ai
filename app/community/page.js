@@ -362,7 +362,7 @@ export default function Community() {
                                             description={r.description}
                                             requirement={r.requirement}
                                             onConnect={() => openChatSession(user.id, r.userId, r.name)}
-                                            connectLabel={connectedUserIds.has(r.userId) ? "Message" : "Connect"}
+                                            connectLabel={paidConnectedUserIds.has(String(r.userId)) ? "Message" : "Connect"}
                                         />
                                     ))}
                                 </div>
