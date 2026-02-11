@@ -16,6 +16,8 @@ export function getSubdomain() {
     return "kavisha"; // Default brand for local development
   }
 
-  const parts = hostname.split(".");
+  const parts = hostname.toLowerCase().replace(/^www\./, "").split(".");
+  const stagingIdx = parts.indexOf("staging");
+  if (stagingIdx >= 0) return stagingIdx > 0 ? parts[0] : "kavisha";
   return parts[0] || "kavisha";
 }
