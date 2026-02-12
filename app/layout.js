@@ -11,7 +11,13 @@ function trimText(str = "", max = 100) {
 }
 
 function getSubdomainFromHost(host) {
-  const parts = host.split(".");
+  if (!host) return "kavisha";
+  const clean = host.toLowerCase().replace(/^www\./, "");
+  const parts = clean.split(".");
+  if (process.env.NODE_ENV === "staging") {
+    const stagingIdx = parts.indexOf("staging");
+    if (stagingIdx >= 0) return stagingIdx > 0 ? parts[0] : "kavisha";
+  }
   return parts.length > 2 ? parts[0] : "kavisha";
 }
 

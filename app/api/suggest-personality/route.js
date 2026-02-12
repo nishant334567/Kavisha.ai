@@ -1,8 +1,31 @@
 import { NextResponse } from "next/server";
 import getGeminiModel from "../../lib/getAiModel.js";
 import { SYSTEM_PROMPT_AVATAR } from "@/app/lib/systemPrompt.js";
+import { client as sanityClient } from "@/app/lib/sanity";
 
 const model = getGeminiModel("gemini-2.5-pro");
+
+function normalizeSubdomain(value) {
+  if (!value || typeof value !== "string") return "";
+  return value.trim().toLowerCase().replace(/\.kavisha\.ai$/i, "");
+}
+
+async function filterAvailableSubdomains(subdomains) {
+  if (!Array.isArray(subdomains) || subdomains.length === 0 || !sanityClient) {
+    return [];
+  }
+  const available = [];
+  for (const raw of subdomains) {
+    const sub = normalizeSubdomain(raw);
+    if (!sub) continue;
+    const existing = await sanityClient.fetch(
+      `*[_type == "brand" && subdomain == $sub][0]{ _id }`,
+      { sub }
+    );
+    if (!existing) available.push(sub);
+  }
+  return available;
+}
 
 const STRICT_RETRY_PROMPT = `
 ⚠️ CRITICAL: Your previous response was invalid JSON and could not be parsed. ⚠️
@@ -72,7 +95,17 @@ async function generateAvatarResponse(name, bio, isRetry = false) {
 
 export async function POST(request) {
   try {
-    const { name, bio } = await request.json();
+    let name, bio;
+    try {
+      const body = await request.json();
+      name = body?.name;
+      bio = body?.bio;
+    } catch {
+      return NextResponse.json(
+        { error: "Invalid request body.", success: false },
+        { status: 400 }
+      );
+    }
 
     if (!name?.trim() || !bio?.trim()) {
       return NextResponse.json(
@@ -98,9 +131,18 @@ export async function POST(request) {
       );
     }
 
+    const data = { ...result.data };
+    if (data.subdomains?.length) {
+      try {
+        data.subdomains = await filterAvailableSubdomains(data.subdomains);
+      } catch (filterErr) {
+        data.subdomains = [];
+      }
+    }
+
     return NextResponse.json(
       {
-        ...result.data,
+        ...data,
         success: true,
       },
       { status: 200 }

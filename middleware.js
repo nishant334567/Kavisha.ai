@@ -15,12 +15,12 @@ function getSubdomainFromRequest(hostname) {
   }
 
   const parts = cleanHostname.split(".");
-  if (parts.length >= 3) {
-    return parts[0];
+  if (process.env.NODE_ENV === "staging") {
+    const stagingIdx = parts.indexOf("staging");
+    if (stagingIdx >= 0) return stagingIdx > 0 ? parts[0] : "kavisha";
   }
-  if (parts.length === 2 && parts[0] === "kavisha") {
-    return "kavisha";
-  }
+  if (parts.length >= 3) return parts[0];
+  if (parts.length === 2 && parts[0] === "kavisha") return "kavisha";
   return "kavisha";
 }
 

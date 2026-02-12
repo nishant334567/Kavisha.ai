@@ -345,10 +345,14 @@ export default function ChatSidebar({
                               const path = isCommunity
                                 ? `/community/${id}`
                                 : `/chats/${id}`;
-                              const url =
+                              const onStaging = hostname.includes(".staging.");
+                              const baseUrl =
                                 hostname === "localhost" || hostname === "127.0.0.1"
-                                  ? `${path}?subdomain=${sessionBrand}`
-                                  : `https://${sessionBrand}.kavisha.ai${path}`;
+                                  ? null
+                                  : onStaging
+                                    ? `https://${sessionBrand}.staging.kavisha.ai`
+                                    : `https://${sessionBrand}.kavisha.ai`;
+                              const url = baseUrl ? `${baseUrl}${path}` : `${path}?subdomain=${sessionBrand}`;
                               window.open(url, "_blank");
                               setIscollapsed(true);
                               onCollapsedChange?.(true);

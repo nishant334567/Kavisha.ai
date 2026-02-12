@@ -1,6 +1,8 @@
 import { client, urlFor } from "@/app/lib/sanity";
 import { NextResponse } from "next/server";
 
+const ROOT_HOST = process.env.NODE_ENV === "staging" ? "staging.kavisha.ai" : "kavisha.ai";
+
 export async function GET(req) {
   try {
     if (!client) {
@@ -35,7 +37,7 @@ export async function GET(req) {
         : null;
 
       // Generate link to avatar home page
-      const link = `https://${brand.subdomain}.kavisha.ai`;
+      const link = `https://${brand.subdomain}.${ROOT_HOST}`;
 
       return {
         id: brand._id,
