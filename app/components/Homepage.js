@@ -183,7 +183,7 @@ export default function Homepage() {
         <button
           onClick={() => {
             if (user) {
-              router.push("/talk-to-avatar2");
+              router.push("/talk-to-avatar");
             } else if (!isBlocked) {
               handleSignIn("/talk-to-avatar");
             }

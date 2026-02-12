@@ -132,6 +132,12 @@ export default function Navbar() {
                 MAKE MY AVATAAR
               </button>
             )}
+            {user && (
+              <>
+                <button onClick={() => router.push("/chats")}>CHATS</button>
+                <button onClick={() => router.push("/community")}>COMMUNITY</button>
+              </>
+            )}
             {loading ? (
               <div className=" text-sm text-muted">Loading...</div>
             ) : !user ? (
@@ -224,6 +230,16 @@ export default function Navbar() {
               <li>
                 <button onClick={() => { setOpenmenu(false); router.push("/talk-to-avatar"); }}>Talk to Avataars</button>
               </li>
+            )}
+            {user && (
+              <>
+                <li>
+                  <button onClick={() => { setOpenmenu(false); router.push("/chats"); }}>Chats</button>
+                </li>
+                <li>
+                  <button onClick={() => { setOpenmenu(false); router.push("/community"); }}>Community</button>
+                </li>
+              </>
             )}
             <li>
               {loading ? (

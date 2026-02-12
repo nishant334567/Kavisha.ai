@@ -13,7 +13,7 @@ import {
 export default function AvatarHomepage() {
   const brand = useBrandContext();
   const router = useRouter();
-  const { refresh } = useFirebaseSession();
+  const { user, refresh } = useFirebaseSession();
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState("");
   const [popupBlocked, setPopupBlocked] = useState(false);
@@ -105,19 +105,36 @@ export default function AvatarHomepage() {
         )}
 
         {/* Button in normal flow for both mobile and desktop; hide when in-app browser on mobile */}
-        <div className="flex justify-center py-6">
+        <div className="flex justify-center items-center gap-3 py-6 flex-wrap">
           {!(isInAppBrowser && isMobile) && (
-            <button
-              onClick={handleSignIn}
-              disabled={signingIn}
-              className="font-akshar px-6 py-3 rounded-full bg-[#59646F] dark:bg-muted-bg text-md disabled:opacity-50 flex items-center gap-2 text-[#FFEED8] dark:text-foreground hover:bg-[#4a5568] dark:hover:bg-border transition-colors"
-            >
-              {signingIn ? (
-                <span>Signing in...</span>
-              ) : (
-                brand?.loginButtonText?.toUpperCase() || "TALK TO ME NOW"
-              )}
-            </button>
+            user ? (
+              <>
+                <button
+                  onClick={() => router.push("/chats")}
+                  className="font-akshar px-6 py-3 rounded-full bg-[#59646F] dark:bg-muted-bg text-md border-2 border-[#59646F] dark:border-border flex items-center gap-2 text-[#FFEED8] dark:text-foreground hover:bg-[#4a5568] dark:hover:bg-border transition-colors"
+                >
+                  YOUR CHATS
+                </button>
+                <button
+                  onClick={() => router.push("/community")}
+                  className="font-akshar px-6 py-3 rounded-full bg-white dark:bg-background text-md border-2 border-[#59646F] dark:border-border text-[#59646F] dark:text-foreground hover:bg-gray-50 dark:hover:bg-muted-bg transition-colors"
+                >
+                  COMMUNITY
+                </button>
+              </>
+            ) : (
+              <button
+                onClick={handleSignIn}
+                disabled={signingIn}
+                className="font-akshar px-6 py-3 rounded-full bg-[#59646F] dark:bg-muted-bg text-md disabled:opacity-50 flex items-center gap-2 text-[#FFEED8] dark:text-foreground hover:bg-[#4a5568] dark:hover:bg-border transition-colors"
+              >
+                {signingIn ? (
+                  <span>Signing in...</span>
+                ) : (
+                  brand?.loginButtonText?.toUpperCase() || "TALK TO ME NOW"
+                )}
+              </button>
+            )
           )}
         </div>
       </div>

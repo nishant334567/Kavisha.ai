@@ -276,6 +276,10 @@ export default function Community() {
         });
     };
 
+    useEffect(() => {
+        if (!authLoading && !user) router.replace("/");
+    }, [authLoading, user, router]);
+
     if (authLoading) return <Loader loadingMessage="Loading..." />;
     if (!user) return null;
 
