@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import Assessments from "@/app/models/Assessment";
 import Questions from "@/app/models/Questions";
+import Attempts from "@/app/models/Attempt";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { refreshImageUrl } from "@/app/lib/gcs";
@@ -37,12 +38,13 @@ export async function GET(req) {
           .sort({ createdAt: -1 })
           .lean();
 
-        // Fetch question counts for each assessment
+        // Fetch question counts and attempt counts for each assessment
         const quizzes = await Promise.all(
           assessments.map(async (assessment) => {
-            const questionCount = await Questions.countDocuments({
-              assessmentId: assessment._id,
-            });
+            const [questionCount, attemptCount] = await Promise.all([
+              Questions.countDocuments({ assessmentId: assessment._id }),
+              Attempts.countDocuments({ assessmentId: assessment._id }),
+            ]);
 
             return {
               id: assessment._id.toString(),
@@ -54,6 +56,7 @@ export async function GET(req) {
               totalMarks: assessment.totalMarks,
               durationInMinutes: assessment.durationInMinutes,
               questionCount: questionCount,
+              attemptCount: attemptCount,
               createdAt: assessment.createdAt,
               updatedAt: assessment.updatedAt,
             };

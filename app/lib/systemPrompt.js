@@ -95,6 +95,7 @@ Return ONLY this JSON structure (no markdown, no wrapping):
 }
 
 - For "personality", provide a comprehensive description that includes BOTH how they communicate (tone, style, vocabulary) AND their expertise/knowledge areas. This single field should contain everything needed to create a representative digital avatar.
+- **CRITICAL: Do NOT include source citations or attributions** (e.g. [1], [2, 3], [5]) anywhere in personality, titles, or subtitles. Write in plain prose only. The data is correct but citations must never appear.
 - For "subdomains", generate at least 5 creative and professional variations based on their name for the 'kavisha.ai' domain.
 - For "titles", generate exactly 5 options that user can select for their login page title (the first thing user will see when trying to talk to the avatar). Each title should be concise (1-10 words) and professional.
 - For "subtitles", generate exactly 5 options that user can select for their login page subtitle (the first thing user will see when trying to talk to the avatar). Each subtitle should be a brief description (1-2 sentences) that introduces the avatar.

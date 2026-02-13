@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { ArrowLeft } from "lucide-react";
+import { ChevronRight, ArrowLeft, BarChart3, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
@@ -119,25 +119,61 @@ export default function ChatRequests() {
   }
 
   return (
-    <div className="overflow-visible">
-      <div className="px-4 mt-4 gap-2 overflow-visible">
+    <div>
+      <div className="px-4 mt-4 gap-2">
         <button
           onClick={() => router.back()}
           className="text-black hover:opacity-70 transition-opacity"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <div className="flex flex-wrap items-center gap-3 justify-center md:justify-start overflow-visible">
+        <div className="flex items-center gap-3 justify-center md:justify-start">
           <h1 className="md:pl-32 text-3xl md:text-4xl font-zen text-[#000A67] mb-6 pb-2 inline-block">
             All Chat Requests
           </h1>
+          <div className="relative group ml-4">
+            <button
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#000A67]/10 text-[#000A67] hover:bg-[#000A67]/20 transition-colors font-akshar uppercase text-sm"
+              aria-label="Analytics"
+            >
+              <BarChart3 className="w-5 h-5" />
+              Analytics
+            </button>
+            <div className="absolute left-0 top-full mt-1 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-100 z-50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-2 bg-white rounded-xl shadow-xl border border-gray-200 min-w-[280px]">
+                <div className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm relative">
+                  <button
+                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xs"
+                    aria-label="Close"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <p className="font-akshar font-semibold text-[#000A67] mb-3 text-sm">All analytics</p>
+                  <p className="text-xs text-gray-600">Total number of people: {getPeopleCount(null)}</p>
+                  <p className="text-xs text-gray-600">Total number of chats: {getSessionCount(null)}</p>
+                  <p className="text-xs text-gray-600">Total number of questions: {getQuestionCount(null)}</p>
+                </div>
+                {brandContext?.services?.map((item) => (
+                  <div
+                    key={item?._key ?? item?.name}
+                    className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm"
+                  >
+                    <p className="font-akshar font-semibold text-[#000A67] mb-3 text-sm">{item?.title || item?.name} analytics</p>
+                    <p className="text-xs text-gray-600">Total number of people: {getPeopleCount(item)}</p>
+                    <p className="text-xs text-gray-600">Total number of chats: {getSessionCount(item)}</p>
+                    <p className="text-xs text-gray-600">Total number of questions: {getQuestionCount(item)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div className="w-full sm:w-[85%] mx-auto md:px-6">
         {/* <div className="flex items-center justify-between mb-8"> */}
         {/* <div className="flex-1"></div> */}
-        <div className="grid grid-cols-2 md:flex items-center justify-center gap-y-4 md:gap-y-0 px-6 my-4 overflow-visible">
-          <div className="flex items-center relative group">
+        <div className="grid grid-cols-2 md:flex items-center justify-center gap-y-4 md:gap-y-0 px-6 my-4">
+          <div className="flex items-center">
             <button
               onClick={() => filterSessions("all")}
               className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${selectedService === "all" ? "text-blue-600" : "text-black"
@@ -150,14 +186,6 @@ export default function ChatRequests() {
                 </span>
               )}
             </button>
-            <div className="absolute left-0 top-full mt-1 pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-100 z-[9999]">
-              <div className="p-3 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[200px]">
-                <p className="font-akshar font-semibold text-[#000A67] mb-2 text-sm">All analytics</p>
-                <p className="text-xs text-gray-600">Total number of people: {getPeopleCount(null)}</p>
-                <p className="text-xs text-gray-600">Total number of chats: {getSessionCount(null)}</p>
-                <p className="text-xs text-gray-600">Total number of questions: {getQuestionCount(null)}</p>
-              </div>
-            </div>
             {brandContext?.services?.length > 0 && (
               <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-8"></div>
             )}
@@ -167,7 +195,7 @@ export default function ChatRequests() {
             const isLast = index === brandContext.services.length - 1;
             const isSelected = selectedService === (item?._key ?? item?.name);
             return (
-              <div key={item?._key ?? index} className="flex items-center relative group">
+              <div key={item?._key ?? index} className="flex items-center">
                 <button
                   onClick={() => filterSessions(item)}
                   className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${isSelected ? "text-blue-600" : "text-black"
@@ -180,14 +208,6 @@ export default function ChatRequests() {
                     </span>
                   )}
                 </button>
-                <div className="absolute left-0 top-full mt-1 pt-1 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-100 z-[9999]">
-                  <div className="p-3 bg-white rounded-lg shadow-xl border border-gray-200 min-w-[200px]">
-                    <p className="font-akshar font-semibold text-[#000A67] mb-2 text-sm truncate">{item?.title || item?.name} analytics</p>
-                    <p className="text-xs text-gray-600">Total number of people: {getPeopleCount(item)}</p>
-                    <p className="text-xs text-gray-600">Total number of chats: {getSessionCount(item)}</p>
-                    <p className="text-xs text-gray-600">Total number of questions: {getQuestionCount(item)}</p>
-                  </div>
-                </div>
                 {!isLast && (
                   <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-8"></div>
                 )}

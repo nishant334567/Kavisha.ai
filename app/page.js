@@ -56,7 +56,7 @@ export default function HomePage() {
   return (
     <div className="min-h-screen">
       {user && (
-        <div className="sm:pt-20 pt-8 pl-4">
+        <div className="sm:pt-16 pt-4 pl-4">
           <p className="font-akshar text-[#3D5A5E] text-lg text-left uppercase">
             Welcome back, <span className="font-semibold">{displayName}</span>!
           </p>

@@ -253,6 +253,9 @@ export default function AdminQuizList() {
                     >
                       <Users className="w-4 h-4 shrink-0" />
                       View attempts
+                      {(quiz.attemptCount ?? 0) > 0 && (
+                        <span className="ml-1 font-semibold">({quiz.attemptCount})</span>
+                      )}
                     </button>
                   )}
                   <button

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { ArrowLeft, Settings, User, Camera } from "lucide-react";
+import { ArrowLeft, Settings, User, Camera, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "../../context/brand/BrandContextProvider";
 import Loader from "../../components/Loader";
@@ -36,6 +36,13 @@ export default function MakeAvatar() {
     bio_subtitle: "",
   });
   const [behaviourTemplate, setBehaviourTemplate] = useState("custom");
+  const [infoSection, setInfoSection] = useState(null); // 'about' | 'behaviour' | 'rules' | null
+
+  const PERSONALITY_INFO = {
+    about: "This section defines who you are — your background, expertise, interests, and the overall tone you want your avatar to sound like. It helps the AI understand your persona and communicate in your voice.",
+    behaviour: "This defines how your avatar should behave in conversations — tone, style, personality traits, and how they respond. Think of it as the 'how' your avatar speaks and interacts with users.",
+    rules: "These are constraints and guidelines your avatar must follow — what to avoid, what to stay on topic about, and any boundaries. For example: don't use slang, stay professional, or don't make up facts.",
+  };
 
   const [suggestedTitles, setSuggestedTitles] = useState([]);
   const [suggestedSubtitles, setSuggestedSubtitles] = useState([]);
@@ -133,7 +140,7 @@ export default function MakeAvatar() {
       const data = await response.json();
       if (response.ok && data.success) {
         alert(
-          `Avatar created successfully! Your domain will be available at: ${data.domainName || "your subdomain"}`
+          `Avatar created successfully! Your domain will be live at: ${data.domainName || "your subdomain"}\n\nIt typically takes around 30 minutes for your avatar to be fully up and running. We'll have everything ready for you soon!`
         );
         router.replace("/");
       } else {
@@ -476,6 +483,7 @@ export default function MakeAvatar() {
               <CoverPhotoSection showEditButton={true} />
 
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-5">
+                {/* 1. Name */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Name of Avataar
@@ -490,6 +498,101 @@ export default function MakeAvatar() {
                   />
                 </div>
 
+                {/* 2. Title */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Title
+                  </label>
+                  {suggestedTitles.length > 0 ? (
+                    <>
+                      <select
+                        value={suggestedTitles.includes(avatarData.bio_title) ? avatarData.bio_title : "__other__"}
+                        onChange={(e) =>
+                          handleAvatarDataChange(
+                            "bio_title",
+                            e.target.value === "__other__" ? "" : e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                      >
+                        {suggestedTitles.map((t) => (
+                          <option key={t} value={t}>{t}</option>
+                        ))}
+                        <option value="__other__">Other (type below)</option>
+                      </select>
+                      {(!avatarData.bio_title || !suggestedTitles.includes(avatarData.bio_title)) && (
+                        <input
+                          type="text"
+                          value={avatarData.bio_title}
+                          onChange={(e) =>
+                            handleAvatarDataChange("bio_title", e.target.value)
+                          }
+                          placeholder="Or enter your own title"
+                          className="w-full mt-2 px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={avatarData.bio_title}
+                      onChange={(e) =>
+                        handleAvatarDataChange("bio_title", e.target.value)
+                      }
+                      placeholder="Enter a title for avataar"
+                      className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                    />
+                  )}
+                </div>
+
+                {/* 3. Subtitle */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Subtitle
+                  </label>
+                  {suggestedSubtitles.length > 0 ? (
+                    <>
+                      <select
+                        value={suggestedSubtitles.includes(avatarData.bio_subtitle) ? avatarData.bio_subtitle : "__other__"}
+                        onChange={(e) =>
+                          handleAvatarDataChange(
+                            "bio_subtitle",
+                            e.target.value === "__other__" ? "" : e.target.value
+                          )
+                        }
+                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                      >
+                        {suggestedSubtitles.map((s, i) => (
+                          <option key={`sub-${i}`} value={s}>{s.length > 60 ? s.slice(0, 60) + "…" : s}</option>
+                        ))}
+                        <option value="__other__">Other (type below)</option>
+                      </select>
+                      {(!avatarData.bio_subtitle || !suggestedSubtitles.includes(avatarData.bio_subtitle)) && (
+                        <textarea
+                          rows={2}
+                          value={avatarData.bio_subtitle}
+                          onChange={(e) =>
+                            handleAvatarDataChange("bio_subtitle", e.target.value)
+                          }
+                          placeholder="Or enter your own subtitle"
+                          className="w-full mt-2 px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent resize-none"
+                        />
+                      )}
+                    </>
+                  ) : (
+                    <input
+                      type="text"
+                      value={avatarData.bio_subtitle}
+                      onChange={(e) =>
+                        handleAvatarDataChange("bio_subtitle", e.target.value)
+                      }
+                      placeholder="Enter a subtitle for avataar"
+                      className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                    />
+                  )}
+                </div>
+
+                {/* 4. Domain (Subdomain) */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Subdomain<span className="text-red-500">*</span>
@@ -548,10 +651,26 @@ export default function MakeAvatar() {
                   </p>
                 </div>
 
+                {/* 5. About */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    About you<span className="text-red-500">*</span>
-                  </label>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium text-gray-700">
+                      About you<span className="text-red-500">*</span>
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => setInfoSection((s) => (s === "about" ? null : "about"))}
+                      className="p-0.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-[#00838F] transition-colors"
+                      aria-label="About this section"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {infoSection === "about" && (
+                    <p className="text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 mb-2">
+                      {PERSONALITY_INFO.about}
+                    </p>
+                  )}
                   <textarea
                     rows={4}
                     value={avatarData.about}
@@ -568,7 +687,7 @@ export default function MakeAvatar() {
 
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Behaviour & rules (Talk to me)
+                    Your Avataar's Behaviour & Rules
                   </label>
                   <select
                     value={behaviourTemplate}
@@ -599,7 +718,22 @@ export default function MakeAvatar() {
                   </select>
                   <div className="space-y-3">
                     <div>
-                      <span className="block text-xs text-gray-500 mb-1">Behaviour</span>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="block text-xs text-gray-500">Behaviour</span>
+                        <button
+                          type="button"
+                          onClick={() => setInfoSection((s) => (s === "behaviour" ? null : "behaviour"))}
+                          className="p-0.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-[#00838F] transition-colors"
+                          aria-label="About behaviour"
+                        >
+                          <Info className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {infoSection === "behaviour" && (
+                        <p className="text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-200 mb-2">
+                          {PERSONALITY_INFO.behaviour}
+                        </p>
+                      )}
                       <textarea
                         rows={6}
                         value={avatarData.behaviour}
@@ -609,7 +743,22 @@ export default function MakeAvatar() {
                       />
                     </div>
                     <div>
-                      <span className="block text-xs text-gray-500 mb-1">Rules</span>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="block text-xs text-gray-500">Rules</span>
+                        <button
+                          type="button"
+                          onClick={() => setInfoSection((s) => (s === "rules" ? null : "rules"))}
+                          className="p-0.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-[#00838F] transition-colors"
+                          aria-label="About rules"
+                        >
+                          <Info className="w-4 h-4" />
+                        </button>
+                      </div>
+                      {infoSection === "rules" && (
+                        <p className="text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-200 mb-2">
+                          {PERSONALITY_INFO.rules}
+                        </p>
+                      )}
                       <textarea
                         rows={6}
                         value={avatarData.rules}
@@ -624,6 +773,7 @@ export default function MakeAvatar() {
                   </p>
                 </div>
 
+                {/* Admin Email */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Admin Email<span className="text-red-500">*</span>
@@ -642,98 +792,6 @@ export default function MakeAvatar() {
                       Add Email
                     </button>
                   </div>
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Title
-                  </label>
-                  {suggestedTitles.length > 0 ? (
-                    <>
-                      <select
-                        value={suggestedTitles.includes(avatarData.bio_title) ? avatarData.bio_title : "__other__"}
-                        onChange={(e) =>
-                          handleAvatarDataChange(
-                            "bio_title",
-                            e.target.value === "__other__" ? "" : e.target.value
-                          )
-                        }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent"
-                      >
-                        {suggestedTitles.map((t) => (
-                          <option key={t} value={t}>{t}</option>
-                        ))}
-                        <option value="__other__">Other (type below)</option>
-                      </select>
-                      {(!avatarData.bio_title || !suggestedTitles.includes(avatarData.bio_title)) && (
-                        <input
-                          type="text"
-                          value={avatarData.bio_title}
-                          onChange={(e) =>
-                            handleAvatarDataChange("bio_title", e.target.value)
-                          }
-                          placeholder="Or enter your own title"
-                          className="w-full mt-2 px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
-                        />
-                      )}
-                    </>
-                  ) : (
-                    <input
-                      type="text"
-                      value={avatarData.bio_title}
-                      onChange={(e) =>
-                        handleAvatarDataChange("bio_title", e.target.value)
-                      }
-                      placeholder="Enter a title for avataar"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
-                    />
-                  )}
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Subtitle
-                  </label>
-                  {suggestedSubtitles.length > 0 ? (
-                    <>
-                      <select
-                        value={suggestedSubtitles.includes(avatarData.bio_subtitle) ? avatarData.bio_subtitle : "__other__"}
-                        onChange={(e) =>
-                          handleAvatarDataChange(
-                            "bio_subtitle",
-                            e.target.value === "__other__" ? "" : e.target.value
-                          )
-                        }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent"
-                      >
-                        {suggestedSubtitles.map((s, i) => (
-                          <option key={`sub-${i}`} value={s}>{s.length > 60 ? s.slice(0, 60) + "…" : s}</option>
-                        ))}
-                        <option value="__other__">Other (type below)</option>
-                      </select>
-                      {(!avatarData.bio_subtitle || !suggestedSubtitles.includes(avatarData.bio_subtitle)) && (
-                        <textarea
-                          rows={2}
-                          value={avatarData.bio_subtitle}
-                          onChange={(e) =>
-                            handleAvatarDataChange("bio_subtitle", e.target.value)
-                          }
-                          placeholder="Or enter your own subtitle"
-                          className="w-full mt-2 px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent resize-none"
-                        />
-                      )}
-                    </>
-                  ) : (
-                    <input
-                      type="text"
-                      value={avatarData.bio_subtitle}
-                      onChange={(e) =>
-                        handleAvatarDataChange("bio_subtitle", e.target.value)
-                      }
-                      placeholder="Enter a subtitle for avataar"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
-                    />
-                  )}
                 </div>
 
                 <div className="flex justify-center gap-4 pt-4">
@@ -769,6 +827,7 @@ export default function MakeAvatar() {
               <CoverPhotoSection showEditButton={false} />
 
               <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-5">
+                {/* 1. Name */}
                 <div className="border-b border-gray-200 pb-4">
                   <label className="block text-sm font-medium text-gray-500 mb-1">
                     Name of Avataar
@@ -776,6 +835,25 @@ export default function MakeAvatar() {
                   <p className="text-gray-900">{avatarData.name || "-"}</p>
                 </div>
 
+                {/* 2. Title */}
+                <div className="border-b border-gray-200 pb-4">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    Title
+                  </label>
+                  <p className="text-gray-900">{avatarData.bio_title || "-"}</p>
+                </div>
+
+                {/* 3. Subtitle */}
+                <div className="border-b border-gray-200 pb-4">
+                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                    Subtitle
+                  </label>
+                  <p className="text-gray-900">
+                    {avatarData.bio_subtitle || "-"}
+                  </p>
+                </div>
+
+                {/* 4. Domain (Subdomain) */}
                 <div className="border-b border-gray-200 pb-4">
                   <label className="block text-sm font-medium text-gray-500 mb-1">
                     Subdomain
@@ -785,15 +863,7 @@ export default function MakeAvatar() {
                   </p>
                 </div>
 
-                <div className="border-b border-gray-200 pb-4">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
-                    Admin Email
-                  </label>
-                  <p className="text-gray-900">
-                    {avatarData.admin_email || "-"}
-                  </p>
-                </div>
-
+                {/* 5. About */}
                 <div className="border-b border-gray-200 pb-4">
                   <label className="block text-sm font-medium text-gray-500 mb-1">
                     About you
@@ -803,10 +873,11 @@ export default function MakeAvatar() {
                   </p>
                 </div>
 
+                {/* 6. Behaviour & Rules */}
                 {(avatarData.behaviour || avatarData.rules) ? (
                   <div className="border-b border-gray-200 pb-4">
                     <label className="block text-sm font-medium text-gray-500 mb-1">
-                      Behaviour & rules (Talk to me)
+                      Your Avataar's Behaviour & Rules
                     </label>
                     {avatarData.behaviour ? (
                       <p className="text-gray-900 text-sm mb-2">
@@ -823,19 +894,13 @@ export default function MakeAvatar() {
                   </div>
                 ) : null}
 
-                <div className="border-b border-gray-200 pb-4">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
-                    Title
-                  </label>
-                  <p className="text-gray-900">{avatarData.bio_title || "-"}</p>
-                </div>
-
+                {/* 7. Admin Email */}
                 <div className="pb-4">
                   <label className="block text-sm font-medium text-gray-500 mb-1">
-                    Subtitle
+                    Admin Email
                   </label>
                   <p className="text-gray-900">
-                    {avatarData.bio_subtitle || "-"}
+                    {avatarData.admin_email || "-"}
                   </p>
                 </div>
 
