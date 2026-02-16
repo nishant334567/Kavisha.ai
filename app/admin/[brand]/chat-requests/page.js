@@ -2,13 +2,26 @@
 
 import { useEffect, useState } from "react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { ChevronRight, ArrowLeft, BarChart3, X } from "lucide-react";
+import { ArrowLeft } from "lucide-react";
 import { useRouter } from "next/navigation";
 import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import Livechat from "@/app/components/LiveChat";
 import Loader from "@/app/components/Loader";
+
+function AnalyticsHoverCard({ title, people, chats, questions }) {
+  return (
+    <div className="absolute left-0 top-full mt-1 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-100 z-50">
+      <div className="p-4 bg-white rounded-lg border border-gray-200 shadow-xl min-w-[220px]">
+        <p className="font-akshar font-semibold text-[#000A67] mb-3 text-sm">{title}</p>
+        <p className="text-xs text-gray-600">Total number of people: {people}</p>
+        <p className="text-xs text-gray-600">Total number of chats: {chats}</p>
+        <p className="text-xs text-gray-600">Total number of questions: {questions}</p>
+      </div>
+    </div>
+  );
+}
 
 export default function ChatRequests() {
   const router = useRouter();
@@ -131,49 +144,13 @@ export default function ChatRequests() {
           <h1 className="md:pl-32 text-3xl md:text-4xl font-zen text-[#000A67] mb-6 pb-2 inline-block">
             All Chat Requests
           </h1>
-          <div className="relative group ml-4">
-            <button
-              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#000A67]/10 text-[#000A67] hover:bg-[#000A67]/20 transition-colors font-akshar uppercase text-sm"
-              aria-label="Analytics"
-            >
-              <BarChart3 className="w-5 h-5" />
-              Analytics
-            </button>
-            <div className="absolute left-0 top-full mt-1 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-100 z-50">
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-2 bg-white rounded-xl shadow-xl border border-gray-200 min-w-[280px]">
-                <div className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm relative">
-                  <button
-                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xs"
-                    aria-label="Close"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                  <p className="font-akshar font-semibold text-[#000A67] mb-3 text-sm">All analytics</p>
-                  <p className="text-xs text-gray-600">Total number of people: {getPeopleCount(null)}</p>
-                  <p className="text-xs text-gray-600">Total number of chats: {getSessionCount(null)}</p>
-                  <p className="text-xs text-gray-600">Total number of questions: {getQuestionCount(null)}</p>
-                </div>
-                {brandContext?.services?.map((item) => (
-                  <div
-                    key={item?._key ?? item?.name}
-                    className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm"
-                  >
-                    <p className="font-akshar font-semibold text-[#000A67] mb-3 text-sm">{item?.title || item?.name} analytics</p>
-                    <p className="text-xs text-gray-600">Total number of people: {getPeopleCount(item)}</p>
-                    <p className="text-xs text-gray-600">Total number of chats: {getSessionCount(item)}</p>
-                    <p className="text-xs text-gray-600">Total number of questions: {getQuestionCount(item)}</p>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
         </div>
       </div>
       <div className="w-full sm:w-[85%] mx-auto md:px-6">
         {/* <div className="flex items-center justify-between mb-8"> */}
         {/* <div className="flex-1"></div> */}
         <div className="grid grid-cols-2 md:flex items-center justify-center gap-y-4 md:gap-y-0 px-6 my-4">
-          <div className="flex items-center">
+          <div className="flex items-center relative group">
             <button
               onClick={() => filterSessions("all")}
               className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${selectedService === "all" ? "text-blue-600" : "text-black"
@@ -186,6 +163,12 @@ export default function ChatRequests() {
                 </span>
               )}
             </button>
+            <AnalyticsHoverCard
+              title="All analytics"
+              people={getPeopleCount(null)}
+              chats={getSessionCount(null)}
+              questions={getQuestionCount(null)}
+            />
             {brandContext?.services?.length > 0 && (
               <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-8"></div>
             )}
@@ -194,8 +177,9 @@ export default function ChatRequests() {
             const count = getSessionCount(item);
             const isLast = index === brandContext.services.length - 1;
             const isSelected = selectedService === (item?._key ?? item?.name);
+            const analyticsTitle = `${item?.title || item?.name} analytics`;
             return (
-              <div key={item?._key ?? index} className="flex items-center">
+              <div key={item?._key ?? index} className="flex items-center relative group">
                 <button
                   onClick={() => filterSessions(item)}
                   className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${isSelected ? "text-blue-600" : "text-black"
@@ -208,6 +192,12 @@ export default function ChatRequests() {
                     </span>
                   )}
                 </button>
+                <AnalyticsHoverCard
+                  title={analyticsTitle}
+                  people={getPeopleCount(item)}
+                  chats={getSessionCount(item)}
+                  questions={getQuestionCount(item)}
+                />
                 {!isLast && (
                   <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-8"></div>
                 )}
