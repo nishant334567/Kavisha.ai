@@ -3,7 +3,7 @@
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { signOut } from "../lib/firebase/logout";
 import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { X, ChevronsRight, PanelLeftClose, Trash2 } from "lucide-react";
 
@@ -31,6 +31,7 @@ export default function ChatSidebar({
 
   const [deletingChatId, setDeletingChatId] = useState(null);
   const router = useRouter();
+  const pathname = usePathname();
 
   // Services for dropdown: exclude quiz and community
   const servicesList = Array.isArray(servicesProvided) ? servicesProvided : [];
@@ -227,7 +228,28 @@ export default function ChatSidebar({
                       <button
                         type="button"
                         className="flex gap-2 justify-center text-xs bg-muted-bg text-foreground w-full p-2 rounded-md font-medium hover:bg-muted-bg/80 transition-colors mt-2"
-                        onClick={() => router.push("/community")}
+                        onClick={() => {
+                          if (pathname === "/chats") {
+                            setIscollapsed(true);
+                            onCollapsedChange?.(true);
+                          } else {
+                            router.push("/chats");
+                          }
+                        }}
+                      >
+                        Avataar chats
+                      </button>
+                      <button
+                        type="button"
+                        className="flex gap-2 justify-center text-xs bg-muted-bg text-foreground w-full p-2 rounded-md font-medium hover:bg-muted-bg/80 transition-colors mt-2"
+                        onClick={() => {
+                          if (pathname === "/community") {
+                            setIscollapsed(true);
+                            onCollapsedChange?.(true);
+                          } else {
+                            router.push("/community");
+                          }
+                        }}
                       >
                         Community
                       </button>
@@ -287,7 +309,14 @@ export default function ChatSidebar({
                       <button
                         type="button"
                         className="flex gap-2 justify-center text-xs bg-muted-bg text-foreground w-full p-2 rounded-md font-medium hover:bg-muted-bg/80 transition-colors mt-2"
-                        onClick={() => router.push("/community")}
+                        onClick={() => {
+                          if (pathname === "/community") {
+                            setIscollapsed(true);
+                            onCollapsedChange?.(true);
+                          } else {
+                            router.push("/community");
+                          }
+                        }}
                       >
                         Community
                       </button>

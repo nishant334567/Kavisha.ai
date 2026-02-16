@@ -367,6 +367,7 @@ export default function Community() {
                                             requirement={r.requirement}
                                             onConnect={() => handleConnect(user.id, r.userId, r.name)}
                                             connectLabel={paidConnectedUserIds.has(String(r.userId)) ? "Message" : "Connect"}
+                                            isOwnPost={String(r.userId) === String(user?.id)}
                                         />
                                     ))}
                                 </div>

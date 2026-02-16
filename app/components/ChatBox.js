@@ -48,8 +48,7 @@ export default function ChatBox({
   const [sessionName, setSessionName] = useState(null);
   const [serviceKey, setServiceKey] = useState(null);
   const [sessionMessageCount, setSessionMessageCount] = useState(0);
-
-
+  const [sessionDetailsLoading, setSessionDetailsLoading] = useState(true);
 
   // Fetch chat type from chat ID
   useEffect(() => {
@@ -57,9 +56,11 @@ export default function ChatBox({
       setCurrentChatType(null);
       setServiceKey(null);
       setSessionMessageCount(0);
+      setSessionDetailsLoading(false);
       return;
     }
 
+    setSessionDetailsLoading(true);
     const fetchChatType = async () => {
       try {
         const response = await fetch(`/api/session/${currentChatId}`);
@@ -72,6 +73,8 @@ export default function ChatBox({
         }
       } catch (error) {
         console.error("Error fetching chat type:", error);
+      } finally {
+        setSessionDetailsLoading(false);
       }
     };
 
@@ -512,6 +515,22 @@ export default function ChatBox({
           </div>
           <div className="text-[#59646F] text-xs font-medium">
             Loading chat…
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (sessionDetailsLoading) {
+    return (
+      <div className="h-full mx-auto w-full lg:w-3/5 bg-background rounded-xl p-4 flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <div className="relative">
+            <div className="w-6 h-6 border-2 border-border rounded-full"></div>
+            <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-t-[#59646F] rounded-full animate-spin"></div>
+          </div>
+          <div className="text-[#59646F] text-xs font-medium">
+            Fetching session details…
           </div>
         </div>
       </div>

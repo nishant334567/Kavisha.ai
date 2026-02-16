@@ -24,7 +24,7 @@ export default function ClientLayout({ children }) {
           {!isMaintenancePage && !isAdmin && <Navbar />}
           {!isMaintenancePage && isAdmin && <AdminNavbar />}
           <div className={isAdmin ? "pt-14" : ""}>{children}</div>
-          {!isMaintenancePage && !isAdmin && <GlobalMessages />}
+          {!isMaintenancePage && !isAdmin && pathname !== "/" && <GlobalMessages />}
         </SocketSessionWrapper>
       </BrandContextProvider>
     </FirebaseSessionProvider>

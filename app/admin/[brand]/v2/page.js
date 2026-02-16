@@ -7,6 +7,14 @@ import { useState, useEffect } from "react";
 import Inbox from "@/app/components/Inbox";
 import Livechat from "@/app/components/LiveChat";
 
+const LoadingDots = () => (
+  <span className="inline-flex gap-0.5 items-center">
+    <span className="w-1.5 h-1.5 rounded-full bg-current animate-loading-dots" />
+    <span className="w-1.5 h-1.5 rounded-full bg-current animate-loading-dots [animation-delay:0.2s]" />
+    <span className="w-1.5 h-1.5 rounded-full bg-current animate-loading-dots [animation-delay:0.4s]" />
+  </span>
+);
+
 export default function AdminHome() {
   const router = useRouter();
   const brand = useBrandContext();
@@ -17,13 +25,15 @@ export default function AdminHome() {
   const [connectionId, setConnectionId] = useState(null);
   const [chatRequestCount, setChatRequestCount] = useState(0);
   const [communityCount, setCommunityCount] = useState(0);
-  const [quizSurveyAttemptCount, setQuizSurveyAttemptCount] = useState(0)
+  const [quizSurveyAttemptCount, setQuizSurveyAttemptCount] = useState(0);
+  const [countsLoading, setCountsLoading] = useState(true);
   const go = (path) => router.push(path);
   const { user } = useFirebaseSession();
 
   useEffect(() => {
     const fetchCounts = async () => {
       if (brand?.subdomain) {
+        setCountsLoading(true);
         try {
           const response = await fetch(
             `/api/admin/fetch-sessions?brand=${brand.subdomain}&count=true`
@@ -32,11 +42,15 @@ export default function AdminHome() {
           if (data.success) {
             setChatRequestCount(data.chatRequestCount || 0);
             setCommunityCount(data.communityCount || 0);
-            setQuizSurveyAttemptCount(data.quizSurveyAttemptCount || 0)
+            setQuizSurveyAttemptCount(data.quizSurveyAttemptCount || 0);
           }
         } catch (error) {
           console.error("Failed to fetch counts:", error);
+        } finally {
+          setCountsLoading(false);
         }
+      } else {
+        setCountsLoading(false);
       }
     };
     fetchCounts();
@@ -65,8 +79,8 @@ export default function AdminHome() {
             className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl flex items-center gap-2"
           >
             Chat Requests
-            <span className="bg-gray-200 text-gray-700 text-sm md:text-base px-2 py-0.5 rounded font-normal">
-              {chatRequestCount}
+            <span className="bg-gray-200 text-gray-700 text-sm md:text-base px-2 py-0.5 rounded font-normal min-w-[2ch]">
+              {countsLoading ? <LoadingDots /> : chatRequestCount}
             </span>
           </button>
           <div className="w-px h-6 bg-gray-300 self-center"></div>
@@ -75,8 +89,8 @@ export default function AdminHome() {
             className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl flex items-center gap-2"
           >
             Community
-            <span className="bg-gray-200 text-gray-700 text-sm md:text-base px-2 py-0.5 rounded font-normal">
-              {communityCount}
+            <span className="bg-gray-200 text-gray-700 text-sm md:text-base px-2 py-0.5 rounded font-normal min-w-[2ch]">
+              {countsLoading ? <LoadingDots /> : communityCount}
             </span>
           </button>
           {brand?.enableQuiz && (
@@ -87,8 +101,8 @@ export default function AdminHome() {
                 className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl flex items-center gap-2"
               >
                 Quizzes/Survey
-                <span className="bg-gray-200 text-gray-700 text-sm md:text-base px-2 py-0.5 rounded font-normal">
-                  {quizSurveyAttemptCount}
+                <span className="bg-gray-200 text-gray-700 text-sm md:text-base px-2 py-0.5 rounded font-normal min-w-[2ch]">
+                  {countsLoading ? <LoadingDots /> : quizSurveyAttemptCount}
                 </span>
               </button>
             </>

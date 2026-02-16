@@ -2,7 +2,7 @@
 
 import { X } from "lucide-react";
 
-export default function CommunityPostDialog({ name, description, date, requirement, onClose, onConnect, connectLabel = "Connect" }) {
+export default function CommunityPostDialog({ name, description, date, requirement, onClose, onConnect, connectLabel = "Connect", isOwnPost = false }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={onClose}>
       <div
@@ -39,16 +39,18 @@ export default function CommunityPostDialog({ name, description, date, requireme
           )}
         </div>
         <div className="p-4 sm:p-6 border-t border-border shrink-0 flex items-center gap-3">
-          <button
-            type="button"
-            className="flex-1 rounded-full bg-[#3D5E6B] text-white px-4 py-2 text-sm hover:bg-[#2d4e5b] transition-colors"
-            onClick={() => {
-              onConnect?.();
-              onClose();
-            }}
-          >
-            {connectLabel}
-          </button>
+          {!isOwnPost && (
+            <button
+              type="button"
+              className="flex-1 rounded-full bg-[#3D5E6B] text-white px-4 py-2 text-sm hover:bg-[#2d4e5b] transition-colors"
+              onClick={() => {
+                onConnect?.();
+                onClose();
+              }}
+            >
+              {connectLabel}
+            </button>
+          )}
           <button
             type="button"
             className="flex-1 rounded-full border border-border bg-muted-bg text-foreground px-4 py-2 text-sm hover:bg-border/50 transition-colors"

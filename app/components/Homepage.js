@@ -348,7 +348,7 @@ export default function Homepage() {
               <span className="md:block">
                 <span className="text-[#f2d75e]">connect </span> with
               </span>
-              <span className="md:block">each other</span>
+              <span className="md:block"> each other</span>
             </p>
             <button
               onClick={() => {
@@ -367,7 +367,7 @@ export default function Homepage() {
 
           {/* Right - Cream section */}
           <div className="font-assistant md:flex-[6] bg-[#f7f0dd] text-[#264653] px-6 md:px-10 py-8 md:py-12 flex items-center">
-            <p className="text-lg leading-relaxed font-assistant">
+            <p className="text-lg leading-relaxed font-assistant text-center md:text-left">
               Your Digital Avataar doesn't just enable conversations between you
               and your fans, it also gives your fans a chance to connect with
               each other. This makes <span className="font-semibold">you</span>{" "}
@@ -378,7 +378,7 @@ export default function Homepage() {
         </div>
         {/* Logo and tagline section */}
         <div className="bg-[linear-gradient(180deg,#FFFFFF_34%,#EDF4F7_100%)] flex flex-col items-center justify-center py-8 md:py-12 px-4 md:px-8 border-b border-gray-200">
-          <div className="flex flex-col items-center justify-center py-8">
+          <div className="flex flex-col items-center justify-center pb-4 pt-2">
 
             <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
           </div>

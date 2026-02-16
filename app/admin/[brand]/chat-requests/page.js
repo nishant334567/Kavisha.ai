@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { ChevronRight, ArrowLeft } from "lucide-react";
+import { ChevronRight, ArrowLeft, BarChart3, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
@@ -66,6 +66,30 @@ export default function ChatRequests() {
     );
   };
 
+  const getPeopleCount = (service) => {
+    if (!service) return allSessions.length;
+    const key = service._key ?? service;
+    return allSessions.filter((u) =>
+      u.sessions.some((s) => s.serviceKey === key)
+    ).length;
+  };
+
+  const getQuestionCount = (service) => {
+    const sumMessages = (users) =>
+      users.reduce(
+        (sum, u) =>
+          sum + u.sessions.reduce((s, sess) => s + (sess.messageCount || 0), 0),
+        0
+      );
+    if (!service) return sumMessages(allSessions);
+    const key = service._key ?? service;
+    const filtered = allSessions.map((u) => ({
+      ...u,
+      sessions: u.sessions.filter((s) => s.serviceKey === key),
+    })).filter((u) => u.sessions.length > 0);
+    return sumMessages(filtered);
+  };
+
   const filterSessions = (service) => {
     if (!service || service === "all") {
       setSelectedService("all");
@@ -107,6 +131,42 @@ export default function ChatRequests() {
           <h1 className="md:pl-32 text-3xl md:text-4xl font-zen text-[#000A67] mb-6 pb-2 inline-block">
             All Chat Requests
           </h1>
+          <div className="relative group ml-4">
+            <button
+              className="flex items-center gap-2 px-3 py-2 rounded-lg bg-[#000A67]/10 text-[#000A67] hover:bg-[#000A67]/20 transition-colors font-akshar uppercase text-sm"
+              aria-label="Analytics"
+            >
+              <BarChart3 className="w-5 h-5" />
+              Analytics
+            </button>
+            <div className="absolute left-0 top-full mt-1 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-100 z-50">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-2 bg-white rounded-xl shadow-xl border border-gray-200 min-w-[280px]">
+                <div className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm relative">
+                  <button
+                    className="absolute top-2 right-2 text-gray-400 hover:text-gray-600 text-xs"
+                    aria-label="Close"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                  <p className="font-akshar font-semibold text-[#000A67] mb-3 text-sm">All analytics</p>
+                  <p className="text-xs text-gray-600">Total number of people: {getPeopleCount(null)}</p>
+                  <p className="text-xs text-gray-600">Total number of chats: {getSessionCount(null)}</p>
+                  <p className="text-xs text-gray-600">Total number of questions: {getQuestionCount(null)}</p>
+                </div>
+                {brandContext?.services?.map((item) => (
+                  <div
+                    key={item?._key ?? item?.name}
+                    className="p-4 bg-white rounded-lg border border-gray-200 shadow-sm"
+                  >
+                    <p className="font-akshar font-semibold text-[#000A67] mb-3 text-sm">{item?.title || item?.name} analytics</p>
+                    <p className="text-xs text-gray-600">Total number of people: {getPeopleCount(item)}</p>
+                    <p className="text-xs text-gray-600">Total number of chats: {getSessionCount(item)}</p>
+                    <p className="text-xs text-gray-600">Total number of questions: {getQuestionCount(item)}</p>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       <div className="w-full sm:w-[85%] mx-auto md:px-6">

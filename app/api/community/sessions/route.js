@@ -30,7 +30,6 @@ export async function GET(request) {
         const filter = {
           isCommunityChat: true,
           allDataCollected: true,
-          userId: { $ne: user.id },
         };
         if (brand !== "kavisha") filter.brand = brand;
 
@@ -52,12 +51,13 @@ export async function GET(request) {
         sessions.forEach((session) => {
           if (!session?.userId?._id) return;
           const userId = session.userId._id.toString();
-          const maskedName = maskName(session.userId?.name);
+          const isOwnPost = userId === user.id;
+          const displayName = isOwnPost ? (session.userId?.name || "You") : maskName(session.userId?.name);
 
           if (!usersMap.has(userId)) {
             usersMap.set(userId, {
               userId,
-              name: maskedName,
+              name: displayName,
               sessions: [],
             });
           }
