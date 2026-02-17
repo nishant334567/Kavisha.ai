@@ -12,25 +12,52 @@ export async function GET(request) {
     const brand = searchParams.get("brand");
     const type = searchParams.get("type");
     const countOnly = searchParams.get("count") === "true";
+    const dateFrom = searchParams.get("dateFrom");
+    const dateTo = searchParams.get("dateTo");
+    const dateField = searchParams.get("dateField") || "updatedAt";
+    const lastDays = searchParams.get("lastDays");
+    const serviceKey = searchParams.get("serviceKey");
+    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10)));
+
+    // Resolve date range: lastDays overrides explicit dateFrom/dateTo
+    let dateFromVal = dateFrom ? new Date(dateFrom) : null;
+    let dateToVal = dateTo ? new Date(dateTo) : null;
+    if (lastDays) {
+      const n = parseInt(lastDays, 10);
+      if (!isNaN(n) && n > 0) {
+        const now = new Date();
+        const from = new Date(now);
+        from.setDate(from.getDate() - n);
+        dateFromVal = from;
+        dateToVal = now;
+      }
+    }
 
     await connectDB();
 
+    const applyDateFilter = (f, field) => {
+      if (dateFromVal || dateToVal) {
+        f[field] = f[field] || {};
+        if (dateFromVal) f[field].$gte = dateFromVal;
+        if (dateToVal) f[field].$lte = dateToVal;
+      }
+    };
+
     // If count=true, return counts instead of full data
     if (countOnly) {
+      const communityFilter = { brand, isCommunityChat: true };
+      const normalFilter = { brand, isCommunityChat: { $ne: true } };
+      applyDateFilter(communityFilter, dateField);
+      applyDateFilter(normalFilter, dateField);
+
       // Count users for community chats
-      const communitySessions = await Session.find({
-        brand,
-        isCommunityChat: true,
-      })
+      const communitySessions = await Session.find(communityFilter)
         .populate("userId", "_id")
         .select("userId")
         .lean();
 
       // Count users for chat requests (normal chats)
-      const normalSessions = await Session.find({
-        brand,
-        isCommunityChat: { $ne: true },
-      })
+      const normalSessions = await Session.find(normalFilter)
         .populate("userId", "_id")
         .select("userId")
         .lean();
@@ -76,7 +103,10 @@ export async function GET(request) {
     } else if (type === "normal") {
       filter.isCommunityChat = { $ne: true };
     }
-    // If type is not specified, don't filter by isCommunityChat
+    applyDateFilter(filter, dateField);
+    if (serviceKey && serviceKey !== "") {
+      filter.serviceKey = serviceKey;
+    }
     const sessions = await Session.find(filter)
       .populate("userId", "name email _id")
       .select(
@@ -85,7 +115,6 @@ export async function GET(request) {
       .sort({ createdAt: -1 })
       .lean();
 
-    // Get message counts for all sessions
     const sessionIds = sessions.map((s) => s._id);
     const messageCounts = await Logs.aggregate([
       { $match: { sessionId: { $in: sessionIds } } },
@@ -141,11 +170,12 @@ export async function GET(request) {
         totalCost: totalCost,
       });
     });
-    const users = Array.from(usersMap.values());
+    const allUsers = Array.from(usersMap.values());
+    const users = allUsers.slice(0, limit);
     return NextResponse.json({
       success: true,
-      //   count: sessions.length,
-      users: users,
+      users,
+      total: allUsers.length,
     });
   } catch (err) {
     return NextResponse.json(

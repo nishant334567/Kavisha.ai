@@ -1,124 +1,36 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
+import AdminChatSessionView from "@/app/admin/components/AdminChatSessionView";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import Livechat from "@/app/components/LiveChat";
 import Loader from "@/app/components/Loader";
-
-function AnalyticsHoverCard({ title, people, chats, questions }) {
-  return (
-    <div className="absolute left-0 top-full mt-1 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-100 z-50">
-      <div className="p-4 bg-white rounded-lg border border-gray-200 shadow-xl min-w-[220px]">
-        <p className="font-akshar font-semibold text-[#000A67] mb-3 text-sm">{title}</p>
-        <p className="text-xs text-gray-600">Total number of people: {people}</p>
-        <p className="text-xs text-gray-600">Total number of chats: {chats}</p>
-        <p className="text-xs text-gray-600">Total number of questions: {questions}</p>
-      </div>
-    </div>
-  );
-}
+import { useChatRequests } from "./hooks/useChatRequests";
 
 export default function ChatRequests() {
   const router = useRouter();
   const { user } = useFirebaseSession();
-  const [sessionData, setSessionData] = useState([]);
-  const [allSessions, setAllSessions] = useState([]);
-  const [selectedService, setSelectedService] = useState("all"); // "all" | service _key
-  const brandContext = useBrandContext();
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [selectedSessionLogs, setSelectedSessionLogs] = useState(null);
+  const [sessionViewSessionId, setSessionViewSessionId] = useState(null);
   const [openChat, setOpenChat] = useState(false);
   const [userA, setUserA] = useState(null);
   const [userB, setUserB] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
-  const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchChatRequests = async () => {
-      if (!brandContext?.subdomain) return;
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `/api/admin/fetch-sessions?brand=${brandContext?.subdomain}&type=normal`
-        );
-        const data = await response.json();
-        if (data.success) {
-          setAllSessions(data.users);
-          setSelectedService("all");
-          setSessionData(data.users);
-        } else {
-          setSessionData([]);
-          setAllSessions([]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch sessions:", error);
-        setSessionData([]);
-        setAllSessions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchChatRequests();
-  }, [brandContext?.subdomain]);
-
-  // Filter by service _key (session.serviceKey). "All" = no filter = all sessions (including serviceKey null / remaining).
-  const getSessionCount = (service) => {
-    if (!service)
-      return allSessions.reduce((sum, user) => sum + user.sessions.length, 0);
-    const key = service._key ?? service;
-    return allSessions.reduce(
-      (sum, user) =>
-        sum + user.sessions.filter((s) => s.serviceKey === key).length,
-      0
-    );
-  };
-
-  const getPeopleCount = (service) => {
-    if (!service) return allSessions.length;
-    const key = service._key ?? service;
-    return allSessions.filter((u) =>
-      u.sessions.some((s) => s.serviceKey === key)
-    ).length;
-  };
-
-  const getQuestionCount = (service) => {
-    const sumMessages = (users) =>
-      users.reduce(
-        (sum, u) =>
-          sum + u.sessions.reduce((s, sess) => s + (sess.messageCount || 0), 0),
-        0
-      );
-    if (!service) return sumMessages(allSessions);
-    const key = service._key ?? service;
-    const filtered = allSessions.map((u) => ({
-      ...u,
-      sessions: u.sessions.filter((s) => s.serviceKey === key),
-    })).filter((u) => u.sessions.length > 0);
-    return sumMessages(filtered);
-  };
-
-  const filterSessions = (service) => {
-    if (!service || service === "all") {
-      setSelectedService("all");
-      setSessionData(allSessions); // All = every session (remaining + keyed)
-      return;
-    }
-    const key = service._key ?? service;
-    setSelectedService(key);
-    const filtered = allSessions
-      .map((user) => ({
-        ...user,
-        sessions: user.sessions.filter((s) => s.serviceKey === key),
-      }))
-      .filter((user) => user.sessions.length > 0);
-    setSessionData(filtered);
-  };
+  const brandContext = useBrandContext();
+  const { users, loading, filters, applyFilters, datePresets, servicesDropDown } = useChatRequests(brandContext);
+  const [draftFilters, setDraftFilters] = useState(() => ({
+    datePreset: "all",
+    dateFrom: null,
+    dateTo: null,
+    serviceKey: "",
+  }));
 
   const openChatSession = (userA, userB) => {
     setUserA(userA);
@@ -126,6 +38,13 @@ export default function ChatRequests() {
     setConnectionId([userA, userB].sort().join("_"));
     setOpenChat((prev) => !prev);
   };
+
+  useEffect(() => {
+    if (sessionViewSessionId) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
+    }
+  }, [sessionViewSessionId]);
 
   if (loading) {
     return <Loader loadingMessage="Loading chat requests..." />;
@@ -146,80 +65,78 @@ export default function ChatRequests() {
           </h1>
         </div>
       </div>
-      <div className="w-full sm:w-[85%] mx-auto md:px-6">
-        {/* <div className="flex items-center justify-between mb-8"> */}
-        {/* <div className="flex-1"></div> */}
-        <div className="grid grid-cols-2 md:flex items-center justify-center gap-y-4 md:gap-y-0 px-6 my-4">
-          <div className="flex items-center relative group">
-            <button
-              onClick={() => filterSessions("all")}
-              className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${selectedService === "all" ? "text-blue-600" : "text-black"
-                }`}
-            >
-              All
-              {getSessionCount(null) > 0 && (
-                <span className="absolute -top-2 -right-6 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                  {getSessionCount(null)}
-                </span>
-              )}
-            </button>
-            <AnalyticsHoverCard
-              title="All analytics"
-              people={getPeopleCount(null)}
-              chats={getSessionCount(null)}
-              questions={getQuestionCount(null)}
-            />
-            {brandContext?.services?.length > 0 && (
-              <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-8"></div>
-            )}
-          </div>
-          {brandContext?.services?.map((item, index) => {
-            const count = getSessionCount(item);
-            const isLast = index === brandContext.services.length - 1;
-            const isSelected = selectedService === (item?._key ?? item?.name);
-            const analyticsTitle = `${item?.title || item?.name} analytics`;
-            return (
-              <div key={item?._key ?? index} className="flex items-center relative group">
-                <button
-                  onClick={() => filterSessions(item)}
-                  className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${isSelected ? "text-blue-600" : "text-black"
-                    }`}
-                >
-                  {item?.title}
-                  {count > 0 && (
-                    <span className="absolute -top-2 -right-6 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                      {count}
-                    </span>
-                  )}
-                </button>
-                <AnalyticsHoverCard
-                  title={analyticsTitle}
-                  people={getPeopleCount(item)}
-                  chats={getSessionCount(item)}
-                  questions={getQuestionCount(item)}
-                />
-                {!isLast && (
-                  <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-8"></div>
-                )}
-              </div>
-            );
-          })}
-        </div>
-        {/* </div> */}
+      <div className="w-full mx-auto px-2 lg:px-4">
+        <div className="flex flex-wrap items-center gap-2 py-2 mb-4">
+          <span className="text-sm font-medium">Date:</span>
+          <select
+            value={draftFilters.datePreset}
+            onChange={(e) =>
+              setDraftFilters((prev) => ({ ...prev, datePreset: e.target.value }))
+            }
+            className="border border-gray-300 rounded px-2 py-1 text-sm"
+          >
+            {datePresets.map((p) => (
+              <option key={p.value} value={p.value}>
+                {p.label}
+              </option>
+            ))}
+          </select>
+          {draftFilters.datePreset === "custom" && (
+            <>
+              <input
+                type="date"
+                value={draftFilters.dateFrom ?? ""}
+                onChange={(e) =>
+                  setDraftFilters((prev) => ({ ...prev, dateFrom: e.target.value }))
+                }
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              />
+              <span className="text-sm text-gray-500">to</span>
+              <input
+                type="date"
+                value={draftFilters.dateTo ?? ""}
+                onChange={(e) =>
+                  setDraftFilters((prev) => ({ ...prev, dateTo: e.target.value }))
+                }
+                className="border border-gray-300 rounded px-2 py-1 text-sm"
+              />
+            </>
+          )}
+          <label>Service Type</label>
+          <select
+            value={draftFilters.serviceKey}
+            onChange={(e) =>
+              setDraftFilters((prev) => ({ ...prev, serviceKey: e.target.value }))
+            }
+            className="border border-gray-300 rounded px-2 py-1 text-sm"
+          >
+            {servicesDropDown?.map((item, index) => {
+              return <option key={item?._key} value={item?._key}>
+                {item.title}
+              </option>
+            })}
+          </select>
 
-        <div>
-          {sessionData.length > 0 ? (
-            sessionData.map((item, index) => {
-              return (
-                <UserCard
-                  key={index}
-                  user={item}
-                  setSelectedSessionLogs={setSelectedSessionLogs}
-                  setShowLogsModal={setShowLogsModal}
-                  openChatSession={openChatSession}
-                />
-              );
-            })
+          <button
+            onClick={() => applyFilters(draftFilters)}
+            className="px-3 py-1 text-sm bg-[#000A67] text-white rounded hover:opacity-90"
+          >
+            Apply
+          </button>
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-w-0">
+          {users.length > 0 ? (
+            users.map((item, index) => (
+              <div key={item.userId ?? index} className="min-w-0 w-full">
+              <UserCard
+                user={item}
+                setSelectedSessionLogs={setSelectedSessionLogs}
+                setShowLogsModal={setShowLogsModal}
+                openChatSession={openChatSession}
+                onOpenSessionView={setSessionViewSessionId}
+              />
+              </div>
+            ))
           ) : (
             <div className="col-span-full text-center text-gray-500 py-8">
               No sessions found
@@ -234,6 +151,24 @@ export default function ChatRequests() {
             setSelectedSessionLogs={setSelectedSessionLogs}
             brand={brandContext?.subdomain}
           />
+        )}
+
+        {sessionViewSessionId && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-hidden"
+            onClick={(e) => e.target === e.currentTarget && setSessionViewSessionId(null)}
+          >
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl h-[90vh] flex flex-col overflow-hidden">
+              <div className="flex-shrink-0 flex justify-end p-2 border-b border-[#BFC4E5] bg-[#EEF0FE]">
+                <button type="button" onClick={() => setSessionViewSessionId(null)} className="p-2 rounded-lg hover:bg-white/80" aria-label="Close">
+                  <X className="w-5 h-5 text-[#42476D]" />
+                </button>
+              </div>
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                <AdminChatSessionView sessionId={sessionViewSessionId} />
+              </div>
+            </div>
+          </div>
         )}
 
         {openChat && userA && userB && (
