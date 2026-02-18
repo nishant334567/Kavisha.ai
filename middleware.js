@@ -63,7 +63,10 @@ export async function middleware(request) {
     },
     handleInvalidToken: async () => {
       if (!PUBLIC_PATHS.includes(request.nextUrl.pathname)) {
-        return NextResponse.redirect(new URL("/", request.url));
+        const pathname = request.nextUrl.pathname || "";
+        const redirectUrl = new URL("/", request.url);
+        redirectUrl.searchParams.set("redirect", pathname);
+        return NextResponse.redirect(redirectUrl);
       }
       return NextResponse.next();
     },
