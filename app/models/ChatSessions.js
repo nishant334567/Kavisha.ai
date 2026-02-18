@@ -61,8 +61,8 @@ const ChatSessionsSchema = new mongoose.Schema(
       default: "",
     },
     assignedTo: {
-      type: String,
-      default: "",
+      type: [String],
+      default: [],
     },
     totalInputTokens: {
       type: Number,

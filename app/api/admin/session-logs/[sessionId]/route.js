@@ -50,7 +50,7 @@ export async function GET(req, { params }) {
           title: sessionDoc.title,
           chatSummary: sessionDoc.chatSummary,
           status: sessionDoc.status,
-          assignedTo: sessionDoc.assignedTo || "",
+          assignedTo: Array.isArray(sessionDoc.assignedTo) ? sessionDoc.assignedTo : (sessionDoc.assignedTo ? [sessionDoc.assignedTo] : []),
           serviceKey: sessionDoc.serviceKey,
           createdAt: sessionDoc.createdAt,
           updatedAt: sessionDoc.updatedAt,

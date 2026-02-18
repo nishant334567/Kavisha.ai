@@ -163,7 +163,7 @@ export async function GET(request) {
         createdAt: session.createdAt,
         updatedAt: session.updatedAt,
         comment: session.comment,
-        assignedTo: session.assignedTo || "",
+        assignedTo: Array.isArray(session.assignedTo) ? session.assignedTo : (session.assignedTo ? [session.assignedTo] : []),
         messageCount: messageCount,
         totalInputTokens: inputTokens,
         totalOutputTokens: outputTokens,

@@ -6,6 +6,8 @@ import { ArrowLeft, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
+import CommentModal from "@/app/admin/components/CommentModal";
+import AssignModal from "@/app/admin/components/AssignModal";
 import AdminChatSessionView from "@/app/admin/components/AdminChatSessionView";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import Livechat from "@/app/components/LiveChat";
@@ -17,6 +19,8 @@ export default function ChatRequests() {
   const { user } = useFirebaseSession();
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [selectedSessionLogs, setSelectedSessionLogs] = useState(null);
+  const [commentModalSessionId, setCommentModalSessionId] = useState(null);
+  const [assignModalSession, setAssignModalSession] = useState(null);
   const [sessionViewSessionId, setSessionViewSessionId] = useState(null);
   const [openChat, setOpenChat] = useState(false);
   const [userA, setUserA] = useState(null);
@@ -25,6 +29,10 @@ export default function ChatRequests() {
 
   const brandContext = useBrandContext();
   const { users, loading, filters, applyFilters, datePresets, servicesDropDown } = useChatRequests(brandContext);
+
+  const handleAssignSuccess = () => {
+    applyFilters(filters);
+  };
   const [draftFilters, setDraftFilters] = useState(() => ({
     datePreset: "all",
     dateFrom: null,
@@ -124,17 +132,19 @@ export default function ChatRequests() {
             Apply
           </button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full min-w-0">
+        <div className="w-full lg:w-[90%] min-w-0 mx-auto flex flex-col gap-4">
           {users.length > 0 ? (
             users.map((item, index) => (
               <div key={item.userId ?? index} className="min-w-0 w-full">
-              <UserCard
-                user={item}
-                setSelectedSessionLogs={setSelectedSessionLogs}
-                setShowLogsModal={setShowLogsModal}
-                openChatSession={openChatSession}
-                onOpenSessionView={setSessionViewSessionId}
-              />
+                <UserCard
+                  user={item}
+                  setSelectedSessionLogs={setSelectedSessionLogs}
+                  setShowLogsModal={setShowLogsModal}
+                  openChatSession={openChatSession}
+                  onOpenSessionView={setSessionViewSessionId}
+                  onOpenComments={setCommentModalSessionId}
+                  onOpenAssign={setAssignModalSession}
+                />
               </div>
             ))
           ) : (
@@ -143,6 +153,23 @@ export default function ChatRequests() {
             </div>
           )}
         </div>
+
+        {commentModalSessionId && (
+          <CommentModal
+            sessionId={commentModalSessionId}
+            onClose={() => setCommentModalSessionId(null)}
+          />
+        )}
+
+        {assignModalSession && (
+          <AssignModal
+            sessionId={assignModalSession.sessionId}
+            brandSubdomain={brandContext?.subdomain}
+            currentAssignedTo={assignModalSession.assignedTo}
+            onClose={() => setAssignModalSession(null)}
+            onSuccess={handleAssignSuccess}
+          />
+        )}
 
         {showLogsModal && selectedSessionLogs && (
           <AdminLogsModal

@@ -95,8 +95,8 @@ export default function AdminChatSessionView({ sessionId }) {
               <Clock className="w-3.5 h-3.5 text-[#7981C2]" aria-hidden />
               {session.updatedAt ? formatToIST(session.updatedAt) : "—"}
             </span>
-            {session.assignedTo && (
-              <span className="px-1.5 py-0.5 rounded bg-white border border-[#BFC4E5]">{session.assignedTo}</span>
+            {(Array.isArray(session.assignedTo) ? session.assignedTo.length : session.assignedTo) && (
+              <span className="px-1.5 py-0.5 rounded bg-white border border-[#BFC4E5]">{Array.isArray(session.assignedTo) ? session.assignedTo.join(", ") : session.assignedTo}</span>
             )}
             {session.status && <span className="capitalize text-[#898989]">{session.status}</span>}
           </div>
