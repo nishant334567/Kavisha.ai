@@ -42,55 +42,59 @@ export async function POST(req) {
           );
         }
 
-        // Send emails to all recipients
-        const emailPromises = recipients.map(async (recipient) => {
-          try {
-            const emailData = {
-              from: "hello@kavisha.ai", // Use Resend's test domain first
-              to: [recipient.email],
-              subject: subject,
-              html: `
-             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-               <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                 <h2 style="color: #333; margin: 0;">Hello ${recipient.name || "User"},</h2>
-               </div>
-               
-               <div style="line-height: 1.6; color: #555;">
-                 ${body.replace(/\n/g, "<br>")}
-               </div>
-               
-               <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #888; font-size: 14px;">
-                 <p>Best regards,<br>The ${brand || "Kavisha"} Team</p>
-               </div>
-             </div>
-           `,
-            };
+        const brandDisplayName = (brand || "Kavisha")
+          .split(/[-_\s]+/)
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(" ");
 
-            const { data, error } = await resend.emails.send(emailData);
+        const htmlTemplate = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="line-height: 1.6; color: #333;">
+              ${body.replace(/\n/g, "<br>")}
+            </div>
+            <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #555; font-size: 14px;">
+              <p>Best regards,<br>The ${brandDisplayName} Team</p>
+            </div>
+            <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid #eee; color: #888; font-size: 12px; text-align: center;">
+              <p style="margin: 0;">powered by <a href="https://kavisha.ai" style="color: #7981C2; text-decoration: none;">kavisha.ai</a></p>
+            </div>
+          </div>
+        `;
 
-            if (error) {
-              return {
-                email: recipient.email,
-                success: false,
-                error: error.message,
-              };
-            }
+        const BATCH_SIZE = 100; // Resend batch limit
+        const results = [];
 
-            return {
-              email: recipient.email,
-              success: true,
-              messageId: data.id,
-            };
-          } catch (error) {
-            return {
-              email: recipient.email,
-              success: false,
-              error: error.message,
-            };
+        for (let i = 0; i < recipients.length; i += BATCH_SIZE) {
+          const chunk = recipients.slice(i, i + BATCH_SIZE);
+          const batchEmails = chunk.map((r) => ({
+            from: "hello@kavisha.ai",
+            to: [r.email],
+            subject,
+            html: htmlTemplate,
+          }));
+
+          const { data: batchResponse, error: batchError } = await resend.batch.send(batchEmails);
+
+          if (batchError) {
+            chunk.forEach((r) => results.push({ email: r.email, success: false, error: batchError.message }));
+          } else {
+            // API returns { data: [{ id }, ...] }; SDK wraps as { data: {...}, error: null }
+            const items = batchResponse?.data || [];
+            chunk.forEach((r, idx) => {
+              const item = items[idx];
+              results.push(
+                item?.id
+                  ? { email: r.email, success: true, messageId: item.id }
+                  : { email: r.email, success: false, error: item?.message || "No response" }
+              );
+            });
           }
-        });
 
-        const results = await Promise.all(emailPromises);
+          // Rate limit: 2 req/sec – wait 600ms between batches
+          if (i + BATCH_SIZE < recipients.length) {
+            await new Promise((r) => setTimeout(r, 600));
+          }
+        }
 
         const successful = results.filter((r) => r.success).length;
         const failed = results.filter((r) => !r.success).length;

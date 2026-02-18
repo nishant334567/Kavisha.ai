@@ -8,7 +8,6 @@ import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const CRON_REPORT_EMAIL = "hello@kavisha.ai";
-const BATCH_LIMIT = parseInt(process.env.CRON_BATCH_LIMIT || "500", 10); // max sessions deleted per run (e.g. per day)
 
 async function sendCronReport({ success, deleted = 0, message, error }) {
     if (!resend) return;
@@ -28,14 +27,12 @@ async function sendCronReport({ success, deleted = 0, message, error }) {
     }
 }
 
-async function runCleanupWithSessionIds(sessionIds) {
+const BATCH_LIMIT = parseInt(process.env.CRON_BATCH_LIMIT || "500", 10);
+
+// Delete sessions and their logs, matches, connections
+async function deleteSessions(sessionIds) {
     if (sessionIds.length === 0) {
-        await sendCronReport({
-            success: true,
-            deleted: 0,
-            message: "No sessions with exactly one log found.",
-        });
-        return { success: true, deleted: 0, message: "No sessions with exactly one log found." };
+        return { deleted: 0, message: "No sessions to delete." };
     }
 
     await Logs.deleteMany({ sessionId: { $in: sessionIds } });
@@ -52,29 +49,58 @@ async function runCleanupWithSessionIds(sessionIds) {
         ],
     });
     const { deletedCount } = await Session.deleteMany({ _id: { $in: sessionIds } });
-    const message = `Deleted ${deletedCount} session(s) with exactly one log (batch limit: ${BATCH_LIMIT}/run).`;
 
-    await sendCronReport({
-        success: true,
-        deleted: deletedCount,
-        message,
-    });
-
-    return { success: true, deleted: deletedCount, message };
+    return { deleted: deletedCount, message: `Deleted ${deletedCount} session(s) with 1 log (batch: ${BATCH_LIMIT}).` };
 }
 
 async function runCleanup() {
     await connectDB();
 
+    // 1. Find sessions that have exactly 1 log (candidates for deletion)
     const singleLogSessions = await Logs.aggregate([
         { $group: { _id: "$sessionId", count: { $sum: 1 } } },
         { $match: { count: 1 } },
-        { $project: { sessionId: "$_id" } },
-        { $limit: BATCH_LIMIT },
+        { $limit: BATCH_LIMIT * 2 },
     ]);
+    const candidateSessionIds = singleLogSessions.map((s) => s._id);
 
-    const sessionIds = singleLogSessions.map((s) => s.sessionId);
-    return runCleanupWithSessionIds(sessionIds);
+    if (candidateSessionIds.length === 0) {
+        await sendCronReport({ success: true, deleted: 0, message: "No sessions with exactly 1 log." });
+        return { success: true, deleted: 0, message: "No sessions with exactly 1 log." };
+    }
+
+    // 2. Get userId for each candidate
+    const sessions = await Session.find({ _id: { $in: candidateSessionIds } })
+        .select("_id userId")
+        .lean();
+
+    // 3. Group candidates by userId
+    const byUser = {};
+    for (const s of sessions) {
+        const uid = s.userId.toString();
+        if (!byUser[uid]) byUser[uid] = [];
+        byUser[uid].push(s._id);
+    }
+
+    // 4. Decide what to delete: if user's ALL sessions would be deleted, keep 1
+    const toDelete = [];
+    for (const uid of Object.keys(byUser)) {
+        const userCandidates = byUser[uid];
+        const userTotalSessions = await Session.countDocuments({ userId: uid });
+
+        // All of this user's sessions are candidates (all have 1 log) → keep 1, delete rest
+        if (userTotalSessions === userCandidates.length) {
+            toDelete.push(...userCandidates.slice(1));
+        } else {
+            toDelete.push(...userCandidates);
+        }
+    }
+
+    const batch = toDelete.slice(0, BATCH_LIMIT);
+    const { deleted, message } = await deleteSessions(batch);
+
+    await sendCronReport({ success: true, deleted, message });
+    return { success: true, deleted, message };
 }
 
 // POST only – requires valid Bearer token when CRON_SECRET is set (e.g. for scheduler)
