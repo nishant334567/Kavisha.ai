@@ -17,7 +17,7 @@ function buildQueryParams(brand, filters) {
     const params = new URLSearchParams();
     params.set("brand", brand);
     params.set("type", "normal");
-    params.set("limit", "50");
+    params.set("limit", "all");
 
     if (filters.datePreset === "custom" && filters.dateFrom && filters.dateTo) {
         params.set("dateFrom", filters.dateFrom);
