@@ -22,18 +22,17 @@ export async function GET(req, { params }) {
           );
         }
 
-        // Get the session to check brand
-        const session = await Session.findById(sessionId).lean();
-        if (!session) {
+        const sessionDoc = await Session.findById(sessionId)
+          .populate("userId", "name email")
+          .lean();
+        if (!sessionDoc) {
           return NextResponse.json(
             { success: false, message: "Session not found" },
             { status: 404 }
           );
         }
 
-        // Check if user is admin for this brand
-        const isAdmin = await isBrandAdmin(decodedToken.email, session.brand);
-
+        const isAdmin = await isBrandAdmin(decodedToken.email, sessionDoc.brand);
         if (!isAdmin) {
           return NextResponse.json(
             { success: false, message: "Forbidden - not a brand admin" },
@@ -41,13 +40,29 @@ export async function GET(req, { params }) {
           );
         }
 
-        // Fetch logs for this session
         const logs = await Logs.find({ sessionId })
           .sort({ createdAt: 1 })
           .lean();
 
+        const session = {
+          _id: sessionDoc._id,
+          brand: sessionDoc.brand,
+          title: sessionDoc.title,
+          chatSummary: sessionDoc.chatSummary,
+          status: sessionDoc.status,
+          assignedTo: Array.isArray(sessionDoc.assignedTo) ? sessionDoc.assignedTo : (sessionDoc.assignedTo ? [sessionDoc.assignedTo] : []),
+          serviceKey: sessionDoc.serviceKey,
+          createdAt: sessionDoc.createdAt,
+          updatedAt: sessionDoc.updatedAt,
+          messageCount: logs.length,
+          user: sessionDoc.userId
+            ? { name: sessionDoc.userId.name, email: sessionDoc.userId.email }
+            : null,
+        };
+
         return NextResponse.json({
           success: true,
+          session,
           logs: logs.map((log) => ({
             _id: log._id,
             message: log.message,

@@ -576,9 +576,9 @@ export default function BrandAdminPage() {
                         <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                           {currentUserSession.role || "Unknown Role"}
                         </span>
-                        {currentUserSession.assignedTo && (
+                        {(Array.isArray(currentUserSession.assignedTo) ? currentUserSession.assignedTo.length : currentUserSession.assignedTo) && (
                           <span className="inline-flex items-center px-2 sm:px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-100 text-purple-800">
-                            {currentUserSession.assignedTo}
+                            {Array.isArray(currentUserSession.assignedTo) ? currentUserSession.assignedTo.join(", ") : currentUserSession.assignedTo}
                           </span>
                         )}
                       </div>
@@ -658,9 +658,9 @@ export default function BrandAdminPage() {
                         Assign to
                       </label>
                       <select
-                        value={currentUserSession.assignedTo || ""}
+                        value={Array.isArray(currentUserSession.assignedTo) ? currentUserSession.assignedTo[0] ?? "" : (currentUserSession.assignedTo || "")}
                         onChange={(e) =>
-                          assignSession(currentUserSession._id, e.target.value)
+                          assignSession(currentUserSession._id, e.target.value ? [e.target.value] : [])
                         }
                         disabled={assigning[currentUserSession._id]}
                         className="w-full text-sm px-3 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-purple-500 bg-white"

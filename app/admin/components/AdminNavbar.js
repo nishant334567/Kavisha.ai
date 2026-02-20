@@ -49,7 +49,7 @@ export default function AdminNavbar() {
   ];
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 w-full h-14 bg-white md:bg-gray-800 z-50">
+      <nav className="fixed top-0 left-0 right-0 w-full h-14 bg-white md:bg-[#004A4E] z-50">
         <div className="hidden px-4 h-full md:flex items-center justify-between font-akshar text-sm">
           <div className="hidden md:flex items-center gap-3">
             <div className="flex justify-between items-center">
@@ -61,31 +61,31 @@ export default function AdminNavbar() {
             </div>
             <button
               onClick={() => go(`/admin/${brand?.subdomain}/v2`)}
-              className="text-[#FFEED8] uppercase tracking-wide hover:opacity-80 transition-opacity"
+              className="text-white uppercase tracking-wide hover:opacity-90 transition-opacity"
             >
               Home
             </button>
           </div>
           <button onClick={() => setShowNavoption(true)}>
-            <Menu className="w-5 h-5 md:text-[#FFEED8] text-balck sm:hidden" />
+            <Menu className="w-5 h-5 md:text-white text-black sm:hidden" />
           </button>
           <ul className="items-center gap-6 hidden md:flex">
             <li
-              className={`cursor-pointer text-[#FFEED8] uppercase tracking-wide ${pathname?.includes("/my-services") ? "font-semibold" : ""
+              className={`cursor-pointer text-white uppercase tracking-wide ${pathname?.includes("/my-services") ? "font-semibold" : ""
                 }`}
               onClick={() => go(`/admin/${brand?.subdomain}/my-services`)}
             >
               MY SERVICES
             </li>
             <li
-              className={`cursor-pointer text-[#FFEED8] uppercase tracking-wide ${pathname?.includes("/train") ? "font-semibold" : ""
+              className={`cursor-pointer text-white uppercase tracking-wide ${pathname?.includes("/train") ? "font-semibold" : ""
                 }`}
               onClick={() => go(`/admin/${brand?.subdomain}/train/v2`)}
             >
               TRAIN MY AVATAAR
             </li>
             <li
-              className={`cursor-pointer text-[#FFEED8] uppercase tracking-wide flex items-center gap-2 ${pathname?.includes("/edit-profile") ? "font-semibold" : ""
+              className={`cursor-pointer text-white uppercase tracking-wide flex items-center gap-2 ${pathname?.includes("/edit-profile") ? "font-semibold" : ""
                 }`}
               onClick={() => go(`/admin/${brand?.subdomain}/edit-profile`)}
             >
@@ -93,7 +93,7 @@ export default function AdminNavbar() {
             </li>
             <li className="relative" ref={settingDropdownRef}>
               <button onClick={() => setShowsettingDropdown((prev) => !prev)}>
-                <Settings className="w-4 h-4 text-[#FFEED8] stroke-2" />
+                <Settings className="w-4 h-4 text-white stroke-2" />
               </button>
               {showSettingDropdown && (
                 <div className="absolute top-full right-0 mt-4 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[180px] z-50">

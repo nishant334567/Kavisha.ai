@@ -1,90 +1,94 @@
-export default function EmailModal({
-  recipients = [],
-  emailData = { subject: "", body: "" },
-  setEmailData,
-  onSend,
-  sending = false,
-  onClose,
-  emailResults = null,
-}) {
-  const count = recipients.length;
-  const title =
-    count === 0
-      ? "Send Email"
-      : count === 1
-        ? `Send Email to ${recipients[0]?.name || "User"}`
-        : `Send Email to ${count} Users`;
+"use client";
+
+import { useState } from "react";
+import { X, Send } from "lucide-react";
+import EmailEditor from "./EmailEditor";
+
+export default function EmailModal({ onClose, toEmails = [], brand }) {
+  const [subject, setSubject] = useState("");
+  const [htmlContent, setHtmlContent] = useState("");
+  const [sending, setSending] = useState(false);
+  const emails = Array.isArray(toEmails) ? toEmails.filter((e) => e && String(e).trim()) : [];
+
+  const handleSend = async () => {
+    if (!emails.length || !subject.trim() || !htmlContent.trim()) return;
+    setSending(true);
+    try {
+      const res = await fetch("/api/admin/send-bulk-email", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          recipients: emails.map((email) => ({ email, name: email })),
+          subject: subject.trim(),
+          body: htmlContent.trim(),
+          brand: brand || "kavisha",
+        }),
+      });
+      const data = await res.json();
+      if (data.success) onClose();
+      else alert(data.error || "Failed to send");
+    } catch (e) {
+      alert("Failed to send");
+    } finally {
+      setSending(false);
+    }
+  };
 
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
       <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-        <h3 className="text-base sm:text-lg font-semibold mb-2 sm:mb-4">{title}</h3>
-
-        {count === 1 && recipients[0]?.email && (
-          <p className="text-xs sm:text-sm text-gray-600 mb-3 sm:mb-4">{recipients[0].email}</p>
-        )}
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-base sm:text-lg font-semibold">Send Email</h3>
+          <button
+            type="button"
+            onClick={onClose}
+            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600"
+            aria-label="Close"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
 
         <div className="space-y-4">
+          {emails.length > 0 && (
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
+              <p className="text-sm text-gray-600 break-all">{emails.join(", ")}</p>
+            </div>
+          )}
           <div>
+            <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
             <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
             <input
               type="text"
-              value={emailData.subject}
-              onChange={(e) =>
-                setEmailData((prev) => ({ ...prev, subject: e.target.value }))
-              }
               placeholder="Enter email subject"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
+              className="w-full border border-gray-300 rounded p-2 text-sm"
             />
           </div>
-
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Message Body</label>
-            <textarea
-              value={emailData.body}
-              onChange={(e) =>
-                setEmailData((prev) => ({ ...prev, body: e.target.value }))
-              }
-              placeholder="Enter your message here..."
-              rows={8}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
-            />
+            <label className="block text-sm font-medium text-gray-700 mb-1">Body</label>
+            <EmailEditor value={htmlContent} onChange={setHtmlContent} brand={brand} />
           </div>
-
-          {count > 1 && (
-            <div className="text-sm text-gray-600">
-              <p>This email will be sent to {count} users:</p>
-              <ul className="mt-2 max-h-48 overflow-y-auto border border-gray-200 rounded-lg p-2 bg-gray-50">
-                {recipients.map((r, idx) => (
-                  <li key={idx} className="flex justify-between py-1 px-2 hover:bg-gray-100 rounded text-left">
-                    <span className="truncate flex-1 mr-2">{r.name || "Unknown"}</span>
-                    <span className="text-gray-500 truncate max-w-[180px]">{r.email}</span>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
-        </div>
-
-        <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
-          <button
-            onClick={onSend}
-            disabled={
-              sending ||
-              !emailData.subject?.trim() ||
-              !emailData.body?.trim() ||
-              count === 0
-            }
-            className="w-full sm:w-auto px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-          >
-            {sending ? "Sending..." : "Send Email"}
-          </button>
-          <button
-            onClick={onClose}
-            className="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm font-medium"
-          >
-            Cancel
-          </button>
+          <div className="flex justify-end gap-2 pt-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 rounded-lg border border-gray-300 text-sm font-medium hover:bg-gray-50"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSend}
+              disabled={sending || !emails.length || !subject.trim() || !htmlContent.trim()}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Send className="w-4 h-4" />
+              {sending ? "Sending..." : "Send"}
+            </button>
+          </div>
         </div>
 
         {emailResults && (

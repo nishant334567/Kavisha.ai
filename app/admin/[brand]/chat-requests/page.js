@@ -1,133 +1,51 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { ArrowLeft, Mail } from "lucide-react";
+import { ArrowLeft, X, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
+import CommentModal from "@/app/admin/components/CommentModal";
+import AssignModal from "@/app/admin/components/AssignModal";
 import EmailModal from "@/app/admin/components/EmailModal";
-import AlertModal from "@/app/admin/components/AlertModal";
+import AdminChatSessionView from "@/app/admin/components/AdminChatSessionView";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import Livechat from "@/app/components/LiveChat";
 import Loader from "@/app/components/Loader";
-
-function AnalyticsHoverCard({ title, people, chats, questions }) {
-  return (
-    <div className="absolute left-0 top-full mt-1 pt-2 opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-100 z-50">
-      <div className="p-4 bg-white rounded-lg border border-gray-200 shadow-xl min-w-[220px]">
-        <p className="font-akshar font-semibold text-[#000A67] mb-3 text-sm">{title}</p>
-        <p className="text-xs text-gray-600">Total number of people: {people}</p>
-        <p className="text-xs text-gray-600">Total number of chats: {chats}</p>
-        <p className="text-xs text-gray-600">Total number of questions: {questions}</p>
-      </div>
-    </div>
-  );
-}
+import { useChatRequests } from "./hooks/useChatRequests";
 
 export default function ChatRequests() {
   const router = useRouter();
   const { user } = useFirebaseSession();
-  const [sessionData, setSessionData] = useState([]);
-  const [allSessions, setAllSessions] = useState([]);
-  const [selectedService, setSelectedService] = useState("all"); // "all" | service _key
-  const brandContext = useBrandContext();
   const [showLogsModal, setShowLogsModal] = useState(false);
   const [selectedSessionLogs, setSelectedSessionLogs] = useState(null);
+  const [commentModalSessionId, setCommentModalSessionId] = useState(null);
+  const [assignModalSession, setAssignModalSession] = useState(null);
+  const [showEmailModal, setShowEmailModal] = useState(false);
+  const [sessionViewSessionId, setSessionViewSessionId] = useState(null);
   const [openChat, setOpenChat] = useState(false);
   const [userA, setUserA] = useState(null);
   const [userB, setUserB] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [emailSelectionMode, setEmailSelectionMode] = useState(false);
-  const [selectedUserIds, setSelectedUserIds] = useState(new Set());
-  const [showEmailModal, setShowEmailModal] = useState(false);
-  const [emailData, setEmailData] = useState({ subject: "", body: "" });
-  const [sendingEmail, setSendingEmail] = useState(false);
-  const [emailResults, setEmailResults] = useState(null);
-  const [showSuccessAlert, setShowSuccessAlert] = useState(false);
+  const [showSelect, setShowSelect] = useState(false);
+  const [emailList, setEmailList] = useState([]);
+
+  const brandContext = useBrandContext();
+  const { users, loading, filters, applyFilters, datePresets, servicesDropDown } = useChatRequests(brandContext);
 
   useEffect(() => {
-    const fetchChatRequests = async () => {
-      if (!brandContext?.subdomain) return;
-      setLoading(true);
-      try {
-        const response = await fetch(
-          `/api/admin/fetch-sessions?brand=${brandContext?.subdomain}&type=normal`
-        );
-        const data = await response.json();
-        if (data.success) {
-          setAllSessions(data.users);
-          setSelectedService("all");
-          setSessionData(data.users);
-        } else {
-          setSessionData([]);
-          setAllSessions([]);
-        }
-      } catch (error) {
-        console.error("Failed to fetch sessions:", error);
-        setSessionData([]);
-        setAllSessions([]);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchChatRequests();
-  }, [brandContext?.subdomain]);
-
-  // Filter by service _key (session.serviceKey). "All" = no filter = all sessions (including serviceKey null / remaining).
-  const getSessionCount = (service) => {
-    if (!service)
-      return allSessions.reduce((sum, user) => sum + user.sessions.length, 0);
-    const key = service._key ?? service;
-    return allSessions.reduce(
-      (sum, user) =>
-        sum + user.sessions.filter((s) => s.serviceKey === key).length,
-      0
-    );
+    console.log("List of Emails:", emailList)
+  }, [emailList])
+  const handleAssignSuccess = () => {
+    applyFilters(filters);
   };
-
-  const getPeopleCount = (service) => {
-    if (!service) return allSessions.length;
-    const key = service._key ?? service;
-    return allSessions.filter((u) =>
-      u.sessions.some((s) => s.serviceKey === key)
-    ).length;
-  };
-
-  const getQuestionCount = (service) => {
-    const sumMessages = (users) =>
-      users.reduce(
-        (sum, u) =>
-          sum + u.sessions.reduce((s, sess) => s + (sess.messageCount || 0), 0),
-        0
-      );
-    if (!service) return sumMessages(allSessions);
-    const key = service._key ?? service;
-    const filtered = allSessions.map((u) => ({
-      ...u,
-      sessions: u.sessions.filter((s) => s.serviceKey === key),
-    })).filter((u) => u.sessions.length > 0);
-    return sumMessages(filtered);
-  };
-
-  const filterSessions = (service) => {
-    if (!service || service === "all") {
-      setSelectedService("all");
-      setSessionData(allSessions); // All = every session (remaining + keyed)
-      return;
-    }
-    const key = service._key ?? service;
-    setSelectedService(key);
-    const filtered = allSessions
-      .map((user) => ({
-        ...user,
-        sessions: user.sessions.filter((s) => s.serviceKey === key),
-      }))
-      .filter((user) => user.sessions.length > 0);
-    setSessionData(filtered);
-  };
+  const [draftFilters, setDraftFilters] = useState(() => ({
+    datePreset: "all",
+    dateFrom: null,
+    dateTo: null,
+    serviceKey: "",
+  }));
 
   const openChatSession = (userA, userB) => {
     setUserA(userA);
@@ -136,63 +54,12 @@ export default function ChatRequests() {
     setOpenChat((prev) => !prev);
   };
 
-  const toggleUserSelection = (userId) => {
-    setSelectedUserIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(userId)) next.delete(userId);
-      else next.add(userId);
-      return next;
-    });
-  };
-
-  const selectAllUsers = () => {
-    const selectableIds = sessionData
-      .filter((u) => u.email)
-      .map((u) => u.userId);
-    const allSelected = selectableIds.length > 0 && selectableIds.every((id) => selectedUserIds.has(id));
-    setSelectedUserIds(allSelected ? new Set() : new Set(selectableIds));
-  };
-
-  const getSelectedRecipients = () =>
-    sessionData
-      .filter((u) => selectedUserIds.has(u.userId) && u.email)
-      .map((u) => ({ email: u.email, name: u.name }));
-
-  const handleSendEmail = async () => {
-    if (!emailData.subject.trim() || !emailData.body.trim()) {
-      alert("Please enter both subject and body");
-      return;
+  useEffect(() => {
+    if (sessionViewSessionId) {
+      document.body.style.overflow = "hidden";
+      return () => { document.body.style.overflow = ""; };
     }
-    const recipients = getSelectedRecipients();
-    if (recipients.length === 0) {
-      alert("No recipients selected or no valid email addresses");
-      return;
-    }
-    setSendingEmail(true);
-    try {
-      const response = await fetch("/api/admin/send-bulk-email", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          recipients,
-          subject: emailData.subject,
-          body: emailData.body,
-          brand: brandContext?.subdomain || "",
-        }),
-      });
-      const result = await response.json();
-      setEmailResults(result);
-      if (result.success) {
-        setShowEmailModal(false);
-        setEmailData({ subject: "", body: "" });
-        setShowSuccessAlert(true);
-      }
-    } catch (error) {
-      alert("Failed to send emails. Please try again.");
-    } finally {
-      setSendingEmail(false);
-    }
-  };
+  }, [sessionViewSessionId]);
 
   if (loading) {
     return <Loader loadingMessage="Loading chat requests..." />;
@@ -200,157 +67,191 @@ export default function ChatRequests() {
 
   return (
     <div>
-      <div className="px-4 mt-4 flex items-start justify-between gap-4">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => router.back()}
-            className="text-black hover:opacity-70 transition-opacity"
-          >
-            <ArrowLeft className="w-6 h-6" />
-          </button>
-          <h1 className="text-3xl md:text-4xl font-zen text-[#000A67] pb-2">
-            All Chat Requests
-          </h1>
-        </div>
-        {sessionData.length > 0 && (
-          <div className="flex items-center gap-2 flex-shrink-0">
+      <div className="w-full lg:w-[90%] min-w-0 mx-auto px-4 sm:px-6 mt-4">
+        {/* Header: back + title left; Send email top right */}
+        <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
+          <div className="flex items-center gap-2 min-w-0">
             <button
-              onClick={() => {
-                setEmailSelectionMode((prev) => !prev);
-                if (emailSelectionMode) setSelectedUserIds(new Set());
-              }}
-              className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-medium transition-colors ${emailSelectionMode
-                ? "bg-[#000A67] text-white"
-                : "bg-gray-200 text-gray-700 hover:bg-gray-300"
-                }`}
+              onClick={() => router.back()}
+              className="text-gray-700 hover:opacity-70 transition-opacity shrink-0"
+            >
+              <ArrowLeft className="w-6 h-6" />
+            </button>
+            <h1 className="text-2xl sm:text-3xl md:text-4xl font-zen text-[#004A4E] pb-1">
+              All Chat Requests
+            </h1>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => setShowSelect((prev) => !prev)}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 transition-opacity"
             >
               <Mail className="w-4 h-4" />
-              Send email
+              {showSelect ? "Cancel" : "Send email"}
             </button>
-            {emailSelectionMode && (
+            {showSelect && (
               <>
                 <button
-                  onClick={selectAllUsers}
-                  className="px-3 py-1.5 rounded-lg text-sm bg-[#EEF0FE] text-[#000A67] hover:bg-[#BFC4E5] transition-colors"
+                  type="button"
+                  onClick={() => {
+                    const allEmails = users.filter((u) => u?.email).map((u) => u.email);
+                    setEmailList((prev) =>
+                      prev.length === allEmails.length ? [] : allEmails
+                    );
+                  }}
+                  className="px-4 py-2 rounded-lg border border-[#004A4E]/30 bg-white text-[#004A4E] text-sm font-medium hover:bg-[#004A4E]/5 transition-colors"
                 >
-                  Select all
+                  {emailList.length === users.filter((u) => u?.email).length ? "Deselect all" : "Select all"}
                 </button>
                 <button
+                  type="button"
                   onClick={() => {
-                    const count = getSelectedRecipients().length;
-                    if (count === 0) {
-                      alert("Select at least one user with a valid email");
-                      return;
-                    }
                     setShowEmailModal(true);
+                    setShowSelect(false);
                   }}
-                  disabled={getSelectedRecipients().length === 0}
-                  className="px-3 py-1.5 rounded-lg text-sm bg-[#7981C2] text-white hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                  disabled={emailList.length === 0}
+                  className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed transition-opacity"
                 >
-                  Compose to {getSelectedRecipients().length} selected
+                  Send to {emailList.length} user{emailList.length !== 1 ? "s" : ""}
                 </button>
               </>
             )}
           </div>
-        )}
-      </div>
-      <div className="w-full sm:w-[85%] mx-auto md:px-6">
-        {/* <div className="flex items-center justify-between mb-8"> */}
-        {/* <div className="flex-1"></div> */}
-        <div className="grid grid-cols-2 md:flex items-center justify-center gap-y-4 md:gap-y-0 px-6 my-4">
-          <div className="flex items-center relative group">
-            <button
-              onClick={() => filterSessions("all")}
-              className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${selectedService === "all" ? "text-blue-600" : "text-black"
-                }`}
-            >
-              All
-              {getSessionCount(null) > 0 && (
-                <span className="absolute -top-2 -right-6 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                  {getSessionCount(null)}
-                </span>
-              )}
-            </button>
-            <AnalyticsHoverCard
-              title="All analytics"
-              people={getPeopleCount(null)}
-              chats={getSessionCount(null)}
-              questions={getQuestionCount(null)}
-            />
-            {brandContext?.services?.length > 0 && (
-              <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-8"></div>
-            )}
-          </div>
-          {brandContext?.services?.map((item, index) => {
-            const count = getSessionCount(item);
-            const isLast = index === brandContext.services.length - 1;
-            const isSelected = selectedService === (item?._key ?? item?.name);
-            const analyticsTitle = `${item?.title || item?.name} analytics`;
-            return (
-              <div key={item?._key ?? index} className="flex items-center relative group">
-                <button
-                  onClick={() => filterSessions(item)}
-                  className={`font-akshar uppercase text-lg md:text-xl tracking-wide transition-colors relative ${isSelected ? "text-blue-600" : "text-black"
-                    }`}
-                >
-                  {item?.title}
-                  {count > 0 && (
-                    <span className="absolute -top-2 -right-6 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                      {count}
-                    </span>
-                  )}
-                </button>
-                <AnalyticsHoverCard
-                  title={analyticsTitle}
-                  people={getPeopleCount(item)}
-                  chats={getSessionCount(item)}
-                  questions={getQuestionCount(item)}
-                />
-                {!isLast && (
-                  <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-8"></div>
-                )}
-              </div>
-            );
-          })}
         </div>
-        {/* </div> */}
-
-        <div>
-          {sessionData.length > 0 ? (
-            sessionData.map((item, index) => {
-              const userId = item.userId ?? index;
-              const isSelected = selectedUserIds.has(userId);
-              return (
-                <div key={userId} className="flex items-start gap-3 w-full min-w-0">
-                  {emailSelectionMode && (
-                    <label className="flex-shrink-0 pt-4 cursor-pointer">
-                      <input
-                        type="checkbox"
-                        checked={isSelected}
-                        onChange={() => toggleUserSelection(userId)}
-                        className="w-4 h-4 rounded border-gray-300 text-[#7981C2] focus:ring-[#7981C2]"
-                        disabled={!item.email}
-                        title={item.email ? "Select for email" : "No email address"}
-                      />
-                    </label>
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <UserCard
-                      user={item}
-                      setSelectedSessionLogs={setSelectedSessionLogs}
-                      setShowLogsModal={setShowLogsModal}
-                      openChatSession={openChatSession}
-                    />
-                  </div>
+        {/* Filter section */}
+        <div className="rounded-xl border border-[#004A4E]/20 bg-[rgba(0,74,78,0.03)] p-4 mb-6 shadow-sm">
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Date</label>
+              <select
+                value={draftFilters.datePreset}
+                onChange={(e) =>
+                  setDraftFilters((prev) => ({ ...prev, datePreset: e.target.value }))
+                }
+                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[140px]"
+              >
+                {datePresets.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {draftFilters.datePreset === "custom" && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-gray-500">From</label>
+                  <input
+                    type="date"
+                    value={draftFilters.dateFrom ?? ""}
+                    onChange={(e) =>
+                      setDraftFilters((prev) => ({ ...prev, dateFrom: e.target.value }))
+                    }
+                    className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 outline-none"
+                  />
                 </div>
-              );
-            })
+                <span className="text-sm text-gray-400 pb-2">to</span>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-gray-500">To</label>
+                  <input
+                    type="date"
+                    value={draftFilters.dateTo ?? ""}
+                    onChange={(e) =>
+                      setDraftFilters((prev) => ({ ...prev, dateTo: e.target.value }))
+                    }
+                    className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 outline-none"
+                  />
+                </div>
+              </>
+            )}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Service Type</label>
+              <select
+                value={draftFilters.serviceKey}
+                onChange={(e) =>
+                  setDraftFilters((prev) => ({ ...prev, serviceKey: e.target.value }))
+                }
+                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[160px]"
+              >
+                {servicesDropDown?.map((item, index) => (
+                  <option key={item?._key} value={item?._key}>
+                    {item.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={() => applyFilters(draftFilters)}
+              className="px-4 py-2 text-sm font-medium bg-[#004A4E] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+            >
+              Apply
+            </button>
+          </div>
+        </div>
+        <div className="w-full flex flex-col gap-4">
+          {users.length > 0 ? (
+            users.map((item, index) => (
+              <div key={item.userId ?? index} className="w-full flex items-stretch gap-2">
+                {showSelect && (
+                  <input
+                    type="checkbox"
+                    checked={item?.email && emailList.includes(item.email)}
+                    onChange={() => {
+                      if (!item?.email) return;
+                      setEmailList((prev) =>
+                        prev.includes(item.email)
+                          ? prev.filter((e) => e !== item.email)
+                          : [...prev, item.email]
+                      );
+                    }}
+                    className="mt-3 shrink-0"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <UserCard
+                    user={item}
+                    setSelectedSessionLogs={setSelectedSessionLogs}
+                    setShowLogsModal={setShowLogsModal}
+                    openChatSession={openChatSession}
+                    onOpenSessionView={setSessionViewSessionId}
+                    onOpenComments={setCommentModalSessionId}
+                    onOpenAssign={setAssignModalSession}
+                  />
+                </div>
+              </div>
+            ))
           ) : (
             <div className="col-span-full text-center text-gray-500 py-8">
               No sessions found
             </div>
           )}
         </div>
+
+        {showEmailModal && (
+          <EmailModal
+            onClose={() => setShowEmailModal(false)}
+            toEmails={emailList}
+            brand={brandContext?.subdomain}
+          />
+        )}
+
+        {commentModalSessionId && (
+          <CommentModal
+            sessionId={commentModalSessionId}
+            onClose={() => setCommentModalSessionId(null)}
+          />
+        )}
+
+        {assignModalSession && (
+          <AssignModal
+            sessionId={assignModalSession.sessionId}
+            brandSubdomain={brandContext?.subdomain}
+            currentAssignedTo={assignModalSession.assignedTo}
+            onClose={() => setAssignModalSession(null)}
+            onSuccess={handleAssignSuccess}
+          />
+        )}
 
         {showLogsModal && selectedSessionLogs && (
           <AdminLogsModal
@@ -361,35 +262,22 @@ export default function ChatRequests() {
           />
         )}
 
-        {/* Success Alert Modal */}
-        {showSuccessAlert && (
-          <AlertModal
-            message="Successfully sent email"
-            onClose={() => {
-              setShowSuccessAlert(false);
-              setEmailSelectionMode(false);
-              setSelectedUserIds(new Set());
-              setEmailData({ subject: "", body: "" });
-              setEmailResults(null);
-            }}
-          />
-        )}
-
-        {/* Email Modal */}
-        {showEmailModal && (
-          <EmailModal
-            recipients={getSelectedRecipients()}
-            emailData={emailData}
-            setEmailData={setEmailData}
-            onSend={handleSendEmail}
-            sending={sendingEmail}
-            onClose={() => {
-              setShowEmailModal(false);
-              setEmailData({ subject: "", body: "" });
-              setEmailResults(null);
-            }}
-            emailResults={emailResults}
-          />
+        {sessionViewSessionId && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-hidden"
+            onClick={(e) => e.target === e.currentTarget && setSessionViewSessionId(null)}
+          >
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl h-[90vh] flex flex-col overflow-hidden">
+              <div className="flex-shrink-0 flex justify-end p-2 border-b border-[#004A4E]/20 bg-[#004A4E]/5">
+                <button type="button" onClick={() => setSessionViewSessionId(null)} className="p-2 rounded-lg hover:bg-[#004A4E]/10" aria-label="Close">
+                  <X className="w-5 h-5 text-[#004A4E]" />
+                </button>
+              </div>
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                <AdminChatSessionView sessionId={sessionViewSessionId} />
+              </div>
+            </div>
+          </div>
         )}
 
         {openChat && userA && userB && (

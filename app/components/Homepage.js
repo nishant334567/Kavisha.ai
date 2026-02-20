@@ -144,10 +144,10 @@ export default function Homepage() {
         <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
       </div>
       <div className="flex flex-col justify-center items-center font-fredoka max-w-[90%] md:max-w-[60%] mx-auto text-center px-4">
-        <p className="text-[#004A4E] text-4xl sm:text-5xl md:text-7xl lg:text-[90px] font-normal leading-tight">
-          Human <span className="text-[#00B5BD]">connections</span> in the age
-          of AI
+        <p className="text-[#004A4E] text-3xl sm:text-5xl md:text-7xl lg:text-[90px] font-normal leading-tight">
+          Future of <span className="text-[#00B5BD]">Digital</span> Profiles
         </p>
+
         <p className="my-6 md:my-8 text-lg text-[#264653] font-extralight">
           With Kavisha, Influencers and Brands create their Digital Avataars to
           engage their fans. Fans talk to them, and also find each other.

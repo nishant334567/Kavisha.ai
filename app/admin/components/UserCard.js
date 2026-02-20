@@ -1,115 +1,71 @@
 "use client";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { formatToIST } from "@/app/utils/formatToIST";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
-import Dropdown from "./AdminDropdown";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, MessageCircle, Clock, IndianRupee, MessagesSquare, ArrowUpDown, MessageCircleMore, ArrowRight } from "lucide-react";
 
 export default function UserCard({
   user,
   setShowLogsModal,
   setSelectedSessionLogs,
   openChatSession,
+  onOpenSessionView,
+  onOpenComments,
+  onOpenAssign,
 }) {
   const brandContext = useBrandContext();
   const { user: adminUser } = useFirebaseSession();
   const [selectedChatSession, setSelectedChatSession] = useState("");
-  const [assigning, setAssigning] = useState({});
-  const [commentUpdating, setCommentUpdating] = useState({});
-  const [comment, setComment] = useState("");
-  const [showAdminDropdown, setShowAdminDropdown] = useState(false);
   const [showSessionDropdown, setShowSessionDropdown] = useState(false);
-  const adminDropdownRef = useRef(null);
+  const [showSortDropdown, setShowSortDropdown] = useState(false);
+  const [sortingType, setSortingType] = useState("messages");
+  const [sortingOrder, setSortingOrder] = useState("desc");
   const sessionDropdownRef = useRef(null);
+  const sortDropdownRef = useRef(null);
+
+  const sortedSessions = useMemo(() => {
+    const list = [...(user?.sessions || [])];
+    const asc = sortingOrder === "asc";
+    if (sortingType === "messages") {
+      list.sort((a, b) =>
+        asc
+          ? (a.messageCount || 0) - (b.messageCount || 0)
+          : (b.messageCount || 0) - (a.messageCount || 0)
+      );
+    }
+    if (sortingType === "lastUpdated") {
+      list.sort((a, b) => {
+        const tA = new Date(a.updatedAt || 0).getTime();
+        const tB = new Date(b.updatedAt || 0).getTime();
+        return asc ? tA - tB : tB - tA;
+      });
+    }
+    return list;
+  }, [user?.sessions, sortingType, sortingOrder]);
 
   useEffect(() => {
-    setSelectedChatSession(user?.sessions[0]);
-  }, [user?.sessions]);
+    setSelectedChatSession(sortedSessions[0]);
+  }, [user?.sessions, sortingType, sortingOrder]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (adminDropdownRef.current && !adminDropdownRef.current.contains(event.target)) {
-        setShowAdminDropdown(false);
-      }
       if (sessionDropdownRef.current && !sessionDropdownRef.current.contains(event.target)) {
         setShowSessionDropdown(false);
       }
+      if (sortDropdownRef.current && !sortDropdownRef.current.contains(event.target)) {
+        setShowSortDropdown(false);
+      }
     };
 
-    if (showAdminDropdown || showSessionDropdown) {
+    if (showSessionDropdown || showSortDropdown) {
       document.addEventListener("mousedown", handleClickOutside);
     }
 
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [showAdminDropdown, showSessionDropdown]);
-
-  useEffect(() => {
-    if (selectedChatSession) {
-      setComment(selectedChatSession.comment || "");
-    }
-  }, [selectedChatSession]);
-
-  const assignSession = async (sessionId, assignedTo) => {
-    setAssigning((prev) => ({ ...prev, [sessionId]: true }));
-    try {
-      const response = await fetch(`/api/admin/assign-session`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, assignedTo }),
-      });
-
-      if (response.ok) {
-        const data = await response.json();
-        // Use the updated session from API response if available
-        const updatedAssignedTo = data?.session?.assignedTo || assignedTo;
-        // Update local session state
-        setSelectedChatSession((prev) =>
-          prev?._id === sessionId
-            ? { ...prev, assignedTo: updatedAssignedTo }
-            : prev
-        );
-        // Update user sessions
-        user.sessions = user.sessions.map((session) =>
-          session._id === sessionId
-            ? { ...session, assignedTo: updatedAssignedTo }
-            : session
-        );
-      }
-    } catch (error) {
-      console.error("Failed to assign session:", error);
-    } finally {
-      setAssigning((prev) => ({ ...prev, [sessionId]: false }));
-    }
-  };
-
-  const updateSessionComment = async (sessionId, comment) => {
-    setCommentUpdating((prev) => ({ ...prev, [sessionId]: true }));
-    try {
-      const response = await fetch(`/api/admin/update-session-comment`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ sessionId, comment }),
-      });
-
-      if (response.ok) {
-        // Update local session state
-        setSelectedChatSession((prev) =>
-          prev?._id === sessionId ? { ...prev, comment: comment } : prev
-        );
-        // Update user sessions
-        user.sessions = user.sessions.map((session) =>
-          session._id === sessionId ? { ...session, comment: comment } : session
-        );
-      }
-    } catch (error) {
-      console.error("Failed to update comment:", error);
-    } finally {
-      setCommentUpdating((prev) => ({ ...prev, [sessionId]: false }));
-    }
-  };
+  }, [showSessionDropdown, showSortDropdown]);
 
   const showLogs = async (id) => {
     setShowLogsModal(true);
@@ -151,13 +107,13 @@ export default function UserCard({
 
   return (
     <>
-      <div className="shadow-md m-2 p-4 md:m-4 flex flex-col md:flex-row justify-between h-full md:max-h-[200px] md:shadow-md bg-white mx-auto ">
+      <div className="w-full min-w-0">
         {/* Mobile Layout */}
         <div className="w-full md:hidden flex flex-col gap-4">
           {/* Name and Contact Button Row */}
           <div className="flex items-start justify-between">
             <div>
-              <p className="font-baloo text-[#42476D] mb-1 text-2xl font-bold">
+              <p className="font-baloo text-[#004A4E] mb-1 text-2xl font-bold">
                 {user.name}
               </p>
               <p className="text-xs text-[#898989] break-words">
@@ -166,90 +122,54 @@ export default function UserCard({
             </div>
             <button
               onClick={() => openChatSession(adminUser?.id, user?.userId)}
-              className="px-3 py-1.5 rounded-lg bg-[#7981C2] text-white text-xs font-medium hover:bg-purple-700 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-[#004A4E] text-white text-xs font-medium hover:opacity-90 transition-colors"
             >
               Contact
             </button>
           </div>
 
-          {/* Assign to Dropdown */}
-          <div className="relative" ref={adminDropdownRef}>
-            <button
-              className="w-full bg-[#EEF0FE] border border-[#BFC4E5] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
-              onClick={() => setShowAdminDropdown((prev) => !prev)}
-            >
-              <span>{selectedChatSession?.assignedTo || "Assign to"}</span>
-              <ChevronDown />
-            </button>
-            {showAdminDropdown && (
-              <div className="absolute top-full left-0 right-0 mt-0.5 z-50 min-w-0">
-                <Dropdown
-                  key={selectedChatSession?._id} // Force re-render when session changes
-                  options={["Unassigned", ...(brandContext?.admins || [])]}
-                  selectedValue={selectedChatSession?.assignedTo || ""}
-                  onProceed={(assignedTo) => {
-                    if (selectedChatSession?._id) {
-                      // Convert "Unassigned" to empty string
-                      const value =
-                        assignedTo === "Unassigned" ? "" : assignedTo;
-                      assignSession(selectedChatSession._id, value);
-                      setShowAdminDropdown(false);
-                    }
-                  }}
-                />
-              </div>
-            )}
-          </div>
-
-          {/* Comment Section */}
-          <div className="bg-[#EEF0FE] p-1 rounded-md flex flex-col">
-            <textarea
-              rows={2}
-              value={comment}
-              onChange={(e) => setComment(e.target.value)}
-              placeholder="Write a comment..."
-              className="w-full border outline-none resize-none p-2 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-purple-500 text-sm bg-white"
-            />
-            <div className="flex justify-end mt-1">
-              <button
-                onClick={() =>
-                  updateSessionComment(selectedChatSession?._id, comment)
-                }
-                disabled={commentUpdating[selectedChatSession?._id]}
-                className="px-3 py-1 rounded-lg bg-white text-gray-700 text-xs font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-              >
-                {commentUpdating[selectedChatSession?._id]
-                  ? "Saving..."
-                  : "Comment"}
-              </button>
-            </div>
-          </div>
-
           {/* Total Messages and Cost */}
-          <div className="flex justify-between text-sm font-baloo">
-            <p>
-              Total Messages:{" "}
-              {user.sessions?.reduce(
-                (sum, session) => sum + (session.messageCount || 0),
-                0
-              ) || 0}
-            </p>
-            <p>
-              Total Cost: Rs.{" "}
-              {(
-                user.sessions?.reduce(
-                  (sum, session) => sum + (session.totalCost || 0),
-                  0
-                ) || 0
-              ).toFixed(2)}
-            </p>
+          <div className="flex items-center gap-3 text-xs text-[#004A4E]">
+            <span className="flex items-center gap-1">
+              <MessagesSquare className="w-4 h-4 text-[#004A4E] shrink-0" aria-hidden />
+              <span>{user.sessions?.reduce((sum, s) => sum + (s.messageCount || 0), 0) || 0}</span>
+            </span>
+            <span className="flex items-center gap-1">
+              <IndianRupee className="w-4 h-4 text-[#004A4E] shrink-0" aria-hidden />
+              <span>{((user.sessions?.reduce((sum, s) => sum + (s.totalCost || 0), 0) || 0)).toFixed(2)}</span>
+            </span>
           </div>
+
+          {/* Sort chats (mobile) */}
+          {user.sessions?.length > 0 && (
+            <div className="flex flex-col items-center gap-2">
+              <div className="flex items-center justify-center">
+                <ArrowUpDown className="w-4 h-4 text-[#004A4E]" aria-label="Sort" />
+              </div>
+              <div>
+                <select
+                  value={`${sortingType}-${sortingOrder}`}
+                  onChange={(e) => {
+                    const [type, order] = e.target.value.split("-");
+                    setSortingType(type);
+                    setSortingOrder(order);
+                  }}
+                  className="text-xs border border-[#004A4E] rounded-lg bg-[#E8F4F4] px-2 py-1.5 text-gray-900"
+                >
+                  <option value="messages-desc">Most messages first</option>
+                  <option value="messages-asc">Fewest messages first</option>
+                  <option value="lastUpdated-desc">Newest first</option>
+                  <option value="lastUpdated-asc">Oldest first</option>
+                </select>
+              </div>
+            </div>
+          )}
 
           {/* All Chats Dropdown */}
           {selectedChatSession && (
             <div className="relative" ref={sessionDropdownRef}>
               <button
-                className="w-full bg-[#EEF0FE] border border-[#BFC4E5] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
+                className="w-full bg-[#E8F4F4] border border-[#004A4E] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
                 onClick={() => setShowSessionDropdown((prev) => !prev)}
               >
                 <span>
@@ -259,22 +179,34 @@ export default function UserCard({
                 <ChevronDown />
               </button>
               {showSessionDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto">
-                  {user.sessions.map((item, index) => {
+                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto p-1 flex flex-col gap-1">
+                  {sortedSessions.map((item, index) => {
                     const isSelected = selectedChatSession?._id === item._id;
                     return (
                       <button
-                        key={index}
-                        className={`w-full text-left px-3 py-2 text-sm border-b border-gray-100 last:border-b-0 transition ${isSelected
-                          ? "bg-gray-100 text-gray-900 font-semibold"
-                          : "text-gray-700 hover:bg-gray-50"
+                        key={item._id ?? index}
+                        className={`w-full text-left px-3 py-1.5 rounded-md border text-sm transition cursor-pointer ${isSelected
+                          ? "bg-[#E8F4F4] border-[#004A4E] text-gray-900 font-semibold shadow-sm"
+                          : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
                           }`}
                         onClick={() => {
                           setSelectedChatSession(item);
                           setShowSessionDropdown(false);
                         }}
                       >
-                        {item?.title || `Chat ${index + 1}`}
+                        <div className="flex flex-col gap-0.5">
+                          <span className="font-medium text-gray-900 truncate">{item?.title || `Chat ${index + 1}`}</span>
+                          <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                            <span className="flex items-center gap-1">
+                              <MessageCircle className="w-3 h-3 text-gray-400 shrink-0" aria-hidden />
+                              <span>{item?.messageCount ?? 0}</span>
+                            </span>
+                            <span className="flex items-center gap-1">
+                              <Clock className="w-3 h-3 text-gray-400 shrink-0" aria-hidden />
+                              <span>{formatToIST(item?.updatedAt)}</span>
+                            </span>
+                          </div>
+                        </div>
                       </button>
                     );
                   })}
@@ -286,13 +218,13 @@ export default function UserCard({
           {/* Chat Summary */}
           {selectedChatSession && (
             <div>
-              <p className="font-bold text-[#1D008F] mb-2">Chat summary</p>
+              <p className="font-bold text-[#004A4E] mb-2">Chat summary</p>
               <p className="text-sm text-gray-700 leading-relaxed mb-2">
                 {selectedChatSession.chatSummary || "Summary Not Available"}
               </p>
               <div className="flex justify-end">
                 <button
-                  className="text-xs px-3 py-1.5 rounded-lg bg-[#7981C2] text-white font-medium hover:bg-purple-700 transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-[#004A4E] text-white font-medium hover:opacity-90 transition-colors"
                   onClick={() => showLogs(selectedChatSession?._id)}
                 >
                   View chat
@@ -302,126 +234,175 @@ export default function UserCard({
           )}
         </div>
 
-        {/* Desktop Layout */}
-        <div className="hidden md:flex md:w-[50%] gap-4">
-          <div className="w-[35%] flex-shrink-0">
-            <p className="font-baloo text-[#42476D] mb-1 text-2xl">
-              {user.name}
-            </p>
-            <p className="text-xs text-[#898989] mb-2 break-words">
-              {user?.email}
-            </p>
-            <button
-              onClick={() => openChatSession(adminUser?.id, user?.userId)}
-              className="w-full px-3 py-1.5 rounded-lg bg-[#7981C2] text-white text-xs font-medium hover:bg-purple-700 transition-colors mb-3"
-            >
-              Contact
-            </button>
-            <div className="space-y-0.5 font-medium">
-              <p className="font-baloo">
-                Total Messages:{" "}
-                {user.sessions?.reduce(
-                  (sum, session) => sum + (session.messageCount || 0),
-                  0
-                ) || 0}
-              </p>
-              <p className="font-baloo">
-                Total Cost: Rs.{" "}
-                {(
-                  user.sessions?.reduce(
-                    (sum, session) => sum + (session.totalCost || 0),
-                    0
-                  ) || 0
-                ).toFixed(2)}
-              </p>
-            </div>
-          </div>
-          <div className="w-[35%] flex-shrink-0">
-            <div className="relative" ref={adminDropdownRef}>
-              <button
-                className="w-full bg-[#EEF0FE] border border-[#BFC4E5] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
-                onClick={() => setShowAdminDropdown((prev) => !prev)}
-              >
-                <span>{selectedChatSession?.assignedTo || "Assign to"}</span>
-                <ChevronDown />
-              </button>
-              {showAdminDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-0.5 z-50 min-w-0">
-                  <Dropdown
-                    key={selectedChatSession?._id} // Force re-render when session changes
-                    options={["Unassigned", ...(brandContext?.admins || [])]}
-                    selectedValue={selectedChatSession?.assignedTo || ""}
-                    onProceed={(assignedTo) => {
-                      if (selectedChatSession?._id) {
-                        // Convert "Unassigned" to empty string
-                        const value =
-                          assignedTo === "Unassigned" ? "" : assignedTo;
-                        assignSession(selectedChatSession._id, value);
-                        setShowAdminDropdown(false);
-                      }
-                    }}
-                  />
+        {/* Desktop Layout: 40% left (user + chats), 60% right (session summary); reduced height; gaps between sections */}
+        <div className="h-[180px] hidden md:flex md:flex-col p-3 rounded-lg shadow-lg bg-white overflow-hidden border border-[#004A4E]/50">
+          <div className="flex flex-1 min-h-0 gap-4">
+            {/* Left 40%: user info + chat tile strip with gap between */}
+            <div className="w-[40%] min-w-0 flex-shrink-0 flex gap-4 overflow-hidden">
+              <div className="flex-1 min-w-0 overflow-hidden flex flex-col">
+                <p className="font-baloo text-[#004A4E] mb-0.5 text-lg">
+                  {user.name}
+                </p>
+                <p className="text-xs text-[#898989] mb-1.5 break-words">
+                  {user?.email}
+                </p>
+                <button
+                  onClick={() => openChatSession(adminUser?.id, user?.userId)}
+                  className="w-full px-2.5 py-1 rounded-lg bg-[#004A4E] text-white text-xs font-medium hover:opacity-90 transition-colors mb-1.5"
+                >
+                  Contact
+                </button>
+                <div className="space-y-0.5 font-medium text-xs">
+                  <p className="font-baloo">
+                    Total Messages:{" "}
+                    {user.sessions?.reduce(
+                      (sum, session) => sum + (session.messageCount || 0),
+                      0
+                    ) || 0}
+                  </p>
+                  <p className="font-baloo">
+                    Total Cost: Rs.{" "}
+                    {(
+                      user.sessions?.reduce(
+                        (sum, session) => sum + (session.totalCost || 0),
+                        0
+                      ) || 0
+                    ).toFixed(2)}
+                  </p>
+                </div>
+              </div>
+              {user.sessions?.length > 0 && (
+                <div className="flex-1 min-w-0 flex flex-col overflow-hidden relative" ref={sortDropdownRef}>
+                  <div className="flex-shrink-0 flex items-center justify-between gap-1 mb-1 relative">
+                    <span className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Chats</span>
+                    <button
+                      type="button"
+                      onClick={() => setShowSortDropdown((prev) => !prev)}
+                      className="p-1 rounded-md text-[#004A4E] hover:bg-[#E8F4F4] border border-transparent hover:border-[#004A4E] transition-colors"
+                      aria-label="Sort chats"
+                      title="Sort"
+                    >
+                      <ArrowUpDown className="w-4 h-4" aria-hidden />
+                    </button>
+                    {showSortDropdown && (
+                      <div className="absolute right-0 top-full mt-0.5 py-1 bg-white border border-[#004A4E] rounded-lg shadow-lg z-50 min-w-[160px] flex flex-col gap-0.5">
+                        <button type="button" onClick={() => { setSortingType("messages"); setSortingOrder("desc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#E8F4F4] rounded-md">Most messages first</button>
+                        <button type="button" onClick={() => { setSortingType("messages"); setSortingOrder("asc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#E8F4F4] rounded-md">Fewest messages first</button>
+                        <button type="button" onClick={() => { setSortingType("lastUpdated"); setSortingOrder("desc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#E8F4F4] rounded-md">Newest first</button>
+                        <button type="button" onClick={() => { setSortingType("lastUpdated"); setSortingOrder("asc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#E8F4F4] rounded-md">Oldest first</button>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-y-auto pr-0.5 scrollbar-none">
+                    <div className="flex flex-col gap-1.5">
+                      {sortedSessions.map((item, index) => {
+                        const isSelected = selectedChatSession?._id === item._id;
+                        return (
+                          <button
+                            key={item._id || index}
+                            type="button"
+                            className={`flex-shrink-0 text-left px-2 py-1.5 rounded-md border transition cursor-pointer flex flex-col gap-0.5 w-full ${isSelected
+                              ? "bg-gray-200 font-semibold shadow-sm"
+                              : "bg-white text-gray-200"
+                              }`}
+                            onClick={() => {
+                              setSelectedChatSession(item);
+                            }}
+                          >
+                            <span className="font-medium text-gray-900 text-xs truncate">{item?.title || `Chat ${index + 1}`}</span>
+                            <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
+                              <span className="flex items-center gap-0.5">
+                                <MessageCircle className="w-2.5 h-2.5 text-gray-400 shrink-0" aria-hidden />
+                                <span>{item?.messageCount ?? 0}</span>
+                              </span>
+                              <span className="flex items-center gap-0.5 min-w-0 truncate">
+                                <Clock className="w-2.5 h-2.5 text-gray-400 shrink-0" aria-hidden />
+                                {formatToIST(item?.updatedAt)}
+                              </span>
+                            </div>
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
-            <div className="bg-[#EEF0FE] p-1 rounded-md flex flex-col mt-4">
-              <textarea
-                rows={2}
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Write a comment..."
-                className="w-full border outline-none resize-none p-2 rounded-lg focus:ring-2 focus:ring-purple-300 focus:border-purple-500 text-sm bg-white"
-              />
-              <div className="flex justify-end mt-1">
-                <button
-                  onClick={() =>
-                    updateSessionComment(selectedChatSession?._id, comment)
-                  }
-                  disabled={commentUpdating[selectedChatSession?._id]}
-                  className="px-3 py-1 rounded-lg bg-white text-gray-700 text-xs font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50 transition-colors"
-                >
-                  {commentUpdating[selectedChatSession?._id]
-                    ? "Saving..."
-                    : "Comment"}
-                </button>
+            {/* Right 60%: session summary; icon row sticks to bottom */}
+            <div className="w-[60%] min-w-0 flex-shrink-0 flex flex-col overflow-hidden pl-1">
+              <div className="flex flex-1 min-h-0 gap-2">
+                <div className="flex-1 min-h-0 flex flex-col overflow-hidden px-2">
+                  <h3 className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide mb-1.5 flex-shrink-0">
+                    Session summary
+                  </h3>
+                  <div className="flex-1 min-h-0 overflow-y-auto pr-0.5">
+                    {selectedChatSession ? (
+                      <>
+                        <p className="text-xs font-medium text-[#004A4E] mb-1 line-clamp-1">
+                          {selectedChatSession?.title || "Untitled chat"}
+                        </p>
+                        <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
+                          {selectedChatSession?.chatSummary || "No summary available for this session."}
+                        </p>
+                      </>
+                    ) : (
+                      <p className="text-xs text-gray-500 italic">
+                        Select a chat from the list to view its summary.
+                      </p>
+                    )}
+                  </div>
+                  {/* Icon row — sticks to bottom of section */}
+                  {selectedChatSession && (
+                    <div className="flex-shrink-0 flex flex-wrap items-center gap-3 mt-2 pt-2 text-[10px] text-gray-500">
+                      <span className="flex items-center gap-1.5">
+                        <MessageCircle className="w-3.5 h-3.5 text-gray-400 shrink-0" aria-hidden />
+                        <span>{selectedChatSession?.messageCount ?? 0}</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" aria-hidden />
+                        <span>{formatToIST(selectedChatSession?.updatedAt)}</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <MessageCircleMore className="w-3.5 h-3.5 text-gray-400 shrink-0" aria-hidden />
+                        <span>{selectedChatSession?.comment ? "1 Comment" : "0 Comments"}</span>
+                      </span>
+                      <span className="flex items-center gap-1.5">
+                        <ArrowRight className="w-3.5 h-3.5 text-gray-400 shrink-0" aria-hidden />
+                        <span>Assigned to: {Array.isArray(selectedChatSession?.assignedTo) ? selectedChatSession.assignedTo.join(", ") || "—" : (selectedChatSession?.assignedTo || "—")}</span>
+                      </span>
+                    </div>
+                  )}
+                </div>
+                <div className="flex flex-col justify-center gap-1.5 pl-2 pr-4 py-2 flex-shrink-0">
+                  <button type="button" onClick={() => showLogs(selectedChatSession?._id)} className="py-1.5 px-3 rounded-full bg-[#004A4E] text-xs text-white hover:opacity-90">
+                    View chat
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => selectedChatSession?._id && onOpenComments?.(selectedChatSession._id)}
+                    className="py-1.5 px-3 rounded-full bg-[#004A4E] text-xs text-white hover:opacity-90"
+                  >
+                    Comments
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      selectedChatSession?._id &&
+                      onOpenAssign?.({
+                        sessionId: selectedChatSession._id,
+                        assignedTo: selectedChatSession.assignedTo,
+                      })
+                    }
+                    className="py-1.5 px-3 rounded-full bg-[#004A4E] text-xs text-white hover:opacity-90"
+                  >
+                    Assign to
+                  </button>
+                </div>
               </div>
             </div>
           </div>
-          <div className="w-[30%] flex flex-col gap-1.5 overflow-y-auto scrollbar-none min-w-0">
-            {user.sessions.map((item, index) => {
-              const isSelected = selectedChatSession?._id === item._id;
-              return (
-                <button
-                  key={index}
-                  className={`text-xs w-full text-left px-2.5 py-1.5 transition shadow-sm ${isSelected ? "font-bold " : "font-light "
-                    }`}
-                  onClick={() => setSelectedChatSession(item)}
-                >
-                  {item?.title || `Chat ${index + 1}`}
-                </button>
-              );
-            })}
-          </div>
         </div>
-        {selectedChatSession && (
-          <div className="hidden md:flex md:w-[50%] flex-col min-w-0 md:px-4">
-            <p className="font-bold text-[#1D008F] mb-2 mt-1">Summary</p>
-            <div className="flex-1 overflow-y-auto scrollbar-none pr-2">
-              <p className="font-commissioner text-xs font-extralight leading-relaxed">
-                {selectedChatSession.chatSummary || "Summary Not Available"}
-              </p>
-            </div>
-            <div className="flex justify-end">
-              <button
-                className="text-xs px-3 py-1.5 rounded-lg bg-[#7981C2] text-white font-medium hover:bg-purple-700 transition-colors"
-                onClick={() => showLogs(selectedChatSession?._id)}
-              >
-                View chat
-              </button>
-            </div>
-          </div>
-        )}
-      </div>
+      </div >
     </>
   );
 }

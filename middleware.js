@@ -5,7 +5,7 @@ import { getCookieOptions } from "./app/lib/firebase/cookie-config";
 
 import { isBrandAdmin } from "./app/lib/firebase/check-admin";
 
-const PUBLIC_PATHS = ["/", "/api/login", "/api/brands", "/tnc", "/privacy-policy", "/help", "/about", "/copyright", "/make-avatar", "/community"];
+const PUBLIC_PATHS = ["/", "/api/login", "/api/brands", "/tnc", "/privacy-policy", "/help", "/about", "/copyright", "/make-avatar", "/community", "/unsubscribe", "/api/unsubscribe", "/api/unsubscribe/resolve"];
 
 function getSubdomainFromRequest(hostname) {
   if (!hostname) return "kavisha";
@@ -63,10 +63,7 @@ export async function middleware(request) {
     },
     handleInvalidToken: async () => {
       if (!PUBLIC_PATHS.includes(request.nextUrl.pathname)) {
-        const pathname = request.nextUrl.pathname || "";
-        const redirectUrl = new URL("/", request.url);
-        redirectUrl.searchParams.set("redirect", pathname);
-        return NextResponse.redirect(redirectUrl);
+        return NextResponse.redirect(new URL("/", request.url));
       }
       return NextResponse.next();
     },
