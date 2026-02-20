@@ -79,7 +79,6 @@ export async function POST(req) {
             { status: 403 }
           );
         }
-        console.log("Decoden token:", decodedToken)
         const authorName =
           decodedToken.name ||
           (decodedToken.email && decodedToken.email.split("@")[0]) ||
