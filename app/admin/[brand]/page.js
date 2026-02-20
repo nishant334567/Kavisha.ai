@@ -757,127 +757,43 @@ export default function BrandAdminPage() {
           )}
         </div>
 
-        {/* Email Modal */}
+        {/* Bulk Email Modal */}
         {showEmailModal && (
-          <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg p-4 sm:p-6 w-full max-w-2xl max-h-[90vh] overflow-y-auto">
-              <h3 className="text-base sm:text-lg font-semibold mb-3 sm:mb-4">
-                Send Email to {sessions.length} Users
-              </h3>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Subject
-                  </label>
-                  <input
-                    type="text"
-                    value={emailData.subject}
-                    onChange={(e) =>
-                      setEmailData((prev) => ({
-                        ...prev,
-                        subject: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter email subject"
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Message Body
-                  </label>
-                  <textarea
-                    value={emailData.body}
-                    onChange={(e) =>
-                      setEmailData((prev) => ({
-                        ...prev,
-                        body: e.target.value,
-                      }))
-                    }
-                    placeholder="Enter your message here..."
-                    rows={8}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                  />
-                </div>
-
-                <div className="text-sm text-gray-600">
-                  <p>This email will be sent to {sessions.length} users:</p>
-                  <ul className="mt-2 max-h-32 overflow-y-auto">
-                    {sessions.slice(0, 10).map((session, idx) => (
-                      <li key={idx} className="flex justify-between">
-                        <span>{session.user?.name || "Unknown"}</span>
-                        <span className="text-gray-500">
-                          {session.user?.email}
-                        </span>
-                      </li>
-                    ))}
-                    {sessions.length > 10 && (
-                      <li className="text-gray-500">
-                        ... and {sessions.length - 10} more
-                      </li>
-                    )}
-                  </ul>
-                </div>
-              </div>
-
-              <div className="flex flex-col sm:flex-row gap-2 sm:gap-3 mt-4 sm:mt-6">
-                <button
-                  onClick={handleSendEmail}
-                  disabled={
-                    sendingEmail ||
-                    !emailData.subject.trim() ||
-                    !emailData.body.trim()
-                  }
-                  className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                >
-                  {sendingEmail ? "Sending..." : "Send Email"}
-                </button>
-                <button
-                  onClick={() => {
-                    setShowEmailModal(false);
-                    setEmailData({ subject: "", body: "" });
-                    setEmailResults(null);
-                  }}
-                  className="w-full sm:w-auto px-4 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-600 text-sm font-medium"
-                >
-                  Cancel
-                </button>
-              </div>
-
-              {/* Email Results */}
-              {emailResults && (
-                <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-                  <h4 className="font-medium mb-2">Email Results:</h4>
-                  <p className="text-sm text-gray-600 mb-2">
-                    {emailResults.message}
-                  </p>
-                  <div className="text-sm">
-                    <p>Total: {emailResults.results?.total}</p>
-                    <p className="text-green-600">
-                      Successful: {emailResults.results?.successful}
-                    </p>
-                    <p className="text-red-600">
-                      Failed: {emailResults.results?.failed}
-                    </p>
-                  </div>
-                </div>
-              )}
-            </div>
-          </div>
+          <EmailModal
+            recipients={sessions
+              .map((s) => ({ email: s.user?.email, name: s.user?.name }))
+              .filter((r) => r.email)}
+            emailData={emailData}
+            setEmailData={setEmailData}
+            onSend={handleSendEmail}
+            sending={sendingEmail}
+            onClose={() => {
+              setShowEmailModal(false);
+              setEmailData({ subject: "", body: "" });
+              setEmailResults(null);
+            }}
+            emailResults={emailResults}
+          />
         )}
 
         {/* Individual Email Modal */}
         {showIndividualEmailModal && selectedSession && (
           <EmailModal
-            selectedSession={selectedSession}
-            individualEmailData={individualEmailData}
-            setIndividualEmailData={setIndividualEmailData}
-            handleSendIndividualEmail={handleSendIndividualEmail}
-            sendingIndividualEmail={sendingIndividualEmail}
-            setShowIndividualEmailModal={setShowIndividualEmailModal}
-            setSelectedSession={setSelectedSession}
+            recipients={[
+              {
+                email: selectedSession.user?.email,
+                name: selectedSession.user?.name,
+              },
+            ].filter((r) => r.email)}
+            emailData={individualEmailData}
+            setEmailData={setIndividualEmailData}
+            onSend={handleSendIndividualEmail}
+            sending={sendingIndividualEmail}
+            onClose={() => {
+              setShowIndividualEmailModal(false);
+              setIndividualEmailData({ subject: "", body: "" });
+              setSelectedSession(null);
+            }}
           />
         )}
       </div>

@@ -121,95 +121,95 @@ export default function ChatRequests() {
         </div>
         {/* Filter section */}
         <div className="rounded-xl border border-[#004A4E]/20 bg-[rgba(0,74,78,0.03)] p-4 mb-6 shadow-sm">
-            <div className="flex flex-wrap items-end gap-4">
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Date</label>
-                <select
-                  value={draftFilters.datePreset}
-                  onChange={(e) =>
-                    setDraftFilters((prev) => ({ ...prev, datePreset: e.target.value }))
-                  }
-                  className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[140px]"
-                >
-                  {datePresets.map((p) => (
-                    <option key={p.value} value={p.value}>
-                      {p.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              {draftFilters.datePreset === "custom" && (
-                <>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-gray-500">From</label>
-                    <input
-                      type="date"
-                      value={draftFilters.dateFrom ?? ""}
-                      onChange={(e) =>
-                        setDraftFilters((prev) => ({ ...prev, dateFrom: e.target.value }))
-                      }
-                      className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 outline-none"
-                    />
-                  </div>
-                  <span className="text-sm text-gray-400 pb-2">to</span>
-                  <div className="flex flex-col gap-1">
-                    <label className="text-xs font-semibold text-gray-500">To</label>
-                    <input
-                      type="date"
-                      value={draftFilters.dateTo ?? ""}
-                      onChange={(e) =>
-                        setDraftFilters((prev) => ({ ...prev, dateTo: e.target.value }))
-                      }
-                      className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 outline-none"
-                    />
-                  </div>
-                </>
-              )}
-              <div className="flex flex-col gap-1">
-                <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Service Type</label>
-                <select
-                  value={draftFilters.serviceKey}
-                  onChange={(e) =>
-                    setDraftFilters((prev) => ({ ...prev, serviceKey: e.target.value }))
-                  }
-                  className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[160px]"
-                >
-                  {servicesDropDown?.map((item, index) => (
-                    <option key={item?._key} value={item?._key}>
-                      {item.title}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <button
-                onClick={() => applyFilters(draftFilters)}
-                className="px-4 py-2 text-sm font-medium bg-[#004A4E] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+          <div className="flex flex-wrap items-end gap-4">
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Date</label>
+              <select
+                value={draftFilters.datePreset}
+                onChange={(e) =>
+                  setDraftFilters((prev) => ({ ...prev, datePreset: e.target.value }))
+                }
+                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[140px]"
               >
-                Apply
-              </button>
+                {datePresets.map((p) => (
+                  <option key={p.value} value={p.value}>
+                    {p.label}
+                  </option>
+                ))}
+              </select>
             </div>
+            {draftFilters.datePreset === "custom" && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-gray-500">From</label>
+                  <input
+                    type="date"
+                    value={draftFilters.dateFrom ?? ""}
+                    onChange={(e) =>
+                      setDraftFilters((prev) => ({ ...prev, dateFrom: e.target.value }))
+                    }
+                    className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 outline-none"
+                  />
+                </div>
+                <span className="text-sm text-gray-400 pb-2">to</span>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-gray-500">To</label>
+                  <input
+                    type="date"
+                    value={draftFilters.dateTo ?? ""}
+                    onChange={(e) =>
+                      setDraftFilters((prev) => ({ ...prev, dateTo: e.target.value }))
+                    }
+                    className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 outline-none"
+                  />
+                </div>
+              </>
+            )}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Service Type</label>
+              <select
+                value={draftFilters.serviceKey}
+                onChange={(e) =>
+                  setDraftFilters((prev) => ({ ...prev, serviceKey: e.target.value }))
+                }
+                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[160px]"
+              >
+                {servicesDropDown?.map((item, index) => (
+                  <option key={item?._key} value={item?._key}>
+                    {item.title}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={() => applyFilters(draftFilters)}
+              className="px-4 py-2 text-sm font-medium bg-[#004A4E] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm"
+            >
+              Apply
+            </button>
           </div>
-          <div className="w-full flex flex-col gap-4">
-            {users.length > 0 ? (
-              users.map((item, index) => (
-                <div key={item.userId ?? index} className="w-full flex items-stretch gap-2">
-                  {showSelect && (
-                    <input
-                      type="checkbox"
-                      checked={item?.email && emailList.includes(item.email)}
-                      onChange={() => {
-                        if (!item?.email) return;
-                        setEmailList((prev) =>
-                          prev.includes(item.email)
-                            ? prev.filter((e) => e !== item.email)
-                            : [...prev, item.email]
-                        );
-                      }}
-                      className="mt-3 shrink-0"
-                    />
-                  )}
-                  <div className="flex-1 min-w-0">
-                    <UserCard
+        </div>
+        <div className="w-full flex flex-col gap-4">
+          {users.length > 0 ? (
+            users.map((item, index) => (
+              <div key={item.userId ?? index} className="w-full flex items-stretch gap-2">
+                {showSelect && (
+                  <input
+                    type="checkbox"
+                    checked={item?.email && emailList.includes(item.email)}
+                    onChange={() => {
+                      if (!item?.email) return;
+                      setEmailList((prev) =>
+                        prev.includes(item.email)
+                          ? prev.filter((e) => e !== item.email)
+                          : [...prev, item.email]
+                      );
+                    }}
+                    className="mt-3 shrink-0"
+                  />
+                )}
+                <div className="flex-1 min-w-0">
+                  <UserCard
                     user={item}
                     setSelectedSessionLogs={setSelectedSessionLogs}
                     setShowLogsModal={setShowLogsModal}
@@ -217,79 +217,79 @@ export default function ChatRequests() {
                     onOpenSessionView={setSessionViewSessionId}
                     onOpenComments={setCommentModalSessionId}
                     onOpenAssign={setAssignModalSession}
-                    />
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="col-span-full text-center text-gray-500 py-8">
-                No sessions found
-              </div>
-            )}
-          </div>
-
-          {showEmailModal && (
-            <EmailModal
-              onClose={() => setShowEmailModal(false)}
-              toEmails={emailList}
-              brand={brandContext?.subdomain}
-            />
-          )}
-
-          {commentModalSessionId && (
-            <CommentModal
-              sessionId={commentModalSessionId}
-              onClose={() => setCommentModalSessionId(null)}
-            />
-          )}
-
-          {assignModalSession && (
-            <AssignModal
-              sessionId={assignModalSession.sessionId}
-              brandSubdomain={brandContext?.subdomain}
-              currentAssignedTo={assignModalSession.assignedTo}
-              onClose={() => setAssignModalSession(null)}
-              onSuccess={handleAssignSuccess}
-            />
-          )}
-
-          {showLogsModal && selectedSessionLogs && (
-            <AdminLogsModal
-              selectedSessionLogs={selectedSessionLogs}
-              setShowLogsModal={setShowLogsModal}
-              setSelectedSessionLogs={setSelectedSessionLogs}
-              brand={brandContext?.subdomain}
-            />
-          )}
-
-          {sessionViewSessionId && (
-            <div
-              className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-hidden"
-              onClick={(e) => e.target === e.currentTarget && setSessionViewSessionId(null)}
-            >
-              <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl h-[90vh] flex flex-col overflow-hidden">
-                <div className="flex-shrink-0 flex justify-end p-2 border-b border-[#004A4E]/20 bg-[#004A4E]/5">
-                  <button type="button" onClick={() => setSessionViewSessionId(null)} className="p-2 rounded-lg hover:bg-[#004A4E]/10" aria-label="Close">
-                    <X className="w-5 h-5 text-[#004A4E]" />
-                  </button>
-                </div>
-                <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
-                  <AdminChatSessionView sessionId={sessionViewSessionId} />
+                  />
                 </div>
               </div>
+            ))
+          ) : (
+            <div className="col-span-full text-center text-gray-500 py-8">
+              No sessions found
             </div>
           )}
-
-          {openChat && userA && userB && (
-            <Livechat
-              userA={userA}
-              userB={userB}
-              currentUserId={user?.id}
-              onClose={() => setOpenChat(false)}
-              connectionId={connectionId}
-            />
-          )}
         </div>
+
+        {showEmailModal && (
+          <EmailModal
+            onClose={() => setShowEmailModal(false)}
+            toEmails={emailList}
+            brand={brandContext?.subdomain}
+          />
+        )}
+
+        {commentModalSessionId && (
+          <CommentModal
+            sessionId={commentModalSessionId}
+            onClose={() => setCommentModalSessionId(null)}
+          />
+        )}
+
+        {assignModalSession && (
+          <AssignModal
+            sessionId={assignModalSession.sessionId}
+            brandSubdomain={brandContext?.subdomain}
+            currentAssignedTo={assignModalSession.assignedTo}
+            onClose={() => setAssignModalSession(null)}
+            onSuccess={handleAssignSuccess}
+          />
+        )}
+
+        {showLogsModal && selectedSessionLogs && (
+          <AdminLogsModal
+            selectedSessionLogs={selectedSessionLogs}
+            setShowLogsModal={setShowLogsModal}
+            setSelectedSessionLogs={setSelectedSessionLogs}
+            brand={brandContext?.subdomain}
+          />
+        )}
+
+        {sessionViewSessionId && (
+          <div
+            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-hidden"
+            onClick={(e) => e.target === e.currentTarget && setSessionViewSessionId(null)}
+          >
+            <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl h-[90vh] flex flex-col overflow-hidden">
+              <div className="flex-shrink-0 flex justify-end p-2 border-b border-[#004A4E]/20 bg-[#004A4E]/5">
+                <button type="button" onClick={() => setSessionViewSessionId(null)} className="p-2 rounded-lg hover:bg-[#004A4E]/10" aria-label="Close">
+                  <X className="w-5 h-5 text-[#004A4E]" />
+                </button>
+              </div>
+              <div className="flex-1 min-h-0 overflow-hidden flex flex-col">
+                <AdminChatSessionView sessionId={sessionViewSessionId} />
+              </div>
+            </div>
+          </div>
+        )}
+
+        {openChat && userA && userB && (
+          <Livechat
+            userA={userA}
+            userB={userB}
+            currentUserId={user?.id}
+            onClose={() => setOpenChat(false)}
+            connectionId={connectionId}
+          />
+        )}
       </div>
+    </div>
   );
 }

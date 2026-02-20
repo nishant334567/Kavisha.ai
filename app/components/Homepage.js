@@ -202,7 +202,7 @@ export default function Homepage() {
         <button
           onClick={() => {
             if (user) {
-              router.push("/talk-to-avatar");
+              router.push("/community");
             } else if (!isBlocked) {
               handleSignIn("/community");
             }
@@ -353,9 +353,9 @@ export default function Homepage() {
             <button
               onClick={() => {
                 if (user) {
-                  router.push("/talk-to-avatar");
+                  router.push("/community");
                 } else if (!isBlocked) {
-                  handleSignIn("/talk-to-avatar");
+                  handleSignIn("/community");
                 }
               }}
               disabled={signingIn || isBlocked}

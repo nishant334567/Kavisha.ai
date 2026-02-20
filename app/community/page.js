@@ -4,6 +4,12 @@ import { useState, useEffect, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
+import { signIn } from "@/app/lib/firebase/sign-in";
+import {
+  detectInAppBrowser,
+  isMobileDevice,
+  openInChrome,
+} from "@/app/lib/in-app-browser";
 import CommunityCard from "@/app/components/CommunityCard";
 import ChatSidebar from "@/app/components/ChatSidebar";
 import LiveChat from "@/app/components/LiveChat";
@@ -46,7 +52,7 @@ function flattenRequirements(users) {
 export default function Community() {
     const router = useRouter();
     const brand = useBrandContext();
-    const { user, loading: authLoading } = useFirebaseSession();
+    const { user, loading: authLoading, refresh } = useFirebaseSession();
     const [creating, setCreating] = useState(null);
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
@@ -60,6 +66,37 @@ export default function Community() {
     const [paidConnectionUserIds, setPaidConnectionUserIds] = useState([]);
     const [connectingToUserId, setConnectingToUserId] = useState(null);
     const [chatOtherDisplayName, setChatOtherDisplayName] = useState(null);
+    const [signingIn, setSigningIn] = useState(false);
+    const [popupBlockedHint, setPopupBlockedHint] = useState(false);
+    const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        setIsInAppBrowser(detectInAppBrowser());
+        setIsMobile(isMobileDevice());
+    }, []);
+
+    const isBlocked = isInAppBrowser && isMobile;
+
+    const handleSignInToCommunity = async () => {
+        if (isBlocked) {
+            openInChrome();
+            return;
+        }
+        setSigningIn(true);
+        setPopupBlockedHint(false);
+        try {
+            await signIn();
+            await refresh();
+            // User state updates, component re-renders and shows community content
+        } catch (e) {
+            if (e?.code === "auth/popup-blocked") {
+                setPopupBlockedHint(true);
+            }
+        } finally {
+            setSigningIn(false);
+        }
+    };
 
     const openChatSession = (userA, userB, otherDisplayName = null) => {
         setChatUserA(userA);
@@ -276,12 +313,47 @@ export default function Community() {
         });
     };
 
-    useEffect(() => {
-        if (!authLoading && !user) router.replace("/");
-    }, [authLoading, user, router]);
+    if (authLoading || !brand) return <Loader loadingMessage="Loading..." />;
 
-    if (authLoading) return <Loader loadingMessage="Loading..." />;
-    if (!user) return null;
+    // Sign-in gate: show when not logged in (user lands on /community directly)
+    if (!user) {
+        return (
+            <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#EDF4F7] to-white px-4">
+                <div className="max-w-md w-full text-center">
+                    <h1 className="font-fredoka text-2xl md:text-3xl text-[#3D5E6B] mb-4">Community</h1>
+                    <p className="text-[#4A6670] mb-8">
+                        Sign in to browse connection requests and connect with people.
+                    </p>
+                    {popupBlockedHint && !isBlocked && (
+                        <p className="text-amber-600 text-sm mb-4">Popup was blocked. Try again — it&apos;ll work.</p>
+                    )}
+                    {isBlocked ? (
+                        <button
+                            onClick={openInChrome}
+                            className="px-6 py-3 rounded-full bg-[#3D5E6B] text-white font-akshar hover:bg-[#2d4e5b] transition-colors"
+                        >
+                            Open in Chrome to sign in
+                        </button>
+                    ) : (
+                        <button
+                            onClick={handleSignInToCommunity}
+                            disabled={signingIn}
+                            className="px-6 py-3 rounded-full bg-[#3D5E6B] text-white font-akshar hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                        >
+                            {signingIn ? "Signing in..." : "Sign in to continue"}
+                        </button>
+                    )}
+                    <button
+                        onClick={() => router.push("/")}
+                        className="mt-6 flex items-center justify-center gap-2 text-[#3D5E6B] hover:opacity-80 mx-auto"
+                    >
+                        <ArrowLeft className="w-4 h-4" />
+                        <span className="text-sm">Back to home</span>
+                    </button>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden">
