@@ -322,19 +322,6 @@ export default function ChatSidebar({
                       </button>
                     </>
                   )}
-
-
-                  {brandContext?.isBrandAdmin && (
-                    <button
-                      className="flex items-center gap-2 justify-center text-xs bg-muted-bg w-full p-2 rounded-md hover:bg-sky-50 hover:border-sky-200 transition-all duration-200 text-foreground border border-border"
-                      onClick={() => {
-                        const target = `/admin/${(brandContext?.subdomain || "").toLowerCase()}`;
-                        router.push(target);
-                      }}
-                    >
-                      🛡️ Admin Dashboard
-                    </button>
-                  )}
                 </div>
                 <div className="h-[60vh] overflow-y-auto scrollbar-none">
                   {!allChats ? (

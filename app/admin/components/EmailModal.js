@@ -58,7 +58,6 @@ export default function EmailModal({ onClose, toEmails = [], brand }) {
           )}
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-            <label className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
             <input
               type="text"
               placeholder="Enter email subject"
@@ -90,22 +89,6 @@ export default function EmailModal({ onClose, toEmails = [], brand }) {
             </button>
           </div>
         </div>
-
-        {emailResults && (
-          <div className="mt-4 p-4 bg-gray-50 rounded-lg">
-            <h4 className="font-medium mb-2">Email Results:</h4>
-            <p className="text-sm text-gray-600 mb-2">{emailResults.message}</p>
-            {emailResults.results && (
-              <div className="text-sm">
-                <p>Total: {emailResults.results.total}</p>
-                <p className="text-green-600">
-                  Successful: {emailResults.results.successful}
-                </p>
-                <p className="text-red-600">Failed: {emailResults.results.failed}</p>
-              </div>
-            )}
-          </div>
-        )}
       </div>
     </div>
   );
