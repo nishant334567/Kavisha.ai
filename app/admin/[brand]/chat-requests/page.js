@@ -32,7 +32,7 @@ export default function ChatRequests() {
   const [emailList, setEmailList] = useState([]);
 
   const brandContext = useBrandContext();
-  const { users, loading, filters, applyFilters, datePresets, servicesDropDown } = useChatRequests(brandContext);
+  const { users, total, loading, filters, applyFilters, datePresets, servicesDropDown } = useChatRequests(brandContext);
 
   useEffect(() => {
     console.log("List of Emails:", emailList)
@@ -79,6 +79,9 @@ export default function ChatRequests() {
             </button>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-zen text-[#004A4E] pb-1">
               All Chat Requests
+              <span className="ml-2 text-lg sm:text-xl font-normal text-gray-600">
+                ({total} {total === 1 ? "result" : "results"})
+              </span>
             </h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">

@@ -44,8 +44,9 @@ export function useChatRequests(brand) {
         serviceKey: "",
     });
     const [users, setUsers] = useState([]);
+    const [total, setTotal] = useState(0);
     const [loading, setLoading] = useState(true);
-    const [servicesDropDown, setServicesDropdown] = useState([])
+    const [servicesDropDown, setServicesDropdown] = useState([]);
 
     const fetchWithFilters = useCallback(async (filtersToApply) => {
         if (!brand?.subdomain) return;
@@ -56,12 +57,15 @@ export function useChatRequests(brand) {
             const data = await response.json();
             if (data.success) {
                 setUsers(data.users ?? []);
+                setTotal(data.total ?? (data.users?.length ?? 0));
             } else {
                 setUsers([]);
+                setTotal(0);
             }
         } catch (error) {
             console.error("Failed to fetch sessions:", error);
             setUsers([]);
+            setTotal(0);
         } finally {
             setLoading(false);
         }
@@ -96,10 +100,11 @@ export function useChatRequests(brand) {
 
     return {
         users,
+        total,
         loading,
         filters,
         applyFilters,
         datePresets: DATE_PRESETS,
-        servicesDropDown
+        servicesDropDown,
     };
 }
