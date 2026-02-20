@@ -1,6 +1,9 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
+import { createUnsubscribeToken } from "@/app/lib/unsubscribe-token";
+import { connectDB } from "@/app/lib/db";
+import EmailUnsubscribe from "@/app/models/EmailUnsubscribe";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -8,13 +11,15 @@ const resend = process.env.RESEND_API_KEY
 
 const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://kavisha.ai";
 
-function getKavishaFooterHtml() {
+function getKavishaFooterHtml(unsubscribeToken) {
   const linkStyle =
     "display:inline-block;padding:8px 10px;margin:4px;background:#004A4E;color:#fff;text-decoration:none;border-radius:6px;font-size:10px;font-weight:200;";
+  const unsubUrl = `${BASE_URL}/unsubscribe?token=${encodeURIComponent(unsubscribeToken)}`;
   return `
 <table width="100%" cellpadding="0" cellspacing="0" style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;">
   <tr><td align="center" style="padding:16px 0 8px;font-size:12px;color:#6b7280;">This mail is powered by <a href="${BASE_URL}" style="color:#004A4E;text-decoration:none;">kavisha.ai</a></td></tr>
   <tr><td align="center" style="padding:8px 0 24px;">
+    <a href="${unsubUrl}" style="${linkStyle}">Unsubscribe</a>
     <a href="${BASE_URL}/talk-to-avatar" style="${linkStyle}">Talk to avatar</a>
     <a href="${BASE_URL}/make-avatar" style="${linkStyle}">Make your avatar</a>
     <a href="${BASE_URL}/community" style="${linkStyle}">Community</a>
@@ -69,12 +74,37 @@ export async function POST(req) {
           );
         }
 
+        const brandVal = (brand || "kavisha").toString().trim().toLowerCase();
+        await connectDB();
+        const unsubscribed = await EmailUnsubscribe.find(
+          { brand: brandVal },
+          { email: 1, _id: 0 }
+        ).lean();
+        const unsubSet = new Set(unsubscribed.map((u) => u.email.toLowerCase()));
+        const toSend = recipients.filter(
+          (r) => r && r.email && !unsubSet.has(String(r.email).trim().toLowerCase())
+        );
+
+        if (toSend.length === 0) {
+          return NextResponse.json({
+            success: true,
+            message: `No emails sent. All ${recipients.length} recipient(s) are unsubscribed.`,
+          });
+        }
+
         const fromEmail = process.env.RESEND_FROM || "hello@kavisha.ai";
         const fromName = brand ? brand.charAt(0).toUpperCase() + brand.slice(1) : null;
         const from = fromName ? `${fromName} <${fromEmail}>` : fromEmail;
         const bodyHtml = typeof body === "string" ? body : "";
-        const html = wrapCentered(bodyHtml + getKavishaFooterHtml());
-        const allEmails = recipients.map((r) => ({ from, to: [r.email], subject, html }));
+        const allEmails = toSend.map((r) => {
+          const token = createUnsubscribeToken({
+            email: r.email,
+            brand: brandVal,
+            avatarId: r.avatarId ?? null,
+          });
+          const html = wrapCentered(bodyHtml + getKavishaFooterHtml(token));
+          return { from, to: [r.email], subject, html };
+        });
         const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
         for (let i = 0; i < allEmails.length; i += 100) {
@@ -86,9 +116,10 @@ export async function POST(req) {
           await delay(500);
         }
 
+        const skipped = recipients.length - toSend.length;
         return NextResponse.json({
           success: true,
-          message: `Sent to ${recipients.length} recipients.`,
+          message: `Sent to ${toSend.length} recipients.${skipped ? ` ${skipped} skipped (unsubscribed).` : ""}`,
         });
       } catch (error) {
         return NextResponse.json(

@@ -5,7 +5,7 @@ import { getCookieOptions } from "./app/lib/firebase/cookie-config";
 
 import { isBrandAdmin } from "./app/lib/firebase/check-admin";
 
-const PUBLIC_PATHS = ["/", "/api/login", "/api/brands", "/tnc", "/privacy-policy", "/help", "/about", "/copyright", "/make-avatar"];
+const PUBLIC_PATHS = ["/", "/api/login", "/api/brands", "/tnc", "/privacy-policy", "/help", "/about", "/copyright", "/make-avatar", "/unsubscribe", "/api/unsubscribe", "/api/unsubscribe/resolve"];
 
 function getSubdomainFromRequest(hostname) {
   if (!hostname) return "kavisha";
