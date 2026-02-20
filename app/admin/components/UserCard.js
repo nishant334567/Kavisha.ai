@@ -107,13 +107,13 @@ export default function UserCard({
 
   return (
     <>
-      <div >
+      <div className="w-full min-w-0">
         {/* Mobile Layout */}
         <div className="w-full md:hidden flex flex-col gap-4">
           {/* Name and Contact Button Row */}
           <div className="flex items-start justify-between">
             <div>
-              <p className="font-baloo text-[#42476D] mb-1 text-2xl font-bold">
+              <p className="font-baloo text-[#004A4E] mb-1 text-2xl font-bold">
                 {user.name}
               </p>
               <p className="text-xs text-[#898989] break-words">
@@ -122,20 +122,20 @@ export default function UserCard({
             </div>
             <button
               onClick={() => openChatSession(adminUser?.id, user?.userId)}
-              className="px-3 py-1.5 rounded-lg bg-[#004A4E] text-white text-xs font-medium hover:bg-purple-700 transition-colors"
+              className="px-3 py-1.5 rounded-lg bg-[#004A4E] text-white text-xs font-medium hover:opacity-90 transition-colors"
             >
               Contact
             </button>
           </div>
 
           {/* Total Messages and Cost */}
-          <div className="flex items-center gap-3 text-xs text-[#42476D]">
+          <div className="flex items-center gap-3 text-xs text-[#004A4E]">
             <span className="flex items-center gap-1">
-              <MessagesSquare className="w-4 h-4 text-[#7981C2] shrink-0" aria-hidden />
+              <MessagesSquare className="w-4 h-4 text-[#004A4E] shrink-0" aria-hidden />
               <span>{user.sessions?.reduce((sum, s) => sum + (s.messageCount || 0), 0) || 0}</span>
             </span>
             <span className="flex items-center gap-1">
-              <IndianRupee className="w-4 h-4 text-[#7981C2] shrink-0" aria-hidden />
+              <IndianRupee className="w-4 h-4 text-[#004A4E] shrink-0" aria-hidden />
               <span>{((user.sessions?.reduce((sum, s) => sum + (s.totalCost || 0), 0) || 0)).toFixed(2)}</span>
             </span>
           </div>
@@ -144,7 +144,7 @@ export default function UserCard({
           {user.sessions?.length > 0 && (
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center justify-center">
-                <ArrowUpDown className="w-4 h-4 text-[#7981C2]" aria-label="Sort" />
+                <ArrowUpDown className="w-4 h-4 text-[#004A4E]" aria-label="Sort" />
               </div>
               <div>
                 <select
@@ -154,7 +154,7 @@ export default function UserCard({
                     setSortingType(type);
                     setSortingOrder(order);
                   }}
-                  className="text-xs border border-[#BFC4E5] rounded-lg bg-[#EEF0FE] px-2 py-1.5 text-gray-900"
+                  className="text-xs border border-[#004A4E] rounded-lg bg-[#E8F4F4] px-2 py-1.5 text-gray-900"
                 >
                   <option value="messages-desc">Most messages first</option>
                   <option value="messages-asc">Fewest messages first</option>
@@ -169,7 +169,7 @@ export default function UserCard({
           {selectedChatSession && (
             <div className="relative" ref={sessionDropdownRef}>
               <button
-                className="w-full bg-[#EEF0FE] border border-[#BFC4E5] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
+                className="w-full bg-[#E8F4F4] border border-[#004A4E] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
                 onClick={() => setShowSessionDropdown((prev) => !prev)}
               >
                 <span>
@@ -186,7 +186,7 @@ export default function UserCard({
                       <button
                         key={item._id ?? index}
                         className={`w-full text-left px-3 py-1.5 rounded-md border text-sm transition cursor-pointer ${isSelected
-                          ? "bg-[#EEF0FE] border-[#BFC4E5] text-gray-900 font-semibold shadow-sm"
+                          ? "bg-[#E8F4F4] border-[#004A4E] text-gray-900 font-semibold shadow-sm"
                           : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
                           }`}
                         onClick={() => {
@@ -218,13 +218,13 @@ export default function UserCard({
           {/* Chat Summary */}
           {selectedChatSession && (
             <div>
-              <p className="font-bold text-[#1D008F] mb-2">Chat summary</p>
+              <p className="font-bold text-[#004A4E] mb-2">Chat summary</p>
               <p className="text-sm text-gray-700 leading-relaxed mb-2">
                 {selectedChatSession.chatSummary || "Summary Not Available"}
               </p>
               <div className="flex justify-end">
                 <button
-                  className="text-xs px-3 py-1.5 rounded-lg bg-[#7981C2] text-white font-medium hover:bg-purple-700 transition-colors"
+                  className="text-xs px-3 py-1.5 rounded-lg bg-[#004A4E] text-white font-medium hover:opacity-90 transition-colors"
                   onClick={() => showLogs(selectedChatSession?._id)}
                 >
                   View chat
@@ -235,12 +235,12 @@ export default function UserCard({
         </div>
 
         {/* Desktop Layout: 40% left (user + chats), 60% right (session summary); reduced height; gaps between sections */}
-        <div className="h-[180px] hidden md:flex md:flex-col p-3 rounded-lg shadow-lg bg-white overflow-hidden border border-[#BFC4E5]/50">
+        <div className="h-[180px] hidden md:flex md:flex-col p-3 rounded-lg shadow-lg bg-white overflow-hidden border border-[#004A4E]/50">
           <div className="flex flex-1 min-h-0 gap-4">
             {/* Left 40%: user info + chat tile strip with gap between */}
             <div className="w-[40%] min-w-0 flex-shrink-0 flex gap-4 overflow-hidden">
               <div className="flex-1 min-w-0 overflow-hidden flex flex-col">
-                <p className="font-baloo text-[#42476D] mb-0.5 text-lg">
+                <p className="font-baloo text-[#004A4E] mb-0.5 text-lg">
                   {user.name}
                 </p>
                 <p className="text-xs text-[#898989] mb-1.5 break-words">
@@ -248,7 +248,7 @@ export default function UserCard({
                 </p>
                 <button
                   onClick={() => openChatSession(adminUser?.id, user?.userId)}
-                  className="w-full px-2.5 py-1 rounded-lg bg-[#004A4E] text-white text-xs font-medium hover:bg-purple-700 transition-colors mb-1.5"
+                  className="w-full px-2.5 py-1 rounded-lg bg-[#004A4E] text-white text-xs font-medium hover:opacity-90 transition-colors mb-1.5"
                 >
                   Contact
                 </button>
@@ -274,22 +274,22 @@ export default function UserCard({
               {user.sessions?.length > 0 && (
                 <div className="flex-1 min-w-0 flex flex-col overflow-hidden relative" ref={sortDropdownRef}>
                   <div className="flex-shrink-0 flex items-center justify-between gap-1 mb-1 relative">
-                    <span className="text-xs font-semibold text-[#42476D] uppercase tracking-wide">Chats</span>
+                    <span className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Chats</span>
                     <button
                       type="button"
                       onClick={() => setShowSortDropdown((prev) => !prev)}
-                      className="p-1 rounded-md text-[#7981C2] hover:bg-[#EEF0FE] border border-transparent hover:border-[#BFC4E5] transition-colors"
+                      className="p-1 rounded-md text-[#004A4E] hover:bg-[#E8F4F4] border border-transparent hover:border-[#004A4E] transition-colors"
                       aria-label="Sort chats"
                       title="Sort"
                     >
                       <ArrowUpDown className="w-4 h-4" aria-hidden />
                     </button>
                     {showSortDropdown && (
-                      <div className="absolute right-0 top-full mt-0.5 py-1 bg-white border border-[#BFC4E5] rounded-lg shadow-lg z-50 min-w-[160px] flex flex-col gap-0.5">
-                        <button type="button" onClick={() => { setSortingType("messages"); setSortingOrder("desc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#EEF0FE] rounded-md">Most messages first</button>
-                        <button type="button" onClick={() => { setSortingType("messages"); setSortingOrder("asc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#EEF0FE] rounded-md">Fewest messages first</button>
-                        <button type="button" onClick={() => { setSortingType("lastUpdated"); setSortingOrder("desc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#EEF0FE] rounded-md">Newest first</button>
-                        <button type="button" onClick={() => { setSortingType("lastUpdated"); setSortingOrder("asc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#EEF0FE] rounded-md">Oldest first</button>
+                      <div className="absolute right-0 top-full mt-0.5 py-1 bg-white border border-[#004A4E] rounded-lg shadow-lg z-50 min-w-[160px] flex flex-col gap-0.5">
+                        <button type="button" onClick={() => { setSortingType("messages"); setSortingOrder("desc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#E8F4F4] rounded-md">Most messages first</button>
+                        <button type="button" onClick={() => { setSortingType("messages"); setSortingOrder("asc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#E8F4F4] rounded-md">Fewest messages first</button>
+                        <button type="button" onClick={() => { setSortingType("lastUpdated"); setSortingOrder("desc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#E8F4F4] rounded-md">Newest first</button>
+                        <button type="button" onClick={() => { setSortingType("lastUpdated"); setSortingOrder("asc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#E8F4F4] rounded-md">Oldest first</button>
                       </div>
                     )}
                   </div>
@@ -332,13 +332,13 @@ export default function UserCard({
             <div className="w-[60%] min-w-0 flex-shrink-0 flex flex-col overflow-hidden pl-1">
               <div className="flex flex-1 min-h-0 gap-2">
                 <div className="flex-1 min-h-0 flex flex-col overflow-hidden px-2">
-                  <h3 className="text-xs font-semibold text-[#42476D] uppercase tracking-wide mb-1.5 flex-shrink-0">
+                  <h3 className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide mb-1.5 flex-shrink-0">
                     Session summary
                   </h3>
                   <div className="flex-1 min-h-0 overflow-y-auto pr-0.5">
                     {selectedChatSession ? (
                       <>
-                        <p className="text-xs font-medium text-[#1D008F] mb-1 line-clamp-1">
+                        <p className="text-xs font-medium text-[#004A4E] mb-1 line-clamp-1">
                           {selectedChatSession?.title || "Untitled chat"}
                         </p>
                         <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
@@ -373,7 +373,7 @@ export default function UserCard({
                     </div>
                   )}
                 </div>
-                <div className="flex flex-col justify-center gap-1.5 px-2 py-2 flex-shrink-0">
+                <div className="flex flex-col justify-center gap-1.5 pl-2 pr-4 py-2 flex-shrink-0">
                   <button type="button" onClick={() => showLogs(selectedChatSession?._id)} className="py-1.5 px-3 rounded-full bg-[#004A4E] text-xs text-white hover:opacity-90">
                     View chat
                   </button>

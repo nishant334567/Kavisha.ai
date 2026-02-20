@@ -6,6 +6,33 @@ const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://kavisha.ai";
+
+function getKavishaFooterHtml() {
+  const linkStyle =
+    "display:inline-block;padding:8px 10px;margin:4px;background:#004A4E;color:#fff;text-decoration:none;border-radius:6px;font-size:10px;font-weight:200;";
+  return `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;">
+  <tr><td align="center" style="padding:16px 0 8px;font-size:12px;color:#6b7280;">This mail is powered by <a href="${BASE_URL}" style="color:#004A4E;text-decoration:none;">kavisha.ai</a></td></tr>
+  <tr><td align="center" style="padding:8px 0 24px;">
+    <a href="${BASE_URL}/talk-to-avatar" style="${linkStyle}">Talk to avatar</a>
+    <a href="${BASE_URL}/make-avatar" style="${linkStyle}">Make your avatar</a>
+    <a href="${BASE_URL}/community" style="${linkStyle}">Community</a>
+  </td></tr>
+</table>`;
+}
+
+function wrapCentered(html) {
+  return `
+<table width="100%" cellpadding="0" cellspacing="0" style="width:100%;">
+  <tr><td align="center" style="padding:20px;">
+    <table width="600" cellpadding="0" cellspacing="0" align="center" style="max-width:100%;">
+      <tr><td align="center" style="text-align:center;">${html}</td></tr>
+    </table>
+  </td></tr>
+</table>`;
+}
+
 export async function POST(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
@@ -42,68 +69,26 @@ export async function POST(req) {
           );
         }
 
-        // Send emails to all recipients
-        const emailPromises = recipients.map(async (recipient) => {
-          try {
-            const emailData = {
-              from: "hello@kavisha.ai", // Use Resend's test domain first
-              to: [recipient.email],
-              subject: subject,
-              html: `
-             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-               <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 20px;">
-                 <h2 style="color: #333; margin: 0;">Hello ${recipient.name || "User"},</h2>
-               </div>
-               
-               <div style="line-height: 1.6; color: #555;">
-                 ${body.replace(/\n/g, "<br>")}
-               </div>
-               
-               <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; color: #888; font-size: 14px;">
-                 <p>Best regards,<br>The ${brand || "Kavisha"} Team</p>
-               </div>
-             </div>
-           `,
-            };
+        const fromEmail = process.env.RESEND_FROM || "hello@kavisha.ai";
+        const fromName = brand ? brand.charAt(0).toUpperCase() + brand.slice(1) : null;
+        const from = fromName ? `${fromName} <${fromEmail}>` : fromEmail;
+        const bodyHtml = typeof body === "string" ? body : "";
+        const html = wrapCentered(bodyHtml + getKavishaFooterHtml());
+        const allEmails = recipients.map((r) => ({ from, to: [r.email], subject, html }));
+        const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
-            const { data, error } = await resend.emails.send(emailData);
-
-            if (error) {
-              return {
-                email: recipient.email,
-                success: false,
-                error: error.message,
-              };
-            }
-
-            return {
-              email: recipient.email,
-              success: true,
-              messageId: data.id,
-            };
-          } catch (error) {
-            return {
-              email: recipient.email,
-              success: false,
-              error: error.message,
-            };
+        for (let i = 0; i < allEmails.length; i += 100) {
+          const chunk = allEmails.slice(i, i + 100);
+          const { error } = await resend.batch.send(chunk);
+          if (error) {
+            return NextResponse.json({ success: false, error: error.message }, { status: 500 });
           }
-        });
-
-        const results = await Promise.all(emailPromises);
-
-        const successful = results.filter((r) => r.success).length;
-        const failed = results.filter((r) => !r.success).length;
+          await delay(500);
+        }
 
         return NextResponse.json({
           success: true,
-          message: `Email sending completed. ${successful} successful, ${failed} failed.`,
-          results: {
-            total: recipients.length,
-            successful,
-            failed,
-            details: results,
-          },
+          message: `Sent to ${recipients.length} recipients.`,
         });
       } catch (error) {
         return NextResponse.json(
