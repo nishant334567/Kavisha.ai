@@ -52,8 +52,18 @@ export default function EmailModal({ onClose, toEmails = [], brand }) {
         <div className="space-y-4">
           {emails.length > 0 && (
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">To</label>
-              <p className="text-sm text-gray-600 break-all">{emails.join(", ")}</p>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                To ({emails.length} {emails.length === 1 ? "recipient" : "recipients"})
+              </label>
+              <div className="max-h-32 overflow-y-auto rounded border border-gray-200 bg-gray-50 p-2 text-sm text-gray-600">
+                <ul className="list-none space-y-1 break-all">
+                  {emails.map((email, i) => (
+                    <li key={i} className="truncate" title={email}>
+                      {email}
+                    </li>
+                  ))}
+                </ul>
+              </div>
             </div>
           )}
           <div>
