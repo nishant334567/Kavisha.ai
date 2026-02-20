@@ -8,29 +8,21 @@ export default function EmailModal({ onClose, toEmails = [], brand }) {
   const [subject, setSubject] = useState("");
   const [htmlContent, setHtmlContent] = useState("");
   const [sending, setSending] = useState(false);
-  const [imageMaxWidth, setImageMaxWidth] = useState("");
-  const [imageWidth, setImageWidth] = useState("");
-  const [imageHeight, setImageHeight] = useState("");
   const emails = Array.isArray(toEmails) ? toEmails.filter((e) => e && String(e).trim()) : [];
 
   const handleSend = async () => {
     if (!emails.length || !subject.trim() || !htmlContent.trim()) return;
     setSending(true);
     try {
-      const payload = {
-        recipients: emails.map((email) => ({ email, name: email })),
-        subject: subject.trim(),
-        body: htmlContent.trim(),
-        brand: brand || "kavisha",
-      };
-      const n = (v) => (v === "" || v === null || v === undefined ? undefined : Number(v));
-      if (n(imageMaxWidth) != null) payload.imageMaxWidth = n(imageMaxWidth);
-      if (n(imageWidth) != null) payload.imageWidth = n(imageWidth);
-      if (n(imageHeight) != null) payload.imageHeight = n(imageHeight);
       const res = await fetch("/api/admin/send-bulk-email", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(payload),
+        body: JSON.stringify({
+          recipients: emails.map((email) => ({ email, name: email })),
+          subject: subject.trim(),
+          body: htmlContent.trim(),
+          brand: brand || "kavisha",
+        }),
       });
       const data = await res.json();
       if (data.success) onClose();
@@ -77,41 +69,6 @@ export default function EmailModal({ onClose, toEmails = [], brand }) {
           <div>
             <label className="block text-sm font-medium text-gray-700 mb-1">Body</label>
             <EmailEditor value={htmlContent} onChange={setHtmlContent} brand={brand} />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Image max width (px)</label>
-              <input
-                type="number"
-                placeholder="e.g. 560"
-                min={1}
-                value={imageMaxWidth}
-                onChange={(e) => setImageMaxWidth(e.target.value)}
-                className="w-full border border-gray-300 rounded p-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Image width (px)</label>
-              <input
-                type="number"
-                placeholder="optional"
-                min={1}
-                value={imageWidth}
-                onChange={(e) => setImageWidth(e.target.value)}
-                className="w-full border border-gray-300 rounded p-2 text-sm"
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-gray-600 mb-1">Image height (px)</label>
-              <input
-                type="number"
-                placeholder="optional"
-                min={1}
-                value={imageHeight}
-                onChange={(e) => setImageHeight(e.target.value)}
-                className="w-full border border-gray-300 rounded p-2 text-sm"
-              />
-            </div>
           </div>
           <div className="flex justify-end gap-2 pt-4">
             <button
