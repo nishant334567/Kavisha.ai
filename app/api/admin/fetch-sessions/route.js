@@ -17,7 +17,11 @@ export async function GET(request) {
     const dateField = searchParams.get("dateField") || "updatedAt";
     const lastDays = searchParams.get("lastDays");
     const serviceKey = searchParams.get("serviceKey");
-    const limit = Math.min(100, Math.max(1, parseInt(searchParams.get("limit") || "50", 10)));
+    const limitParam = searchParams.get("limit");
+    const limit =
+      limitParam === "all" || limitParam === "" || limitParam == null
+        ? null
+        : Math.min(10000, Math.max(1, parseInt(limitParam || "50", 10)));
 
     // Resolve date range: lastDays overrides explicit dateFrom/dateTo
     let dateFromVal = dateFrom ? new Date(dateFrom) : null;
@@ -171,7 +175,7 @@ export async function GET(request) {
       });
     });
     const allUsers = Array.from(usersMap.values());
-    const users = allUsers.slice(0, limit);
+    const users = limit == null ? allUsers : allUsers.slice(0, limit);
     return NextResponse.json({
       success: true,
       users,
