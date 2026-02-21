@@ -6,9 +6,9 @@ import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { signIn } from "@/app/lib/firebase/sign-in";
 import {
-  detectInAppBrowser,
-  isMobileDevice,
-  openInChrome,
+    detectInAppBrowser,
+    isMobileDevice,
+    openInChrome,
 } from "@/app/lib/in-app-browser";
 import CommunityCard from "@/app/components/CommunityCard";
 import ChatSidebar from "@/app/components/ChatSidebar";
@@ -42,6 +42,7 @@ function flattenRequirements(users) {
                 name: u.name,
                 description: s.chatSummary || s.title || "",
                 date: formatDate(s.createdAt),
+                role: s.role,
                 requirement: ROLE_LABELS[s.role] || s.role || "—",
             });
         }
@@ -384,65 +385,86 @@ export default function Community() {
                                 <span className="font-fredoka text-sm sm:text-base">Back</span>
                             </button>
 
-                            <div className="px-8 font-fredoka flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-4 sm:py-3">
-                                <div className="min-w-0">
-                                    <p className="text-[#3D5E6B] text-2xl sm:text-3xl lg:text-4xl">Community</p>
-                                    <p className="text-sm sm:text-base font-extralight mt-1">
-                                        Browse through all connection requests and get connecting. Or create your own! :)
-                                    </p>
-                                </div>
-                                <div className="flex flex-wrap gap-2 sm:gap-3 items-center shrink-0">
-                                    <button
-                                        type="button"
-                                        disabled={creating === "job_seeker"}
-                                        className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
-                                        onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                    >
-                                        {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        disabled={creating === "recruiter"}
-                                        className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
-                                        onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                    >
-                                        {creating === "recruiter" ? "Creating..." : "Hire People"}
-                                    </button>
-                                    <button
-                                        type="button"
-                                        disabled={creating === "friends"}
-                                        className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
-                                        onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                    >
-                                        {creating === "friends" ? "Creating..." : "Find Friends"}
-                                    </button>
-                                </div>
-                            </div>
-                            {loading ? (
-                                <div className="p-4 sm:p-8 flex justify-center">
-                                    <Loader loadingMessage="Loading community..." />
-                                </div>
-                            ) : error ? (
-                                <div className="p-4 sm:p-8 text-center text-red-600 text-sm sm:text-base">{error}</div>
-                            ) : requirements.length === 0 ? (
-                                <div className="p-4 sm:p-8 text-center text-muted text-sm sm:text-base">
-                                    No community posts yet.
+                            {!brand?.enableProfessionalConnect && !brand?.enableFriendConnect ? (
+                                <div className="px-8 py-12 text-center font-fredoka text-[#3D5E6B] text-lg opacity-60">
+                                    Community is not available right now.
                                 </div>
                             ) : (
-                                <div className="py-4 px-4 sm:px-8 sm:py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                                    {requirements.map((r) => (
-                                        <CommunityCard
-                                            key={r.id}
-                                            name={r.name}
-                                            date={r.date}
-                                            description={r.description}
-                                            requirement={r.requirement}
-                                            onConnect={() => handleConnect(user.id, r.userId, r.name)}
-                                            connectLabel={paidConnectedUserIds.has(String(r.userId)) ? "Message" : "Connect"}
-                                            isOwnPost={String(r.userId) === String(user?.id)}
-                                        />
-                                    ))}
-                                </div>
+                                <>
+                                    <div className="px-8 font-fredoka flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-4 sm:py-3">
+                                        <div className="min-w-0">
+                                            <p className="text-[#3D5E6B] text-2xl sm:text-3xl lg:text-4xl">Community</p>
+                                            <p className="text-sm sm:text-base font-extralight mt-1">
+                                                Browse through all connection requests and get connecting. Or create your own! :)
+                                            </p>
+                                        </div>
+                                        <div className="flex flex-wrap gap-2 sm:gap-3 items-center shrink-0">
+                                            {brand?.enableProfessionalConnect && (
+                                                <>
+                                                    <button
+                                                        type="button"
+                                                        disabled={creating === "job_seeker"}
+                                                        className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                                                        onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                                    >
+                                                        {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
+                                                    </button>
+                                                    <button
+                                                        type="button"
+                                                        disabled={creating === "recruiter"}
+                                                        className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                                                        onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                                    >
+                                                        {creating === "recruiter" ? "Creating..." : "Hire People"}
+                                                    </button>
+                                                </>
+                                            )}
+                                            {brand?.enableFriendConnect && (
+                                                <button
+                                                    type="button"
+                                                    disabled={creating === "friends"}
+                                                    className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                                                    onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                                >
+                                                    {creating === "friends" ? "Creating..." : "Find Friends"}
+                                                </button>
+                                            )}
+                                        </div>
+                                    </div>
+                                    {loading ? (
+                                        <div className="p-4 sm:p-8 flex justify-center">
+                                            <Loader loadingMessage="Loading community..." />
+                                        </div>
+                                    ) : error ? (
+                                        <div className="p-4 sm:p-8 text-center text-red-600 text-sm sm:text-base">{error}</div>
+                                    ) : (() => {
+                                        const visibleRequirements = requirements.filter((r) => {
+                                            if (r.role === "friends") return !!brand?.enableFriendConnect;
+                                            if (r.role === "job_seeker" || r.role === "recruiter") return !!brand?.enableProfessionalConnect;
+                                            return true;
+                                        });
+                                        return visibleRequirements.length === 0 ? (
+                                            <div className="p-4 sm:p-8 text-center text-muted text-sm sm:text-base">
+                                                No community posts yet.
+                                            </div>
+                                        ) : (
+                                            <div className="py-4 px-4 sm:px-8 sm:py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                                {visibleRequirements.map((r) => (
+                                                    <CommunityCard
+                                                        key={r.id}
+                                                        name={r.name}
+                                                        date={r.date}
+                                                        description={r.description}
+                                                        requirement={r.requirement}
+                                                        onConnect={() => handleConnect(user.id, r.userId, r.name)}
+                                                        connectLabel={paidConnectedUserIds.has(String(r.userId)) ? "Message" : "Connect"}
+                                                        isOwnPost={String(r.userId) === String(user?.id)}
+                                                    />
+                                                ))}
+                                            </div>
+                                        );
+                                    })()}
+                                </>
                             )}
                         </div>
                     </div>

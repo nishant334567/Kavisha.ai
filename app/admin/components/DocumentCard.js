@@ -38,7 +38,7 @@ export default function DocumentCard({
             e.stopPropagation();
             setOpenMenuId(openMenuId === doc._id ? null : doc._id);
           }}
-          className="text-blue-600 hover:text-blue-800"
+          className="text-[#004A4E] hover:text-blue-800"
         >
           <MoreVertical className="w-4 h-4" />
         </button>

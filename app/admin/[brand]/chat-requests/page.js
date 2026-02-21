@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { ArrowLeft, X, Mail, BarChart3 } from "lucide-react";
+import { ArrowLeft, X, Mail } from "lucide-react";
 import { useRouter } from "next/navigation";
 import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
@@ -30,18 +30,18 @@ export default function ChatRequests() {
   const [connectionId, setConnectionId] = useState(null);
   const [showSelect, setShowSelect] = useState(false);
   const [emailList, setEmailList] = useState([]);
-  const [showAnalyticsModal, setShowAnalyticsModal] = useState(false);
-
   const brandContext = useBrandContext();
   const { users, total, loading, filters, applyFilters, datePresets, servicesDropDown } = useChatRequests(brandContext);
 
-  const totalPeople = users.length;
-  const totalChats = users.reduce((acc, u) => acc + (u.sessions?.length ?? 0), 0);
-  const totalQuestions = users.reduce(
-    (acc, u) =>
-      acc + (u.sessions?.reduce((sacc, s) => sacc + (s.messageCount ?? 0), 0) ?? 0),
-    0
-  );
+  const [activeTab, setActiveTab] = useState("");
+
+  const displayedUsers = activeTab === ""
+    ? users
+    : users.filter((u) => u.sessions?.some((s) => s.serviceKey === activeTab));
+
+  const tabCount = (key) =>
+    key === "" ? users.length : users.filter((u) => u.sessions?.some((s) => s.serviceKey === key)).length;
+
 
   useEffect(() => {
     console.log("List of Emails:", emailList)
@@ -53,7 +53,6 @@ export default function ChatRequests() {
     datePreset: "all",
     dateFrom: null,
     dateTo: null,
-    serviceKey: "",
   }));
 
   const openChatSession = (userA, userB) => {
@@ -88,21 +87,9 @@ export default function ChatRequests() {
             </button>
             <h1 className="text-2xl sm:text-3xl md:text-4xl font-zen text-[#004A4E] pb-1">
               All Chat Requests
-              <span className="ml-2 text-lg sm:text-xl font-normal text-gray-600">
-                ({total} {total === 1 ? "result" : "results"})
-              </span>
             </h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
-            <button
-              type="button"
-              onClick={() => setShowAnalyticsModal(true)}
-              className="flex items-center gap-2 px-3 py-2 rounded-lg border border-[#004A4E]/30 bg-white text-[#004A4E] text-sm font-medium hover:bg-[#004A4E]/5 transition-opacity"
-              title="Analytics"
-            >
-              <BarChart3 className="w-4 h-4" />
-              Analytics
-            </button>
             <button
               type="button"
               onClick={() => setShowSelect((prev) => !prev)}
@@ -116,14 +103,14 @@ export default function ChatRequests() {
                 <button
                   type="button"
                   onClick={() => {
-                    const allEmails = users.filter((u) => u?.email).map((u) => u.email);
+                    const allEmails = displayedUsers.filter((u) => u?.email).map((u) => u.email);
                     setEmailList((prev) =>
                       prev.length === allEmails.length ? [] : allEmails
                     );
                   }}
                   className="px-4 py-2 rounded-lg border border-[#004A4E]/30 bg-white text-[#004A4E] text-sm font-medium hover:bg-[#004A4E]/5 transition-colors"
                 >
-                  {emailList.length === users.filter((u) => u?.email).length ? "Deselect all" : "Select all"}
+                  {emailList.length === displayedUsers.filter((u) => u?.email).length ? "Deselect all" : "Select all"}
                 </button>
                 <button
                   type="button"
@@ -140,6 +127,69 @@ export default function ChatRequests() {
             )}
           </div>
         </div>
+        {/* Service tabs */}
+        {servicesDropDown.length > 0 && (
+          <div className="flex justify-center items-end border-b border-gray-200 mb-6 gap-0">
+            {[{ _key: "", title: "ALL" }, ...servicesDropDown].map((tab) => {
+              const count = tabCount(tab._key);
+              const isActive = activeTab === tab._key;
+              const tabUsers = tab._key === ""
+                ? users
+                : users.filter((u) => u.sessions?.some((s) => s.serviceKey === tab._key));
+              const tabPeople = tabUsers.length;
+              const tabChats = tabUsers.reduce((acc, u) => acc + (u.sessions?.length ?? 0), 0);
+              const tabQuestions = tabUsers.reduce(
+                (acc, u) => acc + (u.sessions?.reduce((sacc, s) => sacc + (s.messageCount ?? 0), 0) ?? 0), 0
+              );
+              return (
+                <div key={tab._key} className="relative group">
+                  <button
+                    type="button"
+                    onClick={() => setActiveTab(tab._key)}
+                    className={`relative flex items-center gap-2 px-5 pb-3 pt-1 text-sm transition-all whitespace-nowrap ${
+                      isActive
+                        ? "font-semibold text-[#004A4E]"
+                        : "font-medium text-gray-400 hover:text-gray-600"
+                    }`}
+                  >
+                    {tab.title}
+                    <span
+                      className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
+                        isActive
+                          ? "bg-[#004A4E] text-white"
+                          : "bg-gray-100 text-gray-500"
+                      }`}
+                    >
+                      {count}
+                    </span>
+                    {isActive && (
+                      <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-[#004A4E] rounded-full" />
+                    )}
+                  </button>
+                  {/* Hover analytics popover */}
+                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg px-4 py-3 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
+                    <p className="text-xs font-semibold text-[#004A4E] mb-2">{tab.title} analytics</p>
+                    <div className="space-y-1.5">
+                      <div className="flex justify-between text-xs text-gray-600">
+                        <span>Total people</span>
+                        <span className="font-semibold text-gray-900">{tabPeople}</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-600">
+                        <span>Total chats</span>
+                        <span className="font-semibold text-gray-900">{tabChats}</span>
+                      </div>
+                      <div className="flex justify-between text-xs text-gray-600">
+                        <span>Total questions</span>
+                        <span className="font-semibold text-gray-900">{tabQuestions}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        )}
+
         {/* Filter section */}
         <div className="rounded-xl border border-[#004A4E]/20 bg-[rgba(0,74,78,0.03)] p-4 mb-6 shadow-sm">
           <div className="flex flex-wrap items-end gap-4">
@@ -186,22 +236,6 @@ export default function ChatRequests() {
                 </div>
               </>
             )}
-            <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Service Type</label>
-              <select
-                value={draftFilters.serviceKey}
-                onChange={(e) =>
-                  setDraftFilters((prev) => ({ ...prev, serviceKey: e.target.value }))
-                }
-                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[160px]"
-              >
-                {servicesDropDown?.map((item, index) => (
-                  <option key={item?._key} value={item?._key}>
-                    {item.title}
-                  </option>
-                ))}
-              </select>
-            </div>
             <button
               onClick={() => applyFilters(draftFilters)}
               className="px-4 py-2 text-sm font-medium bg-[#004A4E] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm"
@@ -211,8 +245,8 @@ export default function ChatRequests() {
           </div>
         </div>
         <div className="w-full flex flex-col gap-4">
-          {users.length > 0 ? (
-            users.map((item, index) => (
+          {displayedUsers.length > 0 ? (
+            displayedUsers.map((item, index) => (
               <div key={item.userId ?? index} className="w-full flex items-stretch gap-2">
                 {showSelect && (
                   <input
@@ -257,43 +291,6 @@ export default function ChatRequests() {
           />
         )}
 
-        {showAnalyticsModal && (
-          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-            <div className="bg-white rounded-lg shadow-xl w-full max-w-md overflow-hidden">
-              <div className="flex items-center justify-between p-4 border-b border-gray-100">
-                <h3 className="text-lg font-semibold text-gray-900">Work with me analytics</h3>
-                <button
-                  type="button"
-                  onClick={() => setShowAnalyticsModal(false)}
-                  className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600"
-                  aria-label="Close"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </div>
-              <div className="border-l-4 border-[#004A4E] p-4 space-y-3">
-                <p className="text-sm text-gray-700">
-                  Total number of people: <span className="font-semibold text-gray-900">{totalPeople}</span>
-                </p>
-                <p className="text-sm text-gray-700">
-                  Total number of chats: <span className="font-semibold text-gray-900">{totalChats}</span>
-                </p>
-                <p className="text-sm text-gray-700">
-                  Total number of questions: <span className="font-semibold text-gray-900">{totalQuestions}</span>
-                </p>
-              </div>
-              <div className="p-4 border-t border-gray-100 flex justify-end">
-                <button
-                  type="button"
-                  onClick={() => setShowAnalyticsModal(false)}
-                  className="px-4 py-2 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90"
-                >
-                  Close
-                </button>
-              </div>
-            </div>
-          </div>
-        )}
 
         {commentModalSessionId && (
           <CommentModal

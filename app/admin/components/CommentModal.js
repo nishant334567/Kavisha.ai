@@ -69,17 +69,17 @@ export default function CommentModal({ sessionId, onClose }) {
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-gray-100 "
+            className="p-1.5 rounded-lg hover:bg-white/10"
             aria-label="Close"
           >
-            <X className="w-5 h-5" />
+            <X className="w-5 h-5 text-white" />
           </button>
         </div>
         <div className="flex-1 min-h-0 overflow-y-auto p-4 bg-[#122A34]">
           {loading ? (
-            <p className="text-sm ">Loading...</p>
+            <p className="text-sm text-white/70">Loading...</p>
           ) : comments.length === 0 ? (
-            <p className="text-sm ">No comment</p>
+            <p className="text-sm text-white/70">No comments yet</p>
           ) : (
             <ul className="space-y-3">
               {comments.map((c) => {

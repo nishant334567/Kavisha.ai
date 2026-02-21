@@ -17,8 +17,10 @@ export default function MyServices() {
   const [featureData, setFeatureData] = useState({
     enableQuiz: brandContext?.enableQuiz || false,
     quizName: brandContext?.quizName || "",
-    enableCommunityOnboarding: true, // Community is always enabled
+    enableCommunityOnboarding: true,
     communityName: brandContext?.communityName || "",
+    enableProfessionalConnect: brandContext?.enableProfessionalConnect || false,
+    enableFriendConnect: brandContext?.enableFriendConnect || false,
   });
   const [updating, setUpdating] = useState(false);
 
@@ -80,8 +82,10 @@ export default function MyServices() {
       setFeatureData({
         enableQuiz: brandContext.enableQuiz || false,
         quizName: brandContext.quizName || "",
-        enableCommunityOnboarding: true, // Community is always enabled
+        enableCommunityOnboarding: true,
         communityName: brandContext.communityName || "",
+        enableProfessionalConnect: brandContext.enableProfessionalConnect || false,
+        enableFriendConnect: brandContext.enableFriendConnect || false,
       });
     }
   }, [brandContext]);
@@ -326,6 +330,48 @@ export default function MyServices() {
                     </>
                   )}
                 </div>
+              )}
+            </div>
+
+            {/* Community sub-toggles */}
+            <div className="w-full flex flex-col gap-3 px-8 py-3 bg-gray-50 rounded-xl border border-gray-200">
+              <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">Community connection types</p>
+              {/* Professional Connect */}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-sm text-gray-700 font-medium">Professional Connect</span>
+                  <span className="text-xs text-gray-400">Shows "Hire People" &amp; "Find Jobs" buttons</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={featureData.enableProfessionalConnect}
+                    onChange={(e) => handleToggleFeature("enableProfessionalConnect", e.target.checked)}
+                    disabled={updating}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                </label>
+              </div>
+              {/* Friend Connect */}
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <span className="text-sm text-gray-700 font-medium">Friend Connect</span>
+                  <span className="text-xs text-gray-400">Shows "Find Friends" button</span>
+                </div>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={featureData.enableFriendConnect}
+                    onChange={(e) => handleToggleFeature("enableFriendConnect", e.target.checked)}
+                    disabled={updating}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                </label>
+              </div>
+              {!featureData.enableProfessionalConnect && !featureData.enableFriendConnect && (
+                <p className="text-xs text-amber-600 font-medium">⚠ Both are off — community section will be hidden for visitors.</p>
               )}
             </div>
 

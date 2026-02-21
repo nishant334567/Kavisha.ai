@@ -10,7 +10,7 @@ export default function CommunityPostDialog({ name, description, date, requireme
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 p-4 sm:p-6 border-b border-border shrink-0">
-          <h2 className="text-xl sm:text-2xl md:text-3xl text-[#3D5E6B] break-words pr-8">
+          <h2 className="text-xl sm:text-2xl md:text-3xl text-[#004A4E] break-words pr-8">
             {name || "—"}
           </h2>
           <button
@@ -42,7 +42,7 @@ export default function CommunityPostDialog({ name, description, date, requireme
           {!isOwnPost && (
             <button
               type="button"
-              className="flex-1 rounded-full bg-[#3D5E6B] text-white px-4 py-2 text-sm hover:bg-[#2d4e5b] transition-colors"
+              className="flex-1 rounded-full bg-[#004A4E] text-white px-4 py-2 text-sm hover:bg-[#003538] transition-colors"
               onClick={() => {
                 onConnect?.();
                 onClose();

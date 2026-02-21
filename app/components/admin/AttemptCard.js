@@ -82,7 +82,7 @@ export default function AttemptCard({ attempt }) {
 
         {attempt.timeTaken && (
           <div className="flex items-center gap-2 text-gray-600">
-            <Clock className="w-4 h-4 text-blue-600" />
+            <Clock className="w-4 h-4 text-[#004A4E]" />
             <span>Time taken: {attempt.timeTaken}</span>
           </div>
         )}
