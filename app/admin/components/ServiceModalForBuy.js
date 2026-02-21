@@ -208,7 +208,7 @@ export default function ServiceModalForBuy({ isOpen, onClose }) {
                     editingService ? handleUpdateService : handleAddService
                   }
                   disabled={loading}
-                  className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2 bg-[#004A4E] text-white rounded hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   {editingService ? "Update" : "Add"}
                 </button>
@@ -219,7 +219,7 @@ export default function ServiceModalForBuy({ isOpen, onClose }) {
           {/* My Services Section */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <h3 className="text-lg font-semibold text-blue-600">
+              <h3 className="text-lg font-semibold text-[#004A4E]">
                 My Services
               </h3>
               <div className="flex-1 h-px bg-gray-300"></div>
@@ -259,18 +259,18 @@ export default function ServiceModalForBuy({ isOpen, onClose }) {
                       name="service"
                       checked={selectedService === service._id}
                       onChange={() => setSelectedService(service._id)}
-                      className="w-4 h-4 text-blue-600"
+                      className="w-4 h-4 text-[#004A4E]"
                     />
                     <span className="flex-1 text-gray-900">{service.name}</span>
                     <button
                       onClick={() => handleModify(service)}
-                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                      className="px-3 py-1 bg-[#004A4E] text-white text-sm rounded hover:bg-blue-700 transition-colors"
                     >
                       Modify
                     </button>
                     <button
                       onClick={() => handleRemove(service._id)}
-                      className="px-3 py-1 bg-blue-600 text-white text-sm rounded hover:bg-blue-700 transition-colors"
+                      className="px-3 py-1 bg-[#004A4E] text-white text-sm rounded hover:bg-blue-700 transition-colors"
                     >
                       Remove
                     </button>

@@ -28,9 +28,6 @@ function buildQueryParams(brand, filters) {
     if (filters.dateField) {
         params.set("dateField", filters.dateField);
     }
-    if (filters.serviceKey && filters.serviceKey !== "") {
-        params.set("serviceKey", filters.serviceKey);
-    }
 
     return params.toString();
 }
@@ -41,7 +38,6 @@ export function useChatRequests(brand) {
         dateFrom: null,
         dateTo: null,
         dateField: "updatedAt",
-        serviceKey: "",
     });
     const [users, setUsers] = useState([]);
     const [total, setTotal] = useState(0);
@@ -82,8 +78,7 @@ export function useChatRequests(brand) {
   `;
 
         const data = await client.fetch(query, { brandname });
-        setServicesDropdown([{ _key: "", name: "All", title: "All" }, ...data?.services])
-        console.log("Data services:", data)
+        setServicesDropdown(data?.services ?? []);
     }, [brand?.subdomain]);
     useEffect(() => {
         if (brand?.subdomain) {

@@ -310,16 +310,6 @@ export default function UserCard({
                             }}
                           >
                             <span className="font-medium text-gray-900 text-xs truncate">{item?.title || `Chat ${index + 1}`}</span>
-                            <div className="flex items-center gap-1.5 text-[10px] text-gray-500">
-                              <span className="flex items-center gap-0.5">
-                                <MessageCircle className="w-2.5 h-2.5 text-gray-400 shrink-0" aria-hidden />
-                                <span>{item?.messageCount ?? 0}</span>
-                              </span>
-                              <span className="flex items-center gap-0.5 min-w-0 truncate">
-                                <Clock className="w-2.5 h-2.5 text-gray-400 shrink-0" aria-hidden />
-                                {formatToIST(item?.updatedAt)}
-                              </span>
-                            </div>
                           </button>
                         );
                       })}
@@ -338,9 +328,6 @@ export default function UserCard({
                   <div className="flex-1 min-h-0 overflow-y-auto pr-0.5">
                     {selectedChatSession ? (
                       <>
-                        <p className="text-xs font-medium text-[#004A4E] mb-1 line-clamp-1">
-                          {selectedChatSession?.title || "Untitled chat"}
-                        </p>
                         <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
                           {selectedChatSession?.chatSummary || "No summary available for this session."}
                         </p>

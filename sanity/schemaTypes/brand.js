@@ -97,6 +97,20 @@ export default {
       initialValue: false,
     },
     {
+      name: "enableProfessionalConnect",
+      title: "Enable Professional Connect",
+      type: "boolean",
+      description: "Show Hire People and Find Jobs buttons in community",
+      initialValue: false,
+    },
+    {
+      name: "enableFriendConnect",
+      title: "Enable Friend Connect",
+      type: "boolean",
+      description: "Show Find Friends button in community",
+      initialValue: false,
+    },
+    {
       name: "communityName",
       title: "Community Name",
       type: "string",

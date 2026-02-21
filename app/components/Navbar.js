@@ -86,7 +86,7 @@ export default function Navbar() {
   ];
   return (
     <div className="relative">
-      <nav className="hidden md:block w-full bg-[#3D5E6B] fixed top-0 left-0 z-50 text-[#FFEED8]">
+      <nav className="hidden md:block w-full bg-[#004A4E] fixed top-0 left-0 z-50 text-white">
         <div className="px-4 h-14 flex items-center justify-between">
           <div
             className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"

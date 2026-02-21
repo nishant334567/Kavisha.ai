@@ -95,7 +95,7 @@ export default function DocumentUploadCard({
             )}
 
             <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
-              <span className="font-mono text-blue-600">
+              <span className="font-mono text-[#004A4E]">
                 ID: {documentData.docid}
               </span>
               <span>
@@ -129,7 +129,7 @@ export default function DocumentUploadCard({
           <div className="flex items-start gap-2">
             <button
               onClick={toggleShowAllChunks}
-              className="rounded-full border border-blue-100 px-3 py-1 text-xs font-medium text-blue-600 hover:bg-blue-50"
+              className="rounded-full border border-blue-100 px-3 py-1 text-xs font-medium text-[#004A4E] hover:bg-blue-50"
             >
               Show all chunks
             </button>
@@ -153,7 +153,7 @@ export default function DocumentUploadCard({
                   <button
                     onClick={handleSaveDoc}
                     disabled={saving}
-                    className="px-4 py-1.5 text-xs font-medium text-white bg-blue-600 rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                    className="px-4 py-1.5 text-xs font-medium text-white bg-[#004A4E] rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
                     title="Save changes"
                   >
                     {saving ? (
@@ -193,7 +193,7 @@ export default function DocumentUploadCard({
                 </button>
                 <button
                   onClick={() => handleEditDoc(documentData._id)}
-                  className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-blue-600 transition-colors hover:bg-blue-100"
+                  className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-[#004A4E] transition-colors hover:bg-blue-100"
                   title="Edit document"
                 >
                   Edit
@@ -224,7 +224,7 @@ export default function DocumentUploadCard({
         {documentData?.text?.length > 400 && (
           <button
             onClick={() => toggleReadMore(documentData.docid)}
-            className="mt-2 text-xs text-blue-600 hover:underline"
+            className="mt-2 text-xs text-[#004A4E] hover:underline"
           >
             {expandedDocs[documentData.docid] ? "Show less" : "Show more"}
           </button>

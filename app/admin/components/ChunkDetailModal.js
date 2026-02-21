@@ -51,7 +51,7 @@ export default function ChunkDetailModal({
         <div className="flex-1 overflow-y-auto p-3 sm:p-4 text-sm text-gray-800">
           {loading ? (
             <div className="flex justify-center py-8">
-              <div className="animate-spin rounded-full h-8 w-8 border-2 border-blue-600 border-t-transparent" />
+              <div className="animate-spin rounded-full h-8 w-8 border-2 border-[#004A4E] border-t-transparent" />
             </div>
           ) : chunk ? (
             <>
@@ -78,7 +78,7 @@ export default function ChunkDetailModal({
               <button
                 type="button"
                 onClick={() => setShowFullText((v) => !v)}
-                className="flex-1 py-2 px-4 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-sm font-medium flex items-center justify-center gap-1.5"
+                className="flex-1 py-2 px-4 rounded-lg bg-[#004A4E] hover:bg-blue-700 text-white text-sm font-medium flex items-center justify-center gap-1.5"
                 aria-label={showFullText ? "Show chunk text only" : "Show full document text"}
               >
                 <FileText className="w-4 h-4" />

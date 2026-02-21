@@ -629,8 +629,8 @@ export default function ChatBox({
                   )}
                   {m.role === "user" ? (
                     <div className="flex justify-end w-full min-w-0">
-                      <div className="text-white font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-[#59646F]">
-                        <FormatText text={m.message} />
+                      <div className="text-white font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-[#004A4E]">
+                        {m.message}
                       </div>
                     </div>
                   ) : (

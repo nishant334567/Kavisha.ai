@@ -39,7 +39,7 @@ export default function UserSessionDetail({
                     [currentUserSession._id]: !prev[currentUserSession._id],
                   }))
                 }
-                className="text-blue-600 ml-1 hover:underline"
+                className="text-[#004A4E] ml-1 hover:underline"
               >
                 {expandSummaries[currentUserSession._id] ? "less" : "more"}
               </button>
@@ -55,7 +55,7 @@ export default function UserSessionDetail({
                 currentUserSession.status === "completed"
                   ? "text-green-600"
                   : currentUserSession.status === "in-progress"
-                    ? "text-blue-600"
+                    ? "text-[#004A4E]"
                     : currentUserSession.status === "on hold"
                       ? "text-yellow-600"
                       : currentUserSession.status === "rejected"
