@@ -30,6 +30,8 @@ export default function ChatRequests() {
   const [connectionId, setConnectionId] = useState(null);
   const [showSelect, setShowSelect] = useState(false);
   const [emailList, setEmailList] = useState([]);
+  const [pageTitle, setPageTitle] = useState("All Chat Requests");
+  const [pageSubtitle, setPageSubtitle] = useState("");
   const brandContext = useBrandContext();
   const { users, total, loading, filters, applyFilters, datePresets, servicesDropDown } = useChatRequests(brandContext);
 
@@ -76,6 +78,27 @@ export default function ChatRequests() {
   return (
     <div>
       <div className="w-full lg:w-[90%] min-w-0 mx-auto px-4 sm:px-6 mt-4">
+        {/* Title / subtitle area (same design as EmailEditor) */}
+        <p className="text-sm text-gray-500 mb-4">Page</p>
+        <div className="space-y-3 mb-6">
+          <input
+            type="text"
+            value={pageTitle}
+            onChange={(e) => setPageTitle(e.target.value)}
+            placeholder="Title"
+            className="block w-full text-2xl font-normal text-gray-900 placeholder:text-gray-400 bg-transparent border-0 focus:outline-none focus:ring-0"
+            aria-label="Page title"
+          />
+          <input
+            type="text"
+            value={pageSubtitle}
+            onChange={(e) => setPageSubtitle(e.target.value)}
+            placeholder="Add a subtitle"
+            className="block w-full text-base font-normal text-gray-900 placeholder:text-gray-400 bg-transparent border-0 focus:outline-none focus:ring-0"
+            aria-label="Page subtitle"
+          />
+        </div>
+
         {/* Header: back + title left; Send email top right */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2 min-w-0">
@@ -286,8 +309,15 @@ export default function ChatRequests() {
         {showEmailModal && (
           <EmailModal
             onClose={() => setShowEmailModal(false)}
-            toEmails={emailList}
+            toEmails={displayedUsers
+              .filter((u) => u?.email && emailList.includes(u.email))
+              .map((u) => ({
+                email: u.email,
+                name: u.name ?? u.email,
+                lastEmail: u.sessions?.[0]?.updatedAt ?? null,
+              }))}
             brand={brandContext?.subdomain}
+            logoUrl={brandContext?.logoUrl}
           />
         )}
 
