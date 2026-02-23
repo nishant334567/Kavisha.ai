@@ -20,8 +20,8 @@ function getKavishaFooterHtml(unsubscribeToken) {
   <tr><td align="center" style="padding:16px 0 8px;font-size:12px;color:#6b7280;">This mail is powered by <a href="${BASE_URL}" style="color:#004A4E;text-decoration:none;">kavisha.ai</a></td></tr>
   <tr><td align="center" style="padding:8px 0 24px;">
     <a href="${unsubUrl}" style="${linkStyle}">Unsubscribe</a>
-    <a href="${BASE_URL}/talk-to-avatar" style="${linkStyle}">Talk to avatar</a>
-    <a href="${BASE_URL}/make-avatar" style="${linkStyle}">Make your avatar</a>
+    <a href="${BASE_URL}/talk-to-avatar" style="${linkStyle}">Talk to Avataar</a>
+    <a href="${BASE_URL}/make-avatar" style="${linkStyle}">Make your Avataar</a>
     <a href="${BASE_URL}/community" style="${linkStyle}">Community</a>
   </td></tr>
 </table>`;
