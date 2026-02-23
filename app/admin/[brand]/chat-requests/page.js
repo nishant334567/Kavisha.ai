@@ -78,26 +78,7 @@ export default function ChatRequests() {
   return (
     <div>
       <div className="w-full lg:w-[90%] min-w-0 mx-auto px-4 sm:px-6 mt-4">
-        {/* Title / subtitle area (same design as EmailEditor) */}
-        <p className="text-sm text-gray-500 mb-4">Page</p>
-        <div className="space-y-3 mb-6">
-          <input
-            type="text"
-            value={pageTitle}
-            onChange={(e) => setPageTitle(e.target.value)}
-            placeholder="Title"
-            className="block w-full text-2xl font-normal text-gray-900 placeholder:text-gray-400 bg-transparent border-0 focus:outline-none focus:ring-0"
-            aria-label="Page title"
-          />
-          <input
-            type="text"
-            value={pageSubtitle}
-            onChange={(e) => setPageSubtitle(e.target.value)}
-            placeholder="Add a subtitle"
-            className="block w-full text-base font-normal text-gray-900 placeholder:text-gray-400 bg-transparent border-0 focus:outline-none focus:ring-0"
-            aria-label="Page subtitle"
-          />
-        </div>
+
 
         {/* Header: back + title left; Send email top right */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
@@ -169,19 +150,17 @@ export default function ChatRequests() {
                   <button
                     type="button"
                     onClick={() => setActiveTab(tab._key)}
-                    className={`relative flex items-center gap-2 px-5 pb-3 pt-1 text-sm transition-all whitespace-nowrap ${
-                      isActive
+                    className={`relative flex items-center gap-2 px-5 pb-3 pt-1 text-sm transition-all whitespace-nowrap ${isActive
                         ? "font-semibold text-[#004A4E]"
                         : "font-medium text-gray-400 hover:text-gray-600"
-                    }`}
+                      }`}
                   >
                     {tab.title}
                     <span
-                      className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
-                        isActive
+                      className={`text-xs font-semibold px-1.5 py-0.5 rounded ${isActive
                           ? "bg-[#004A4E] text-white"
                           : "bg-gray-100 text-gray-500"
-                      }`}
+                        }`}
                     >
                       {count}
                     </span>
