@@ -14,9 +14,28 @@ const storage = new Storage(
 const bucketName =
   process.env.GCS_KNOWLEDGE_BASE || process.env.GCS_BUCKET_NAME;
 
-// Only create bucket if bucketName is defined (prevents build-time errors)
 export const bucket = bucketName ? storage.bucket(bucketName) : null;
 
+export async function uploadToBucket(filename, file, contentType) {
+  if (!bucket) return null;
+  const buffer = Buffer.isBuffer(file) ? file : Buffer.from(await file.arrayBuffer());
+  const type = contentType || (file.type ?? "application/octet-stream");
+  const gcsFile = bucket.file(filename);
+  await gcsFile.save(buffer, { contentType: type });
+
+  let url = `https://storage.googleapis.com/${bucket.name}/${filename}`;
+  try {
+    await gcsFile.makePublic();
+  } catch {
+    const [signedUrl] = await gcsFile.getSignedUrl({
+      version: "v4",
+      action: "read",
+      expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
+    });
+    url = signedUrl;
+  }
+  return url;
+}
 
 export async function refreshImageUrl(url) {
   if (!bucket || !url) return url;
