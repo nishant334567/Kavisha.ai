@@ -33,7 +33,7 @@ export default function ChatRequests() {
   const [pageTitle, setPageTitle] = useState("All Chat Requests");
   const [pageSubtitle, setPageSubtitle] = useState("");
   const brandContext = useBrandContext();
-  const { users, total, loading, filters, applyFilters, datePresets, servicesDropDown } = useChatRequests(brandContext);
+  const { users, total, loading, filters, applyFilters, datePresets, messageCountOptions, sessionCountOptions, servicesDropDown } = useChatRequests(brandContext);
 
   const [activeTab, setActiveTab] = useState("");
 
@@ -55,7 +55,20 @@ export default function ChatRequests() {
     datePreset: "all",
     dateFrom: null,
     dateTo: null,
+    minMessages: "all",
+    minSessions: "all",
   }));
+
+  useEffect(() => {
+    setDraftFilters((prev) => ({
+      ...prev,
+      datePreset: filters.datePreset ?? prev.datePreset,
+      dateFrom: filters.dateFrom ?? prev.dateFrom,
+      dateTo: filters.dateTo ?? prev.dateTo,
+      minMessages: filters.minMessages ?? prev.minMessages,
+      minSessions: filters.minSessions ?? prev.minSessions,
+    }));
+  }, [filters.datePreset, filters.dateFrom, filters.dateTo, filters.minMessages, filters.minSessions]);
 
   const openChatSession = (userA, userB) => {
     setUserA(userA);
@@ -238,6 +251,38 @@ export default function ChatRequests() {
                 </div>
               </>
             )}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Total messages</label>
+              <select
+                value={draftFilters.minMessages ?? "all"}
+                onChange={(e) =>
+                  setDraftFilters((prev) => ({ ...prev, minMessages: e.target.value }))
+                }
+                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[140px]"
+              >
+                {messageCountOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Chat sessions</label>
+              <select
+                value={draftFilters.minSessions ?? "all"}
+                onChange={(e) =>
+                  setDraftFilters((prev) => ({ ...prev, minSessions: e.target.value }))
+                }
+                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[140px]"
+              >
+                {sessionCountOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
             <button
               onClick={() => applyFilters(draftFilters)}
               className="px-4 py-2 text-sm font-medium bg-[#004A4E] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm"

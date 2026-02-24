@@ -22,6 +22,16 @@ export async function GET(request) {
       limitParam === "all" || limitParam === "" || limitParam == null
         ? null
         : Math.min(10000, Math.max(1, parseInt(limitParam || "50", 10)));
+    const minMessagesParam = searchParams.get("minMessages");
+    const minMessages =
+      minMessagesParam == null || minMessagesParam === "" || minMessagesParam === "all"
+        ? null
+        : parseInt(minMessagesParam, 10);
+    const minSessionsParam = searchParams.get("minSessions");
+    const minSessions =
+      minSessionsParam == null || minSessionsParam === "" || minSessionsParam === "all"
+        ? null
+        : parseInt(minSessionsParam, 10);
 
     // Resolve date range: lastDays overrides explicit dateFrom/dateTo
     let dateFromVal = dateFrom ? new Date(dateFrom) : null;
@@ -174,7 +184,18 @@ export async function GET(request) {
         totalCost: totalCost,
       });
     });
-    const allUsers = Array.from(usersMap.values());
+    let allUsers = Array.from(usersMap.values());
+
+    if (minMessages != null && !isNaN(minMessages) && minMessages > 0) {
+      allUsers = allUsers.filter((u) => {
+        const total = (u.sessions || []).reduce((sum, s) => sum + (s.messageCount ?? 0), 0);
+        return total >= minMessages;
+      });
+    }
+    if (minSessions != null && !isNaN(minSessions) && minSessions > 0) {
+      allUsers = allUsers.filter((u) => (u.sessions?.length ?? 0) >= minSessions);
+    }
+
     const users = limit == null ? allUsers : allUsers.slice(0, limit);
     return NextResponse.json({
       success: true,

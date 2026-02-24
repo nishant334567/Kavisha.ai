@@ -11,7 +11,24 @@ const DATE_PRESETS = [
     { value: "custom", label: "Custom range" },
 ];
 
+const MESSAGE_COUNT_OPTIONS = [
+    { value: "all", label: "Any messages" },
+    { value: "1", label: "1+ messages" },
+    { value: "10", label: "10+ messages" },
+    { value: "50", label: "50+ messages" },
+    { value: "100", label: "100+ messages" },
+    { value: "250", label: "250+ messages" },
+    { value: "500", label: "500+ messages" },
+];
 
+const SESSION_COUNT_OPTIONS = [
+    { value: "all", label: "Any sessions" },
+    { value: "1", label: "1+ sessions" },
+    { value: "2", label: "2+ sessions" },
+    { value: "3", label: "3+ sessions" },
+    { value: "5", label: "5+ sessions" },
+    { value: "10", label: "10+ sessions" },
+];
 
 function buildQueryParams(brand, filters) {
     const params = new URLSearchParams();
@@ -28,6 +45,12 @@ function buildQueryParams(brand, filters) {
     if (filters.dateField) {
         params.set("dateField", filters.dateField);
     }
+    if (filters.minMessages && filters.minMessages !== "all") {
+        params.set("minMessages", filters.minMessages);
+    }
+    if (filters.minSessions && filters.minSessions !== "all") {
+        params.set("minSessions", filters.minSessions);
+    }
 
     return params.toString();
 }
@@ -38,6 +61,8 @@ export function useChatRequests(brand) {
         dateFrom: null,
         dateTo: null,
         dateField: "updatedAt",
+        minMessages: "all",
+        minSessions: "all",
     });
     const [users, setUsers] = useState([]);
     const [total, setTotal] = useState(0);
@@ -100,6 +125,8 @@ export function useChatRequests(brand) {
         filters,
         applyFilters,
         datePresets: DATE_PRESETS,
+        messageCountOptions: MESSAGE_COUNT_OPTIONS,
+        sessionCountOptions: SESSION_COUNT_OPTIONS,
         servicesDropDown,
     };
 }
