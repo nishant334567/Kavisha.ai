@@ -44,7 +44,7 @@ export default function AdminNavbar() {
   const navOptions = [
     { name: "Home", path: `/admin/${brand?.subdomain}/v2` },
     { name: "My Services", path: `/admin/${brand?.subdomain}/my-services` },
-    // { name: "My Jobs", path: `/admin/${brand?.subdomain}/jobs` },
+    ...(brand?.enableJobs ? [{ name: "My Jobs", path: `/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
     { name: "Train My Avataar", path: `/admin/${brand?.subdomain}/train/v2` },
     { name: "My Profile", path: `/admin/${brand?.subdomain}/edit-profile` },
   ];
@@ -78,13 +78,15 @@ export default function AdminNavbar() {
             >
               MY SERVICES
             </li>
-            {/* <li
-              className={`cursor-pointer text-white uppercase tracking-wide ${pathname?.includes("/jobs") ? "font-semibold" : ""
-                }`}
-              onClick={() => go(`/admin/${brand?.subdomain}/jobs`)}
-            >
-              MY JOBS
-            </li> */}
+            {brand?.enableJobs && (
+              <li
+                className={`cursor-pointer text-white uppercase tracking-wide ${pathname?.includes("/jobs") ? "font-semibold" : ""
+                  }`}
+                onClick={() => go(`/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
+              >
+                MY JOBS
+              </li>
+            )}
             <li
               className={`cursor-pointer text-white uppercase tracking-wide ${pathname?.includes("/train") ? "font-semibold" : ""
                 }`}

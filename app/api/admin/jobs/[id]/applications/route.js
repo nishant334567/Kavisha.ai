@@ -4,16 +4,17 @@ import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { connectDB } from "@/app/lib/db";
 import Job from "@/app/models/Job";
+import JobApplication from "@/app/models/JobApplication";
 
 export async function GET(req, { params }) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
-      const { id } = await params;
+      const { id: jobId } = await params;
       const brand = req.nextUrl.searchParams.get("brand")?.trim();
-      if (!id || !brand) {
+      if (!jobId || !brand) {
         return NextResponse.json({ error: "id and brand required" }, { status: 400 });
       }
-      if (!mongoose.Types.ObjectId.isValid(id)) {
+      if (!mongoose.Types.ObjectId.isValid(jobId)) {
         return NextResponse.json({ error: "Invalid job id" }, { status: 400 });
       }
       const isAdmin = await isBrandAdmin(decodedToken.email, brand);
@@ -21,11 +22,25 @@ export async function GET(req, { params }) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
       await connectDB();
-      const job = await Job.findOne({ _id: id, brand }).lean();
+      const job = await Job.findOne({ _id: jobId, brand }).lean();
       if (!job) {
         return NextResponse.json({ error: "Job not found" }, { status: 404 });
       }
-      return NextResponse.json({ job });
+      const applications = await JobApplication.find({ jobId })
+        .sort({ createdAt: -1 })
+        .lean();
+      return NextResponse.json({
+        applications: applications.map((a) => ({
+          _id: a._id,
+          applicantEmail: a.applicantEmail,
+          resumeLink: a.resumeLink,
+          questionsAnswers: a.questionsAnswers || [],
+          createdAt: a.createdAt,
+        })),
+      });
+    },
+    onUnauthenticated: async () => {
+      return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     },
   });
 }

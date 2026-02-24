@@ -5,6 +5,7 @@ import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { connectDB } from "@/app/lib/db";
 import Job from "@/app/models/Job";
+import JobApplication from "@/app/models/JobApplication";
 
 export async function GET(req) {
   return withAuth(req, {
@@ -19,7 +20,22 @@ export async function GET(req) {
       }
       await connectDB();
       const jobs = await Job.find({ brand }).sort({ createdAt: -1 }).lean();
-      return NextResponse.json({ jobs });
+      const jobIds = jobs.map((j) => j._id);
+      const counts =
+        jobIds.length > 0
+          ? await JobApplication.aggregate([
+              { $match: { jobId: { $in: jobIds } } },
+              { $group: { _id: "$jobId", count: { $sum: 1 } } },
+            ])
+          : [];
+      const countByJobId = Object.fromEntries(
+        counts.map((c) => [String(c._id), c.count])
+      );
+      const jobsWithCount = jobs.map((j) => ({
+        ...j,
+        applicationCount: countByJobId[String(j._id)] ?? 0,
+      }));
+      return NextResponse.json({ jobs: jobsWithCount });
     },
   });
 }

@@ -17,6 +17,7 @@ export default function MyServices() {
   const [featureData, setFeatureData] = useState({
     enableQuiz: brandContext?.enableQuiz || false,
     quizName: brandContext?.quizName || "",
+    enableJobs: brandContext?.enableJobs || false,
     enableCommunityOnboarding: true,
     communityName: brandContext?.communityName || "",
     enableProfessionalConnect: brandContext?.enableProfessionalConnect || false,
@@ -82,6 +83,7 @@ export default function MyServices() {
       setFeatureData({
         enableQuiz: brandContext.enableQuiz || false,
         quizName: brandContext.quizName || "",
+        enableJobs: brandContext.enableJobs || false,
         enableCommunityOnboarding: true,
         communityName: brandContext.communityName || "",
         enableProfessionalConnect: brandContext.enableProfessionalConnect || false,
@@ -223,7 +225,7 @@ export default function MyServices() {
           </div>
 
           {/* Featured Services Section - Show enabled features */}
-          {(featureData.enableQuiz || featureData.enableCommunityOnboarding) && (
+          {(featureData.enableQuiz || featureData.enableJobs || featureData.enableCommunityOnboarding) && (
             <div className="flex flex-col items-center gap-4 font-akshar mt-4 border-gray-300">
               <h2 className="uppercase font-zen text-xl md:text-2xl font-bold text-[#000A67] mb-4">
                 Featured Services
@@ -232,6 +234,14 @@ export default function MyServices() {
                 <div className="flex flex-col items-center">
                   <span className="text-gray-600 uppercase text-base tracking-wider font-normal">
                     {featureData.quizName || "Take a Quiz/Survey"}
+                  </span>
+                  <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
+                </div>
+              )}
+              {featureData.enableJobs && (
+                <div className="flex flex-col items-center">
+                  <span className="text-gray-600 uppercase text-base tracking-wider font-normal">
+                    Jobs
                   </span>
                   <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
                 </div>
@@ -449,6 +459,28 @@ export default function MyServices() {
                   )}
                 </div>
               )}
+            </div>
+
+            {/* Jobs Feature */}
+            <div className="flex items-center justify-between w-full gap-4 px-4">
+              <div className="flex items-center gap-3">
+                <span className="text-gray-600 uppercase text-base tracking-wider font-normal">
+                  Jobs
+                </span>
+                <label className="relative inline-flex items-center cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={featureData.enableJobs}
+                    onChange={(e) =>
+                      handleToggleFeature("enableJobs", e.target.checked)
+                    }
+                    disabled={updating}
+                    className="sr-only peer"
+                  />
+                  <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                </label>
+              </div>
+              <span className="text-xs text-gray-400">Job listings &amp; applications</span>
             </div>
           </div>
         </div>

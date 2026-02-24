@@ -11,6 +11,7 @@ export default function SelectChatType({
   communityName = "",
   enableQuiz = false,
   quizName = "",
+  enableJobs = false,
 }) {
   const router = useRouter();
 
@@ -21,7 +22,7 @@ export default function SelectChatType({
             {servicesProvided.length > 0 &&
               servicesProvided.map((item, index) => {
                 const isLastService = index === servicesProvided.length - 1;
-                const hasMoreItems = enableCommunityOnboarding || enableQuiz;
+                const hasMoreItems = enableCommunityOnboarding || enableQuiz || enableJobs;
                 const shouldShowLine = !(isLastService && !hasMoreItems);
 
                 return (
@@ -69,7 +70,7 @@ export default function SelectChatType({
               })}
 
             {/* Features Section - at the bottom */}
-            {(enableCommunityOnboarding || enableQuiz) && (
+            {(enableCommunityOnboarding || enableQuiz || enableJobs) && (
               <>
                 {enableCommunityOnboarding && (
                   <div className="flex flex-col justify-center items-center">
@@ -84,7 +85,7 @@ export default function SelectChatType({
                         </span>
                       </div>
                     </button>
-                    {enableQuiz && (
+                    {(enableQuiz || enableJobs) && (
                       <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
                     )}
                   </div>
@@ -99,6 +100,24 @@ export default function SelectChatType({
                       <div className="flex items-center justify-center">
                         <span className="font-akshar uppercase text-lg font-light">
                           {quizName || "Take quiz/survey"}
+                        </span>
+                      </div>
+                    </button>
+                    {enableJobs && (
+                      <div className="h-[0.5px] w-[40px] mx-auto bg-slate-400 my-4"></div>
+                    )}
+                  </div>
+                )}
+                {enableJobs && (
+                  <div className="flex flex-col justify-center items-center">
+                    <button
+                      onClick={() => router.push("/jobs")}
+                      className="font-akshar uppercase text-lg flex items-center justify-center w-full"
+                      disabled={isCreating}
+                    >
+                      <div className="flex items-center justify-center">
+                        <span className="font-akshar uppercase text-lg font-light">
+                          Jobs
                         </span>
                       </div>
                     </button>

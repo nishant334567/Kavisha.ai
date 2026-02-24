@@ -1,17 +1,29 @@
 "use client";
 import { EditIcon, Save, Trash2, X, ArrowLeft, FileText } from "lucide-react";
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 
 const INITIAL_QUESTIONS = [
-  "Lorem Ipsum is simply dummy text of the printing and typesetting industry?",
-  "Lorem Ipsum is simply dummy text of the printing and typesetting industry?",
+  "Current role or background",
+  "Role(s) they're interested in",
+  "Years of experience",
+  "Education (least relevant)",
+  "Current salary and expected",
+  "Location (current, and relocation / travel flexibility)",
+  "Notice period or availability",
+  "Work temperament (e.g. structured, or independent)",
+  "Work mode preferences: Remote / Hybrid (if applicable)",
 ];
 
 export default function UploadJob() {
   const router = useRouter();
-  const brand = useBrandContext();
+  const searchParams = useSearchParams();
+  const brandContext = useBrandContext();
+  const brand =
+    searchParams?.get("subdomain")?.trim() ||
+    searchParams?.get("brand")?.trim() ||
+    brandContext?.subdomain;
   const [title, setTitle] = useState("");
   const [subtitle, setSubtitle] = useState("");
   const [jobQuestions, setJobQuestions] = useState([]);
@@ -49,7 +61,7 @@ export default function UploadJob() {
     try {
       const formData = new FormData();
       formData.append("file", jdFile);
-      formData.append("brand", brand?.subdomain ?? "");
+      formData.append("brand", brand ?? "");
       formData.append("title", title.trim() || "Untitled Job");
       formData.append("description", subtitle.trim());
       formData.append("questions", JSON.stringify(jobQuestions));
