@@ -10,6 +10,8 @@ export async function POST(req) {
     const formData = await req.formData();
     const jobId = formData.get("jobId")?.toString()?.trim();
     const applicantEmail = formData.get("applicantEmail")?.toString()?.trim()?.toLowerCase();
+    const applicantName = formData.get("applicantName")?.toString()?.trim() || "";
+    const applicantImage = formData.get("applicantImage")?.toString()?.trim() || "";
     const resume = formData.get("resume");
     const questionsAnswersRaw = formData.get("questionsAnswers");
 
@@ -77,6 +79,8 @@ export async function POST(req) {
     await JobApplication.create({
       jobId,
       applicantEmail,
+      applicantName,
+      applicantImage,
       resumeLink,
       questionsAnswers: questionsAnswers.map((qa) => ({
         question: qa.question,

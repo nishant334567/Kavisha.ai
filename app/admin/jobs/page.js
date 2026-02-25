@@ -34,6 +34,8 @@ export default function JobsPage() {
 
   const jobDetailHref = (jobId) =>
     brand ? `/admin/jobs/${jobId}?subdomain=${encodeURIComponent(brand)}` : `/admin/jobs/${jobId}`;
+  const applicationsHref = (jobId) =>
+    brand ? `/admin/jobs/${jobId}/applications?subdomain=${encodeURIComponent(brand)}` : `/admin/jobs/${jobId}/applications`;
 
   if (loading) return <div className="p-6 text-[#004A4E]">Loading…</div>;
 
@@ -114,7 +116,7 @@ export default function JobsPage() {
                   )}
                   <button
                     type="button"
-                    onClick={() => router.push(jobDetailHref(job._id))}
+                    onClick={() => router.push(applicationsHref(job._id))}
                     className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
                   >
                     <Users className="w-4 h-4 shrink-0" /> View applicants ({applicantCount})

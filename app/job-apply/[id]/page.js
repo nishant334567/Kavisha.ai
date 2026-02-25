@@ -127,6 +127,8 @@ export default function JobApplyPage() {
       const formData = new FormData();
       formData.append("jobId", job._id);
       formData.append("applicantEmail", email);
+      if (user.name) formData.append("applicantName", String(user.name).trim());
+      if (user.image) formData.append("applicantImage", String(user.image).trim());
       formData.append("resume", resumeFile);
       formData.append("questionsAnswers", JSON.stringify(questionsAnswers));
       const res = await fetch("/api/job-apply", { method: "POST", body: formData });

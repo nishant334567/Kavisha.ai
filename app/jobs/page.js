@@ -72,6 +72,7 @@ export default function JobsPage() {
               key={job._id}
               job={job}
               alreadyApplied={appliedJobIds.includes(String(job._id))}
+              brand={brand}
             />
           ))}
         </div>

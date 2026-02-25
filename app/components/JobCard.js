@@ -7,7 +7,7 @@ import { FileCheck } from "lucide-react";
  * Job card: title, description, and buttons — View JD, Apply / View your application.
  * When alreadyApplied, shows "Applied" badge, "View your application" link, and grayed-out Apply.
  */
-export default function JobCard({ job, alreadyApplied = false, className = "" }) {
+export default function JobCard({ job, alreadyApplied = false, brand, className = "" }) {
   if (!job) return null;
 
   const { _id, title, description = "", jdLink } = job;
@@ -15,6 +15,11 @@ export default function JobCard({ job, alreadyApplied = false, className = "" })
     description && description.length > 180 ? description.slice(0, 179).trim() + "…" : description;
   const applyHref = _id ? `/job-apply/${_id}` : "#";
   const jobPageHref = _id ? `/jobs/${_id}` : "#";
+  const viewApplicationHref = _id
+    ? brand
+      ? `/jobs/${_id}/application?brand=${encodeURIComponent(brand)}`
+      : `/jobs/${_id}/application`
+    : "#";
 
   return (
     <article
@@ -56,7 +61,7 @@ export default function JobCard({ job, alreadyApplied = false, className = "" })
         ) : null}
         {alreadyApplied ? (
           <Link
-            href={applyHref}
+            href={viewApplicationHref}
             className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 transition-opacity"
           >
             <FileCheck className="w-4 h-4 shrink-0" /> View your application

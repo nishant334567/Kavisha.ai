@@ -122,7 +122,7 @@ export default function JobDetailPage() {
           )}
           {alreadyApplied ? (
             <Link
-              href={`/job-apply/${job._id}`}
+              href={brand ? `/jobs/${job._id}/application?brand=${encodeURIComponent(brand)}` : `/jobs/${job._id}/application`}
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 transition-opacity"
             >
               <FileCheck className="w-4 h-4" /> View your application

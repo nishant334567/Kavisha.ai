@@ -2,7 +2,7 @@
 import { useState, useEffect } from "react";
 import { useRouter, useParams, useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { ArrowLeft, FileText, ExternalLink, Users, ChevronDown, ChevronUp } from "lucide-react";
+import { ArrowLeft, ArrowRight, FileText, ExternalLink, Users } from "lucide-react";
 
 export default function JobDetailPage() {
   const router = useRouter();
@@ -15,9 +15,6 @@ export default function JobDetailPage() {
     brandContext?.subdomain;
   const [job, setJob] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [applications, setApplications] = useState([]);
-  const [applicationsLoading, setApplicationsLoading] = useState(false);
-  const [applicationsOpen, setApplicationsOpen] = useState(true);
 
   useEffect(() => {
     if (!brand || !params?.id) return;
@@ -30,25 +27,6 @@ export default function JobDetailPage() {
         setJob(null);
       } finally {
         setLoading(false);
-      }
-    })();
-  }, [brand, params?.id]);
-
-  useEffect(() => {
-    if (!brand || !params?.id) return;
-    setApplicationsLoading(true);
-    (async () => {
-      try {
-        const res = await fetch(
-          `/api/admin/jobs/${params.id}/applications?brand=${encodeURIComponent(brand)}`,
-          { credentials: "include" }
-        );
-        const data = await res.json();
-        setApplications(res.ok && Array.isArray(data.applications) ? data.applications : []);
-      } catch {
-        setApplications([]);
-      } finally {
-        setApplicationsLoading(false);
       }
     })();
   }, [brand, params?.id]);
@@ -99,64 +77,22 @@ export default function JobDetailPage() {
         ) : null}
       </div>
 
-      <div className="rounded-xl border border-[#004A4E]/20 bg-white overflow-hidden">
-        <button
-          type="button"
-          onClick={() => setApplicationsOpen((o) => !o)}
-          className="w-full flex items-center justify-between gap-2 p-4 text-left hover:bg-[#004A4E]/5 transition-colors"
-        >
-          <span className="flex items-center gap-2 text-[#004A4E] font-medium">
-            <Users className="w-5 h-5" /> Applications ({applications.length})
-          </span>
-          {applicationsOpen ? (
-            <ChevronUp className="w-5 h-5 text-gray-500" />
-          ) : (
-            <ChevronDown className="w-5 h-5 text-gray-500" />
-          )}
-        </button>
-        {applicationsOpen && (
-          <div className="border-t border-[#004A4E]/10">
-            {applicationsLoading ? (
-              <div className="p-4 text-sm text-gray-500">Loading applications…</div>
-            ) : applications.length === 0 ? (
-              <div className="p-4 text-sm text-gray-500">No applications yet.</div>
-            ) : (
-              <ul className="divide-y divide-gray-100">
-                {applications.map((app) => (
-                  <li key={app._id} className="p-4">
-                    <div className="flex flex-wrap items-center gap-2 mb-2">
-                      <span className="text-sm font-medium text-gray-800">{app.applicantEmail}</span>
-                      <span className="text-xs text-gray-400">
-                        {app.createdAt ? new Date(app.createdAt).toLocaleDateString() : ""}
-                      </span>
-                    </div>
-                    {app.resumeLink && (
-                      <a
-                        href={app.resumeLink}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 text-sm text-[#004A4E] font-medium hover:underline mb-2"
-                      >
-                        <FileText className="w-4 h-4" /> Resume <ExternalLink className="w-3 h-3" />
-                      </a>
-                    )}
-                    {Array.isArray(app.questionsAnswers) && app.questionsAnswers.length > 0 && (
-                      <div className="mt-2 space-y-2">
-                        {app.questionsAnswers.map((qa, i) => (
-                          <div key={i} className="text-sm">
-                            <p className="font-medium text-gray-700">{qa.question}</p>
-                            <p className="text-gray-600 whitespace-pre-wrap">{qa.answer || "—"}</p>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        )}
-      </div>
+      <button
+        type="button"
+        onClick={() =>
+          router.push(
+            brand
+              ? `/admin/jobs/${params.id}/applications?subdomain=${encodeURIComponent(brand)}`
+              : `/admin/jobs/${params.id}/applications`
+          )
+        }
+        className="w-full flex items-center justify-between gap-2 p-4 rounded-xl border border-[#004A4E]/20 bg-white hover:bg-[#004A4E]/5 transition-colors text-left"
+      >
+        <span className="flex items-center gap-2 text-[#004A4E] font-medium">
+          <Users className="w-5 h-5" /> View applicants
+        </span>
+        <ArrowRight className="w-5 h-5 text-gray-400" />
+      </button>
     </div>
   );
 }

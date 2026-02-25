@@ -9,6 +9,11 @@ const JobApplicationSchema = new mongoose.Schema(
       index: true,
     },
     applicantEmail: { type: String, required: true, trim: true, lowercase: true, index: true },
+    applicantName: { type: String, default: "", trim: true },
+    applicantImage: { type: String, default: "", trim: true },
+    status: { type: String, default: "new", trim: true },
+    starred: { type: Boolean, default: false },
+    assignedTo: [{ type: String, trim: true }],
     resumeLink: { type: String, required: true, trim: true },
     questionsAnswers: [
       {
