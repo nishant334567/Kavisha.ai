@@ -4,6 +4,7 @@ import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { createUnsubscribeToken } from "@/app/lib/unsubscribe-token";
 import { connectDB } from "@/app/lib/db";
 import EmailUnsubscribe from "@/app/models/EmailUnsubscribe";
+import SentEmailLog from "@/app/models/SentEmailLog";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -107,14 +108,36 @@ export async function POST(req) {
         });
         const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
+        function buildLogDocs(recipients, emailStatus) {
+          const sentAt = new Date();
+          return recipients.map((r) => ({
+            brand: brandVal,
+            toEmail: String(r.email).trim().toLowerCase(),
+            subject: subject.trim(),
+            type: "bulk",
+            sentAt,
+            status: emailStatus,
+          }));
+        }
+
         for (let i = 0; i < allEmails.length; i += 100) {
           const chunk = allEmails.slice(i, i + 100);
+          const chunkRecipients = toSend.slice(i, i + 100);
           const { error } = await resend.batch.send(chunk);
           if (error) {
+            const failedDocs = buildLogDocs(chunkRecipients, "failed");
+            await SentEmailLog.insertMany(failedDocs).catch((err) => {
+              console.error("SentEmailLog insertMany (failed):", err);
+            });
             return NextResponse.json({ success: false, error: error.message }, { status: 500 });
           }
           await delay(500);
         }
+
+        const logDocs = buildLogDocs(toSend, "sent");
+        await SentEmailLog.insertMany(logDocs).catch((err) => {
+          console.error("SentEmailLog insertMany:", err);
+        });
 
         const skipped = recipients.length - toSend.length;
         return NextResponse.json({

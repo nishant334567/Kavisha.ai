@@ -30,6 +30,21 @@ const SESSION_COUNT_OPTIONS = [
     { value: "10", label: "10+ sessions" },
 ];
 
+const EMAIL_SENT_OPTIONS = [
+    { value: "all", label: "Any emails sent" },
+    { value: "1", label: "1+ emails sent" },
+    { value: "2", label: "2+ emails sent" },
+    { value: "5", label: "5+ emails sent" },
+    { value: "10", label: "10+ emails sent" },
+];
+
+const LAST_EMAIL_OPTIONS = [
+    { value: "all", label: "Any time" },
+    { value: "7", label: "Last email in 7 days" },
+    { value: "30", label: "Last email in 30 days" },
+    { value: "custom", label: "Custom range" },
+];
+
 function buildQueryParams(brand, filters) {
     const params = new URLSearchParams();
     params.set("brand", brand);
@@ -51,6 +66,15 @@ function buildQueryParams(brand, filters) {
     if (filters.minSessions && filters.minSessions !== "all") {
         params.set("minSessions", filters.minSessions);
     }
+    if (filters.minEmailsSent && filters.minEmailsSent !== "all") {
+        params.set("minEmailsSent", filters.minEmailsSent);
+    }
+    if (filters.lastEmailPreset === "custom" && filters.lastEmailFrom && filters.lastEmailTo) {
+        params.set("lastEmailFrom", filters.lastEmailFrom);
+        params.set("lastEmailTo", filters.lastEmailTo);
+    } else if (filters.lastEmailPreset && filters.lastEmailPreset !== "all") {
+        params.set("lastEmailDays", filters.lastEmailPreset);
+    }
 
     return params.toString();
 }
@@ -63,6 +87,10 @@ export function useChatRequests(brand) {
         dateField: "updatedAt",
         minMessages: "all",
         minSessions: "all",
+        minEmailsSent: "all",
+        lastEmailPreset: "all",
+        lastEmailFrom: null,
+        lastEmailTo: null,
     });
     const [users, setUsers] = useState([]);
     const [total, setTotal] = useState(0);
@@ -127,6 +155,8 @@ export function useChatRequests(brand) {
         datePresets: DATE_PRESETS,
         messageCountOptions: MESSAGE_COUNT_OPTIONS,
         sessionCountOptions: SESSION_COUNT_OPTIONS,
+        emailSentOptions: EMAIL_SENT_OPTIONS,
+        lastEmailOptions: LAST_EMAIL_OPTIONS,
         servicesDropDown,
     };
 }
