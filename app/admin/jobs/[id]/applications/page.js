@@ -4,16 +4,30 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
+import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { ArrowLeft } from "lucide-react";
 import ApplicantCard from "./ApplicantCard";
+import Livechat from "@/app/components/LiveChat";
 
 export default function Applications() {
     const params = useParams();
     const brandContext = useBrandContext();
     const brand = brandContext?.subdomain;
+    const { user } = useFirebaseSession();
 
     const [applications, setApplications] = useState([]);
     const [job, setJob] = useState(null);
+    const [openChat, setOpenChat] = useState(false);
+    const [userA, setUserA] = useState(null);
+    const [userB, setUserB] = useState(null);
+    const [connectionId, setConnectionId] = useState(null);
+
+    const openChatSession = (adminId, applicantUserId) => {
+        setUserA(adminId);
+        setUserB(applicantUserId);
+        setConnectionId([adminId, applicantUserId].sort().join("_"));
+        setOpenChat(true);
+    };
 
     useEffect(() => {
         if (!brand || !params?.id) return;
@@ -76,9 +90,21 @@ export default function Applications() {
                                 prev.map((a) => (a._id === updated._id ? updated : a))
                             );
                         }}
+                        onConnect={openChatSession}
+                        currentUserId={user?.id}
                     />
                 ))}
             </div>
+
+            {openChat && userA && userB && user?.id && (
+                <Livechat
+                    userA={userA}
+                    userB={userB}
+                    currentUserId={user.id}
+                    onClose={() => setOpenChat(false)}
+                    connectionId={connectionId}
+                />
+            )}
         </div>
     );
 }

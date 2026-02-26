@@ -5,6 +5,7 @@ import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { connectDB } from "@/app/lib/db";
 import Job from "@/app/models/Job";
 import JobApplication from "@/app/models/JobApplication";
+import User from "@/app/models/Users";
 
 export async function GET(req, { params }) {
   return withAuth(req, {
@@ -29,6 +30,12 @@ export async function GET(req, { params }) {
       const applications = await JobApplication.find({ jobId })
         .sort({ createdAt: -1 })
         .lean();
+      const emails = [...new Set(applications.map((a) => (a.applicantEmail || "").toLowerCase()).filter(Boolean))];
+      const userByEmail = new Map();
+      if (emails.length > 0) {
+        const users = await User.find({ email: { $in: emails } }).select("_id email").lean();
+        users.forEach((u) => userByEmail.set((u.email || "").toLowerCase(), u._id.toString()));
+      }
       return NextResponse.json({
         job: {
           _id: job._id,
@@ -40,6 +47,7 @@ export async function GET(req, { params }) {
           applicantEmail: a.applicantEmail,
           applicantName: a.applicantName || "",
           applicantImage: a.applicantImage || "",
+          applicantUserId: userByEmail.get((a.applicantEmail || "").toLowerCase()) || null,
           status: a.status || "new",
           starred: !!a.starred,
           assignedTo: Array.isArray(a.assignedTo) ? a.assignedTo : [],

@@ -26,7 +26,7 @@ function getDisplayName(email) {
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 }
 
-export default function ApplicantCard({ applicant, jobId, brand, onUpdate }) {
+export default function ApplicantCard({ applicant, jobId, brand, onUpdate, onConnect, currentUserId }) {
     const email = applicant?.applicantEmail ?? "";
     const name = applicant?.applicantName?.trim() || getDisplayName(email);
     const imageUrl = applicant?.applicantImage?.trim() || "";
@@ -176,7 +176,12 @@ export default function ApplicantCard({ applicant, jobId, brand, onUpdate }) {
                     )}
                     <button
                         type="button"
-                        className="w-full px-2 py-1 rounded-full bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                        onClick={() => {
+                            const uid = applicant?.applicantUserId;
+                            if (currentUserId && uid && onConnect) onConnect(currentUserId, uid);
+                        }}
+                        disabled={!currentUserId || !applicant?.applicantUserId || !onConnect}
+                        className="w-full px-2 py-1 rounded-full bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                         Connect
                     </button>

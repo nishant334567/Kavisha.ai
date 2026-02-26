@@ -4,8 +4,10 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useParams, useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
+import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { ArrowLeft, Star, FileText, ExternalLink, ChevronDown } from "lucide-react";
 import AssignApplicationModal from "../AssignApplicationModal";
+import Livechat from "@/app/components/LiveChat";
 
 function getDisplayName(applicant) {
     const name = applicant?.applicantName?.trim();
@@ -30,6 +32,7 @@ export default function ApplicationDetailPage() {
     const pathname = usePathname();
     const searchParams = useSearchParams();
     const brand = useBrandContext()?.subdomain;
+    const { user } = useFirebaseSession();
     const jobId = params?.id;
     const aid = params?.aid;
 
@@ -39,6 +42,17 @@ export default function ApplicationDetailPage() {
     const [showAssignModal, setShowAssignModal] = useState(false);
     const [starUpdating, setStarUpdating] = useState(false);
     const [jobSectionOpen, setJobSectionOpen] = useState(false);
+    const [openChat, setOpenChat] = useState(false);
+    const [userA, setUserA] = useState(null);
+    const [userB, setUserB] = useState(null);
+    const [connectionId, setConnectionId] = useState(null);
+
+    const openChatSession = (adminId, applicantUserId) => {
+        setUserA(adminId);
+        setUserB(applicantUserId);
+        setConnectionId([adminId, applicantUserId].sort().join("_"));
+        setOpenChat(true);
+    };
 
     useEffect(() => {
         if (!jobId || !aid) return;
@@ -269,6 +283,17 @@ export default function ApplicationDetailPage() {
                                     )}
                                 </dd>
                             </div>
+                            {application.applicantUserId && user?.id && (
+                                <div className="pt-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => openChatSession(user.id, application.applicantUserId)}
+                                        className="w-full py-2 px-3 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                                    >
+                                        Connect
+                                    </button>
+                                </div>
+                            )}
                         </dl>
                     </div>
 
@@ -312,6 +337,16 @@ export default function ApplicationDetailPage() {
                     currentAssignedTo={assignedTo}
                     onClose={() => setShowAssignModal(false)}
                     onSuccess={(updated) => setApplication(updated)}
+                />
+            )}
+
+            {openChat && userA && userB && user?.id && (
+                <Livechat
+                    userA={userA}
+                    userB={userB}
+                    currentUserId={user.id}
+                    onClose={() => setOpenChat(false)}
+                    connectionId={connectionId}
                 />
             )}
         </div>

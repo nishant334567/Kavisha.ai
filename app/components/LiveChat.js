@@ -18,9 +18,9 @@ export default function Livechat({
   const { user } = useFirebaseSession();
   const [messages, setMessages] = useState([]);
   const listRef = useRef(null);
+  const [connectionLoading, setConnectionLoading] = useState(true);
   const [chatInfo, setChatInfo] = useState({
     otherUser: "",
-    // jobTitle: "",
     connectionId: null,
   });
 
@@ -49,23 +49,28 @@ export default function Livechat({
   }, [messages]);
 
   useEffect(() => {
+    setConnectionLoading(true);
     const checkConnection = async () => {
-      const response = await fetch(`/api/check-connection`, {
-        method: "POST",
-        body: JSON.stringify({
-          userA,
-          userB,
-          connectionId: connectionId,
-          currentUserId,
-        }),
-      });
-      const data = await response.json();
-
-      if (data.status && data.connectionId) {
-        setChatInfo({
-          otherUser: data.otherUser,
-          connectionId: data.connectionId,
+      try {
+        const response = await fetch(`/api/check-connection`, {
+          method: "POST",
+          body: JSON.stringify({
+            userA,
+            userB,
+            connectionId: connectionId,
+            currentUserId,
+          }),
         });
+        const data = await response.json();
+
+        if (data.status && data.connectionId) {
+          setChatInfo({
+            otherUser: data.otherUser,
+            connectionId: data.connectionId,
+          });
+        }
+      } finally {
+        setConnectionLoading(false);
       }
     };
     checkConnection();
@@ -190,7 +195,11 @@ export default function Livechat({
       </div>
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto scrollbar-none p-2 bg-[#004A4E]/[0.03]" ref={listRef}>
-        {messages.length === 0 ? (
+        {connectionLoading ? (
+          <div className="flex items-center justify-center h-full min-h-[200px] text-gray-500 text-sm">
+            Loading chat...
+          </div>
+        ) : messages.length === 0 ? (
           <div className="text-center py-8 text-gray-500 text-sm">
             No messages yet. Start the conversation!
           </div>
@@ -244,8 +253,9 @@ export default function Livechat({
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
-          className="font-baloo w-full border border-[#004A4E]/20 rounded-xl px-3 py-2 text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] text-sm transition resize-none"
-          placeholder="Write a message..."
+          disabled={connectionLoading}
+          className="font-baloo w-full border border-[#004A4E]/20 rounded-xl px-3 py-2 text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] text-sm transition resize-none disabled:opacity-60 disabled:cursor-not-allowed"
+          placeholder={connectionLoading ? "Loading..." : "Write a message..."}
         />
       </div>
       <div className="flex justify-end p-2 border-t border-[#004A4E]/20 rounded-b-xl">
@@ -255,7 +265,7 @@ export default function Livechat({
             sendMessage();
           }}
           type="submit"
-          disabled={!message.trim()}
+          disabled={connectionLoading || !message.trim()}
           className="shadow-sm px-8 py-2 bg-[#004A4E] disabled:bg-gray-200 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors text-sm hover:opacity-90"
         >
           Send

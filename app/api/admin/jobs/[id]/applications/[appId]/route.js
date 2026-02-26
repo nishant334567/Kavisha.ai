@@ -5,6 +5,7 @@ import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { connectDB } from "@/app/lib/db";
 import Job from "@/app/models/Job";
 import JobApplication from "@/app/models/JobApplication";
+import User from "@/app/models/Users";
 import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -12,12 +13,18 @@ const ROOT_HOST = process.env.NODE_ENV === "staging" ? "staging.kavisha.ai" : "k
 
 const ALLOWED_STATUSES = ["new", "shortlisted", "hired", "rejected"];
 
-function toApplicationResponse(app) {
+async function toApplicationResponse(app) {
+  let applicantUserId = null;
+  if (app.applicantEmail) {
+    const u = await User.findOne({ email: (app.applicantEmail || "").toLowerCase() }).select("_id").lean();
+    applicantUserId = u?._id?.toString() || null;
+  }
   return {
     _id: app._id,
     applicantEmail: app.applicantEmail,
     applicantName: app.applicantName || "",
     applicantImage: app.applicantImage || "",
+    applicantUserId,
     status: app.status || "new",
     starred: !!app.starred,
     assignedTo: Array.isArray(app.assignedTo) ? app.assignedTo : [],
@@ -71,7 +78,7 @@ export async function GET(req, { params }) {
           description: job.description || "",
           jdLink: job.jdLink || "",
         },
-        application: toApplicationResponse(application),
+        application: await toApplicationResponse(application),
       });
     },
     onUnauthenticated: async () => {
@@ -191,7 +198,7 @@ export async function PATCH(req, { params }) {
 
       return NextResponse.json({
         success: true,
-        application: toApplicationResponse(updated),
+        application: await toApplicationResponse(updated),
       });
     },
     onUnauthenticated: async () => {
