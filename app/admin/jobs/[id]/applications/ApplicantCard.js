@@ -127,7 +127,9 @@ export default function ApplicantCard({ applicant, jobId, brand, onUpdate }) {
                         <p className="text-[12px] text-gray-800 leading-snug">
                             {summary}
                         </p>
-                    ) : null}
+                    ) : (
+                        <p className="text-[12px] text-gray-500 italic">No summary available.</p>
+                    )}
 
                     {assignedTo.length > 0 && (
                         <p className="text-xs text-gray-600 mt-1.5">

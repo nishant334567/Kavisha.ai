@@ -204,7 +204,9 @@ export default function ApplicationDetailPage() {
                         </div>
                         {summary ? (
                             <p className="text-sm text-gray-700 leading-relaxed">{summary}</p>
-                        ) : null}
+                        ) : (
+                            <p className="text-sm text-gray-500 italic">No summary available.</p>
+                        )}
                     </div>
 
                     {/* Application form */}

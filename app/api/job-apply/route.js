@@ -2,8 +2,33 @@ import { NextResponse } from "next/server";
 import { v4 as uuidv4 } from "uuid";
 import { connectDB } from "@/app/lib/db";
 import { uploadToBucket } from "@/app/lib/gcs";
+import { getGeminiModel } from "@/app/lib/getAiModel";
 import Job from "@/app/models/Job";
 import JobApplication from "@/app/models/JobApplication";
+
+const SUMMARY_PROMPT = `You are summarizing a job application for an admin. Below are the exact questions and the applicant's answers.
+
+Write a short, factual summary (2–4 sentences) so an admin can quickly see what the applicant answered for each question. Use the applicant's actual words, numbers, and choices—e.g. "Currently 30 LPA, expecting 40 LPA; based in Mumbai; prefers hybrid." Cover every topic they answered (salary, location, experience, role, work mode, etc.). Do NOT use generic intros like "This summary outlines..." or "Details regarding...". Only state the key answers in plain, scannable language.`;
+
+async function summarizeApplication(questionsAnswers) {
+  if (!Array.isArray(questionsAnswers) || questionsAnswers.length === 0) return "";
+  const text = questionsAnswers
+    .map((qa) => `Q: ${qa.question || ""}\nA: ${qa.answer || ""}`)
+    .join("\n\n");
+  const model = getGeminiModel("gemini-2.5-flash");
+  if (!model) return "";
+  try {
+    const res = await model.generateContent({
+      contents: [{ role: "user", parts: [{ text: `${SUMMARY_PROMPT}\n\n---\n\n${text}` }] }],
+      generationConfig: { temperature: 0.3, maxOutputTokens: 512 },
+    });
+    const summary =
+      res?.response?.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+    return summary.slice(0, 2000);
+  } catch {
+    return "";
+  }
+}
 
 export async function POST(req) {
   try {
@@ -76,6 +101,8 @@ export async function POST(req) {
       );
     }
 
+    const applicationSummary = await summarizeApplication(questionsAnswers);
+
     await JobApplication.create({
       jobId,
       applicantEmail,
@@ -86,6 +113,7 @@ export async function POST(req) {
         question: qa.question,
         answer: qa.answer || "",
       })),
+      applicationSummary: applicationSummary || "",
     });
 
     return NextResponse.json({ success: true, message: "Application submitted" });

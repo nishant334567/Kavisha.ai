@@ -21,6 +21,7 @@ const JobApplicationSchema = new mongoose.Schema(
         answer: { type: String, default: "" },
       },
     ],
+    applicationSummary: { type: String, default: "" },
   },
   { timestamps: true }
 );
