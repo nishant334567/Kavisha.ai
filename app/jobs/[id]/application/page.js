@@ -87,10 +87,7 @@ export default function MyApplicationPage() {
     ? application.questionsAnswers
     : [];
   const firstName = name.trim().split(/\s+/)[0] || name;
-  const statusLabel =
-    { new: "New", shortlisted: "Shortlisted", hired: "Hired", rejected: "Rejected" }[
-      application.status || "new"
-    ] || "New";
+  const statusLabel = (application.status ?? "").trim() || "—";
 
   return (
     <div className="min-h-screen bg-gray-50">

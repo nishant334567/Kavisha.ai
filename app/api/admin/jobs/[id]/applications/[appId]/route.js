@@ -11,7 +11,14 @@ import { Resend } from "resend";
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 const ROOT_HOST = process.env.NODE_ENV === "staging" ? "staging.kavisha.ai" : "kavisha.ai";
 
-const ALLOWED_STATUSES = ["new", "shortlisted", "hired", "rejected"];
+function getValidatedStatus(status, job) {
+  if (status === undefined || status === null) return null;
+  const s = typeof status === "string" ? status.trim() : "";
+  if (!s) return "";
+  const categories = Array.isArray(job?.statusCategories) ? job.statusCategories : [];
+  const match = categories.find((c) => (c || "").toLowerCase() === s.toLowerCase());
+  return match !== undefined ? match : null;
+}
 
 async function toApplicationResponse(app) {
   let applicantUserId = null;
@@ -25,7 +32,7 @@ async function toApplicationResponse(app) {
     applicantName: app.applicantName || "",
     applicantImage: app.applicantImage || "",
     applicantUserId,
-    status: app.status || "new",
+    status: app.status || "",
     starred: !!app.starred,
     assignedTo: Array.isArray(app.assignedTo) ? app.assignedTo : [],
     resumeLink: app.resumeLink,
@@ -77,6 +84,7 @@ export async function GET(req, { params }) {
           title: job.title || "",
           description: job.description || "",
           jdLink: job.jdLink || "",
+          statusCategories: Array.isArray(job.statusCategories) ? job.statusCategories : [],
         },
         application: await toApplicationResponse(application),
       });
@@ -131,10 +139,9 @@ export async function PATCH(req, { params }) {
       }
       const updates = {};
       if (body.status !== undefined) {
-        const s =
-          typeof body.status === "string" ? body.status.trim().toLowerCase() : "";
-        if (s && ALLOWED_STATUSES.includes(s)) {
-          updates.status = s;
+        const validated = getValidatedStatus(body.status, job);
+        if (validated !== null) {
+          updates.status = validated;
         }
       }
       if (body.assignedTo !== undefined) {

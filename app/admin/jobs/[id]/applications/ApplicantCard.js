@@ -2,15 +2,10 @@
 
 import { useState } from "react";
 import Link from "next/link";
-import { ChevronDown, Star } from "lucide-react";
+import { ChevronDown, Star, Plus } from "lucide-react";
 import AssignApplicationModal from "./AssignApplicationModal";
 
-const STATUS_OPTIONS = [
-    { value: "new", label: "New" },
-    { value: "shortlisted", label: "Shortlisted" },
-    { value: "hired", label: "Hired" },
-    { value: "rejected", label: "Rejected" },
-];
+const ADD_CATEGORY_VALUE = "__add_new__";
 
 function getInitials(email) {
     if (!email || typeof email !== "string") return "?";
@@ -26,23 +21,40 @@ function getDisplayName(email) {
     return name.charAt(0).toUpperCase() + name.slice(1).toLowerCase();
 }
 
-export default function ApplicantCard({ applicant, jobId, brand, onUpdate, onConnect, currentUserId }) {
+export default function ApplicantCard({
+    applicant,
+    jobId,
+    brand,
+    statusCategories = [],
+    onUpdate,
+    onJobUpdate,
+    onConnect,
+    currentUserId,
+}) {
     const email = applicant?.applicantEmail ?? "";
     const name = applicant?.applicantName?.trim() || getDisplayName(email);
     const imageUrl = applicant?.applicantImage?.trim() || "";
     const summary = applicant?.applicationSummary ?? "";
     const initials = getInitials(email);
-    const status = applicant?.status || "new";
+    const status = applicant?.status ?? "";
     const starred = !!applicant?.starred;
     const assignedTo = Array.isArray(applicant?.assignedTo) ? applicant.assignedTo : [];
 
     const [statusUpdating, setStatusUpdating] = useState(false);
     const [starUpdating, setStarUpdating] = useState(false);
     const [showAssignModal, setShowAssignModal] = useState(false);
+    const [showAddCategory, setShowAddCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
+    const [addCategorySubmitting, setAddCategorySubmitting] = useState(false);
 
     const handleStatusChange = async (e) => {
-        const newStatus = e.target.value;
-        if (newStatus === status || !jobId || !applicant?._id || !brand) return;
+        const value = e.target.value;
+        if (value === ADD_CATEGORY_VALUE) {
+            setShowAddCategory(true);
+            e.target.value = status;
+            return;
+        }
+        if (value === status || !jobId || !applicant?._id || !brand) return;
         setStatusUpdating(true);
         try {
             const res = await fetch(
@@ -50,16 +62,39 @@ export default function ApplicantCard({ applicant, jobId, brand, onUpdate, onCon
                 {
                     method: "PATCH",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ status: newStatus }),
+                    body: JSON.stringify({ status: value }),
                     credentials: "include",
                 }
             );
             const data = await res.json();
-            if (data.success && data.application) {
-                onUpdate?.(data.application);
-            }
+            if (data.success && data.application) onUpdate?.(data.application);
         } finally {
             setStatusUpdating(false);
+        }
+    };
+
+    const handleAddCategory = async () => {
+        const name = newCategoryName.trim();
+        if (!name || !jobId || !brand || addCategorySubmitting) return;
+        setAddCategorySubmitting(true);
+        try {
+            const res = await fetch(
+                `/api/admin/jobs/${jobId}?brand=${encodeURIComponent(brand)}`,
+                {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ addStatusCategory: name }),
+                    credentials: "include",
+                }
+            );
+            const data = await res.json();
+            if (data.success && data.job) {
+                onJobUpdate?.(data.job);
+                setNewCategoryName("");
+                setShowAddCategory(false);
+            }
+        } finally {
+            setAddCategorySubmitting(false);
         }
     };
 
@@ -87,10 +122,11 @@ export default function ApplicantCard({ applicant, jobId, brand, onUpdate, onCon
         }
     };
 
+    const effectiveSelectValue = status || "";
+
     return (
         <>
             <div className="flex flex-col sm:flex-row gap-5 p-4 rounded-2xl bg-white border border-gray-100 shadow-md font-fredoka">
-                {/* Left: avatar + name + email + summary (~2/3) */}
                 <div className="flex-1 min-w-0 sm:min-w-[60%]">
                     <div className="flex gap-4 mb-4">
                         <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold text-lg shrink-0 overflow-hidden">
@@ -124,13 +160,10 @@ export default function ApplicantCard({ applicant, jobId, brand, onUpdate, onCon
                         </div>
                     </div>
                     {summary ? (
-                        <p className="text-[12px] text-gray-800 leading-snug">
-                            {summary}
-                        </p>
+                        <p className="text-[12px] text-gray-800 leading-snug">{summary}</p>
                     ) : (
                         <p className="text-[12px] text-gray-500 italic">No summary available.</p>
                     )}
-
                     {assignedTo.length > 0 && (
                         <p className="text-xs text-gray-600 mt-1.5">
                             Assigned to: {assignedTo.join(", ")}
@@ -138,22 +171,56 @@ export default function ApplicantCard({ applicant, jobId, brand, onUpdate, onCon
                     )}
                 </div>
 
-                {/* Right: status dropdown + action buttons (~1/3) */}
                 <div className="flex flex-col items-stretch sm:items-end gap-3 shrink-0 w-full sm:w-[200px]">
-                    <div className="relative w-full">
-                        <select
-                            value={status}
-                            onChange={handleStatusChange}
-                            disabled={statusUpdating}
-                            className="w-full appearance-none border border-gray-300 rounded-full pl-3 pr-8 py-2 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#004A4E] focus:border-transparent disabled:opacity-60"
-                        >
-                            {STATUS_OPTIONS.map((opt) => (
-                                <option key={opt.value} value={opt.value}>
-                                    {opt.label}
-                                </option>
-                            ))}
-                        </select>
-                        <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                    <div className="w-full space-y-2">
+                        <div className="relative">
+                            <select
+                                value={effectiveSelectValue}
+                                onChange={handleStatusChange}
+                                disabled={statusUpdating}
+                                className="w-full appearance-none border border-gray-300 rounded-full pl-3 pr-8 py-2 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#004A4E] focus:border-transparent disabled:opacity-60"
+                            >
+                                <option value="">{statusCategories.length === 0 ? "No categories" : "Select status"}</option>
+                                {statusCategories.map((cat) => (
+                                    <option key={cat} value={cat}>
+                                        {cat}
+                                    </option>
+                                ))}
+                                <option value={ADD_CATEGORY_VALUE}>+ Add new category</option>
+                            </select>
+                            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                        </div>
+                        {showAddCategory && (
+                            <div className="flex gap-2 items-center">
+                                <input
+                                    type="text"
+                                    value={newCategoryName}
+                                    onChange={(e) => setNewCategoryName(e.target.value)}
+                                    placeholder="Category name"
+                                    className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004A4E]/30"
+                                    onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
+                                />
+                                <button
+                                    type="button"
+                                    onClick={handleAddCategory}
+                                    disabled={!newCategoryName.trim() || addCategorySubmitting}
+                                    className="shrink-0 px-3 py-1.5 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1"
+                                >
+                                    <Plus className="w-3.5 h-3.5" />
+                                    Add
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => {
+                                        setShowAddCategory(false);
+                                        setNewCategoryName("");
+                                    }}
+                                    className="shrink-0 text-sm text-gray-500 hover:text-gray-700"
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+                        )}
                     </div>
                     <button
                         type="button"

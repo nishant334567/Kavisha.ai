@@ -41,6 +41,7 @@ export async function GET(req, { params }) {
           _id: job._id,
           title: job.title || "",
           description: job.description || "",
+          statusCategories: Array.isArray(job.statusCategories) ? job.statusCategories : [],
         },
         applications: applications.map((a) => ({
           _id: a._id,
@@ -48,7 +49,7 @@ export async function GET(req, { params }) {
           applicantName: a.applicantName || "",
           applicantImage: a.applicantImage || "",
           applicantUserId: userByEmail.get((a.applicantEmail || "").toLowerCase()) || null,
-          status: a.status || "new",
+          status: a.status || "",
           starred: !!a.starred,
           assignedTo: Array.isArray(a.assignedTo) ? a.assignedTo : [],
           resumeLink: a.resumeLink,

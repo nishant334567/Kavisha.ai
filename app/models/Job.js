@@ -7,6 +7,7 @@ const JobSchema = new mongoose.Schema(
     questions: [{ type: String }],
     jdLink: { type: String, required: true, trim: true },
     brand: { type: String, required: true, trim: true, index: true },
+    statusCategories: { type: [String], default: [] }, // Admin-defined; no defaults
   },
   { timestamps: true }
 );

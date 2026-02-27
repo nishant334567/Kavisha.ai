@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useParams, useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
-import { ArrowLeft, Star, FileText, ExternalLink, ChevronDown } from "lucide-react";
+import { ArrowLeft, Star, FileText, ExternalLink, ChevronDown, Plus } from "lucide-react";
 import AssignApplicationModal from "../AssignApplicationModal";
 import Livechat from "@/app/components/LiveChat";
 
@@ -46,6 +46,13 @@ export default function ApplicationDetailPage() {
     const [userA, setUserA] = useState(null);
     const [userB, setUserB] = useState(null);
     const [connectionId, setConnectionId] = useState(null);
+    const [showAddCategory, setShowAddCategory] = useState(false);
+    const [newCategoryName, setNewCategoryName] = useState("");
+    const [addCategorySubmitting, setAddCategorySubmitting] = useState(false);
+    const [statusUpdating, setStatusUpdating] = useState(false);
+
+    const statusCategories = Array.isArray(job?.statusCategories) ? job.statusCategories : [];
+    const ADD_CATEGORY_VALUE = "__add_new__";
 
     const openChatSession = (adminId, applicantUserId) => {
         setUserA(adminId);
@@ -119,6 +126,57 @@ export default function ApplicationDetailPage() {
         : [];
     const assignedTo = Array.isArray(application.assignedTo) ? application.assignedTo : [];
     const starred = !!application.starred;
+    const status = application.status ?? "";
+
+    const handleStatusChange = async (e) => {
+        const value = e.target.value;
+        if (value === ADD_CATEGORY_VALUE) {
+            setShowAddCategory(true);
+            return;
+        }
+        if (value === status || !jobId || !application._id || !brand) return;
+        setStatusUpdating(true);
+        try {
+            const res = await fetch(
+                `/api/admin/jobs/${jobId}/applications/${application._id}?brand=${encodeURIComponent(brand)}`,
+                {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ status: value }),
+                    credentials: "include",
+                }
+            );
+            const data = await res.json();
+            if (data.success && data.application) setApplication(data.application);
+        } finally {
+            setStatusUpdating(false);
+        }
+    };
+
+    const handleAddCategory = async () => {
+        const name = newCategoryName.trim();
+        if (!name || !jobId || !brand || addCategorySubmitting) return;
+        setAddCategorySubmitting(true);
+        try {
+            const res = await fetch(
+                `/api/admin/jobs/${jobId}?brand=${encodeURIComponent(brand)}`,
+                {
+                    method: "PATCH",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({ addStatusCategory: name }),
+                    credentials: "include",
+                }
+            );
+            const data = await res.json();
+            if (data.success && data.job) {
+                setJob(data.job);
+                setNewCategoryName("");
+                setShowAddCategory(false);
+            }
+        } finally {
+            setAddCategorySubmitting(false);
+        }
+    };
 
     const toggleStar = async () => {
         if (!jobId || !application._id || !brand || starUpdating) return;
@@ -305,6 +363,52 @@ export default function ApplicationDetailPage() {
               <p className="text-sm text-gray-500">No summary.</p>
             )}
           </div> */}
+
+                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                        <h3 className="text-sm font-semibold text-gray-900 mb-3">Status</h3>
+                        <div className="space-y-2">
+                            <select
+                                value={status}
+                                onChange={handleStatusChange}
+                                disabled={statusUpdating}
+                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#004A4E]/30 disabled:opacity-60"
+                            >
+                                <option value="">{statusCategories.length === 0 ? "No categories" : "Select status"}</option>
+                                {statusCategories.map((cat) => (
+                                    <option key={cat} value={cat}>{cat}</option>
+                                ))}
+                                <option value={ADD_CATEGORY_VALUE}>+ Add new category</option>
+                            </select>
+                            {showAddCategory && (
+                                <div className="flex gap-2 items-center">
+                                    <input
+                                        type="text"
+                                        value={newCategoryName}
+                                        onChange={(e) => setNewCategoryName(e.target.value)}
+                                        placeholder="Category name"
+                                        className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004A4E]/30"
+                                        onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
+                                    />
+                                    <button
+                                        type="button"
+                                        onClick={handleAddCategory}
+                                        disabled={!newCategoryName.trim() || addCategorySubmitting}
+                                        className="shrink-0 px-3 py-1.5 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 flex items-center gap-1"
+                                    >
+                                        <Plus className="w-3.5 h-3.5" />
+                                        Add
+                                    </button>
+                                    <button
+                                        type="button"
+                                        onClick={() => { setShowAddCategory(false); setNewCategoryName(""); }}
+                                        className="shrink-0 text-sm text-gray-500 hover:text-gray-700"
+                                    >
+                                        Cancel
+                                    </button>
+                                </div>
+                            )}
+                        </div>
+                    </div>
 
                     {assignedTo.length > 0 && (
                         <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
