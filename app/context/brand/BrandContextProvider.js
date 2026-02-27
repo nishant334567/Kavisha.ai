@@ -56,6 +56,7 @@ export default function BrandContextProvider({ children }) {
                   communityName,
                   enableQuiz,
                   quizName,
+                  enableJobs,
                   services
               }[0]`
         );
@@ -92,6 +93,7 @@ export default function BrandContextProvider({ children }) {
             communityName: brand.communityName || "Community",
             enableQuiz: brand.enableQuiz || false,
             quizName: brand.quizName || "Take quiz/survey",
+            enableJobs: brand.enableJobs || false,
             services: brand.services,
           };
 

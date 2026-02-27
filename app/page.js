@@ -54,10 +54,11 @@ export default function HomePage() {
   }, [user, loading, brandContext, router]);
 
   useLayoutEffect(() => {
-    if (user && brandContext?.isBrandAdmin) {
-      router.push(`/admin/${brandContext.subdomain}/v2`);
-    }
-  }, [user, brandContext, router]);
+    if (loading || !user || !brandContext?.isBrandAdmin) return;
+    const hasRedirect = typeof window !== "undefined" && localStorage.getItem("redirectAfterLogin");
+    if (hasRedirect) return;
+    router.push(`/admin/${brandContext.subdomain}/v2`);
+  }, [user, loading, brandContext, router]);
 
   if (loading) {
     return <Loader loadingMessage="Loading..." />;

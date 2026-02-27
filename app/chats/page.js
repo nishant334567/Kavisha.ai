@@ -201,6 +201,7 @@ export default function HomePage() {
                         communityName={brandContext?.communityName || ""}
                         enableQuiz={brandContext?.enableQuiz || false}
                         quizName={brandContext?.quizName || ""}
+                        enableJobs={brandContext?.enableJobs || false}
                     />
 
                     {currentChatId && (

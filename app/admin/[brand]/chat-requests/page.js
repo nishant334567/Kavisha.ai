@@ -30,8 +30,10 @@ export default function ChatRequests() {
   const [connectionId, setConnectionId] = useState(null);
   const [showSelect, setShowSelect] = useState(false);
   const [emailList, setEmailList] = useState([]);
+  const [pageTitle, setPageTitle] = useState("All Chat Requests");
+  const [pageSubtitle, setPageSubtitle] = useState("");
   const brandContext = useBrandContext();
-  const { users, total, loading, filters, applyFilters, datePresets, servicesDropDown } = useChatRequests(brandContext);
+  const { users, total, loading, filters, applyFilters, datePresets, messageCountOptions, sessionCountOptions, emailSentOptions, lastEmailOptions, servicesDropDown } = useChatRequests(brandContext);
 
   const [activeTab, setActiveTab] = useState("");
 
@@ -53,7 +55,28 @@ export default function ChatRequests() {
     datePreset: "all",
     dateFrom: null,
     dateTo: null,
+    minMessages: "all",
+    minSessions: "all",
+    minEmailsSent: "all",
+    lastEmailPreset: "all",
+    lastEmailFrom: null,
+    lastEmailTo: null,
   }));
+
+  useEffect(() => {
+    setDraftFilters((prev) => ({
+      ...prev,
+      datePreset: filters.datePreset ?? prev.datePreset,
+      dateFrom: filters.dateFrom ?? prev.dateFrom,
+      dateTo: filters.dateTo ?? prev.dateTo,
+      minMessages: filters.minMessages ?? prev.minMessages,
+      minSessions: filters.minSessions ?? prev.minSessions,
+      minEmailsSent: filters.minEmailsSent ?? prev.minEmailsSent,
+      lastEmailPreset: filters.lastEmailPreset ?? prev.lastEmailPreset,
+      lastEmailFrom: filters.lastEmailFrom ?? prev.lastEmailFrom,
+      lastEmailTo: filters.lastEmailTo ?? prev.lastEmailTo,
+    }));
+  }, [filters.datePreset, filters.dateFrom, filters.dateTo, filters.minMessages, filters.minSessions, filters.minEmailsSent, filters.lastEmailPreset, filters.lastEmailFrom, filters.lastEmailTo]);
 
   const openChatSession = (userA, userB) => {
     setUserA(userA);
@@ -76,6 +99,8 @@ export default function ChatRequests() {
   return (
     <div>
       <div className="w-full lg:w-[90%] min-w-0 mx-auto px-4 sm:px-6 mt-4">
+
+
         {/* Header: back + title left; Send email top right */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2 min-w-0">
@@ -146,19 +171,17 @@ export default function ChatRequests() {
                   <button
                     type="button"
                     onClick={() => setActiveTab(tab._key)}
-                    className={`relative flex items-center gap-2 px-5 pb-3 pt-1 text-sm transition-all whitespace-nowrap ${
-                      isActive
-                        ? "font-semibold text-[#004A4E]"
-                        : "font-medium text-gray-400 hover:text-gray-600"
-                    }`}
+                    className={`relative flex items-center gap-2 px-5 pb-3 pt-1 text-sm transition-all whitespace-nowrap ${isActive
+                      ? "font-semibold text-[#004A4E]"
+                      : "font-medium text-gray-400 hover:text-gray-600"
+                      }`}
                   >
                     {tab.title}
                     <span
-                      className={`text-xs font-semibold px-1.5 py-0.5 rounded ${
-                        isActive
-                          ? "bg-[#004A4E] text-white"
-                          : "bg-gray-100 text-gray-500"
-                      }`}
+                      className={`text-xs font-semibold px-1.5 py-0.5 rounded ${isActive
+                        ? "bg-[#004A4E] text-white"
+                        : "bg-gray-100 text-gray-500"
+                        }`}
                     >
                       {count}
                     </span>
@@ -236,6 +259,97 @@ export default function ChatRequests() {
                 </div>
               </>
             )}
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Total messages</label>
+              <select
+                value={draftFilters.minMessages ?? "all"}
+                onChange={(e) =>
+                  setDraftFilters((prev) => ({ ...prev, minMessages: e.target.value }))
+                }
+                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[140px]"
+              >
+                {messageCountOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Chat sessions</label>
+              <select
+                value={draftFilters.minSessions ?? "all"}
+                onChange={(e) =>
+                  setDraftFilters((prev) => ({ ...prev, minSessions: e.target.value }))
+                }
+                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[140px]"
+              >
+                {sessionCountOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Total emails sent</label>
+              <select
+                value={draftFilters.minEmailsSent ?? "all"}
+                onChange={(e) =>
+                  setDraftFilters((prev) => ({ ...prev, minEmailsSent: e.target.value }))
+                }
+                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[140px]"
+              >
+                {emailSentOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            <div className="flex flex-col gap-1">
+              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Last email sent</label>
+              <select
+                value={draftFilters.lastEmailPreset ?? "all"}
+                onChange={(e) =>
+                  setDraftFilters((prev) => ({ ...prev, lastEmailPreset: e.target.value }))
+                }
+                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[160px]"
+              >
+                {lastEmailOptions.map((o) => (
+                  <option key={o.value} value={o.value}>
+                    {o.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+            {draftFilters.lastEmailPreset === "custom" && (
+              <>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-gray-500">Last email from</label>
+                  <input
+                    type="date"
+                    value={draftFilters.lastEmailFrom ?? ""}
+                    onChange={(e) =>
+                      setDraftFilters((prev) => ({ ...prev, lastEmailFrom: e.target.value }))
+                    }
+                    className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 outline-none"
+                  />
+                </div>
+                <span className="text-sm text-gray-400 pb-2">to</span>
+                <div className="flex flex-col gap-1">
+                  <label className="text-xs font-semibold text-gray-500">Last email to</label>
+                  <input
+                    type="date"
+                    value={draftFilters.lastEmailTo ?? ""}
+                    onChange={(e) =>
+                      setDraftFilters((prev) => ({ ...prev, lastEmailTo: e.target.value }))
+                    }
+                    className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 outline-none"
+                  />
+                </div>
+              </>
+            )}
             <button
               onClick={() => applyFilters(draftFilters)}
               className="px-4 py-2 text-sm font-medium bg-[#004A4E] text-white rounded-lg hover:opacity-90 transition-opacity shadow-sm"
@@ -286,8 +400,15 @@ export default function ChatRequests() {
         {showEmailModal && (
           <EmailModal
             onClose={() => setShowEmailModal(false)}
-            toEmails={emailList}
+            toEmails={displayedUsers
+              .filter((u) => u?.email && emailList.includes(u.email))
+              .map((u) => ({
+                email: u.email,
+                name: u.name ?? u.email,
+                lastEmail: u.sessions?.[0]?.updatedAt ?? null,
+              }))}
             brand={brandContext?.subdomain}
+            logoUrl={brandContext?.logoUrl}
           />
         )}
 

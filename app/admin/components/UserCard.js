@@ -195,7 +195,7 @@ export default function UserCard({
                         }}
                       >
                         <div className="flex flex-col gap-0.5">
-                          <span className="font-medium text-gray-900 truncate">{item?.title || `Chat ${index + 1}`}</span>
+                          <span className={`truncate text-gray-900 ${isSelected ? "font-bold" : "font-medium"}`}>{item?.title || `Chat ${index + 1}`}</span>
                           <div className="flex items-center gap-2 text-[10px] text-gray-500">
                             <span className="flex items-center gap-1">
                               <MessageCircle className="w-3 h-3 text-gray-400 shrink-0" aria-hidden />
@@ -301,15 +301,15 @@ export default function UserCard({
                           <button
                             key={item._id || index}
                             type="button"
-                            className={`flex-shrink-0 text-left px-2 py-1.5 rounded-md border transition cursor-pointer flex flex-col gap-0.5 w-full ${isSelected
-                              ? "bg-gray-200 font-semibold shadow-sm"
-                              : "bg-white text-gray-200"
+                            className={`flex-shrink-0 text-left px-2 py-1.5  border-b-2 transition cursor-pointer flex flex-col gap-0.5 w-full ${isSelected
+                              ? "font-bold shadow-sm text-black"
+                              : "font-normal text-gray-400"
                               }`}
                             onClick={() => {
                               setSelectedChatSession(item);
                             }}
                           >
-                            <span className="font-medium text-gray-900 text-xs truncate">{item?.title || `Chat ${index + 1}`}</span>
+                            <span className={`text-xs truncate text-gray-900 ${isSelected ? "font-bold" : "font-medium"}`}>{item?.title || `Chat ${index + 1}`}</span>
                           </button>
                         );
                       })}

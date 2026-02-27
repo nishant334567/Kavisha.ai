@@ -4,6 +4,7 @@ import Session from "@/app/models/ChatSessions";
 import Logs from "@/app/models/ChatLogs";
 import Assessments from "@/app/models/Assessment";
 import Attempts from "@/app/models/Attempt";
+import SentEmailLog from "@/app/models/SentEmailLog";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 
 export async function GET(request) {
@@ -22,6 +23,28 @@ export async function GET(request) {
       limitParam === "all" || limitParam === "" || limitParam == null
         ? null
         : Math.min(10000, Math.max(1, parseInt(limitParam || "50", 10)));
+    const minMessagesParam = searchParams.get("minMessages");
+    const minMessages =
+      minMessagesParam == null || minMessagesParam === "" || minMessagesParam === "all"
+        ? null
+        : parseInt(minMessagesParam, 10);
+    const minSessionsParam = searchParams.get("minSessions");
+    const minSessions =
+      minSessionsParam == null || minSessionsParam === "" || minSessionsParam === "all"
+        ? null
+        : parseInt(minSessionsParam, 10);
+    const minEmailsSentParam = searchParams.get("minEmailsSent");
+    const minEmailsSent =
+      minEmailsSentParam == null || minEmailsSentParam === "" || minEmailsSentParam === "all"
+        ? null
+        : parseInt(minEmailsSentParam, 10);
+    const lastEmailDaysParam = searchParams.get("lastEmailDays");
+    const lastEmailDays =
+      lastEmailDaysParam == null || lastEmailDaysParam === "" || lastEmailDaysParam === "all"
+        ? null
+        : parseInt(lastEmailDaysParam, 10);
+    const lastEmailFrom = searchParams.get("lastEmailFrom");
+    const lastEmailTo = searchParams.get("lastEmailTo");
 
     // Resolve date range: lastDays overrides explicit dateFrom/dateTo
     let dateFromVal = dateFrom ? new Date(dateFrom) : null;
@@ -174,7 +197,66 @@ export async function GET(request) {
         totalCost: totalCost,
       });
     });
-    const allUsers = Array.from(usersMap.values());
+    let allUsers = Array.from(usersMap.values());
+
+    if (minMessages != null && !isNaN(minMessages) && minMessages > 0) {
+      allUsers = allUsers.filter((u) => {
+        const total = (u.sessions || []).reduce((sum, s) => sum + (s.messageCount ?? 0), 0);
+        return total >= minMessages;
+      });
+    }
+    if (minSessions != null && !isNaN(minSessions) && minSessions > 0) {
+      allUsers = allUsers.filter((u) => (u.sessions?.length ?? 0) >= minSessions);
+    }
+
+    // Filter by emails sent (SentEmailLog): min count and/or last email date range
+    if (
+      brand &&
+      (minEmailsSent != null || lastEmailDays != null || lastEmailFrom || lastEmailTo)
+    ) {
+      const userEmails = [...new Set(allUsers.map((u) => (u.email || "").toLowerCase()).filter(Boolean))];
+      if (userEmails.length > 0) {
+        const emailMatch = { brand: brand.toLowerCase().trim(), toEmail: { $in: userEmails }, status: "sent" };
+        const lastEmailFromVal = lastEmailFrom ? new Date(lastEmailFrom) : null;
+        const lastEmailToVal = lastEmailTo ? new Date(lastEmailTo) : null;
+        let lastEmailSentAtFilter = null;
+        if (lastEmailDays != null && !isNaN(lastEmailDays) && lastEmailDays > 0) {
+          const now = new Date();
+          const from = new Date(now);
+          from.setDate(from.getDate() - lastEmailDays);
+          lastEmailSentAtFilter = { $gte: from, $lte: now };
+        } else if (lastEmailFromVal || lastEmailToVal) {
+          lastEmailSentAtFilter = {};
+          if (lastEmailFromVal) lastEmailSentAtFilter.$gte = lastEmailFromVal;
+          if (lastEmailToVal) lastEmailSentAtFilter.$lte = lastEmailToVal;
+        }
+        if (lastEmailSentAtFilter) {
+          emailMatch.sentAt = lastEmailSentAtFilter;
+        }
+        const agg = await SentEmailLog.aggregate([
+          { $match: emailMatch },
+          {
+            $group: {
+              _id: "$toEmail",
+              count: { $sum: 1 },
+              lastSentAt: { $max: "$sentAt" },
+            },
+          },
+        ]);
+        const emailStats = new Map(agg.map((r) => [r._id, { count: r.count, lastSentAt: r.lastSentAt }]));
+
+        allUsers = allUsers.filter((u) => {
+          const email = (u.email || "").toLowerCase();
+          if (!email) return false;
+          const stats = emailStats.get(email);
+          const count = stats ? stats.count : 0;
+          if (minEmailsSent != null && !isNaN(minEmailsSent) && count < minEmailsSent) return false;
+          if (lastEmailSentAtFilter && !stats) return false;
+          return true;
+        });
+      }
+    }
+
     const users = limit == null ? allUsers : allUsers.slice(0, limit);
     return NextResponse.json({
       success: true,
