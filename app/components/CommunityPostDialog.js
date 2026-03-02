@@ -44,8 +44,8 @@ export default function CommunityPostDialog({ name, description, date, requireme
               type="button"
               className="flex-1 rounded-full bg-[#004A4E] text-white px-4 py-2 text-sm hover:bg-[#003538] transition-colors"
               onClick={() => {
-                onConnect?.();
-                onClose();
+                const proceeded = onConnect?.();
+                if (proceeded !== false) onClose();
               }}
             >
               {connectLabel}

@@ -2,10 +2,32 @@
 
 import { useState } from "react";
 import CommunityPostDialog from "./CommunityPostDialog";
+import ConfirmModal from "./ConfirmModal";
 
 export default function CommunityCard({ name, description, date, requirement, onConnect, connectLabel = "Connect", isOwnPost = false }) {
     const [showDialog, setShowDialog] = useState(false);
+    const [showConfirmModal, setShowConfirmModal] = useState(false);
     const isConnected = connectLabel === "Message";
+    const requiresPayment = !isConnected && connectLabel === "Connect";
+
+    const handleConnectClick = () => {
+        if (isConnected) {
+            onConnect?.();
+            return true;
+        }
+        if (requiresPayment) {
+            setShowConfirmModal(true);
+            return false;
+        }
+        onConnect?.();
+        return true;
+    };
+
+    const handleConfirmProceed = () => {
+        onConnect?.();
+        setShowConfirmModal(false);
+        setShowDialog(false);
+    };
     return (
         <>
             <div className="shadow-xl rounded-lg px-4 sm:px-6 md:px-8 py-4 font-fredoka border border-border flex flex-col h-full min-w-0 bg-card">
@@ -38,7 +60,7 @@ export default function CommunityCard({ name, description, date, requirement, on
                             <button
                                 type="button"
                                 className="rounded-full bg-[#004A4E] text-white px-3 py-1.5 sm:px-4 text-sm hover:bg-[#003538] transition-colors"
-                                onClick={() => onConnect?.()}
+                                onClick={handleConnectClick}
                             >
                                 {connectLabel}
                             </button>
@@ -53,11 +75,19 @@ export default function CommunityCard({ name, description, date, requirement, on
                     date={date}
                     requirement={requirement}
                     onClose={() => setShowDialog(false)}
-                    onConnect={isOwnPost ? undefined : onConnect}
+                    onConnect={isOwnPost ? undefined : handleConnectClick}
                     connectLabel={connectLabel}
                     isOwnPost={isOwnPost}
                 />
             )}
+            <ConfirmModal
+                isOpen={showConfirmModal}
+                message="Proceed to payment to connect?"
+                onConfirm={handleConfirmProceed}
+                onCancel={() => setShowConfirmModal(false)}
+                confirmLabel="Proceed"
+                cancelLabel="Cancel"
+            />
         </>
     );
 }
