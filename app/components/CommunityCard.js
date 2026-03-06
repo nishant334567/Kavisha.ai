@@ -82,7 +82,11 @@ export default function CommunityCard({ name, description, date, requirement, on
             )}
             <ConfirmModal
                 isOpen={showConfirmModal}
-                message="Proceed to payment to connect?"
+                title="Proceed to payment to connect?"
+                rows={[
+                    { label: "Connecting with", value: requirement || "—" },
+                    { label: "Amount", value: "Rs. 20/-*", note: "*Incl. taxes", isAmount: true },
+                ]}
                 onConfirm={handleConfirmProceed}
                 onCancel={() => setShowConfirmModal(false)}
                 confirmLabel="Proceed"
