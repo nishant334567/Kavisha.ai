@@ -129,3 +129,36 @@ export async function PATCH(req) {
             NextResponse.json({ error: "Not authenticated" }, { status: 401 }),
     });
 }
+
+export async function DELETE(req) {
+    return withAuth(req, {
+        onAuthenticated: async ({ decodedToken }) => {
+            try {
+                const user = await getUserFromDB(decodedToken.email);
+                if (!user) {
+                    return NextResponse.json({ error: "User not found" }, { status: 404 });
+                }
+                const { searchParams } = new URL(req.url);
+                const brand = searchParams.get("brand") || searchParams.get("subdomain");
+                if (!brand) {
+                    return NextResponse.json(
+                        { error: "brand or subdomain is required" },
+                        { status: 400 }
+                    );
+                }
+                await connectDB();
+                const cart = await Cart.findOne({ userId: user.id, brand });
+                if (cart) {
+                    cart.items = [];
+                    await cart.save();
+                }
+                return NextResponse.json({ cart: { items: [] } });
+            } catch (err) {
+                console.error("Cart DELETE error:", err);
+                return NextResponse.json({ error: "Failed to clear cart" }, { status: 500 });
+            }
+        },
+        onUnauthenticated: async () =>
+            NextResponse.json({ error: "Not authenticated" }, { status: 401 }),
+    });
+}

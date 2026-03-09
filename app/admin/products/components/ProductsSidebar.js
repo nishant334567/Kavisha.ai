@@ -24,7 +24,6 @@ export default function ProductsSidebar({ onClose }) {
 
   const listHref = `${BASE}${qs}`;
   const ordersHref = `${BASE}/orders${qs}`;
-  const paymentsHref = `${BASE}/payments${qs}`;
   const addNewHref = `${BASE}/add-new${qs}`;
 
   const isActive = (path) => {
@@ -84,9 +83,6 @@ export default function ProductsSidebar({ onClose }) {
         </Link>
         <Link href={ordersHref} className={navLinkClass(ordersHref)}>
           Orders
-        </Link>
-        <Link href={paymentsHref} className={navLinkClass(paymentsHref)}>
-          Payments
         </Link>
       </nav>
     </aside>

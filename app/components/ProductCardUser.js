@@ -1,12 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { Minus, Plus } from "lucide-react";
 import { useCart } from "../context/cart/CartContextProvider";
+import { useBrandContext } from "../context/brand/BrandContextProvider";
 
 const TEAL = "#2b6a5b";
 const GREEN = "#28a745";
 
 export default function ProductCardUser({ product }) {
+    const brandContext = useBrandContext();
+    const brand = brandContext?.subdomain;
+    const qs = brand ? `?subdomain=${encodeURIComponent(brand)}` : "";
+    const detailHref = `/products/${product?._id}${qs}`;
     const { items, addToCart, updateQuantity, isAuthenticated, loading } = useCart();
 
     if (!product) return null;
@@ -43,9 +49,14 @@ export default function ProductCardUser({ product }) {
             {/* Left: Product details */}
             <div className="flex-1 min-w-0 flex flex-col justify-between">
                 <div>
-                    <h3 className="font-bold text-lg" style={{ color: TEAL }}>
-                        {product.name || "Untitled"}
-                    </h3>
+                    <Link href={detailHref}>
+                        <h3
+                            className="font-bold text-lg hover:underline"
+                            style={{ color: TEAL }}
+                        >
+                            {product.name || "Untitled"}
+                        </h3>
+                    </Link>
                     <p className="text-sm text-gray-500 mt-2">{description}</p>
                     <p className="text-sm mt-2 font-medium" style={{ color: GREEN }}>
                         In stock
@@ -70,20 +81,22 @@ export default function ProductCardUser({ product }) {
 
             {/* Right: Image + Quantity controls */}
             <div className="shrink-0 flex flex-col items-center gap-4 w-[40%] max-w-[200px]">
-                <div className="w-full aspect-square rounded-2xl bg-gray-100 overflow-hidden flex items-center justify-center">
-                    {imageUrl ? (
-                        <img
-                            src={imageUrl}
-                            alt={product.name || ""}
-                            className="w-full h-full object-cover"
-                            referrerPolicy="no-referrer"
-                        />
-                    ) : (
-                        <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
-                            No image
-                        </div>
-                    )}
-                </div>
+                <Link href={detailHref} className="w-full block">
+                    <div className="w-full aspect-square rounded-2xl bg-gray-100 overflow-hidden flex items-center justify-center hover:opacity-90 transition-opacity">
+                        {imageUrl ? (
+                            <img
+                                src={imageUrl}
+                                alt={product.name || ""}
+                                className="w-full h-full object-cover"
+                                referrerPolicy="no-referrer"
+                            />
+                        ) : (
+                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                                No image
+                            </div>
+                        )}
+                    </div>
+                </Link>
                 {!isAuthenticated ? (
                     <button
                         type="button"

@@ -25,7 +25,7 @@ export default function ClientLayout({ children }) {
           <SocketSessionWrapper>
             {!isMaintenancePage && !isAdmin && <Navbar />}
             {!isMaintenancePage && isAdmin && <AdminNavbar />}
-            <div className={isAdmin ? "pt-14" : ""}>{children}</div>
+            <div className={!isMaintenancePage ? "pt-14" : ""}>{children}</div>
             {!isMaintenancePage && !isAdmin && pathname !== "/" && <GlobalMessages />}
           </SocketSessionWrapper>
         </CartContextProvider>

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef } from "react";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { Plus, X, Loader2 } from "lucide-react";
 
@@ -29,6 +29,7 @@ function calcPriceAfterDiscount(price, discount) {
 }
 
 export default function AddProductPage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const brandContext = useBrandContext();
   const brand =
@@ -48,11 +49,10 @@ export default function AddProductPage() {
   });
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [removingIndex, setRemovingIndex] = useState(null);
 
   const update = (key) => (e) =>
     setForm((prev) => ({ ...prev, [key]: e.target.value }));
-
-  const [removingIndex, setRemovingIndex] = useState(null);
 
   const removeImage = async (i) => {
     const url = form.images[i];
@@ -114,19 +114,10 @@ export default function AddProductPage() {
     }
   };
 
-  const priceAfterDiscount = calcPriceAfterDiscount(
-    form.price,
-    form.discountPercentage
-  );
-
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!form.productName.trim() || !form.price.trim()) {
-      alert("Product name and price are required");
-      return;
-    }
-    if (!brand) {
-      alert("Brand is required");
+    if (!form.productName.trim() || !brand) {
+      alert("Product name is required");
       return;
     }
 
@@ -135,44 +126,41 @@ export default function AddProductPage() {
       const res = await fetch("/api/admin/products", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
           name: form.productName.trim(),
           tagline: form.tagline.trim(),
           description: form.description.trim(),
           specifications: form.specifications.trim(),
           images: form.images,
-          price: Number(form.price) || 0,
-          discountPercentage: Number(form.discountPercentage) || 0,
+          price: form.price,
+          discountPercentage: form.discountPercentage,
           brand,
         }),
-        credentials: "include",
       });
       const data = await res.json();
-      if (res.ok) {
-        setForm({
-          productName: "",
-          tagline: "",
-          description: "",
-          specifications: "",
-          images: [],
-          price: "",
-          discountPercentage: "",
-        });
+      if (res.ok && data.product) {
+        const qs = brand ? `?subdomain=${encodeURIComponent(brand)}` : "";
+        router.push(`/admin/products${qs}`);
       } else {
-        alert(data.error || "Failed to add product");
+        alert(data.error || "Failed to create product");
       }
     } catch {
-      alert("Failed to add product");
+      alert("Failed to create product");
     } finally {
       setSubmitting(false);
     }
   };
 
   const canAddMore = form.images.length < MAX_IMAGES;
+  const priceAfterDiscount = calcPriceAfterDiscount(
+    form.price,
+    form.discountPercentage
+  );
 
   return (
     <div className="px-8 py-8 max-w-2xl">
-      <h1 className="text-xl font-bold text-[#2D545E] mb-8">Add a product</h1>
+      <h1 className="text-xl font-bold text-gray-900 mb-8">Add a product</h1>
 
       <form className="space-y-6" onSubmit={handleSubmit}>
         <FormField id="product-name" label="Product name" required>
@@ -310,7 +298,7 @@ export default function AddProductPage() {
           disabled={submitting}
           className="px-6 py-2.5 rounded-lg bg-[#2D545E] text-white font-medium hover:opacity-90 disabled:opacity-50"
         >
-          {submitting ? "Adding…" : "Add product"}
+          {submitting ? "Creating…" : "Add product"}
         </button>
       </form>
     </div>

@@ -146,6 +146,8 @@ export default function CartPage() {
           </span>
         </div>
         <button
+          type="button"
+          onClick={() => router.push("/checkout")}
           disabled={loading}
           className="mt-4 w-full py-3 rounded-lg bg-[#2b6a5b] text-white font-medium hover:bg-[#235a4d] disabled:opacity-60 transition-colors"
         >

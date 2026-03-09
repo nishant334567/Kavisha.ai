@@ -14,8 +14,8 @@ export default function ProductsListPage() {
     brandContext?.subdomain;
 
   const [products, setProducts] = useState([]);
+  const [stats, setStats] = useState({});
   const [loading, setLoading] = useState(true);
-  const [selectedId, setSelectedId] = useState(null);
   const [deletingId, setDeletingId] = useState(null);
 
   useEffect(() => {
@@ -23,14 +23,21 @@ export default function ProductsListPage() {
     (async () => {
       setLoading(true);
       try {
-        const res = await fetch(
-          `/api/admin/products?brand=${encodeURIComponent(brand)}`,
-          { credentials: "include" }
-        );
-        const data = await res.json();
-        setProducts(res.ok ? (data.products ?? []) : []);
+        const [productsRes, statsRes] = await Promise.all([
+          fetch(`/api/admin/products?brand=${encodeURIComponent(brand)}`, {
+            credentials: "include",
+          }),
+          fetch(`/api/admin/products/stats?brand=${encodeURIComponent(brand)}`, {
+            credentials: "include",
+          }),
+        ]);
+        const productsData = await productsRes.json();
+        const statsData = await statsRes.json();
+        setProducts(productsRes.ok ? (productsData.products ?? []) : []);
+        setStats(statsRes.ok ? (statsData.stats ?? {}) : {});
       } catch {
         setProducts([]);
+        setStats({});
       } finally {
         setLoading(false);
       }
@@ -47,7 +54,6 @@ export default function ProductsListPage() {
       });
       if (res.ok) {
         setProducts((prev) => prev.filter((p) => p._id !== product._id));
-        setSelectedId((id) => (id === product._id ? null : id));
       } else {
         const data = await res.json();
         alert(data.error || "Failed to delete");
@@ -76,17 +82,20 @@ export default function ProductsListPage() {
         <p className="text-sm text-gray-500">No products yet.</p>
       ) : (
         <div className="space-y-4">
-          {products.map((product) => (
-            <ProductCard
-              key={product._id}
-              product={product}
-              selected={selectedId === product._id}
-              onSelect={setSelectedId}
-              onDelete={handleDelete}
-              brand={brand}
-              deleting={deletingId === product._id}
-            />
-          ))}
+          {products.map((product) => {
+            const s = stats[product._id] || { orders: 0, revenue: 0 };
+            return (
+              <ProductCard
+                key={product._id}
+                product={product}
+                onDelete={handleDelete}
+                brand={brand}
+                deleting={deletingId === product._id}
+                orders={s.orders}
+                revenue={s.revenue}
+              />
+            );
+          })}
         </div>
       )}
     </div>

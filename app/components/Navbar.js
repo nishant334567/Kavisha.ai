@@ -138,6 +138,7 @@ export default function Navbar() {
               <>
                 <button onClick={() => router.push("/chats")}>CHATS</button>
                 <button onClick={() => router.push("/community")}>COMMUNITY</button>
+                <button onClick={() => router.push("/orders")}>MY ORDERS</button>
               </>
             )}
             <button onClick={() => router.push("/products")}>PRODUCTS</button>
@@ -255,6 +256,9 @@ export default function Navbar() {
                 </li>
                 <li>
                   <button onClick={() => { setOpenmenu(false); router.push("/community"); }}>Community</button>
+                </li>
+                <li>
+                  <button onClick={() => { setOpenmenu(false); router.push("/orders"); }}>My Orders</button>
                 </li>
               </>
             )}

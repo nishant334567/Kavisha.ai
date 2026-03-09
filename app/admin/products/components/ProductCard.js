@@ -6,8 +6,6 @@ const TEAL = "#2D545E";
 
 export default function ProductCard({
   product,
-  selected,
-  onSelect,
   onDelete,
   brand,
   deleting,
@@ -31,16 +29,6 @@ export default function ProductCard({
 
   return (
     <div className="flex gap-6 p-6 rounded-xl border border-gray-200 bg-white shadow-md">
-      <div className="shrink-0 pt-1">
-        <input
-          type="radio"
-          name="product"
-          checked={selected}
-          onChange={() => onSelect?.(product._id)}
-          className="w-5 h-5 text-[#2D545E] border-gray-300 cursor-pointer"
-        />
-      </div>
-
       <div className="flex-1 min-w-0 flex gap-6 overflow-hidden">
         <div className="flex-1 min-w-0">
           <h3
@@ -81,31 +69,31 @@ export default function ProductCard({
         </div>
 
         <div className="shrink-0 flex flex-col gap-3 items-stretch min-w-[140px]">
-          <div className="flex rounded-full overflow-hidden border border-gray-200 shadow-sm">
-            <span className="flex-1 min-w-0 py-2.5 bg-white text-gray-900 text-sm font-medium flex items-center justify-center">
+          <div className="grid grid-cols-2 rounded-lg overflow-hidden border border-gray-200">
+            <span className="px-3 py-2 bg-white text-gray-900 text-sm font-medium text-center">
               Orders
             </span>
             <span
-              className="flex-1 min-w-0 py-2.5 text-sm font-medium text-white flex items-center justify-center"
+              className="px-3 py-2 text-sm font-medium text-white text-center"
               style={{ backgroundColor: TEAL }}
             >
               {orders}
             </span>
           </div>
-          <div className="flex rounded-full overflow-hidden border border-gray-200 shadow-sm">
-            <span className="flex-1 min-w-0 py-2.5 bg-white text-gray-900 text-sm font-medium flex items-center justify-center">
+          <div className="grid grid-cols-2 rounded-lg overflow-hidden border border-gray-200">
+            <span className="px-3 py-2 bg-white text-gray-900 text-sm font-medium text-center">
               Revenue
             </span>
             <span
-              className="flex-1 min-w-0 py-2.5 text-sm font-medium text-white flex items-center justify-center"
+              className="px-3 py-2 text-sm font-medium text-white text-center whitespace-nowrap"
               style={{ backgroundColor: TEAL }}
             >
-              {revenue}
+              Rs. {Number(revenue || 0).toLocaleString()}/-
             </span>
           </div>
           <Link
             href={editHref}
-            className="px-4 py-2.5 rounded-full text-sm font-medium text-white hover:opacity-90 text-center shadow-sm"
+            className="px-4 py-2 rounded-lg text-sm font-medium text-white hover:opacity-90 text-center"
             style={{ backgroundColor: TEAL }}
           >
             Edit product
@@ -114,7 +102,7 @@ export default function ProductCard({
             type="button"
             onClick={() => onDelete?.(product)}
             disabled={deleting}
-            className="px-4 py-2.5 rounded-full text-sm font-medium bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 shadow-sm"
+            className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
           >
             {deleting ? "Deleting…" : "Delete product"}
           </button>
