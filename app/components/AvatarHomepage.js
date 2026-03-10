@@ -121,6 +121,14 @@ export default function AvatarHomepage() {
                 >
                   COMMUNITY
                 </button>
+                {brand?.enableProducts && (
+                  <button
+                    onClick={() => router.push("/products")}
+                    className="font-akshar px-6 py-3 rounded-full bg-white dark:bg-background text-md border-2 border-[#59646F] dark:border-border text-[#59646F] dark:text-foreground hover:bg-gray-50 dark:hover:bg-muted-bg transition-colors"
+                  >
+                    PRODUCTS
+                  </button>
+                )}
               </>
             ) : (
               <button

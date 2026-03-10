@@ -43,6 +43,7 @@ export default function AddProductPage() {
     tagline: "",
     description: "",
     specifications: "",
+    termsAndConditions: "",
     images: [],
     price: "",
     discountPercentage: "",
@@ -132,6 +133,7 @@ export default function AddProductPage() {
           tagline: form.tagline.trim(),
           description: form.description.trim(),
           specifications: form.specifications.trim(),
+          termsAndConditions: form.termsAndConditions.trim(),
           images: form.images,
           price: form.price,
           discountPercentage: form.discountPercentage,
@@ -200,6 +202,17 @@ export default function AddProductPage() {
             value={form.specifications}
             onChange={update("specifications")}
             className={`${INPUT_CLASS} resize-none`}
+          />
+        </FormField>
+
+        <FormField id="termsAndConditions" label="Terms and conditions">
+          <textarea
+            id="termsAndConditions"
+            rows={4}
+            value={form.termsAndConditions}
+            onChange={update("termsAndConditions")}
+            className={`${INPUT_CLASS} resize-none`}
+            placeholder="Add return, replacement, usage or legal terms for this product"
           />
         </FormField>
 

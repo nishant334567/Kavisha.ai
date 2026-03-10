@@ -287,6 +287,19 @@ export default function ProductDetailPage() {
                         </a>
                     </section>
                 )}
+                {product.termsAndConditions && (
+                    <section>
+                        <h2
+                            className="font-semibold text-lg mb-2"
+                            style={{ color: TEAL }}
+                        >
+                            Terms and conditions
+                        </h2>
+                        <div className="text-gray-600 text-sm whitespace-pre-wrap">
+                            {product.termsAndConditions}
+                        </div>
+                    </section>
+                )}
             </div>
 
             <Link

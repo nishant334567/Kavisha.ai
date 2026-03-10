@@ -135,6 +135,13 @@ export default {
       hidden: ({ parent }) => !parent?.enableQuiz,
     },
     {
+      name: "enableProducts",
+      title: "Enable Products",
+      type: "boolean",
+      description: "Toggle to enable products, cart, and order history for users",
+      initialValue: false,
+    },
+    {
       name: "services",
       title: "Services",
       type: "array",

@@ -177,9 +177,11 @@ export default function AdminOrdersPage() {
                                             {group.customer?.email || "—"}
                                         </p>
                                         <p className="text-xs text-gray-600">
+                                            <span className="font-medium">Phone:</span>{" "}
                                             {group.shippingPhone || "—"}
                                         </p>
-                                        <p className="text-xs text-gray-600 truncate" title={group.shippingAddress}>
+                                        <p className="text-xs text-gray-600 break-words" title={group.shippingAddress}>
+                                            <span className="font-medium">Address:</span>{" "}
                                             {group.shippingAddress || "—"}
                                         </p>
                                     </div>

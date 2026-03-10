@@ -31,6 +31,7 @@ export async function PATCH(req, { params }) {
       tagline,
       description,
       specifications,
+      termsAndConditions,
       images,
       price,
       discountPercentage,
@@ -46,6 +47,7 @@ export async function PATCH(req, { params }) {
       tagline: tagline ?? "",
       description: description ?? "",
       specifications: specifications ?? "",
+      termsAndConditions: termsAndConditions ?? "",
     };
     if (Array.isArray(images)) update.images = images.filter(Boolean);
     if (price !== undefined) update.price = Number(price) || 0;

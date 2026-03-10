@@ -28,6 +28,9 @@ export default function CheckoutPage() {
     const [products, setProducts] = useState([]);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
     const [paying, setPaying] = useState(false);
+    const [shippingPhone, setShippingPhone] = useState("");
+    const [shippingAddress, setShippingAddress] = useState("");
+    const [checkoutError, setCheckoutError] = useState("");
 
     useEffect(() => {
         if (!brand) return;
@@ -43,9 +46,36 @@ export default function CheckoutPage() {
         (sum, i) => sum + (i.priceSnapshot || 0) * (i.quantity || 0),
         0
     );
+    const isDeliveryReady =
+        /^\d{10}$/.test(shippingPhone.trim()) && shippingAddress.trim().length >= 5;
+
+    const validateDeliveryDetails = () => {
+        const phone = shippingPhone.trim();
+        const address = shippingAddress.trim();
+        if (!/^\d{10}$/.test(phone)) {
+            return {
+                valid: false,
+                message: "Please enter a valid 10-digit phone number.",
+            };
+        }
+        if (address.length < 5) {
+            return {
+                valid: false,
+                message: "Please enter your delivery address.",
+            };
+        }
+        return { valid: true, phone, address };
+    };
 
     const initiatePayment = async () => {
         if (!user?.id || !brand || items.length === 0) return;
+        const validation = validateDeliveryDetails();
+        if (!validation.valid) {
+            setCheckoutError(validation.message);
+            return;
+        }
+
+        setCheckoutError("");
         setPaying(true);
         try {
             const res = await fetch("/api/checkout/create-order", {
@@ -71,7 +101,7 @@ export default function CheckoutPage() {
                 order_id: data.orderId,
                 name: "Kavisha",
                 description: "Product Order",
-                prefill: { email: user?.email || "" },
+                prefill: { email: user?.email || "", contact: validation.phone },
                 modal: { ondismiss: () => setPaying(false) },
                 handler: async function (response) {
                     const verifyRes = await fetch("/api/razorpay/verify-payment", {
@@ -87,8 +117,8 @@ export default function CheckoutPage() {
                             metadata: {
                                 brand,
                                 cartItems: cartItemsForVerify,
-                                shippingPhone: "",
-                                shippingAddress: "",
+                                shippingPhone: validation.phone,
+                                shippingAddress: validation.address,
                             },
                             amount: data.amount,
                             currency: data.currency || "INR",
@@ -161,6 +191,48 @@ export default function CheckoutPage() {
 
             <div className="grid gap-6 md:grid-cols-[1fr,320px]">
                 <div className="space-y-4">
+                    <div className="rounded-xl border border-gray-200 bg-white p-4 md:p-5">
+                        <h2 className="font-semibold text-gray-800 mb-4">Delivery details</h2>
+                        <div className="grid gap-3">
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Phone number
+                                </label>
+                                <input
+                                    type="tel"
+                                    inputMode="numeric"
+                                    maxLength={10}
+                                    value={shippingPhone}
+                                    onChange={(e) => {
+                                        const digitsOnly = e.target.value.replace(/\D/g, "");
+                                        setShippingPhone(digitsOnly.slice(0, 10));
+                                        if (checkoutError) setCheckoutError("");
+                                    }}
+                                    placeholder="10-digit mobile number"
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2b6a5b]/20 focus:border-[#2b6a5b]"
+                                />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                    Delivery address
+                                </label>
+                                <textarea
+                                    rows={3}
+                                    value={shippingAddress}
+                                    onChange={(e) => {
+                                        setShippingAddress(e.target.value);
+                                        if (checkoutError) setCheckoutError("");
+                                    }}
+                                    placeholder="House/Flat, street, area, city, state, pincode"
+                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2b6a5b]/20 focus:border-[#2b6a5b] resize-y"
+                                />
+                            </div>
+                            {checkoutError && (
+                                <p className="text-sm text-red-600">{checkoutError}</p>
+                            )}
+                        </div>
+                    </div>
+
                     <h2 className="font-semibold text-gray-800">Order summary</h2>
                     <div className="rounded-xl border border-gray-200 bg-white divide-y divide-gray-200">
                         {items.map((item) => {
@@ -220,11 +292,16 @@ export default function CheckoutPage() {
                     <button
                         type="button"
                         onClick={() => setShowConfirmModal(true)}
-                        disabled={paying}
+                        disabled={paying || !isDeliveryReady}
                         className="w-full py-3 rounded-lg bg-[#2b6a5b] text-white font-medium hover:bg-[#235a4d] disabled:opacity-60 transition-colors"
                     >
                         {paying ? "Processing..." : "Proceed to payment"}
                     </button>
+                    {!isDeliveryReady && (
+                        <p className="mt-2 text-xs text-gray-500">
+                            Add valid phone number and delivery address to continue.
+                        </p>
+                    )}
                 </div>
             </div>
 
@@ -234,6 +311,14 @@ export default function CheckoutPage() {
                 rows={[
                     { label: "Items", value: `${items.length} item(s)` },
                     { label: "Amount", value: `Rs. ${Math.round(total)}/-*`, note: "*Incl. taxes", isAmount: true },
+                    { label: "Phone", value: shippingPhone || "-" },
+                    {
+                        label: "Address",
+                        value:
+                            shippingAddress && shippingAddress.length > 50
+                                ? `${shippingAddress.slice(0, 50)}...`
+                                : shippingAddress || "-",
+                    },
                 ]}
                 onConfirm={() => {
                     setShowConfirmModal(false);

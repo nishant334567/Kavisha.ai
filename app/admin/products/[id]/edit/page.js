@@ -47,6 +47,7 @@ export default function EditProductPage() {
     tagline: "",
     description: "",
     specifications: "",
+    termsAndConditions: "",
     images: [],
     price: "",
     discountPercentage: "",
@@ -72,6 +73,7 @@ export default function EditProductPage() {
             tagline: p.tagline || "",
             description: p.description || "",
             specifications: p.specifications || "",
+            termsAndConditions: p.termsAndConditions || "",
             images: Array.isArray(p.images) ? [...p.images] : [],
             price: p.price != null ? String(p.price) : "",
             discountPercentage: p.discountPercentage != null ? String(p.discountPercentage) : "",
@@ -170,6 +172,7 @@ export default function EditProductPage() {
           tagline: form.tagline.trim(),
           description: form.description.trim(),
           specifications: form.specifications.trim(),
+          termsAndConditions: form.termsAndConditions.trim(),
           images: form.images,
           price: Number(form.price) || 0,
           discountPercentage: Number(form.discountPercentage) || 0,
@@ -250,6 +253,17 @@ export default function EditProductPage() {
             value={form.specifications}
             onChange={update("specifications")}
             className={`${INPUT_CLASS} resize-none`}
+          />
+        </FormField>
+
+        <FormField id="termsAndConditions" label="Terms and conditions">
+          <textarea
+            id="termsAndConditions"
+            rows={4}
+            value={form.termsAndConditions}
+            onChange={update("termsAndConditions")}
+            className={`${INPUT_CLASS} resize-none`}
+            placeholder="Add return, replacement, usage or legal terms for this product"
           />
         </FormField>
 

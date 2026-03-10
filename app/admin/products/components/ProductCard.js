@@ -69,7 +69,7 @@ export default function ProductCard({
         </div>
 
         <div className="shrink-0 flex flex-col gap-3 items-stretch min-w-[140px]">
-          <div className="grid grid-cols-2 rounded-lg overflow-hidden border border-gray-200">
+          <div className="grid grid-cols-2 rounded-full overflow-hidden border border-gray-200">
             <span className="px-3 py-2 bg-white text-gray-900 text-sm font-medium text-center">
               Orders
             </span>
@@ -80,7 +80,7 @@ export default function ProductCard({
               {orders}
             </span>
           </div>
-          <div className="grid grid-cols-2 rounded-lg overflow-hidden border border-gray-200">
+          <div className="grid grid-cols-2 rounded-full overflow-hidden border border-gray-200">
             <span className="px-3 py-2 bg-white text-gray-900 text-sm font-medium text-center">
               Revenue
             </span>
@@ -93,7 +93,7 @@ export default function ProductCard({
           </div>
           <Link
             href={editHref}
-            className="px-4 py-2 rounded-lg text-sm font-medium text-white hover:opacity-90 text-center"
+            className="px-4 py-2 rounded-full text-sm font-medium text-white hover:opacity-90 text-center"
             style={{ backgroundColor: TEAL }}
           >
             Edit product
@@ -102,7 +102,7 @@ export default function ProductCard({
             type="button"
             onClick={() => onDelete?.(product)}
             disabled={deleting}
-            className="px-4 py-2 rounded-lg text-sm font-medium bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
+            className="px-4 py-2 rounded-full text-sm font-medium bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
           >
             {deleting ? "Deleting…" : "Delete product"}
           </button>

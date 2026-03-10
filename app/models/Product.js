@@ -8,6 +8,7 @@ const ProductSchema = new mongoose.Schema(
     tagline: { type: String, default: "" },
     description: { type: String, default: "" },
     specifications: { type: String, default: "" },
+    termsAndConditions: { type: String, default: "" },
     images: { type: [String], default: [] },
     price: { type: Number, default: 0 },
     discountPercentage: { type: Number, default: 0 },

@@ -202,6 +202,7 @@ export default function HomePage() {
                         enableQuiz={brandContext?.enableQuiz || false}
                         quizName={brandContext?.quizName || ""}
                         enableJobs={brandContext?.enableJobs || false}
+                        enableProducts={brandContext?.enableProducts || false}
                     />
 
                     {currentChatId && (

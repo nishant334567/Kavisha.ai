@@ -4,9 +4,8 @@ import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { signIn } from "../lib/firebase/sign-in";
 import { signOut } from "../lib/firebase/logout";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { useCart } from "../context/cart/CartContextProvider";
 import { useRouter } from "next/navigation";
-import { Cross, Menu, X, Settings, ShoppingCart } from "lucide-react";
+import { Menu, Settings } from "lucide-react";
 import {
   detectInAppBrowser,
   isMobileDevice,
@@ -16,7 +15,6 @@ import {
 export default function Navbar() {
   const { user, loading, refresh } = useFirebaseSession();
   const brand = useBrandContext();
-  const { cartCount } = useCart();
   const router = useRouter();
   const [signingIn, setSigningIn] = useState(false);
   const [popupBlockedHint, setPopupBlockedHint] = useState(false);
@@ -138,23 +136,10 @@ export default function Navbar() {
               <>
                 <button onClick={() => router.push("/chats")}>CHATS</button>
                 <button onClick={() => router.push("/community")}>COMMUNITY</button>
-                <button onClick={() => router.push("/orders")}>MY ORDERS</button>
               </>
             )}
-            <button onClick={() => router.push("/products")}>PRODUCTS</button>
-            {user && (
-              <button
-                onClick={() => router.push("/cart")}
-                className="relative p-1 rounded hover:bg-white/10 transition-colors"
-                aria-label={`Cart (${cartCount} items)`}
-              >
-                <ShoppingCart className="w-5 h-5" />
-                {cartCount > 0 && (
-                  <span className="absolute -top-1 -right-1 min-w-[18px] h-[18px] flex items-center justify-center rounded-full bg-amber-500 text-[10px] font-bold text-gray-900">
-                    {cartCount > 99 ? "99+" : cartCount}
-                  </span>
-                )}
-              </button>
+            {brand?.enableProducts && (
+              <button onClick={() => router.push("/products")}>PRODUCTS</button>
             )}
             {loading ? (
               <div className=" text-sm text-muted">Loading...</div>
@@ -257,19 +242,11 @@ export default function Navbar() {
                 <li>
                   <button onClick={() => { setOpenmenu(false); router.push("/community"); }}>Community</button>
                 </li>
-                <li>
-                  <button onClick={() => { setOpenmenu(false); router.push("/orders"); }}>My Orders</button>
-                </li>
               </>
             )}
-            <li>
-              <button onClick={() => { setOpenmenu(false); router.push("/products"); }}>Products</button>
-            </li>
-            {user && (
+            {brand?.enableProducts && (
               <li>
-                <button onClick={() => { setOpenmenu(false); router.push("/cart"); }}>
-                  Cart {cartCount > 0 && `(${cartCount})`}
-                </button>
+                <button onClick={() => { setOpenmenu(false); router.push("/products"); }}>Products</button>
               </li>
             )}
             <li>
