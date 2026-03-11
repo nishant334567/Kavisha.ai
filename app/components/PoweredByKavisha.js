@@ -11,7 +11,7 @@ export default function PoweredByKavisha({ className = "" }) {
       href={href}
       target="_blank"
       rel="noopener noreferrer"
-      className={`block w-full text-center py-2.5 bg-white text-gray-600 text-sm font-medium cursor-pointer flex-shrink-0 hover:underline ${className}`}
+      className={`block w-full text-center py-2.5 bg-card text-muted text-sm font-medium cursor-pointer flex-shrink-0 hover:underline border-t border-border ${className}`}
     >
       Powered by {label}
     </a>

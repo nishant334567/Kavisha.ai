@@ -11,6 +11,7 @@ import Loader from "./Loader";
 import { usePathname } from "next/navigation";
 import AdminNavbar from "../admin/components/AdminNavbar";
 import GlobalMessages from "./GlobalMessages";
+import { CartContextProvider } from "../context/cart/CartContextProvider"
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
@@ -20,12 +21,14 @@ export default function ClientLayout({ children }) {
   return (
     <FirebaseSessionProvider>
       <BrandContextProvider>
-        <SocketSessionWrapper>
-          {!isMaintenancePage && !isAdmin && <Navbar />}
-          {!isMaintenancePage && isAdmin && <AdminNavbar />}
-          <div className={isAdmin ? "pt-14" : ""}>{children}</div>
-          {!isMaintenancePage && !isAdmin && pathname !== "/" && <GlobalMessages />}
-        </SocketSessionWrapper>
+        <CartContextProvider>
+          <SocketSessionWrapper>
+            {!isMaintenancePage && !isAdmin && <Navbar />}
+            {!isMaintenancePage && isAdmin && <AdminNavbar />}
+            <div className={!isMaintenancePage ? "pt-14" : ""}>{children}</div>
+            {!isMaintenancePage && !isAdmin && pathname !== "/" && <GlobalMessages />}
+          </SocketSessionWrapper>
+        </CartContextProvider>
       </BrandContextProvider>
     </FirebaseSessionProvider>
   );

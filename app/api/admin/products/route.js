@@ -28,7 +28,18 @@ export async function POST(req) {
   try {
     await connectDB();
     const body = await req.json();
-    const { name, url, description, brand } = body;
+    const {
+      name,
+      url,
+      tagline,
+      description,
+      specifications,
+      termsAndConditions,
+      images,
+      price,
+      discountPercentage,
+      brand,
+    } = body;
 
     if (!name || !brand) {
       return NextResponse.json(
@@ -40,7 +51,13 @@ export async function POST(req) {
     const product = await Product.create({
       name,
       url: url || "",
+      tagline: tagline || "",
       description: description || "",
+      specifications: specifications || "",
+      termsAndConditions: termsAndConditions || "",
+      images: Array.isArray(images) ? images.filter(Boolean) : [],
+      price: Number(price) || 0,
+      discountPercentage: Math.min(100, Math.max(0, Number(discountPercentage) || 0)),
       brand,
     });
 

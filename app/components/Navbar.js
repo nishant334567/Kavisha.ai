@@ -5,7 +5,7 @@ import { signIn } from "../lib/firebase/sign-in";
 import { signOut } from "../lib/firebase/logout";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
-import { Cross, Menu, X, Settings } from "lucide-react";
+import { Menu, Settings } from "lucide-react";
 import {
   detectInAppBrowser,
   isMobileDevice,
@@ -138,6 +138,9 @@ export default function Navbar() {
                 <button onClick={() => router.push("/community")}>COMMUNITY</button>
               </>
             )}
+            {brand?.enableProducts && (
+              <button onClick={() => router.push("/products")}>PRODUCTS</button>
+            )}
             {loading ? (
               <div className=" text-sm text-muted">Loading...</div>
             ) : !user ? (
@@ -240,6 +243,11 @@ export default function Navbar() {
                   <button onClick={() => { setOpenmenu(false); router.push("/community"); }}>Community</button>
                 </li>
               </>
+            )}
+            {brand?.enableProducts && (
+              <li>
+                <button onClick={() => { setOpenmenu(false); router.push("/products"); }}>Products</button>
+              </li>
             )}
             <li>
               {loading ? (

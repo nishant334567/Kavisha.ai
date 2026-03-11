@@ -45,6 +45,18 @@ export default function AvatarHomepage() {
     }
   };
 
+  const enabledLinks = [
+    { label: "YOUR CHATS", path: "/chats", primary: true },
+    ...(brand?.enableCommunityOnboarding
+      ? [{ label: (brand?.communityName || "Community").toUpperCase(), path: "/community" }]
+      : []),
+    ...(brand?.enableQuiz
+      ? [{ label: (brand?.quizName || "Take quiz/survey").toUpperCase(), path: "/quiz" }]
+      : []),
+    ...(brand?.enableJobs ? [{ label: "JOBS", path: "/jobs" }] : []),
+    ...(brand?.enableProducts ? [{ label: "PRODUCTS", path: "/products" }] : []),
+  ];
+
   return (
     <div className="h-full flex flex-col bg-background">
       <div className="md:mt-12 flex-1 overflow-y-auto mx-auto w-full md:max-w-[60%] md:px-8 pt-2 space-y-4 pb-8 md:pb-24">
@@ -109,18 +121,19 @@ export default function AvatarHomepage() {
           {!(isInAppBrowser && isMobile) && (
             user ? (
               <>
-                <button
-                  onClick={() => router.push("/chats")}
-                  className="font-akshar px-6 py-3 rounded-full bg-[#59646F] dark:bg-muted-bg text-md border-2 border-[#59646F] dark:border-border flex items-center gap-2 text-[#FFEED8] dark:text-foreground hover:bg-[#4a5568] dark:hover:bg-border transition-colors"
-                >
-                  YOUR CHATS
-                </button>
-                <button
-                  onClick={() => router.push("/community")}
-                  className="font-akshar px-6 py-3 rounded-full bg-white dark:bg-background text-md border-2 border-[#59646F] dark:border-border text-[#59646F] dark:text-foreground hover:bg-gray-50 dark:hover:bg-muted-bg transition-colors"
-                >
-                  COMMUNITY
-                </button>
+                {enabledLinks.map((item) => (
+                  <button
+                    key={item.path}
+                    onClick={() => router.push(item.path)}
+                    className={`font-akshar px-6 py-3 rounded-full text-md border-2 transition-colors ${
+                      item.primary
+                        ? "bg-[#59646F] dark:bg-muted-bg border-[#59646F] dark:border-border text-[#FFEED8] dark:text-foreground hover:bg-[#4a5568] dark:hover:bg-border"
+                        : "bg-white dark:bg-background border-[#59646F] dark:border-border text-[#59646F] dark:text-foreground hover:bg-gray-50 dark:hover:bg-muted-bg"
+                    }`}
+                  >
+                    {item.label}
+                  </button>
+                ))}
               </>
             ) : (
               <button

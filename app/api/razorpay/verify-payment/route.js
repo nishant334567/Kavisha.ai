@@ -4,6 +4,9 @@ import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { connectDB } from "@/app/lib/db";
 import Payment from "@/app/models/Payment";
 import User from "@/app/models/Users";
+import Order from "@/app/models/Order";
+import Cart from "@/app/models/Cart";
+import Product from "@/app/models/Product";
 import { sendEmail } from "@/app/lib/email";
 
 export async function POST(request) {
@@ -86,6 +89,57 @@ export async function POST(request) {
                             body: `<p>Hi ${targetUser?.name || "there"},</p><p>${connectorName} connected you from community.</p><p>Go to your inbox to see the conversation.</p>`,
                         }).catch((e) => console.error("Community connection email failed:", e));
                     }
+                }
+
+                if (type === "product_order") {
+                    const { brand, cartItems = [], shippingPhone = "", shippingAddress = "" } = metadata;
+                    if (!brand || !Array.isArray(cartItems) || cartItems.length === 0) {
+                        return NextResponse.json(
+                            { success: false, error: "Invalid product order metadata" },
+                            { status: 400 }
+                        );
+                    }
+                    const productIds = cartItems.map((i) => i.productId).filter(Boolean);
+                    const products = await Product.find({ _id: { $in: productIds } }).lean();
+                    const productMap = Object.fromEntries(products.map((p) => [String(p._id), p]));
+                    const orderGroupId = `ord_${Date.now()}`;
+
+                    for (const item of cartItems) {
+                        const productId = item.productId;
+                        const quantity = Math.max(1, Number(item.quantity) || 1);
+                        const priceSnapshot = Number(item.priceSnapshot) || 0;
+                        const totalAmount = priceSnapshot * quantity;
+                        const product = productMap[String(productId)];
+
+                        await Order.create({
+                            brand,
+                            orderId: orderGroupId,
+                            productId,
+                            productSnapshot: product
+                                ? {
+                                      name: product.name || "",
+                                      description: product.description || "",
+                                      price: product.price || 0,
+                                      discountPercentage: product.discountPercentage || 0,
+                                      images: product.images || [],
+                                  }
+                                : { name: "", description: "", price: 0, discountPercentage: 0, images: [] },
+                            customerId: payerUserId,
+                            shippingPhone,
+                            shippingAddress,
+                            orderStatus: "pending",
+                            paymentStatus: "completed",
+                            razorpayOrderId: razorpay_order_id,
+                            razorpayPaymentId: razorpay_payment_id,
+                            quantity,
+                            totalAmount,
+                        });
+                    }
+
+                    await Cart.findOneAndUpdate(
+                        { userId: payerUserId, brand },
+                        { $set: { items: [] } }
+                    );
                 }
 
                 return NextResponse.json({ success: true });

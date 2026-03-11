@@ -1,9 +1,10 @@
 "use client";
-import { ArrowLeft, Trash2 } from "lucide-react";
+import { ArrowLeft, Trash2, Info } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useState, useEffect } from "react";
 import ProductModal from "./ProductModal";
 import ServiceModalForBuy from "./ServiceModalForBuy";
+import { BEHAVIOUR_TEMPLATES } from "@/app/make-avatar/v2/behaviourTemplates";
 
 export default function ServiceModal({
   isOpen,
@@ -15,7 +16,14 @@ export default function ServiceModal({
 
   const [showProductModal, setShowProductModal] = useState(false);
   const [showServiceModalForBuy, setShowServiceModalForBuy] = useState(false);
-  const [personalitytype, setPersonalitytype] = useState("about");
+  const [templateId, setTemplateId] = useState("custom");
+  const [infoSection, setInfoSection] = useState(null);
+
+  const PERSONALITY_INFO = {
+    about: "Who you are — background, expertise, interests, and the tone you want. Helps the AI understand your persona.",
+    behaviour: "How the AI should behave — tone, style, personality traits, how it responds. The 'how' it speaks and interacts.",
+    rules: "Constraints and guidelines — what to avoid, what to stay on topic about. E.g. don't use slang, stay professional.",
+  };
   const [formData, setFormData] = useState({
     serviceTitle: "",
     serviceName: "",
@@ -33,6 +41,7 @@ export default function ServiceModal({
   useEffect(() => {
     if (service) {
       if (addNewservice) {
+        setTemplateId("custom");
         setFormData({
           serviceTitle: service.title || "",
           serviceName: service.name || "",
@@ -217,48 +226,128 @@ export default function ServiceModal({
                 />
               </div>
 
-              {/* Personality core */}
-              <div>
-                <p className="mb-3 text-sm font-medium text-gray-700">
-                  Personality Core
-                </p>
-                <div className="flex gap-2 mb-4">
-                  <button
-                    onClick={() => setPersonalitytype("about")}
-                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${personalitytype === "about"
-                      ? "bg-purple-900 text-white shadow-md"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
+              {/* Template (only for new Talk to me) */}
+              {addNewservice && service?.name === "lead_journey" && (
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    Start from template
+                  </label>
+                  <select
+                    value={templateId}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      setTemplateId(value);
+                      if (value === "custom") {
+                        setFormData((prev) => ({ ...prev, about: "", behaviour: "", rules: "" }));
+                      } else {
+                        const t = BEHAVIOUR_TEMPLATES.find((x) => x.id === value);
+                        if (t) {
+                          setFormData((prev) => ({
+                            ...prev,
+                            behaviour: t.behaviour,
+                            rules: t.rules,
+                          }));
+                        }
+                      }
+                    }}
+                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 text-sm"
                   >
-                    About
-                  </button>
-                  <button
-                    onClick={() => setPersonalitytype("behaviour")}
-                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${personalitytype === "behaviour"
-                      ? "bg-purple-900 text-white shadow-md"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                  >
-                    Behaviour
-                  </button>
-                  <button
-                    onClick={() => setPersonalitytype("rules")}
-                    className={`flex-1 py-2.5 rounded-lg font-medium text-xs transition-all ${personalitytype === "rules"
-                      ? "bg-purple-900 text-white shadow-md"
-                      : "bg-gray-100 text-gray-700 hover:bg-gray-200"
-                      }`}
-                  >
-                    Rules
-                  </button>
+                    {BEHAVIOUR_TEMPLATES.map((t) => (
+                      <option key={t.id} value={t.id}>{t.label}</option>
+                    ))}
+                    <option value="custom">Custom (start from scratch)</option>
+                  </select>
+                  <p className="mt-1 text-xs text-gray-500">
+                    Pick a template to pre-fill behaviour & rules, or start custom. You can edit after selecting.
+                  </p>
+                </div>
+              )}
+
+              {/* Personality core — three separate sections like create avatar */}
+              <div className="space-y-6">
+                <p className="text-sm font-medium text-gray-700">Personality Core</p>
+
+                {/* About */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium text-gray-700">About</label>
+                    <button
+                      type="button"
+                      onClick={() => setInfoSection((s) => (s === "about" ? null : "about"))}
+                      className="p-0.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-purple-600 transition-colors"
+                      aria-label="About this section"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {infoSection === "about" && (
+                    <p className="text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 mb-2">
+                      {PERSONALITY_INFO.about}
+                    </p>
+                  )}
+                  <textarea
+                    rows={4}
+                    value={formData.about || ""}
+                    onChange={(e) => handleChange("about", e.target.value)}
+                    placeholder="Enter about..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none bg-white text-sm"
+                  />
+                </div>
+
+                {/* Behaviour */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium text-gray-700">Behaviour</label>
+                    <button
+                      type="button"
+                      onClick={() => setInfoSection((s) => (s === "behaviour" ? null : "behaviour"))}
+                      className="p-0.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-purple-600 transition-colors"
+                      aria-label="About behaviour"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {infoSection === "behaviour" && (
+                    <p className="text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 mb-2">
+                      {PERSONALITY_INFO.behaviour}
+                    </p>
+                  )}
+                  <textarea
+                    rows={6}
+                    value={formData.behaviour || ""}
+                    onChange={(e) => handleChange("behaviour", e.target.value)}
+                    placeholder="Enter behaviour..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none bg-white text-sm"
+                  />
+                </div>
+
+                {/* Rules */}
+                <div>
+                  <div className="flex items-center gap-2 mb-2">
+                    <label className="block text-sm font-medium text-gray-700">Rules</label>
+                    <button
+                      type="button"
+                      onClick={() => setInfoSection((s) => (s === "rules" ? null : "rules"))}
+                      className="p-0.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-purple-600 transition-colors"
+                      aria-label="About rules"
+                    >
+                      <Info className="w-4 h-4" />
+                    </button>
+                  </div>
+                  {infoSection === "rules" && (
+                    <p className="text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 mb-2">
+                      {PERSONALITY_INFO.rules}
+                    </p>
+                  )}
+                  <textarea
+                    rows={6}
+                    value={formData.rules || ""}
+                    onChange={(e) => handleChange("rules", e.target.value)}
+                    placeholder="Enter rules..."
+                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none bg-white text-sm"
+                  />
                 </div>
               </div>
-              <textarea
-                className="w-full rounded-lg border-2 border-gray-300 px-4 py-3 text-xs focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-purple-500 resize-none bg-white shadow-sm"
-                value={formData[personalitytype] || ""}
-                onChange={(e) => handleChange(personalitytype, e.target.value)}
-                rows={10}
-                placeholder={`Enter ${personalitytype}...`}
-              />
 
               {/* Initial Questions (up to 5) */}
               <div>

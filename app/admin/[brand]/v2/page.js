@@ -107,6 +107,17 @@ export default function AdminHome() {
               </button>
             </>
           )}
+          {brand?.enableProducts && (
+            <>
+              <div className="w-px h-6 bg-gray-300 self-center"></div>
+              <button
+                onClick={() => go(`/admin/products?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
+                className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl flex items-center gap-2"
+              >
+                Products
+              </button>
+            </>
+          )}
         </div>
       </div>
 

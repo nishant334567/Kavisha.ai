@@ -513,7 +513,7 @@ export default function ChatBox({
             <div className="w-6 h-6 border-2 border-border rounded-full"></div>
             <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-t-[#59646F] rounded-full animate-spin"></div>
           </div>
-          <div className="text-[#59646F] text-xs font-medium">
+          <div className="text-muted text-xs font-medium">
             Loading chat…
           </div>
         </div>
@@ -529,7 +529,7 @@ export default function ChatBox({
             <div className="w-6 h-6 border-2 border-border rounded-full"></div>
             <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-t-[#59646F] rounded-full animate-spin"></div>
           </div>
-          <div className="text-[#59646F] text-xs font-medium">
+          <div className="text-muted text-xs font-medium">
             Fetching session details…
           </div>
         </div>

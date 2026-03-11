@@ -2,26 +2,59 @@ import { connectDB } from "@/app/lib/db";
 import Product from "@/app/models/Product";
 import { NextResponse } from "next/server";
 
+export async function GET(req, { params }) {
+  try {
+    await connectDB();
+    const { id } = await params;
+    const product = await Product.findById(id).lean();
+    if (!product) {
+      return NextResponse.json({ error: "Product not found" }, { status: 404 });
+    }
+    return NextResponse.json({ product });
+  } catch (error) {
+    console.error("Error fetching product:", error);
+    return NextResponse.json(
+      { error: "Failed to fetch product" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function PATCH(req, { params }) {
   try {
     await connectDB();
     const { id } = await params;
     const body = await req.json();
-    const { name, url, description } = body;
+    const {
+      name,
+      url,
+      tagline,
+      description,
+      specifications,
+      termsAndConditions,
+      images,
+      price,
+      discountPercentage,
+    } = body;
 
     if (!name) {
       return NextResponse.json({ error: "Name is required" }, { status: 400 });
     }
 
-    const product = await Product.findByIdAndUpdate(
-      id,
-      {
-        name,
-        url: url || "",
-        description: description || "",
-      },
-      { new: true }
-    );
+    const update = {
+      name,
+      url: url ?? "",
+      tagline: tagline ?? "",
+      description: description ?? "",
+      specifications: specifications ?? "",
+      termsAndConditions: termsAndConditions ?? "",
+    };
+    if (Array.isArray(images)) update.images = images.filter(Boolean);
+    if (price !== undefined) update.price = Number(price) || 0;
+    if (discountPercentage !== undefined)
+      update.discountPercentage = Math.min(100, Math.max(0, Number(discountPercentage) || 0));
+
+    const product = await Product.findByIdAndUpdate(id, update, { new: true });
 
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });

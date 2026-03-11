@@ -163,7 +163,7 @@ export default function ChatSidebar({
                 </div>
               </div>
               <div className="flex justify-between">
-                <p className="font-semibold text-slate-600">Your Chats</p>
+                <p className="font-semibold text-muted">Your Chats</p>
                 <button className="p-1" onClick={() => toggleLeftSideBar()} title="Close sidebar" aria-label="Close sidebar">
                   <PanelLeftClose className="w-5 h-5" />
                 </button>
@@ -331,7 +331,7 @@ export default function ChatSidebar({
                           <div className="w-6 h-6 border-2 border-border rounded-full"></div>
                           <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-t-[#59646F] rounded-full animate-spin"></div>
                         </div>
-                        <div className="text-[#59646F] text-xs font-medium">
+                        <div className="text-muted text-xs font-medium">
                           Loading chats...
                         </div>
                       </div>
