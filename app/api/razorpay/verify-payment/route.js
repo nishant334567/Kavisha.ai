@@ -7,6 +7,8 @@ import User from "@/app/models/Users";
 import Order from "@/app/models/Order";
 import Cart from "@/app/models/Cart";
 import Product from "@/app/models/Product";
+import BookingAppointment from "@/app/models/BookingAppointment";
+import mongoose from "mongoose";
 import { sendEmail } from "@/app/lib/email";
 
 export async function POST(request) {
@@ -139,6 +141,43 @@ export async function POST(request) {
                     await Cart.findOneAndUpdate(
                         { userId: payerUserId, brand },
                         { $set: { items: [] } }
+                    );
+                }
+
+                if (type === "booking") {
+                    const appointmentId = metadata?.appointmentId;
+                    if (!appointmentId) {
+                        return NextResponse.json(
+                            { success: false, error: "Missing appointmentId" },
+                            { status: 400 }
+                        );
+                    }
+                    const appointment = await BookingAppointment.findOne({
+                        _id: new mongoose.Types.ObjectId(appointmentId),
+                        paymentStatus: "pending",
+                    });
+                    if (!appointment) {
+                        return NextResponse.json(
+                            { success: false, error: "Appointment not found or already paid" },
+                            { status: 400 }
+                        );
+                    }
+                    if (String(appointment.customerId) !== String(payerUserId)) {
+                        return NextResponse.json(
+                            { success: false, error: "Appointment does not belong to payer" },
+                            { status: 403 }
+                        );
+                    }
+                    await BookingAppointment.updateOne(
+                        { _id: appointment._id },
+                        {
+                            $set: {
+                                razorpayOrderId: razorpay_order_id,
+                                razorpayPaymentId: razorpay_payment_id,
+                                paymentStatus: "completed",
+                                status: "confirmed",
+                            },
+                        }
                     );
                 }
 

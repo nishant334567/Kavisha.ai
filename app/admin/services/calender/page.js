@@ -109,9 +109,7 @@ export default function CalendarPage() {
 
   // ── render ────────────────────────────────────────────────────────────────
   return (
-    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
-      <div className="max-w-6xl mx-auto px-6 py-8">
-
+    <div className="max-w-4xl -mx-6 -my-8 px-6 py-8 bg-gray-50 dark:bg-gray-950 min-h-[calc(100vh-4rem)]">
         {/* Page header */}
         <div className="flex items-start justify-between mb-8">
           <div>
@@ -275,7 +273,6 @@ export default function CalendarPage() {
           </section>
 
         </div>
-      </div>
     </div>
   );
 }

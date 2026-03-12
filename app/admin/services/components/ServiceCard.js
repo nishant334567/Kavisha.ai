@@ -1,14 +1,21 @@
 "use client";
 
 import Link from "next/link";
-import { Calendar, Clock3, Pencil } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { Clock3, Pencil, List } from "lucide-react";
 
 function formatPrice(value) {
   const amount = Number(value) || 0;
   return `Rs. ${Math.round(amount)}/-`;
 }
 
-export default function ServiceCard({ service, href }) {
+export default function ServiceCard({ service, href, showBookingsHref }) {
+  const router = useRouter();
+
+  const handleShowBookings = () => {
+    if (showBookingsHref) router.push(showBookingsHref);
+  };
+
   return (
     <article className="rounded-xl border border-gray-200 bg-white p-4">
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
@@ -56,10 +63,11 @@ export default function ServiceCard({ service, href }) {
           </Link>
           <button
             type="button"
-            className="inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-500"
+            onClick={handleShowBookings}
+            className="mb-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-100 hover:text-gray-900"
           >
-            <Calendar className="h-4 w-4" />
-            Edit in calendar
+            <List className="h-4 w-4" />
+            Show bookings
           </button>
           <div className="mt-3 space-y-1 text-xs text-gray-500">
             <p className="inline-flex items-center gap-1">

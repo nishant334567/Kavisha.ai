@@ -1,9 +1,21 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useParams, useSearchParams } from "next/navigation";
+import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { ChevronLeft, ChevronRight, Globe, ChevronDown } from "lucide-react";
+import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
+import { ChevronLeft, ChevronRight, Globe } from "lucide-react";
+
+function ensureRazorpayLoaded() {
+  if (typeof window === "undefined" || window.Razorpay) return Promise.resolve();
+  return new Promise((resolve, reject) => {
+    const s = document.createElement("script");
+    s.src = "https://checkout.razorpay.com/v1/checkout.js";
+    s.onload = resolve;
+    s.onerror = () => reject(new Error("Could not load payment"));
+    document.body.appendChild(s);
+  });
+}
 
 function formatDateLabel(dateStr) {
   if (!dateStr) return "";
@@ -42,6 +54,8 @@ function DetailChip({ active, onClick, top, bottom }) {
 export default function ServiceDetailPage() {
   const params = useParams();
   const searchParams = useSearchParams();
+  const router = useRouter();
+  const { user } = useFirebaseSession();
   const brandContext = useBrandContext();
   const brand =
     searchParams?.get("subdomain")?.trim() ||
@@ -51,16 +65,16 @@ export default function ServiceDetailPage() {
   const serviceId = params?.id;
   const [service, setService] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [selectedTimezone, setSelectedTimezone] = useState("GMT +5:30");
-
-  const [slotsMap, setSlotsMap] = useState({});     // the full map from API
-  const [weekOffset, setWeekOffset] = useState(0);  // 0, 1, or 2
+  const [slotsMap, setSlotsMap] = useState({});
+  const [weekOffset, setWeekOffset] = useState(0);
   const [selectedDate, setSelectedDate] = useState(null);
   const [selectedTime, setSelectedTime] = useState(null);
 
   const [slotsApiData, setSlotsApiData] = useState(null);
   const [slotsApiLoading, setSlotsApiLoading] = useState(false);
   const [slotsApiError, setSlotsApiError] = useState(null);
+  const [paying, setPaying] = useState(false);
+  const [bookError, setBookError] = useState("");
 
   useEffect(() => {
     if (!brand || !serviceId) {
@@ -97,13 +111,11 @@ export default function ServiceDetailPage() {
         const url = `/api/booking-services/${serviceId}/slots?days=21&brand=${encodeURIComponent(brand)}`;
         const res = await fetch(url);
         const data = await res.json();
-        console.log("[Slots API response]", data);
         setSlotsApiData(data);
         if (data.slots && typeof data.slots === "object") {
           setSlotsMap(data.slots);
         }
       } catch (err) {
-        console.error("[Slots API error]", err);
         setSlotsApiError(err.message || "Failed to load slots");
         setSlotsApiData(null);
       } finally {
@@ -121,6 +133,73 @@ export default function ServiceDetailPage() {
   }, [datesWithDay, weekOffset]);
   const maxWeekOffset = Math.max(0, Math.ceil(datesWithDay.length / 7) - 1);
   const timeSlots = selectedDate ? slotsMap[selectedDate] ?? [] : [];
+
+  const handleBook = async () => {
+    if (!user?.id || !serviceId || !selectedDate || !selectedTime) return;
+    setBookError("");
+    setPaying(true);
+    try {
+      const res = await fetch(
+        `/api/booking-services/${serviceId}/create-order`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          credentials: "include",
+          body: JSON.stringify({ date: selectedDate, startTime: selectedTime }),
+        }
+      );
+      const data = await res.json();
+      if (!data?.orderId) {
+        throw new Error(data?.error || "Failed to create order");
+      }
+
+      await ensureRazorpayLoaded();
+
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
+        amount: data.amount,
+        currency: data.currency || "INR",
+        order_id: data.orderId,
+        name: "Kavisha",
+        description: `${resolvedService.title} - Booking`,
+        prefill: { email: user?.email || "" },
+        modal: { ondismiss: () => setPaying(false) },
+        handler: async function (response) {
+          const verifyRes = await fetch("/api/razorpay/verify-payment", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            credentials: "include",
+            body: JSON.stringify({
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              userId: user.id,
+              type: "booking",
+              metadata: { appointmentId: data.appointmentId },
+              amount: data.amount,
+              currency: data.currency || "INR",
+            }),
+          });
+          const verifyData = await verifyRes.json();
+          if (verifyData?.success) {
+            router.push("/service-orders");
+          } else {
+            setPaying(false);
+            setBookError(verifyData?.error || "Payment verification failed.");
+          }
+        },
+      };
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", () => {
+        setPaying(false);
+        setBookError("Payment failed. Please try again.");
+      });
+      rzp.open();
+    } catch (err) {
+      setPaying(false);
+      setBookError(err?.message || "Something went wrong.");
+    }
+  };
 
   const resolvedService = useMemo(
     () => ({
@@ -276,15 +355,27 @@ export default function ServiceDetailPage() {
 
                 <div className="mt-8 flex items-center gap-2 text-sm text-gray-500">
                   <Globe className="h-4 w-4" />
-                  {selectedTimezone}
+                  GMT +5:30
                 </div>
 
-                <button
-                  type="button"
-                  className="mt-6 rounded-full bg-[#2D545E] px-10 py-2.5 text-sm font-semibold text-white hover:bg-[#264850]"
-                >
-                  Book
-                </button>
+                {bookError && (
+                  <p className="mt-4 text-sm text-red-600">{bookError}</p>
+                )}
+
+                {!user ? (
+                  <p className="mt-6 text-sm text-gray-500">
+                    Sign in to book this service.
+                  </p>
+                ) : (
+                  <button
+                    type="button"
+                    disabled={!selectedDate || !selectedTime || paying}
+                    onClick={handleBook}
+                    className="mt-6 rounded-full bg-[#2D545E] px-10 py-2.5 text-sm font-semibold text-white hover:bg-[#264850] disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:bg-[#2D545E]"
+                  >
+                    {paying ? "Opening payment…" : "Book"}
+                  </button>
+                )}
               </>
             )}
           </section>

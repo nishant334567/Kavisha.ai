@@ -14,6 +14,10 @@ const userSchema = new mongoose.Schema(
     image: {
       type: String,
     },
+    phone: {
+      type: String,
+      default: "",
+    },
     profileType: {
       type: String,
       enum: ["job_seeker", "recruiter", "male", "female"],

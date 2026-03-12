@@ -17,7 +17,6 @@ import {
   Undo2,
 } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import ServicesSidebar from "../components/ServicesSidebar";
 
 const INPUT_CLASS =
   "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-[18px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E]";
@@ -144,15 +143,12 @@ export default function AddBookingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white flex justify-center">
-      <div className="w-full max-w-6xl flex min-h-screen">
-        <ServicesSidebar />
-        <main className="flex-1 min-w-0 overflow-auto bg-[#F3F3F3] px-6 py-8 md:px-10">
-          <h1 className="mb-10 text-5xl font-semibold tracking-wide text-[#111111]">
-            Create a booking
-          </h1>
+    <div className="-mx-6 -my-8 px-6 py-8 md:px-10 bg-[#F3F3F3] min-h-[calc(100vh-4rem)]">
+      <h1 className="mb-10 text-5xl font-semibold tracking-wide text-[#111111]">
+        Create a booking
+      </h1>
 
-          <form className="space-y-8" onSubmit={handleSubmit}>
+      <form className="space-y-8" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-[240px_1fr]">
               <button
                 type="button"
@@ -324,8 +320,6 @@ export default function AddBookingPage() {
               </button>
             </div>
           </form>
-        </main>
-      </div>
     </div>
   );
 }

@@ -4,7 +4,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import ServicesSidebar from "./components/ServicesSidebar";
 import { CalendarClock } from "lucide-react";
 import ServiceCard from "./components/ServiceCard";
 
@@ -34,11 +33,8 @@ export default function ServicesListPage() {
   }, [brand]);
 
   return (
-    <div className="min-h-screen bg-white flex justify-center">
-      <div className="w-full max-w-6xl flex min-h-screen">
-        <ServicesSidebar />
-        <main className="flex-1 min-w-0 overflow-auto px-6 py-8">
-          <div className="flex items-center justify-between mb-6">
+    <>
+      <div className="flex items-center justify-between mb-6">
             <h1 className="text-2xl font-bold text-gray-900">List of services</h1>
             <Link
               href={`/admin/services/add-new${qs}`}
@@ -65,12 +61,11 @@ export default function ServicesListPage() {
                   key={service._id}
                   service={service}
                   href={`/admin/services/${service._id}/edit${qs}`}
+                  showBookingsHref={`/admin/services/orders${qs}${qs ? "&" : "?"}serviceId=${service._id}`}
                 />
               ))}
             </div>
           )}
-        </main>
-      </div>
-    </div>
+    </>
   );
 }

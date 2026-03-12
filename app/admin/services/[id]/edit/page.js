@@ -3,7 +3,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter, useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import ServicesSidebar from "@/app/admin/services/components/ServicesSidebar";
 import {
   ChevronDown,
   Clock3,
@@ -159,28 +158,16 @@ export default function EditServicePage() {
   };
 
   if (loading) {
-    return (
-      <div className="min-h-screen bg-white flex justify-center">
-        <div className="w-full max-w-6xl flex min-h-screen">
-          <ServicesSidebar />
-          <main className="flex-1 min-w-0 overflow-auto px-6 py-8">
-            <p className="text-sm text-gray-500">Loading service...</p>
-          </main>
-        </div>
-      </div>
-    );
+    return <p className="text-sm text-gray-500">Loading service...</p>;
   }
 
   return (
-    <div className="min-h-screen bg-white flex justify-center">
-      <div className="w-full max-w-6xl flex min-h-screen">
-        <ServicesSidebar />
-        <main className="flex-1 min-w-0 overflow-auto bg-[#F3F3F3] px-6 py-8 md:px-10">
-          <h1 className="mb-8 text-3xl font-semibold tracking-wide text-[#111111]">
-            Edit booking service
-          </h1>
+    <div className="-mx-6 -my-8 px-6 py-8 md:px-10 bg-[#F3F3F3] min-h-[calc(100vh-4rem)]">
+      <h1 className="mb-8 text-3xl font-semibold tracking-wide text-[#111111]">
+        Edit booking service
+      </h1>
 
-          <form className="space-y-6" onSubmit={handleSubmit}>
+      <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-[220px_1fr]">
               <button
                 type="button"
@@ -355,8 +342,6 @@ export default function EditServicePage() {
               </button>
             </div>
           </form>
-        </main>
-      </div>
     </div>
   );
 }
