@@ -45,6 +45,7 @@ export default function AvatarHomepage() {
     }
   };
 
+  const qs = brand?.subdomain ? `?subdomain=${encodeURIComponent(brand.subdomain)}` : "";
   const enabledLinks = [
     { label: "YOUR CHATS", path: "/chats", primary: true },
     ...(brand?.enableCommunityOnboarding
@@ -55,6 +56,7 @@ export default function AvatarHomepage() {
       : []),
     ...(brand?.enableJobs ? [{ label: "JOBS", path: "/jobs" }] : []),
     ...(brand?.enableProducts ? [{ label: "PRODUCTS", path: "/products" }] : []),
+    ...(brand?.enableBooking ? [{ label: "SERVICES", path: `/services${qs}` }] : []),
   ];
 
   return (
