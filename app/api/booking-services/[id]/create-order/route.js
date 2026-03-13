@@ -49,6 +49,20 @@ export async function POST(req, { params }) {
             { status: 400 }
           );
         }
+        const dateStr = String(date).trim();
+        const startTimeStr = String(startTime).trim();
+        if (!/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) {
+          return NextResponse.json(
+            { error: "date must be YYYY-MM-DD" },
+            { status: 400 }
+          );
+        }
+        if (!/^\d{1,2}:\d{2}(:\d{2})?$/.test(startTimeStr)) {
+          return NextResponse.json(
+            { error: "startTime must be HH:MM or HH:MM:SS" },
+            { status: 400 }
+          );
+        }
 
         await connectDB();
 
@@ -65,14 +79,14 @@ export async function POST(req, { params }) {
             ? (service.duration || 0) * 60
             : service.duration || 0;
         const bufferMinutes = service.bufferTime || 0;
-        const endTime = addMinutesToTime(startTime, durationMinutes, bufferMinutes);
+        const endTime = addMinutesToTime(startTimeStr, durationMinutes, bufferMinutes);
 
         const conflicting = await BookingAppointment.findOne({
           serviceId: new mongoose.Types.ObjectId(serviceId),
-          date,
+          date: dateStr,
           status: { $in: ["pending", "confirmed"] },
           startTime: { $lt: endTime },
-          endTime: { $gt: startTime },
+          endTime: { $gt: startTimeStr },
         }).lean();
 
         if (conflicting) {
@@ -104,8 +118,8 @@ export async function POST(req, { params }) {
           serviceId: new mongoose.Types.ObjectId(serviceId),
           serviceSnapshot,
           customerId: new mongoose.Types.ObjectId(user.id),
-          date,
-          startTime,
+          date: dateStr,
+          startTime: startTimeStr,
           endTime,
           status: "pending",
           paymentStatus: "pending",

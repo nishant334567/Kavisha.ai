@@ -7,8 +7,6 @@ import {
   CalendarDays,
   CalendarClock,
   ChevronRight,
-  Video,
-  Camera,
   Link2,
   User,
 } from "lucide-react";
@@ -142,34 +140,17 @@ function BookingCard({ booking, index }) {
             <span>Time: {formatTime(booking.startTime)}</span>
           </div>
           <div className="flex justify-end gap-2 pt-2">
-            <button
-              type="button"
-              aria-label="LinkedIn"
-              className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            >
-              <span className="text-[10px] font-bold">in</span>
-            </button>
-            <button
-              type="button"
-              aria-label="Video call"
-              className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            >
-              <Video className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              aria-label="Camera"
-              className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            >
-              <Camera className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              aria-label="Link"
-              className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600"
-            >
-              <Link2 className="w-4 h-4" />
-            </button>
+            {booking.meetLink ? (
+              <a
+                href={booking.meetLink}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Join Google Meet"
+                className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 inline-flex items-center justify-center"
+              >
+                <Link2 className="w-4 h-4" />
+              </a>
+            ) : null}
           </div>
         </div>
       </div>

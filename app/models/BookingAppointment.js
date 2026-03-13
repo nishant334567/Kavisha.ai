@@ -45,6 +45,7 @@ const BookingAppointmentSchema = new mongoose.Schema(
     totalAmount: { type: Number, required: true },
     razorpayOrderId: { type: String, default: "" },
     razorpayPaymentId: { type: String, default: "" },
+    meetLink: { type: String, default: "" },
 
     cancelledAt: { type: Date, default: null },
     cancelReason: { type: String, default: "" },
