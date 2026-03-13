@@ -30,12 +30,16 @@ export default function MyServices() {
   const availedServices = services.map((item) => item.name) || [];
 
   const availableServices = [
-    { serviceName: "lead_journey", serviceTitle: "Talk to me", allowMultiple: true },
+    {
+      serviceName: "lead_journey",
+      serviceTitle: "Talk to me",
+      allowMultiple: true,
+    },
     { serviceName: "pitch_to_investor", serviceTitle: "Pitch to me" },
     { serviceName: "job_seeker", serviceTitle: "Work with me" },
   ];
   const hasServicesToAdd = availableServices.some(
-    (item) => item.allowMultiple || !availedServices.includes(item.serviceName)
+    (item) => item.allowMultiple || !availedServices.includes(item.serviceName),
   );
   const handleEdit = (service) => {
     setSelectedService(service);
@@ -87,7 +91,8 @@ export default function MyServices() {
         enableBooking: brandContext.enableBooking || false,
         enableCommunityOnboarding: true,
         communityName: brandContext.communityName || "",
-        enableProfessionalConnect: brandContext.enableProfessionalConnect || false,
+        enableProfessionalConnect:
+          brandContext.enableProfessionalConnect || false,
         enableFriendConnect: brandContext.enableFriendConnect || false,
       });
     }
@@ -98,7 +103,9 @@ export default function MyServices() {
 
     // Prevent disabling community feature
     if (featureType === "enableCommunityOnboarding" && value === false) {
-      alert("Community feature cannot be disabled. It is always enabled for all brands.");
+      alert(
+        "Community feature cannot be disabled. It is always enabled for all brands.",
+      );
       return;
     }
 
@@ -121,17 +128,18 @@ export default function MyServices() {
         throw new Error(data.error || "Failed to update feature");
       }
 
-      setFeatureData((prev) => ({ ...prev, [featureType]: value }));
+      // Success: keep loading on, wait for Sanity to propagate, then reload once
+      await new Promise((r) => setTimeout(r, 400));
       window.location.reload();
     } catch (err) {
       console.error("Error updating feature:", err);
       alert(err.message || "Failed to update feature");
-    } finally {
       setUpdating(false);
     }
   };
 
   const handleSaveFeatureName = async (featureType, name) => {
+    if (updating) return;
     setUpdating(true);
     try {
       const updatePayload = {
@@ -151,13 +159,11 @@ export default function MyServices() {
         throw new Error(data.error || "Failed to update feature name");
       }
 
-      setFeatureData((prev) => ({ ...prev, [featureType]: name }));
-      setEditingFeature(null);
+      await new Promise((r) => setTimeout(r, 400));
       window.location.reload();
     } catch (err) {
       console.error("Error updating feature name:", err);
       alert(err.message || "Failed to update feature name");
-    } finally {
       setUpdating(false);
     }
   };
@@ -187,7 +193,9 @@ export default function MyServices() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <section className="lg:col-span-5 bg-white border border-gray-200 rounded-2xl shadow-sm p-5 md:p-6">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-zen text-xl font-bold text-[#000A67]">Configured Services</h2>
+                <h2 className="font-zen text-xl font-bold text-[#000A67]">
+                  Configured Services
+                </h2>
                 <span className="text-xs uppercase tracking-wider text-gray-400">
                   {services.length} active
                 </span>
@@ -195,7 +203,9 @@ export default function MyServices() {
 
               <div className="space-y-2">
                 {services.length === 0 && (
-                  <p className="text-sm text-gray-500">No services configured yet.</p>
+                  <p className="text-sm text-gray-500">
+                    No services configured yet.
+                  </p>
                 )}
                 {services.map((service, index) => (
                   <button
@@ -206,7 +216,9 @@ export default function MyServices() {
                     <p className="text-sm uppercase tracking-wide text-[#2D545E] font-medium">
                       {service?.title || service?.name || "Untitled Service"}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">{service?.name || "service"}</p>
+                    <p className="text-xs text-gray-400 mt-0.5">
+                      {service?.name || "service"}
+                    </p>
                   </button>
                 ))}
               </div>
@@ -225,7 +237,7 @@ export default function MyServices() {
                         .filter(
                           (item) =>
                             item.allowMultiple ||
-                            !availedServices.includes(item.serviceName)
+                            !availedServices.includes(item.serviceName),
                         )
                         .map((item, index) => (
                           <button
@@ -245,21 +257,30 @@ export default function MyServices() {
             <section className="lg:col-span-7 bg-white border border-gray-200 rounded-2xl shadow-sm p-5 md:p-6">
               <div className="flex items-start justify-between gap-4 mb-5">
                 <div>
-                  <h2 className="font-zen text-xl font-bold text-[#000A67]">Feature Settings</h2>
+                  <h2 className="font-zen text-xl font-bold text-[#000A67]">
+                    Feature Settings
+                  </h2>
                   <p className="text-sm text-gray-500 mt-1">
                     Control what appears on user home and chat selection.
                   </p>
                 </div>
                 {updating && (
-                  <span className="text-xs px-2 py-1 rounded-full bg-amber-50 text-amber-700 border border-amber-200">
-                    Updating...
+                  <span className="inline-flex items-center gap-2 text-sm font-medium text-amber-700 bg-amber-50 px-3 py-1.5 rounded-full border border-amber-200">
+                    <span className="w-4 h-4 border-2 border-amber-500 border-t-transparent rounded-full animate-spin" />
+                    Updating…
                   </span>
                 )}
               </div>
 
-              {(featureData.enableQuiz || featureData.enableJobs || featureData.enableProducts || featureData.enableBooking || featureData.enableCommunityOnboarding) && (
+              {(featureData.enableQuiz ||
+                featureData.enableJobs ||
+                featureData.enableProducts ||
+                featureData.enableBooking ||
+                featureData.enableCommunityOnboarding) && (
                 <div className="mb-5 p-3 rounded-xl bg-[#F8FBFC] border border-[#2D545E]/15">
-                  <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">Visible on user side</p>
+                  <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">
+                    Visible on user side
+                  </p>
                   <div className="flex flex-wrap gap-2">
                     {featureData.enableCommunityOnboarding && (
                       <span className="px-3 py-1 rounded-full text-xs bg-white border border-gray-200 text-gray-700">
@@ -290,7 +311,9 @@ export default function MyServices() {
                 </div>
               )}
 
-              <div className={`space-y-4 ${updating ? "pointer-events-none opacity-70" : ""}`}>
+              <div
+                className={`space-y-4 ${updating ? "pointer-events-none opacity-70" : ""}`}
+              >
                 <div className="p-4 rounded-xl border border-gray-200 bg-gray-50">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
@@ -334,7 +357,7 @@ export default function MyServices() {
                               onClick={() =>
                                 handleSaveFeatureName(
                                   "communityName",
-                                  featureData.communityName
+                                  featureData.communityName,
                                 )
                               }
                               disabled={updating}
@@ -347,7 +370,8 @@ export default function MyServices() {
                                 setEditingFeature(null);
                                 setFeatureData((prev) => ({
                                   ...prev,
-                                  communityName: brandContext?.communityName || "",
+                                  communityName:
+                                    brandContext?.communityName || "",
                                 }));
                               }}
                               disabled={updating}
@@ -359,7 +383,8 @@ export default function MyServices() {
                         ) : (
                           <>
                             <span className="text-gray-600 uppercase text-xs tracking-wider font-normal">
-                              {featureData.communityName || "Connect with others"}
+                              {featureData.communityName ||
+                                "Connect with others"}
                             </span>
                             <button
                               onClick={() => setEditingFeature("communityName")}
@@ -379,14 +404,23 @@ export default function MyServices() {
                     </p>
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-700 font-medium">Professional Connect</span>
-                        <span className="text-xs text-gray-400">Shows "Hire People" &amp; "Find Jobs" buttons</span>
+                        <span className="text-sm text-gray-700 font-medium">
+                          Professional Connect
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          Shows "Hire People" &amp; "Find Jobs" buttons
+                        </span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
                           checked={featureData.enableProfessionalConnect}
-                          onChange={(e) => handleToggleFeature("enableProfessionalConnect", e.target.checked)}
+                          onChange={(e) =>
+                            handleToggleFeature(
+                              "enableProfessionalConnect",
+                              e.target.checked,
+                            )
+                          }
                           disabled={updating}
                           className="sr-only peer"
                         />
@@ -395,25 +429,36 @@ export default function MyServices() {
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-700 font-medium">Friend Connect</span>
-                        <span className="text-xs text-gray-400">Shows "Find Friends" button</span>
+                        <span className="text-sm text-gray-700 font-medium">
+                          Friend Connect
+                        </span>
+                        <span className="text-xs text-gray-400">
+                          Shows "Find Friends" button
+                        </span>
                       </div>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
                           checked={featureData.enableFriendConnect}
-                          onChange={(e) => handleToggleFeature("enableFriendConnect", e.target.checked)}
+                          onChange={(e) =>
+                            handleToggleFeature(
+                              "enableFriendConnect",
+                              e.target.checked,
+                            )
+                          }
                           disabled={updating}
                           className="sr-only peer"
                         />
                         <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                       </label>
                     </div>
-                    {!featureData.enableProfessionalConnect && !featureData.enableFriendConnect && (
-                      <p className="text-xs text-amber-600 font-medium">
-                        Both are off — community section will be hidden for visitors.
-                      </p>
-                    )}
+                    {!featureData.enableProfessionalConnect &&
+                      !featureData.enableFriendConnect && (
+                        <p className="text-xs text-amber-600 font-medium">
+                          Both are off — community section will be hidden for
+                          visitors.
+                        </p>
+                      )}
                   </div>
                 </div>
 
@@ -455,7 +500,10 @@ export default function MyServices() {
                             />
                             <button
                               onClick={() =>
-                                handleSaveFeatureName("quizName", featureData.quizName)
+                                handleSaveFeatureName(
+                                  "quizName",
+                                  featureData.quizName,
+                                )
                               }
                               disabled={updating}
                               className="text-green-600 hover:text-green-700"
@@ -513,7 +561,9 @@ export default function MyServices() {
                         <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                       </label>
                     </div>
-                    <span className="text-xs text-gray-400">Job listings &amp; applications</span>
+                    <span className="text-xs text-gray-400">
+                      Job listings &amp; applications
+                    </span>
                   </div>
                 </div>
 
@@ -528,7 +578,10 @@ export default function MyServices() {
                           type="checkbox"
                           checked={featureData.enableProducts}
                           onChange={(e) =>
-                            handleToggleFeature("enableProducts", e.target.checked)
+                            handleToggleFeature(
+                              "enableProducts",
+                              e.target.checked,
+                            )
                           }
                           disabled={updating}
                           className="sr-only peer"
@@ -536,7 +589,9 @@ export default function MyServices() {
                         <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                       </label>
                     </div>
-                    <span className="text-xs text-gray-400">Store, cart &amp; order history</span>
+                    <span className="text-xs text-gray-400">
+                      Store, cart &amp; order history
+                    </span>
                   </div>
                 </div>
 
@@ -551,7 +606,10 @@ export default function MyServices() {
                           type="checkbox"
                           checked={featureData.enableBooking}
                           onChange={(e) =>
-                            handleToggleFeature("enableBooking", e.target.checked)
+                            handleToggleFeature(
+                              "enableBooking",
+                              e.target.checked,
+                            )
                           }
                           disabled={updating}
                           className="sr-only peer"
@@ -559,7 +617,9 @@ export default function MyServices() {
                         <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
                       </label>
                     </div>
-                    <span className="text-xs text-gray-400">Bookable services &amp; booking history</span>
+                    <span className="text-xs text-gray-400">
+                      Bookable services &amp; booking history
+                    </span>
                   </div>
                   {featureData.enableBooking && (
                     <a

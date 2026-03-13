@@ -60,7 +60,7 @@ export default function BrandContextProvider({ children }) {
                   enableProducts,
                   enableBooking,
                   services
-              }[0]`
+              }[0]`,
         );
         if (brand) {
           // Generate URLs using urlFor helper with proper null checks
@@ -125,7 +125,7 @@ export const useBrandContext = () => {
   const context = useContext(BrandContext);
   if (context === undefined) {
     throw new Error(
-      "useBrandContext must be used within a BrandContextProvider"
+      "useBrandContext must be used within a BrandContextProvider",
     );
   }
   return context;
