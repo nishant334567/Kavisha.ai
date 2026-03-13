@@ -18,6 +18,7 @@ export default function MyServices() {
     quizName: brandContext?.quizName || "",
     enableJobs: brandContext?.enableJobs || false,
     enableProducts: brandContext?.enableProducts || false,
+    enableBooking: brandContext?.enableBooking || false,
     enableCommunityOnboarding: true,
     communityName: brandContext?.communityName || "",
     enableProfessionalConnect: brandContext?.enableProfessionalConnect || false,
@@ -83,6 +84,7 @@ export default function MyServices() {
         quizName: brandContext.quizName || "",
         enableJobs: brandContext.enableJobs || false,
         enableProducts: brandContext.enableProducts || false,
+        enableBooking: brandContext.enableBooking || false,
         enableCommunityOnboarding: true,
         communityName: brandContext.communityName || "",
         enableProfessionalConnect: brandContext.enableProfessionalConnect || false,
@@ -255,7 +257,7 @@ export default function MyServices() {
                 )}
               </div>
 
-              {(featureData.enableQuiz || featureData.enableJobs || featureData.enableProducts || featureData.enableCommunityOnboarding) && (
+              {(featureData.enableQuiz || featureData.enableJobs || featureData.enableProducts || featureData.enableBooking || featureData.enableCommunityOnboarding) && (
                 <div className="mb-5 p-3 rounded-xl bg-[#F8FBFC] border border-[#2D545E]/15">
                   <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">Visible on user side</p>
                   <div className="flex flex-wrap gap-2">
@@ -277,6 +279,11 @@ export default function MyServices() {
                     {featureData.enableProducts && (
                       <span className="px-3 py-1 rounded-full text-xs bg-white border border-gray-200 text-gray-700">
                         Products
+                      </span>
+                    )}
+                    {featureData.enableBooking && (
+                      <span className="px-3 py-1 rounded-full text-xs bg-white border border-gray-200 text-gray-700">
+                        Bookings
                       </span>
                     )}
                   </div>
@@ -531,6 +538,37 @@ export default function MyServices() {
                     </div>
                     <span className="text-xs text-gray-400">Store, cart &amp; order history</span>
                   </div>
+                </div>
+
+                <div className="p-4 rounded-xl border border-gray-200">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-gray-700 uppercase text-sm tracking-wider font-medium">
+                        Booking
+                      </span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={featureData.enableBooking}
+                          onChange={(e) =>
+                            handleToggleFeature("enableBooking", e.target.checked)
+                          }
+                          disabled={updating}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                      </label>
+                    </div>
+                    <span className="text-xs text-gray-400">Bookable services &amp; booking history</span>
+                  </div>
+                  {featureData.enableBooking && (
+                    <a
+                      href={`/admin/services?subdomain=${encodeURIComponent(brandContext?.subdomain || "")}`}
+                      className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[#2D545E] hover:text-[#1e3d44]"
+                    >
+                      Manage booking services →
+                    </a>
+                  )}
                 </div>
               </div>
             </section>

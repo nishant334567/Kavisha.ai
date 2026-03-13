@@ -44,6 +44,7 @@ export default function AdminNavbar() {
   const navOptions = [
     { name: "Home", path: `/admin/${brand?.subdomain}/v2` },
     { name: "My Services", path: `/admin/${brand?.subdomain}/my-services` },
+    ...(brand?.enableBooking ? [{ name: "Booking Services", path: `/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
     ...(brand?.enableJobs ? [{ name: "My Jobs", path: `/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
     { name: "Train My Avataar", path: `/admin/${brand?.subdomain}/train/v2` },
     { name: "My Profile", path: `/admin/${brand?.subdomain}/edit-profile` },
@@ -78,6 +79,15 @@ export default function AdminNavbar() {
             >
               MY SERVICES
             </li>
+            {brand?.enableBooking && (
+              <li
+                className={`cursor-pointer text-white uppercase tracking-wide ${pathname?.includes("/admin/services") ? "font-semibold" : ""
+                  }`}
+                onClick={() => go(`/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
+              >
+                BOOKING SERVICES
+              </li>
+            )}
             {brand?.enableJobs && (
               <li
                 className={`cursor-pointer text-white uppercase tracking-wide ${pathname?.includes("/jobs") ? "font-semibold" : ""

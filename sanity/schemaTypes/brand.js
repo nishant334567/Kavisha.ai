@@ -142,6 +142,13 @@ export default {
       initialValue: false,
     },
     {
+      name: "enableBooking",
+      title: "Enable Booking / Bookable Services",
+      type: "boolean",
+      description: "When enabled, users can see and use the bookable services (Services list and Booking history). Admins can manage booking services and orders.",
+      initialValue: false,
+    },
+    {
       name: "services",
       title: "Services",
       type: "array",

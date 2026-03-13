@@ -58,6 +58,7 @@ export default function BrandContextProvider({ children }) {
                   quizName,
                   enableJobs,
                   enableProducts,
+                  enableBooking,
                   services
               }[0]`
         );
@@ -96,6 +97,7 @@ export default function BrandContextProvider({ children }) {
             quizName: brand.quizName || "Take quiz/survey",
             enableJobs: brand.enableJobs || false,
             enableProducts: brand.enableProducts || false,
+            enableBooking: brand.enableBooking || false,
             services: brand.services,
           };
 
