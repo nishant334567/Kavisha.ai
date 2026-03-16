@@ -59,6 +59,7 @@ export default function BrandContextProvider({ children }) {
                   enableJobs,
                   enableProducts,
                   enableBooking,
+                  enableBlogs,
                   services
               }[0]`,
         );
@@ -98,6 +99,7 @@ export default function BrandContextProvider({ children }) {
             enableJobs: brand.enableJobs || false,
             enableProducts: brand.enableProducts || false,
             enableBooking: brand.enableBooking || false,
+            enableBlogs: brand.enableBlogs || false,
             services: brand.services,
           };
 

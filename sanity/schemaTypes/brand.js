@@ -149,6 +149,13 @@ export default {
       initialValue: false,
     },
     {
+      name: "enableBlogs",
+      title: "Enable Blog",
+      type: "boolean",
+      description: "When enabled, users can see the blog (list and posts). Admins can create, edit, and manage blog posts.",
+      initialValue: false,
+    },
+    {
       name: "services",
       title: "Services",
       type: "array",

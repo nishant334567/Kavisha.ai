@@ -19,6 +19,7 @@ export default function MyServices() {
     enableJobs: brandContext?.enableJobs || false,
     enableProducts: brandContext?.enableProducts || false,
     enableBooking: brandContext?.enableBooking || false,
+    enableBlogs: brandContext?.enableBlogs || false,
     enableCommunityOnboarding: true,
     communityName: brandContext?.communityName || "",
     enableProfessionalConnect: brandContext?.enableProfessionalConnect || false,
@@ -89,6 +90,7 @@ export default function MyServices() {
         enableJobs: brandContext.enableJobs || false,
         enableProducts: brandContext.enableProducts || false,
         enableBooking: brandContext.enableBooking || false,
+        enableBlogs: brandContext.enableBlogs || false,
         enableCommunityOnboarding: true,
         communityName: brandContext.communityName || "",
         enableProfessionalConnect:
@@ -276,6 +278,7 @@ export default function MyServices() {
                 featureData.enableJobs ||
                 featureData.enableProducts ||
                 featureData.enableBooking ||
+                featureData.enableBlogs ||
                 featureData.enableCommunityOnboarding) && (
                 <div className="mb-5 p-3 rounded-xl bg-[#F8FBFC] border border-[#2D545E]/15">
                   <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">
@@ -305,6 +308,11 @@ export default function MyServices() {
                     {featureData.enableBooking && (
                       <span className="px-3 py-1 rounded-full text-xs bg-white border border-gray-200 text-gray-700">
                         Bookings
+                      </span>
+                    )}
+                    {featureData.enableBlogs && (
+                      <span className="px-3 py-1 rounded-full text-xs bg-white border border-gray-200 text-gray-700">
+                        Blogs
                       </span>
                     )}
                   </div>
@@ -599,7 +607,7 @@ export default function MyServices() {
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
                       <span className="text-gray-700 uppercase text-sm tracking-wider font-medium">
-                        Booking
+                        Bookings
                       </span>
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
@@ -627,6 +635,42 @@ export default function MyServices() {
                       className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[#2D545E] hover:text-[#1e3d44]"
                     >
                       Manage booking services →
+                    </a>
+                  )}
+                </div>
+
+                <div className="p-4 rounded-xl border border-gray-200">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-gray-700 uppercase text-sm tracking-wider font-medium">
+                        Blogs
+                      </span>
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={featureData.enableBlogs}
+                          onChange={(e) =>
+                            handleToggleFeature(
+                              "enableBlogs",
+                              e.target.checked,
+                            )
+                          }
+                          disabled={updating}
+                          className="sr-only peer"
+                        />
+                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                      </label>
+                    </div>
+                    <span className="text-xs text-gray-400">
+                      Blog posts for users
+                    </span>
+                  </div>
+                  {featureData.enableBlogs && (
+                    <a
+                      href={`/admin/blogs?subdomain=${encodeURIComponent(brandContext?.subdomain || "")}`}
+                      className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[#2D545E] hover:text-[#1e3d44]"
+                    >
+                      Manage blog posts →
                     </a>
                   )}
                 </div>

@@ -46,12 +46,13 @@ export default function AdminNavbar() {
     { name: "My Services", path: `/admin/${brand?.subdomain}/my-services` },
     ...(brand?.enableBooking ? [{ name: "Booking Services", path: `/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
     ...(brand?.enableJobs ? [{ name: "My Jobs", path: `/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
+    ...(brand?.enableBlogs ? [{ name: "Blogs", path: `/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
     { name: "Train My Avataar", path: `/admin/${brand?.subdomain}/train/v2` },
     { name: "My Profile", path: `/admin/${brand?.subdomain}/edit-profile` },
   ];
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 w-full h-14 bg-white md:bg-[#004A4E] z-50">
+      <nav className="fixed top-0 left-0 right-0 w-full h-14 bg-white border-b border-gray-200 z-50 text-gray-700">
         <div className="hidden px-4 h-full md:flex items-center justify-between font-akshar text-sm">
           <div className="hidden md:flex items-center gap-3">
             <div className="flex justify-between items-center">
@@ -63,17 +64,17 @@ export default function AdminNavbar() {
             </div>
             <button
               onClick={() => go(`/admin/${brand?.subdomain}/v2`)}
-              className="text-white uppercase tracking-wide hover:opacity-90 transition-opacity"
+              className="uppercase tracking-wide hover:opacity-80 transition-opacity text-gray-700"
             >
               Home
             </button>
           </div>
-          <button onClick={() => setShowNavoption(true)}>
-            <Menu className="w-5 h-5 md:text-white text-black sm:hidden" />
+          <button onClick={() => setShowNavoption(true)} className="md:hidden">
+            <Menu className="w-5 h-5 text-gray-700" />
           </button>
           <ul className="items-center gap-6 hidden md:flex">
             <li
-              className={`cursor-pointer text-white uppercase tracking-wide ${pathname?.includes("/my-services") ? "font-semibold" : ""
+              className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/my-services") ? "font-semibold text-gray-900" : ""
                 }`}
               onClick={() => go(`/admin/${brand?.subdomain}/my-services`)}
             >
@@ -81,7 +82,7 @@ export default function AdminNavbar() {
             </li>
             {brand?.enableBooking && (
               <li
-                className={`cursor-pointer text-white uppercase tracking-wide ${pathname?.includes("/admin/services") ? "font-semibold" : ""
+                className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/admin/services") ? "font-semibold text-gray-900" : ""
                   }`}
                 onClick={() => go(`/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
               >
@@ -90,30 +91,39 @@ export default function AdminNavbar() {
             )}
             {brand?.enableJobs && (
               <li
-                className={`cursor-pointer text-white uppercase tracking-wide ${pathname?.includes("/jobs") ? "font-semibold" : ""
+                className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/jobs") ? "font-semibold text-gray-900" : ""
                   }`}
                 onClick={() => go(`/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
               >
                 MY JOBS
               </li>
             )}
+            {brand?.enableBlogs && (
+              <li
+                className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/blogs") ? "font-semibold text-gray-900" : ""
+                  }`}
+                onClick={() => go(`/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
+              >
+                BLOGS
+              </li>
+            )}
             <li
-              className={`cursor-pointer text-white uppercase tracking-wide ${pathname?.includes("/train") ? "font-semibold" : ""
+              className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/train") ? "font-semibold text-gray-900" : ""
                 }`}
               onClick={() => go(`/admin/${brand?.subdomain}/train/v2`)}
             >
               TRAIN MY AVATAAR
             </li>
             <li
-              className={`cursor-pointer text-white uppercase tracking-wide flex items-center gap-2 ${pathname?.includes("/edit-profile") ? "font-semibold" : ""
+              className={`cursor-pointer uppercase tracking-wide flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/edit-profile") ? "font-semibold text-gray-900" : ""
                 }`}
               onClick={() => go(`/admin/${brand?.subdomain}/edit-profile`)}
             >
               MY PROFILE
             </li>
             <li className="relative" ref={settingDropdownRef}>
-              <button onClick={() => setShowsettingDropdown((prev) => !prev)}>
-                <Settings className="w-4 h-4 text-white stroke-2" />
+              <button onClick={() => setShowsettingDropdown((prev) => !prev)} className="text-gray-600 hover:text-gray-900 transition-colors">
+                <Settings className="w-4 h-4 stroke-2" />
               </button>
               {showSettingDropdown && (
                 <div className="absolute top-full right-0 mt-4 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[180px] z-50">
@@ -140,13 +150,12 @@ export default function AdminNavbar() {
             </li>
           </ul>
         </div>
-        <div className="flex justify-between md:hidden px-3 py-4 shadow-md">
+        <div className="flex justify-between md:hidden px-3 py-4 border-b border-gray-200 bg-white">
           <div
-            onClick={() => {
-              setShowNavoption((prev) => !prev);
-            }}
+            onClick={() => setShowNavoption((prev) => !prev)}
+            className="text-gray-700"
           >
-            <Menu />
+            <Menu className="w-5 h-5" />
           </div>
           {/* <div className="flex items-center gap-2">
             <button>
