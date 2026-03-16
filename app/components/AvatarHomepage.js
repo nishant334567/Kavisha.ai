@@ -57,6 +57,7 @@ export default function AvatarHomepage() {
     ...(brand?.enableJobs ? [{ label: "JOBS", path: "/jobs" }] : []),
     ...(brand?.enableProducts ? [{ label: "PRODUCTS", path: "/products" }] : []),
     ...(brand?.enableBooking ? [{ label: "SERVICES", path: `/services${qs}` }] : []),
+    ...(brand?.enableBlogs ? [{ label: "BLOG", path: `/blogs${qs}` }] : []),
   ];
 
   return (

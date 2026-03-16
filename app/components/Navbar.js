@@ -32,10 +32,16 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (settingDropdownRef.current && !settingDropdownRef.current.contains(event.target)) {
+      if (
+        settingDropdownRef.current &&
+        !settingDropdownRef.current.contains(event.target)
+      ) {
         setShowsettingDropdown(false);
       }
-      if (mobileMenuRef.current && !mobileMenuRef.current.contains(event.target)) {
+      if (
+        mobileMenuRef.current &&
+        !mobileMenuRef.current.contains(event.target)
+      ) {
         setOpenmenu(false);
       }
     };
@@ -62,9 +68,10 @@ export default function Navbar() {
     try {
       if (redirectPath && typeof window !== "undefined") {
         // Ensure redirectPath is a string and starts with /
-        const path = typeof redirectPath === "string" && redirectPath.startsWith("/")
-          ? redirectPath
-          : "/";
+        const path =
+          typeof redirectPath === "string" && redirectPath.startsWith("/")
+            ? redirectPath
+            : "/";
         localStorage.setItem("redirectAfterLogin", path);
       }
       await signIn();
@@ -86,20 +93,22 @@ export default function Navbar() {
   ];
   return (
     <div className="relative">
-      <nav className="hidden md:block w-full bg-[#004A4E] fixed top-0 left-0 z-50 text-white">
+      <nav className="hidden md:block w-full fixed top-0 left-0 z-50 text-gray-700 bg-white border-b border-gray-200">
         <div className="px-4 h-14 flex items-center justify-between">
           <div
             className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
             onClick={() => router.push("/")}
           >
             {brand?.logoUrl ? (
-              <img
-                src={brand.logoUrl}
-                alt={`${brand.brandName} logo`}
-                className="w-14 h-14 object-contain"
-              />
+              <div className="h-12 w-12 shrink-0 overflow-hidden rounded-full bg-gray-200/50">
+                <img
+                  src={brand.logoUrl}
+                  alt={`${brand.brandName} logo`}
+                  className="h-full w-full object-cover"
+                />
+              </div>
             ) : (
-              <div className="w-8 h-8 rounded-md bg-blue-600 flex items-center justify-center text-white text-xs font-bold">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-lg font-bold">
                 {brand?.brandName?.[0]?.toUpperCase() || "K"}
               </div>
             )}
@@ -127,7 +136,7 @@ export default function Navbar() {
             {isMainDomain && (
               <button
                 onClick={() => router.push("/make-avatar")}
-              // className="px-3 py-1.5 rounded-md text-sm bg-blue-600 hover:bg-blue-700 transition-colors"
+                // className="px-3 py-1.5 rounded-md text-sm bg-blue-600 hover:bg-blue-700 transition-colors"
               >
                 MAKE MY AVATAAR
               </button>
@@ -135,11 +144,27 @@ export default function Navbar() {
             {user && (
               <>
                 <button onClick={() => router.push("/chats")}>CHATS</button>
-                <button onClick={() => router.push("/community")}>COMMUNITY</button>
+                <button onClick={() => router.push("/community")}>
+                  COMMUNITY
+                </button>
               </>
             )}
             {brand?.enableProducts && (
               <button onClick={() => router.push("/products")}>PRODUCTS</button>
+            )}
+            {brand?.enableBlogs && (
+              <button
+                onClick={() =>
+                  router.push(
+                    "/blogs" +
+                      (brand?.subdomain
+                        ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
+                        : ""),
+                  )
+                }
+              >
+                BLOGS
+              </button>
             )}
             {loading ? (
               <div className=" text-sm text-muted">Loading...</div>
@@ -162,7 +187,9 @@ export default function Navbar() {
                   </button>
                 )}
                 {popupBlockedHint && !isBlocked && (
-                  <p className="text-xs text-amber-200 mt-1 text-right max-w-[200px]">Popup was blocked. Try again — it&apos;ll work.</p>
+                  <p className="text-xs text-amber-200 mt-1 text-right max-w-[200px]">
+                    Popup was blocked. Try again — it&apos;ll work.
+                  </p>
                 )}
               </div>
             ) : (
@@ -172,7 +199,7 @@ export default function Navbar() {
             )}
             <div className="relative" ref={settingDropdownRef}>
               <button onClick={() => setShowsettingDropdown((prev) => !prev)}>
-                <Settings className="w-4 h-4 text-[#FFEED8] stroke-2" />
+                <Settings className="w-4 h-4 stroke-2" />
               </button>
               {showSettingDropdown && (
                 <div className="absolute top-full right-0 mt-4 bg-card rounded-lg shadow-lg border border-border min-w-[180px] z-50">
@@ -197,7 +224,7 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <nav className="md:hidden bg-background border border-b-2 border-border py-4 px-4">
+      <nav className="md:hidden bg-white border-b border-gray-200 py-4 px-4">
         <div className="flex gap-2 items-center">
           <button onClick={() => setOpenmenu((prev) => !prev)}>
             <Menu />
@@ -213,40 +240,116 @@ export default function Navbar() {
       </nav>
 
       {openMenu && (
-        <div className="w-50% z-50 absolute left-0 top-14 py-2 px-8 bg-muted-bg rounded-md" ref={mobileMenuRef}>
+        <div
+          className="w-50% z-50 absolute left-0 top-14 py-2 px-8 bg-muted-bg rounded-md"
+          ref={mobileMenuRef}
+        >
           <ul className="space-y-4 font-akshar">
             <li>
-              <button onClick={() => { setOpenmenu(false); router.push("/help"); }}>Help</button>
+              <button
+                onClick={() => {
+                  setOpenmenu(false);
+                  router.push("/help");
+                }}
+              >
+                Help
+              </button>
             </li>
             <li>
-              <button onClick={() => { setOpenmenu(false); router.push("/privacy-policy"); }}>Privacy Policy</button>
+              <button
+                onClick={() => {
+                  setOpenmenu(false);
+                  router.push("/privacy-policy");
+                }}
+              >
+                Privacy Policy
+              </button>
             </li>
             <li>
-              <button onClick={() => { setOpenmenu(false); router.push("/tnc"); }}>Terms and Conditions</button>
+              <button
+                onClick={() => {
+                  setOpenmenu(false);
+                  router.push("/tnc");
+                }}
+              >
+                Terms and Conditions
+              </button>
             </li>
             {brand?.subdomain === "kavisha" && (
               <li>
-                <button onClick={() => { setOpenmenu(false); router.push("/make-avatar"); }}>Make my Avataar</button>
+                <button
+                  onClick={() => {
+                    setOpenmenu(false);
+                    router.push("/make-avatar");
+                  }}
+                >
+                  Make my Avataar
+                </button>
               </li>
             )}
             {brand?.subdomain === "kavisha" && (
               <li>
-                <button onClick={() => { setOpenmenu(false); router.push("/talk-to-avatar"); }}>Talk to Avataars</button>
+                <button
+                  onClick={() => {
+                    setOpenmenu(false);
+                    router.push("/talk-to-avatar");
+                  }}
+                >
+                  Talk to Avataars
+                </button>
               </li>
             )}
             {user && (
               <>
                 <li>
-                  <button onClick={() => { setOpenmenu(false); router.push("/chats"); }}>Chats</button>
+                  <button
+                    onClick={() => {
+                      setOpenmenu(false);
+                      router.push("/chats");
+                    }}
+                  >
+                    Chats
+                  </button>
                 </li>
                 <li>
-                  <button onClick={() => { setOpenmenu(false); router.push("/community"); }}>Community</button>
+                  <button
+                    onClick={() => {
+                      setOpenmenu(false);
+                      router.push("/community");
+                    }}
+                  >
+                    Community
+                  </button>
                 </li>
               </>
             )}
             {brand?.enableProducts && (
               <li>
-                <button onClick={() => { setOpenmenu(false); router.push("/products"); }}>Products</button>
+                <button
+                  onClick={() => {
+                    setOpenmenu(false);
+                    router.push("/products");
+                  }}
+                >
+                  Products
+                </button>
+              </li>
+            )}
+            {brand?.enableBlogs && (
+              <li>
+                <button
+                  onClick={() => {
+                    setOpenmenu(false);
+                    router.push(
+                      "/blogs" +
+                        (brand?.subdomain
+                          ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
+                          : ""),
+                    );
+                  }}
+                >
+                  Blogs
+                </button>
               </li>
             )}
             <li>
@@ -264,7 +367,9 @@ export default function Navbar() {
                     </button>
                   )}
                   {popupBlockedHint && !isBlocked && (
-                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">Popup was blocked. Try again — it&apos;ll work.</p>
+                    <p className="text-xs text-amber-600 dark:text-amber-400 mt-1">
+                      Popup was blocked. Try again — it&apos;ll work.
+                    </p>
                   )}
                 </div>
               ) : (

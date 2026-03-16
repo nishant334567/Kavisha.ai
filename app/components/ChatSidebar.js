@@ -142,7 +142,7 @@ export default function ChatSidebar({
               onClick={() => toggleLeftSideBar()}
             ></div>
 
-            <div className="h-full md:mt-12 fixed top-0 left-0 z-40 flex flex-col  p-4 border-r border-border bg-muted-bg shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div className="h-full md:mt-12 fixed top-0 left-0 z-40 flex flex-col p-4 border-r border-border bg-white shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
               <div className="font-akshar flex items-center gap-3 mb-6 p-3 rounded-xl bg-[#3D5E6B] text-[#FFEED8] ">
                 <div className="w-8 h-8 rounded-full bg-background/20 flex items-center justify-center text-sm font-semibold overflow-hidden flex-shrink-0">
                   {user?.image ? (
