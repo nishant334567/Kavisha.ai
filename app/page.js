@@ -17,11 +17,20 @@ export default function HomePage() {
   useEffect(() => {
     if (loading) return;
     const redirectParam = searchParams.get("redirect");
-    const path = typeof redirectParam === "string" && redirectParam.startsWith("/") ? redirectParam : null;
+    const path =
+      typeof redirectParam === "string" && redirectParam.startsWith("/")
+        ? redirectParam
+        : null;
     if (!path) return;
 
     if (user && brandContext) {
       localStorage.removeItem("redirectAfterLogin");
+      // Don't send non-admins to admin routes
+      if (path.startsWith("/admin") && !brandContext.isBrandAdmin) {
+        if (typeof window !== "undefined") localStorage.removeItem("redirectAfterLogin");
+        router.replace("/", { scroll: false });
+        return;
+      }
       router.replace(path);
       return;
     }
@@ -36,14 +45,18 @@ export default function HomePage() {
     if (loading || !user || !brandContext) {
       return;
     }
-    const redirectPath = typeof window !== "undefined" ? localStorage.getItem("redirectAfterLogin") : null;
-
-    if (redirectPath) {
-      const path = typeof redirectPath === "string" && redirectPath.startsWith("/")
-        ? redirectPath
+    const redirectPath =
+      typeof window !== "undefined"
+        ? localStorage.getItem("redirectAfterLogin")
         : null;
 
-      if (path) {
+    if (redirectPath) {
+      const path =
+        typeof redirectPath === "string" && redirectPath.startsWith("/")
+          ? redirectPath
+          : null;
+
+      if (path && !(path.startsWith("/admin") && !brandContext?.isBrandAdmin)) {
         localStorage.removeItem("redirectAfterLogin");
         router.replace(path);
         return;
@@ -55,7 +68,9 @@ export default function HomePage() {
 
   useLayoutEffect(() => {
     if (loading || !user || !brandContext?.isBrandAdmin) return;
-    const hasRedirect = typeof window !== "undefined" && localStorage.getItem("redirectAfterLogin");
+    const hasRedirect =
+      typeof window !== "undefined" &&
+      localStorage.getItem("redirectAfterLogin");
     if (hasRedirect) return;
     router.push(`/admin/${brandContext.subdomain}/v2`);
   }, [user, loading, brandContext, router]);
@@ -72,7 +87,11 @@ export default function HomePage() {
     return <Loader loadingMessage="Redirecting to admin dashboard..." />;
   }
 
-  const displayName = (user?.name || user?.email?.split("@")[0] || "there").toUpperCase();
+  const displayName = (
+    user?.name ||
+    user?.email?.split("@")[0] ||
+    "there"
+  ).toUpperCase();
 
   return (
     <div className="min-h-screen">
