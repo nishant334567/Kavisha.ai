@@ -52,10 +52,13 @@ export async function generateMetadata({ params }) {
       brand && brand !== "kavisha"
         ? `${siteUrl}${path}?subdomain=${encodeURIComponent(brand)}`
         : `${siteUrl}${path}`;
-    let ogImage = post.featuredImage || null;
+    let ogImage = post.featuredImage?.trim() || null;
     if (ogImage && ogImage.startsWith("/")) {
       ogImage = `${siteUrl}${ogImage}`;
     }
+    const ogImages = ogImage
+      ? [{ url: ogImage, width: 1200, height: 630, alt: title }]
+      : [];
 
     return {
       title,
@@ -68,15 +71,13 @@ export async function generateMetadata({ params }) {
         title,
         description,
         siteName: "Kavisha.ai",
-        ...(ogImage && {
-          images: [{ url: ogImage, width: 1200, height: 630, alt: title }],
-        }),
+        images: ogImages,
       },
       twitter: {
-        card: "summary_large_image",
+        card: ogImage ? "summary_large_image" : "summary",
         title,
         description,
-        ...(ogImage && { images: [ogImage] }),
+        images: ogImage ? [ogImage] : [],
       },
     };
   } catch (e) {
