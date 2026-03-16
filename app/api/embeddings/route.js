@@ -259,6 +259,7 @@ export async function PATCH(request) {
       {
         $set: {
           text: text,
+          title: titleValue.substring(0, 50),
           totalChunks: totalChunks,
           updatedAt: new Date(),
           ...(folderId !== undefined && {

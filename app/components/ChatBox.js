@@ -6,7 +6,7 @@ import Resume from "./Resume";
 import FormatText from "./FormatText";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { Mic, MicOff, Send, Paperclip } from "lucide-react";
-import Matches from '@/app/components/Matches'
+import Matches from "@/app/components/Matches";
 
 export default function ChatBox({
   currentChatId,
@@ -69,7 +69,9 @@ export default function ChatBox({
           setCurrentChatType(data.role || null);
           setSessionName(data.name || null);
           setServiceKey(data.serviceKey || null);
-          setSessionMessageCount(typeof data.messageCount === "number" ? data.messageCount : 0);
+          setSessionMessageCount(
+            typeof data.messageCount === "number" ? data.messageCount : 0,
+          );
         }
       } catch (error) {
         console.error("Error fetching chat type:", error);
@@ -116,7 +118,7 @@ export default function ChatBox({
           filename: data.resumeFilename,
           resumeSummary: data.resumeSummary,
         });
-      } catch (error) { }
+      } catch (error) {}
     };
     fetchResumeData();
   }, [currentChatId, currentChatType]);
@@ -136,7 +138,7 @@ export default function ChatBox({
         const response = await fetch(`/api/all-data-fetched/${currentChatId}`);
         const data = await response.json();
         setHasDatacollected(data.allDataCollected);
-      } catch (error) { }
+      } catch (error) {}
     };
     fetchDataCollectionStatus();
   }, [currentChatId, currentChatType]);
@@ -326,15 +328,20 @@ export default function ChatBox({
     }
     if (!service && currentChatType) {
       service = brandContext.services.find(
-        (s) => s.name?.toLowerCase() === currentChatType?.toLowerCase()
+        (s) => s.name?.toLowerCase() === currentChatType?.toLowerCase(),
       );
     }
     if (!service) return "";
 
     const parts = [];
-    if (service.about?.trim()) parts.push(`About the person you represent (real world): ${service.about.trim()}`);
-    if (service.rules?.trim()) parts.push(`Rules to follow: ${service.rules.trim()}`);
-    if (service.behaviour?.trim()) parts.push(`How to behave as this avatar: ${service.behaviour.trim()}`);
+    if (service.about?.trim())
+      parts.push(
+        `About the person you represent (real world): ${service.about.trim()}`,
+      );
+    if (service.rules?.trim())
+      parts.push(`Rules to follow: ${service.rules.trim()}`);
+    if (service.behaviour?.trim())
+      parts.push(`How to behave as this avatar: ${service.behaviour.trim()}`);
 
     return parts.length > 0 ? parts.join(". ") + " " : "";
   };
@@ -513,9 +520,7 @@ export default function ChatBox({
             <div className="w-6 h-6 border-2 border-border rounded-full"></div>
             <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-t-[#59646F] rounded-full animate-spin"></div>
           </div>
-          <div className="text-muted text-xs font-medium">
-            Loading chat…
-          </div>
+          <div className="text-muted text-xs font-medium">Loading chat…</div>
         </div>
       </div>
     );
@@ -614,10 +619,11 @@ export default function ChatBox({
               messages.map((m, i) => (
                 <div
                   key={i}
-                  className={`mb-4 w-full min-w-0 ${m.role === "user"
-                    ? "flex flex-col items-end"
-                    : "flex flex-col items-start"
-                    }`}
+                  className={`mb-4 w-full min-w-0 ${
+                    m.role === "user"
+                      ? "flex flex-col items-end"
+                      : "flex flex-col items-start"
+                  }`}
                 >
                   {i === retryIndex && retry && (
                     <button
@@ -658,9 +664,7 @@ export default function ChatBox({
                   {/* Show sources for assistant messages */}
                   {m.role === "assistant" && m.sourceUrls?.length > 0 && (
                     <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0 flex flex-wrap gap-1.5">
-                      <span className="text-xs text-muted">
-                        📚 Sources:
-                      </span>
+                      <span className="text-xs text-muted">📚 Links:</span>
                       {m.sourceUrls.map((url, idx) => (
                         <a
                           key={idx}
@@ -723,25 +727,30 @@ export default function ChatBox({
             {/* </div> */}
           </div>
           {/* Initial questions: show when 0 or 1 message, then hide */}
-          {messages.length <= 1 && (() => {
-            const service = brandContext?.services?.find((s) => s._key === serviceKey);
-            const questions = (service?.introquestions || []).slice(0, 5).filter(Boolean);
-            if (questions.length === 0) return null;
-            return (
-              <div className="flex flex-wrap gap-2 py-2 px-0">
-                {questions.map((q, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    onClick={() => handleSubmit(String(q).trim())}
-                    className="text-left px-3 py-2 rounded-xl border border-border bg-muted-bg hover:bg-border/30 text-foreground text-sm transition-colors"
-                  >
-                    {q}
-                  </button>
-                ))}
-              </div>
-            );
-          })()}
+          {messages.length <= 1 &&
+            (() => {
+              const service = brandContext?.services?.find(
+                (s) => s._key === serviceKey,
+              );
+              const questions = (service?.introquestions || [])
+                .slice(0, 5)
+                .filter(Boolean);
+              if (questions.length === 0) return null;
+              return (
+                <div className="flex flex-wrap gap-2 py-2 px-0">
+                  {questions.map((q, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => handleSubmit(String(q).trim())}
+                      className="text-left px-3 py-2 rounded-xl border border-border bg-muted-bg hover:bg-border/30 text-foreground text-sm transition-colors"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              );
+            })()}
           {/* Textarea Section - flex-1 */}
           <div className="flex-1 min-h-0 flex flex-col border-border pt-2">
             <form
@@ -857,10 +866,11 @@ export default function ChatBox({
                 <button
                   type="submit"
                   disabled={!input.trim() || messageLoading}
-                  className={`inline-flex items-center justify-center p-2 rounded-lg ${!input.trim() || messageLoading
-                    ? "bg-muted-bg text-muted cursor-not-allowed"
-                    : "bg-[#59646F] text-[#FFEED8] hover:bg-[#4a5568] active:scale-95"
-                    } transition-all`}
+                  className={`inline-flex items-center justify-center p-2 rounded-lg ${
+                    !input.trim() || messageLoading
+                      ? "bg-muted-bg text-muted cursor-not-allowed"
+                      : "bg-[#59646F] text-[#FFEED8] hover:bg-[#4a5568] active:scale-95"
+                  } transition-all`}
                   title="Send message"
                 >
                   <Send className="w-5 h-5" />
@@ -880,7 +890,6 @@ export default function ChatBox({
           />
         </div>
       </div>
-
     </div>
   );
 }

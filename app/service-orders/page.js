@@ -71,7 +71,7 @@ function BookingCard({ booking, index }) {
     CARD_HEADER_COLORS[index % CARD_HEADER_COLORS.length];
   const title = booking.serviceSnapshot?.title || "Booking";
   const subtitle =
-    booking.serviceSnapshot?.subtitle || "Discussion on tinnitus";
+    booking.serviceSnapshot?.subtitle || "";
   const duration = booking.serviceSnapshot?.duration ?? 25;
   const durationUnit =
     booking.serviceSnapshot?.durationUnit || "Minutes";
@@ -99,9 +99,11 @@ function BookingCard({ booking, index }) {
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
-            <p className="text-sm text-gray-700 mt-0.5 truncate">
-              {subtitle}
-            </p>
+            {subtitle ? (
+              <p className="text-sm text-gray-700 mt-0.5 truncate">
+                {subtitle}
+              </p>
+            ) : null}
           </div>
           <div className="shrink-0 w-12 h-12 rounded-xl bg-white/80 border border-white shadow-sm overflow-hidden flex items-center justify-center -mb-6">
             <User className="w-6 h-6 text-gray-500" />

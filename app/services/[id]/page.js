@@ -203,11 +203,11 @@ export default function ServiceDetailPage() {
 
   const resolvedService = useMemo(
     () => ({
-      title: service?.title || "Tinnitus",
-      subtitle: service?.subtitle || "Discussion on tinnitus",
+      title: service?.title || "Service",
+      subtitle: service?.subtitle || "",
       description:
         service?.description ||
-        "This discussion will explore tinnitus and hyperacusis, focusing on their symptoms, underlying causes, and daily impact. We will cover coping strategies, sound sensitivity management, and current research insights.",
+        "",
       image: service?.image || "",
       price: Math.round(service?.price || 499),
       duration: service?.duration || 25,
@@ -235,9 +235,11 @@ export default function ServiceDetailPage() {
                   <h1 className="text-4xl font-medium tracking-wide text-gray-900">
                     {resolvedService.title}
                   </h1>
-                  <p className="mt-1 text-xl text-gray-700">
-                    {resolvedService.subtitle}
-                  </p>
+                  {resolvedService.subtitle ? (
+                    <p className="mt-1 text-xl text-gray-700">
+                      {resolvedService.subtitle}
+                    </p>
+                  ) : null}
                 </div>
                 <div className="h-[88px] w-[88px] shrink-0 overflow-hidden rounded-xl border border-white/70 bg-gray-100">
                   {resolvedService.image ? (
@@ -268,11 +270,13 @@ export default function ServiceDetailPage() {
                 <span>Mode: {resolvedService.mode}</span>
               </div>
 
-              <div className="p-4">
-                <p className="text-sm leading-6 text-gray-600">
-                  {resolvedService.description}
-                </p>
-              </div>
+              {resolvedService.description ? (
+                <div className="p-4">
+                  <p className="text-sm leading-6 text-gray-600">
+                    {resolvedService.description}
+                  </p>
+                </div>
+              ) : null}
             </article>
           </section>
 
