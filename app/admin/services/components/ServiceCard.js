@@ -3,14 +3,24 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Clock3, Pencil, List } from "lucide-react";
+import ShareButtons from "@/app/components/blog/ShareButtons";
 
 function formatPrice(value) {
   const amount = Number(value) || 0;
   return `Rs. ${Math.round(amount)}/-`;
 }
 
-export default function ServiceCard({ service, href, showBookingsHref }) {
+function getServiceShareUrl(serviceId, brand) {
+  if (typeof window === "undefined") return "";
+  const base = window.location.origin;
+  const qs = brand ? `?subdomain=${encodeURIComponent(brand)}` : "";
+  return `${base}/services/${serviceId}${qs}`;
+}
+
+export default function ServiceCard({ service, href, showBookingsHref, brand, openHoursSet }) {
   const router = useRouter();
+  const shareUrl = getServiceShareUrl(service?._id, brand);
+  const isLive = openHoursSet === true;
 
   const handleShowBookings = () => {
     if (showBookingsHref) router.push(showBookingsHref);
@@ -18,6 +28,17 @@ export default function ServiceCard({ service, href, showBookingsHref }) {
 
   return (
     <article className="rounded-xl border border-gray-200 bg-white p-4">
+      {isLive ? (
+        <div className="mb-3 inline-flex items-center gap-2 rounded-lg bg-green-50 px-3 py-1.5 text-sm font-medium text-green-800">
+          <span className="inline-block h-2 w-2 rounded-full bg-green-500" aria-hidden />
+          Live
+        </div>
+      ) : (
+        <div className="mb-3 inline-flex items-center gap-2 rounded-lg bg-amber-100 px-3 py-1.5 text-sm font-medium text-amber-800">
+          <span className="inline-block h-2 w-2 rounded-full bg-amber-500" aria-hidden />
+          Not live — Open hours not set
+        </div>
+      )}
       <div className="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
         <div className="flex min-w-0 items-start gap-4">
           <div className="h-[120px] w-[120px] shrink-0 overflow-hidden rounded-lg bg-gray-100 border border-gray-200">
@@ -78,6 +99,16 @@ export default function ServiceCard({ service, href, showBookingsHref }) {
           </div>
         </aside>
       </div>
+      {shareUrl && (
+        <div className="mt-4 pt-4 border-t border-gray-200">
+          <ShareButtons
+            url={shareUrl}
+            title={service?.title}
+            text={service?.subtitle || service?.title}
+            variant="row"
+          />
+        </div>
+      )}
     </article>
   );
 }

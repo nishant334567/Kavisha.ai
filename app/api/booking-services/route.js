@@ -1,7 +1,15 @@
 import { connectDB } from "@/app/lib/db";
 import BookingService from "@/app/models/BookingService";
+import BookingAvailability from "@/app/models/BookingAvailability";
 import { client as sanityClient } from "@/app/lib/sanity";
 import { NextResponse } from "next/server";
+
+function hasOpenHoursSet(weeklySchedule) {
+  if (!Array.isArray(weeklySchedule)) return false;
+  return weeklySchedule.some(
+    (day) => day.enabled && Array.isArray(day.intervals) && day.intervals.length > 0
+  );
+}
 
 export async function GET(req) {
   try {
@@ -26,6 +34,12 @@ export async function GET(req) {
     }
 
     await connectDB();
+
+    const availability = await BookingAvailability.findOne({ brand }).lean();
+    if (!availability || !hasOpenHoursSet(availability.weeklySchedule)) {
+      return NextResponse.json({ services: [] }, { status: 200 });
+    }
+
     const services = await BookingService.find({ brand })
       .sort({ createdAt: -1 })
       .lean();

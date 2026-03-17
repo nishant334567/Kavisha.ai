@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import { Link2, MoreVertical } from "lucide-react";
 import ShareButtons from "./ShareButtons";
+import ShareAsEmailButton from "./ShareAsEmailButton";
 
 function getReadTimeMinutes(html) {
   if (!html || typeof html !== "string") return 0;
@@ -28,7 +29,7 @@ function getRelativeUpdated(updatedAt, publishedAt) {
   return `Updated: ${Math.floor(days / 30)} months ago`;
 }
 
-export default function BlogPostContent({ post, brandName, brandImageUrl }) {
+export default function BlogPostContent({ post, brand, brandName, brandImageUrl }) {
   const [copied, setCopied] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
 
@@ -140,12 +141,21 @@ export default function BlogPostContent({ post, brandName, brandImageUrl }) {
         dangerouslySetInnerHTML={{ __html: content }}
       />
 
-      <div className="mt-8 pt-6 border-t border-gray-200">
+      <div className="mt-8 pt-6 border-t border-gray-200 flex flex-wrap items-center gap-4">
         <ShareButtons
+          url={typeof window !== "undefined" ? window.location.href : ""}
           title={title}
           text={excerpt || title}
           variant="row"
         />
+        {brand && (
+          <ShareAsEmailButton
+            slug={post.slug || post._id}
+            brand={brand}
+            title={title}
+            variant="row"
+          />
+        )}
       </div>
     </article>
   );

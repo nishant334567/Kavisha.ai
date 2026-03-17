@@ -218,11 +218,36 @@ export default function ServiceDetailPage() {
     [service, brandContext?.brandName]
   );
 
+  if (loading) {
+    return (
+      <main className="px-6 py-8">
+        <p className="text-sm text-gray-500">Loading service details...</p>
+      </main>
+    );
+  }
+
+  if (!service) {
+    return (
+      <main className="px-6 py-8">
+        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 max-w-lg">
+          <p className="font-medium text-amber-800">Not available for booking</p>
+          <p className="mt-1 text-sm text-amber-700">
+            This service is not live. Open hours have not been set, or the service may have been removed.
+          </p>
+          <button
+            type="button"
+            onClick={() => router.push(brand ? `/services?subdomain=${encodeURIComponent(brand)}` : "/services")}
+            className="mt-4 rounded-lg bg-amber-600 px-4 py-2 text-sm font-medium text-white hover:bg-amber-700"
+          >
+            Back to services
+          </button>
+        </div>
+      </main>
+    );
+  }
+
   return (
     <main className="px-6 py-8">
-      {loading ? (
-        <p className="text-sm text-gray-500">Loading service details...</p>
-      ) : (
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1.1fr]">
           <section>
             <p className="mb-4 text-[28px] font-medium text-[#1B5A67]">
@@ -384,7 +409,6 @@ export default function ServiceDetailPage() {
             )}
           </section>
         </div>
-      )}
     </main>
   );
 }

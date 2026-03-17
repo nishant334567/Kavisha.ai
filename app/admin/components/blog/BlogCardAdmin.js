@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { FileText, Pencil, Eye, Trash2, Calendar } from "lucide-react";
+import ShareButtons from "@/app/components/blog/ShareButtons";
+import ShareAsEmailButton from "@/app/components/blog/ShareAsEmailButton";
 
 const TEAL = "#2D545E";
 
@@ -30,6 +32,14 @@ export default function BlogCardAdmin({
     ? new Date(post.updatedAt).toLocaleDateString()
     : null;
   const imageUrl = post?.featuredImage || null;
+
+  const getBlogShareUrl = () => {
+    if (typeof window === "undefined") return "";
+    const base = window.location.origin;
+    const qs = brand ? `?subdomain=${encodeURIComponent(brand)}` : "";
+    return `${base}/blogs/${encodeURIComponent(slug)}${qs}`;
+  };
+  const shareUrl = getBlogShareUrl();
 
   const handleDelete = (e) => {
     e.preventDefault();
@@ -111,6 +121,24 @@ export default function BlogCardAdmin({
           )}
         </div>
       </div>
+      {shareUrl && (
+        <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-0 border-t border-gray-100 flex flex-wrap items-center gap-4">
+          <ShareButtons
+            url={shareUrl}
+            title={title}
+            text={excerpt}
+            variant="row"
+          />
+          {brand && (
+            <ShareAsEmailButton
+              slug={slug}
+              brand={brand}
+              title={title}
+              variant="row"
+            />
+          )}
+        </div>
+      )}
     </article>
   );
 }

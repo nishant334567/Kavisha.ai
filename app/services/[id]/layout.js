@@ -1,6 +1,6 @@
 import { headers } from "next/headers";
 import { connectDB } from "@/app/lib/db";
-import BlogPost from "@/app/models/BlogPost";
+import BookingService from "@/app/models/BookingService";
 
 function getSubdomainFromHost(host) {
   if (!host) return "kavisha";
@@ -20,43 +20,41 @@ function trimText(str = "", max = 160) {
 }
 
 export async function generateMetadata({ params }) {
-  const { slug } = await params;
+  const { id } = await params;
   const headersList = await headers();
   const host = headersList.get("host") || "";
   const brand = getSubdomainFromHost(host);
 
   try {
     await connectDB();
-    const now = new Date();
-    const post = await BlogPost.findOne({
+    const service = await BookingService.findOne({
+      _id: id,
       brand,
-      slug: String(slug).trim(),
-      status: "published",
-      $or: [{ publishedAt: { $lte: now } }, { publishedAt: null }],
     })
-      .select("title excerpt metaTitle metaDescription featuredImage")
+      .select("title subtitle description image")
       .lean();
 
-    if (!post) {
+    if (!service) {
       return {
-        title: "Post not found",
+        title: "Service not found",
         openGraph: { images: [] },
         twitter: { images: [] },
       };
     }
 
-    const title = post.metaTitle?.trim() || post.title || "Blog post";
+    const title = service.title?.trim() || "Booking service";
     const description = trimText(
-      post.metaDescription?.trim() || post.excerpt || post.title,
+      service.subtitle?.trim() || service.description?.trim() || title,
       160
     );
     const siteUrl = `https://${host}`;
-    const path = `/blogs/${encodeURIComponent(slug)}`;
+    const path = `/services/${encodeURIComponent(id)}`;
     const canonicalUrl =
       brand && brand !== "kavisha"
         ? `${siteUrl}${path}?subdomain=${encodeURIComponent(brand)}`
         : `${siteUrl}${path}`;
-    let ogImage = post.featuredImage?.trim() || null;
+
+    let ogImage = service.image?.trim() || null;
     if (ogImage && ogImage.startsWith("/")) {
       ogImage = `${siteUrl}${ogImage}`;
     }
@@ -69,12 +67,12 @@ export async function generateMetadata({ params }) {
       description,
       alternates: { canonical: canonicalUrl },
       openGraph: {
-        type: "article",
+        type: "website",
         locale: "en_US",
         url: canonicalUrl,
+        siteName: "Kavisha.ai",
         title,
         description,
-        siteName: "Kavisha.ai",
         images: ogImages,
       },
       twitter: {
@@ -86,13 +84,13 @@ export async function generateMetadata({ params }) {
     };
   } catch (e) {
     return {
-      title: "Blog post",
+      title: "Service",
       openGraph: { images: [] },
       twitter: { images: [] },
     };
   }
 }
 
-export default function BlogPostLayout({ children }) {
+export default function ServiceDetailLayout({ children }) {
   return <>{children}</>;
 }

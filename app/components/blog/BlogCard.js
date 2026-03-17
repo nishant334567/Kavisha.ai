@@ -4,6 +4,7 @@ import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
 import { Calendar, Share2 } from "lucide-react";
 import ShareButtons from "./ShareButtons";
+import ShareAsEmailButton from "./ShareAsEmailButton";
 
 export default function BlogCard({ post, brand }) {
   const [shareOpen, setShareOpen] = useState(false);
@@ -94,6 +95,14 @@ export default function BlogCard({ post, brand }) {
               text={excerpt}
               variant="dropdown"
             />
+            {brand && (
+              <ShareAsEmailButton
+                slug={slug}
+                brand={brand}
+                title={title}
+                variant="dropdown"
+              />
+            )}
           </div>
         )}
       </div>

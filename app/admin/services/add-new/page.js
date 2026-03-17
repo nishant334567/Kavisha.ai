@@ -17,6 +17,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
+import { ServiceSuccessCard } from "@/app/admin/components/PublishSuccessCard";
 
 const INPUT_CLASS =
   "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-[18px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E]";
@@ -48,6 +49,8 @@ export default function AddBookingPage() {
   const [imageUrl, setImageUrl] = useState("");
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [createdService, setCreatedService] = useState(null);
   const [form, setForm] = useState({
     title: "",
     subtitle: "",
@@ -134,13 +137,27 @@ export default function AddBookingPage() {
       if (!response.ok || !data?.service) {
         throw new Error(data.error || "Failed to save booking");
       }
-      router.push(`/admin/services${qs}`);
+      setCreatedService(data.service);
+      setShowSuccess(true);
     } catch (error) {
       alert(error.message || "Failed to save booking");
     } finally {
       setSaving(false);
     }
   };
+
+  if (showSuccess && createdService) {
+    return (
+      <div className="-mx-6 -my-8 px-6 py-8 md:px-10 bg-[#F3F3F3] min-h-[calc(100vh-4rem)]">
+        <ServiceSuccessCard
+          serviceId={createdService._id}
+          serviceTitle={createdService.title}
+          brand={brand}
+          onBackToList={() => router.push(`/admin/services${qs}`)}
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="-mx-6 -my-8 px-6 py-8 md:px-10 bg-[#F3F3F3] min-h-[calc(100vh-4rem)]">
