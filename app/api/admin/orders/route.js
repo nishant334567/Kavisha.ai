@@ -1,5 +1,6 @@
 import { connectDB } from "@/app/lib/db";
 import Order from "@/app/models/Order";
+import { refreshImageUrls } from "@/app/lib/gcs";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -17,7 +18,16 @@ export async function GET(req) {
             .sort({ createdAt: -1 })
             .lean();
 
-        return NextResponse.json({ orders }, { status: 200 });
+        const ordersWithFreshImages = await Promise.all(
+            orders.map(async (order) => {
+                const snap = order.productSnapshot;
+                if (!snap?.images?.length) return order;
+                const images = await refreshImageUrls(snap.images);
+                return { ...order, productSnapshot: { ...snap, images } };
+            })
+        );
+
+        return NextResponse.json({ orders: ordersWithFreshImages }, { status: 200 });
     } catch (error) {
         console.error("Error fetching admin orders:", error);
         return NextResponse.json(

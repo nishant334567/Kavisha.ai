@@ -10,11 +10,25 @@ import Product from "@/app/models/Product";
 import BookingAppointment from "@/app/models/BookingAppointment";
 import mongoose from "mongoose";
 import { sendEmail } from "@/app/lib/email";
+import { createDownloadToken } from "@/app/lib/download-token";
 import {
   getBookingInviteRecipients,
   sendBookingCalendarInvite,
 } from "@/app/lib/booking-invite-email";
 import { getUserFromDB } from "@/app/lib/firebase/get-user";
+
+const DIGITAL_DOWNLOAD_LINK_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
+const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://kavisha.ai";
+
+function escapeHtml(str) {
+  if (typeof str !== "string") return "";
+  return str
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#039;");
+}
 
 export async function POST(request) {
   return withAuth(request, {
@@ -172,6 +186,63 @@ export async function POST(request) {
             { userId: payerUserId, brand },
             { $set: { items: [] } },
           );
+
+          // Send digital download email for any digital products in the order
+          const digitalProductIds = [...new Set(cartItems.map((i) => i.productId).filter(Boolean))];
+          const digitalProducts = digitalProductIds
+            .map((id) => productMap[String(id)])
+            .filter(
+              (p) =>
+                p &&
+                Array.isArray(p.digitalFiles) &&
+                p.digitalFiles.length > 0 &&
+                p.digitalFiles.some((f) => f && f.gcsPath)
+            );
+
+          if (digitalProducts.length > 0) {
+            const customer = await User.findById(payerUserId).select("email name").lean();
+            const to = customer?.email || currentUser?.email;
+            const customerName = customer?.name || currentUser?.name || "there";
+            const fromName = brand ? brand.charAt(0).toUpperCase() + brand.slice(1) : "Kavisha";
+            const from = `${fromName} <hello@kavisha.ai>`;
+
+            if (!to) {
+              console.error("Digital download email skipped: no recipient email (userId:", payerUserId, ")");
+            } else {
+              const linkLines = [];
+              const expiresAtMs = Date.now() + DIGITAL_DOWNLOAD_LINK_EXPIRY_MS;
+              for (const product of digitalProducts) {
+                linkLines.push(`<p style="margin:16px 0 8px;font-weight:600;">${escapeHtml(product.name || "Product")}</p>`);
+                for (const file of product.digitalFiles) {
+                  if (!file?.gcsPath) continue;
+                  const token = createDownloadToken({
+                    gcsPath: file.gcsPath,
+                    filename: file.filename || "download",
+                    expiresAtMs,
+                  });
+                  const downloadUrl = `${BASE_URL}/api/download-digital-file?token=${encodeURIComponent(token)}`;
+                  linkLines.push(
+                    `<p style="margin:4px 0;"><a href="${escapeHtml(downloadUrl)}" style="color:#004A4E;text-decoration:underline;">${escapeHtml(file.filename || "Download")}</a> (link valid 7 days)</p>`
+                  );
+                }
+              }
+              const html = `
+                <p>Hi ${escapeHtml(customerName)},</p>
+                <p>Thanks for your purchase. Click the links below to download your files:</p>
+                ${linkLines.join("")}
+                <p style="margin-top:24px;font-size:12px;color:#6b7280;">If you have any issues, reply to this email.</p>
+              `;
+              const emailResult = await sendEmail({
+                to,
+                from,
+                subject: "Your download links",
+                body: html,
+              });
+              if (!emailResult?.ok) {
+                console.error("Digital download email failed:", emailResult?.error);
+              }
+            }
+          }
         }
 
         if (type === "booking") {

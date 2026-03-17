@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { connectDB } from "@/app/lib/db";
+import { refreshImageUrl } from "@/app/lib/gcs";
 import JobApplication from "@/app/models/JobApplication";
 
 export async function GET(req, { params }) {
@@ -24,9 +25,10 @@ export async function GET(req, { params }) {
       if (!application) {
         return NextResponse.json({ error: "Application not found" }, { status: 404 });
       }
+      const resumeLink = application.resumeLink ? await refreshImageUrl(application.resumeLink) : "";
       return NextResponse.json({
         application: {
-          resumeLink: application.resumeLink,
+          resumeLink,
           questionsAnswers: application.questionsAnswers || [],
         },
       });

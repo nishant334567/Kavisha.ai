@@ -1,5 +1,6 @@
 import { connectDB } from "@/app/lib/db";
 import Product from "@/app/models/Product";
+import { refreshImageUrls } from "@/app/lib/gcs";
 import { NextResponse } from "next/server";
 
 export async function GET(req) {
@@ -12,9 +13,15 @@ export async function GET(req) {
       return NextResponse.json({ error: "Brand is required" }, { status: 400 });
     }
 
-    const products = await Product.find({ brand }).sort({ createdAt: -1 });
+    const products = await Product.find({ brand }).sort({ createdAt: -1 }).lean();
+    const productsWithFreshImages = await Promise.all(
+      products.map(async (p) => {
+        const images = Array.isArray(p.images) ? await refreshImageUrls(p.images) : [];
+        return { ...p, images };
+      })
+    );
 
-    return NextResponse.json({ products }, { status: 200 });
+    return NextResponse.json({ products: productsWithFreshImages }, { status: 200 });
   } catch (error) {
     console.error("Error fetching products:", error);
     return NextResponse.json(
@@ -39,6 +46,8 @@ export async function POST(req) {
       price,
       discountPercentage,
       brand,
+      type,
+      digitalFiles,
     } = body;
 
     if (!name || !brand) {
@@ -47,6 +56,11 @@ export async function POST(req) {
         { status: 400 }
       );
     }
+
+    const productType = type === "digital" ? "digital" : "physical";
+    const files = Array.isArray(digitalFiles)
+      ? digitalFiles.filter((f) => f && f.gcsPath && f.filename && f.mimeType)
+      : [];
 
     const product = await Product.create({
       name,
@@ -59,6 +73,8 @@ export async function POST(req) {
       price: Number(price) || 0,
       discountPercentage: Math.min(100, Math.max(0, Number(discountPercentage) || 0)),
       brand,
+      type: productType,
+      digitalFiles: productType === "digital" ? files : [],
     });
 
     return NextResponse.json({ product }, { status: 201 });
