@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
-import { Package } from "lucide-react";
+import { Package, PanelLeft } from "lucide-react";
 import UserProductsSidebar from "../products/components/UserProductsSidebar";
 
 function formatDate(date) {
@@ -22,6 +22,7 @@ export default function MyOrdersPage() {
     const { user } = useFirebaseSession();
     const [orders, setOrders] = useState([]);
     const [loading, setLoading] = useState(true);
+    const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
     useEffect(() => {
         if (!user) {
@@ -184,8 +185,32 @@ export default function MyOrdersPage() {
 
     return (
         <div className="min-h-screen bg-white flex justify-center">
-            <div className="w-full max-w-6xl flex min-h-screen">
-                <UserProductsSidebar />
+            <div className="w-full max-w-6xl flex min-h-screen relative">
+                <div className="hidden md:block">
+                    <UserProductsSidebar />
+                </div>
+                {mobileSidebarOpen && (
+                    <>
+                        <div
+                            className="fixed inset-0 z-30 bg-black/50 md:hidden"
+                            onClick={() => setMobileSidebarOpen(false)}
+                            aria-hidden="true"
+                        />
+                        <div className="fixed inset-y-0 left-0 z-40 w-[280px] max-w-[85vw] md:hidden">
+                            <UserProductsSidebar onClose={() => setMobileSidebarOpen(false)} />
+                        </div>
+                    </>
+                )}
+                {!mobileSidebarOpen && (
+                    <button
+                        type="button"
+                        onClick={() => setMobileSidebarOpen(true)}
+                        className="fixed left-0 top-16 z-40 md:hidden p-2 rounded-r-lg bg-white border border-l-0 border-gray-200 shadow-sm hover:bg-gray-50"
+                        aria-label="Open panel"
+                    >
+                        <PanelLeft className="w-5 h-5 text-gray-600" />
+                    </button>
+                )}
                 <main className="flex-1 min-w-0 overflow-auto">{content}</main>
             </div>
         </div>

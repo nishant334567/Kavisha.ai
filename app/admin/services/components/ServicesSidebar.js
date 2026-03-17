@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { ArrowLeft, CalendarClock, ClipboardList, Plus } from "lucide-react";
+import { ArrowLeft, CalendarClock, ClipboardList, Plus, X } from "lucide-react";
 
 const BASE = "/admin/services";
 
@@ -17,7 +17,7 @@ function useBrandQuery() {
   return brand ? `?subdomain=${encodeURIComponent(brand)}` : "";
 }
 
-export default function ServicesSidebar() {
+export default function ServicesSidebar({ onClose }) {
   const router = useRouter();
   const pathname = usePathname();
   const qs = useBrandQuery();
@@ -49,7 +49,17 @@ export default function ServicesSidebar() {
   };
 
   return (
-    <aside className="w-56 shrink-0 border-r border-gray-200 py-6 px-4 overflow-y-auto bg-white">
+    <aside className="relative h-full w-56 shrink-0 border-r border-gray-200 py-6 px-4 overflow-y-auto bg-white">
+      {onClose && (
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute top-4 right-3 p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+          aria-label="Close panel"
+        >
+          <X className="w-5 h-5" />
+        </button>
+      )}
       <button
         type="button"
         onClick={() => router.back()}

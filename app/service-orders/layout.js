@@ -32,12 +32,31 @@ export default function ServiceOrdersLayout({ children }) {
     <div className="min-h-screen bg-white flex justify-center">
       <div className="w-full max-w-6xl flex min-h-screen relative">
         {sidebarOpen ? (
-          <UserServicesSidebar onClose={() => setSidebarOpen(false)} />
+          <>
+            <div
+              className="fixed inset-0 z-30 bg-black/50 md:hidden"
+              onClick={() => setSidebarOpen(false)}
+              aria-hidden="true"
+            />
+            <div className="fixed inset-y-0 left-0 z-40 w-[280px] max-w-[85vw] md:static md:z-auto md:w-56">
+              <UserServicesSidebar onClose={() => setSidebarOpen(false)} />
+            </div>
+          </>
         ) : (
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="absolute left-0 top-4 z-10 p-2 rounded-r-lg bg-white border border-l-0 border-gray-200 shadow-sm hover:bg-gray-50"
+            className="fixed left-0 top-16 z-40 md:hidden p-2 rounded-r-lg bg-white border border-l-0 border-gray-200 shadow-sm hover:bg-gray-50"
+            aria-label="Open panel"
+          >
+            <PanelLeft className="w-5 h-5 text-gray-600" />
+          </button>
+        )}
+        {!sidebarOpen && (
+          <button
+            type="button"
+            onClick={() => setSidebarOpen(true)}
+            className="fixed left-0 top-4 z-40 hidden md:block p-2 rounded-r-lg bg-white border border-l-0 border-gray-200 shadow-sm hover:bg-gray-50"
             aria-label="Open panel"
           >
             <PanelLeft className="w-5 h-5 text-gray-600" />

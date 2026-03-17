@@ -32,7 +32,7 @@ export default function UserServicesSidebar({ onClose }) {
   ];
 
   return (
-    <aside className="w-56 shrink-0 border-r border-gray-200 py-6 px-4 overflow-y-auto bg-white relative">
+    <aside className="h-full w-56 shrink-0 border-r border-gray-200 py-6 px-4 overflow-y-auto bg-white relative">
       {onClose && (
         <button
           type="button"
