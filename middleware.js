@@ -74,5 +74,6 @@ export async function middleware(request) {
 }
 
 export const config = {
-  matcher: ["/", "/((?!_next|favicon.ico|api/login|api/logout|.*\\.).*)"],
+  // Include /api/logout so auth middleware can clear all auth cookies (single + multiple)
+  matcher: ["/", "/((?!_next|favicon.ico|api/login|.*\\.).*)"],
 };
