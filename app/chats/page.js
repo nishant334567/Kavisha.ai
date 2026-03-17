@@ -23,6 +23,8 @@ export default function HomePage() {
     const [creatingForServiceKey, setCreatingForServiceKey] = useState(null);
     const [showInbox, setShowInbox] = useState(false);
     const [servicesProvided, setServicesProvided] = useState({});
+    const [servicesWithStats, setServicesWithStats] = useState([]);
+    const [loadingServicesWithStats, setLoadingServicesWithStats] = useState(true);
     const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
 
 
@@ -94,6 +96,34 @@ export default function HomePage() {
     }, [user, brandContext]);
 
     useEffect(() => {
+        if (!user || !brandContext) return;
+        setLoadingServicesWithStats(true);
+        fetch(
+            `/api/chat-services-stats?brand=${encodeURIComponent(brandContext.subdomain)}`,
+            { credentials: "include" }
+        )
+            .then((res) => res.json())
+            .then((data) => {
+                const list = Array.isArray(data?.services) ? data.services : [];
+                let filtered = list;
+                if (brandContext.subdomain !== "kavisha") {
+                    if (brandContext.isBrandAdmin) {
+                        filtered = list.filter(
+                            (s) => s.name?.toLowerCase() === "recruiter"
+                        );
+                    } else {
+                        filtered = list.filter(
+                            (s) => s.name?.toLowerCase() !== "recruiter"
+                        );
+                    }
+                }
+                setServicesWithStats(filtered);
+            })
+            .catch(() => setServicesWithStats([]))
+            .finally(() => setLoadingServicesWithStats(false));
+    }, [user, brandContext]);
+
+    useEffect(() => {
         if (!user || !brandContext || !currentChatId) return;
         const key = `lastChat:${user.id}:${brandContext.brandName}`;
         const key2 = `lastChatType:${user.id}`;
@@ -140,6 +170,7 @@ export default function HomePage() {
             console.error("Error creating chat session:", e);
         } finally {
             setCreatingSession(false);
+            setCreatingForServiceKey(null);
         }
     };
 
@@ -190,19 +221,12 @@ export default function HomePage() {
 
                 <div className="w-full h-full flex flex-col overflow-hidden">
                     <SelectChatType
-                        servicesProvided={servicesProvided}
-                        selectedType={currentChatType}
+                        servicesWithStats={servicesWithStats}
+                        userDisplayName={user?.displayName || user?.name || "there"}
                         selectChatType={selectChatType}
                         isCreating={creatingSession}
                         creatingForServiceKey={creatingForServiceKey}
-                        enableCommunityOnboarding={
-                            brandContext?.enableCommunityOnboarding || false
-                        }
-                        communityName={brandContext?.communityName || ""}
-                        enableQuiz={brandContext?.enableQuiz || false}
-                        quizName={brandContext?.quizName || ""}
-                        enableJobs={brandContext?.enableJobs || false}
-                        enableProducts={brandContext?.enableProducts || false}
+                        loading={loadingServicesWithStats}
                     />
 
                     {currentChatId && (

@@ -543,12 +543,12 @@ export default function ChatBox({
   }
 
   return (
-    <div className="w-full max-w-full md:w-3/5 flex bg-background rounded-xl p-2 md:p-4 h-full min-h-0 mx-2 md:mx-4 overflow-hidden">
+    <div className="font-baloo w-full max-w-full md:w-3/5 flex bg-background rounded-xl p-2 md:p-4 h-full min-h-0 mx-2 md:mx-4 overflow-hidden">
       <div className="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
         <div className="rounded-xl w-full p-1 md:p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
           <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-card sm:bg-muted-bg z-10"></div>
           {/* Logo Section - flex-1 */}
-          <div className="flex-2 flex flex-col md:flex-row justify-center items-center md:gap-4 md:items-start md:mb-8 my-4 min-h-0  md:mt-16 md:px-2">
+          <div className="flex-2 flex flex-col md:flex-row justify-center items-center md:gap-4 md:items-start md:mb-8 my-4 min-h-0 md:mt-4 md:px-2">
             <img
               src={brandContext?.logoUrl}
               className="rounded-full w-[65px] h-[65px] object-cover flex-shrink-0"

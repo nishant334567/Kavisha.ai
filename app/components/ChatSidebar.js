@@ -142,26 +142,8 @@ export default function ChatSidebar({
               onClick={() => toggleLeftSideBar()}
             ></div>
 
-            <div className="h-full md:mt-12 fixed top-0 left-0 z-40 flex flex-col p-4 border-r border-border bg-white shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
-              <div className="font-akshar flex items-center gap-3 mb-6 p-3 rounded-xl bg-[#3D5E6B] text-[#FFEED8] ">
-                <div className="w-8 h-8 rounded-full bg-background/20 flex items-center justify-center text-sm font-semibold overflow-hidden flex-shrink-0">
-                  {user?.image ? (
-                    <img
-                      src={user.image}
-                      alt={user?.name || "User"}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <span>{(user?.name || "K").charAt(0).toUpperCase()}</span>
-                  )}
-                </div>
-                <div className="flex flex-col overflow-hidden">
-                  <span className="font-semibold truncate text-base">
-                    {user?.name?.toUpperCase() || "User"}
-                  </span>
-                  <span className="text-xs  truncate">{user?.email}</span>
-                </div>
-              </div>
+            <div className="font-baloo h-full max-h-[100vh] md:mt-12 md:h-[calc(100vh-3rem)] fixed top-0 left-0 z-40 flex flex-col w-[280px] border-r border-border bg-white shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
+              <div className="flex-1 flex flex-col min-h-0 p-4">
               <div className="flex justify-between">
                 <p className="font-semibold text-muted">Your Chats</p>
                 <button className="p-1" onClick={() => toggleLeftSideBar()} title="Close sidebar" aria-label="Close sidebar">
@@ -169,7 +151,7 @@ export default function ChatSidebar({
                 </button>
               </div>
 
-              <div>
+              <div className="flex-1 flex flex-col min-h-0">
                 <div className="py-4 gap-2">
                   {isCommunity ? (
                     <>
@@ -323,7 +305,7 @@ export default function ChatSidebar({
                     </>
                   )}
                 </div>
-                <div className="h-[60vh] overflow-y-auto scrollbar-none">
+                <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none">
                   {!allChats ? (
                     <div className="flex items-center justify-center h-full">
                       <div className="flex flex-col items-center gap-3">
@@ -339,12 +321,12 @@ export default function ChatSidebar({
                   ) : allChats?.sessionIds?.length > 0 ? (
                     allChats.sessionIds.map((id, idx) => (
                       <div
-                        className="flex justify-center items-center w-full gap-2 border-b-2 border-border"
+                        className={`flex items-center w-full gap-2 rounded-md transition-colors ${currentChatId === id ? "bg-gray-100" : ""} hover:bg-gray-100`}
                         key={id}
                       >
                         <button
-                          className={`text-muted px-2 py-4 flex-1 text-left
-                    ${currentChatId === id && "font-semibold"}
+                          className={`text-muted px-2 py-3 flex-1 text-left min-w-0 truncate text-sm rounded-md
+                    ${currentChatId === id ? "font-semibold text-foreground" : ""}
                   `}
                           type="button"
                           onClick={() => {
@@ -379,45 +361,13 @@ export default function ChatSidebar({
                             onCollapsedChange?.(true);
                           }}
                         >
-                          <div className="font-akshar flex flex-col items-start w-full justify-center">
-                            {/* Show brand name above title when brand is kavisha */}
-                            {brandContext?.subdomain === "kavisha" &&
-                              allChats?.sessions[id]?.brand &&
-                              allChats.sessions[id].brand !== "kavisha" && (
-                                <span className="text-[10px] text-muted bg-muted-bg px-1.5 py-0.5 rounded mb-0.5 whitespace-nowrap">
-                                  {allChats.sessions[id].brand
-                                    .charAt(0)
-                                    .toUpperCase() +
-                                    allChats.sessions[id].brand.slice(1)}
-                                </span>
-                              )}
-                            {isCommunity && (
-                              <span
-                                className={`inline-block text-[10px] px-1.5 py-0.5 rounded mb-0.5 ${allChats?.sessions[id]?.allDataCollected
-                                  ? "bg-emerald-100 text-emerald-700"
-                                  : "bg-amber-100 text-amber-700"
-                                  }`}
-                              >
-                                {allChats?.sessions[id]?.allDataCollected
-                                  ? "Completed"
-                                  : "In progress"}
-                              </span>
-                            )}
-                            <div className="flex items-center gap-2 w-full min-w-0">
-                              <span className="truncate">
-                                {allChats?.sessions[id]?.title ||
-                                  `Chat ${idx + 1} `}
-                              </span>
-                            </div>
-                            {allChats?.sessions[id]?.updatedAt && (
-                              <span className="text-[10px] text-muted mt-1">
-                                {formatIST(allChats?.sessions[id]?.updatedAt)}
-                              </span>
-                            )}
-                          </div>
+                          <span className="truncate block">
+                            {allChats?.sessions[id]?.title ||
+                              `Chat ${idx + 1}`}
+                          </span>
                         </button>
                         <button
-                          className="flex-shrink-0 py-4 px-2 hover:bg-red-50 rounded transition-colors"
+                          className="flex-shrink-0 p-2 hover:bg-red-50 rounded transition-colors"
                           onClick={(e) => deleteSession(id, e)}
                           disabled={deletingChatId === id}
                           title="Delete chat"
@@ -439,6 +389,34 @@ export default function ChatSidebar({
                   )}
                 </div>
               </div>
+
+              {/* Profile card - fixed at bottom */}
+              <div className="font-baloo flex-shrink-0 border-t border-gray-200 pt-3 pb-2 mt-auto">
+                <div className="flex items-center gap-3 w-full">
+                  <div className="flex flex-col overflow-hidden min-w-0 flex-1">
+                    <span className="font-bold text-gray-900 text-sm uppercase tracking-[0.08em] truncate">
+                      {user?.name || "User"}
+                    </span>
+                    <span className="text-xs text-gray-600 truncate mt-0.5">
+                      {user?.email}
+                    </span>
+                  </div>
+                  <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                    {user?.image ? (
+                      <img
+                        src={user.image}
+                        alt={user?.name || "User"}
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <span className="text-sm font-semibold text-gray-600">
+                        {(user?.name || "U").charAt(0).toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
             </div>
           </>
         )}
