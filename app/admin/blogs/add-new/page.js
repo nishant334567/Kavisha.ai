@@ -5,6 +5,7 @@ import { useState, useRef, useCallback } from "react";
 import { ArrowLeft, Save, Send, ImagePlus } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { BlogEditor } from "@/app/admin/components/blog";
+import { BlogSuccessCard } from "@/app/admin/components/PublishSuccessCard";
 
 function slugify(text) {
   return (text || "")
@@ -46,6 +47,9 @@ export default function AddNewBlogPage() {
   const [uploading, setUploading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveType, setSaveType] = useState(null);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [createdSlug, setCreatedSlug] = useState("");
+  const [createdTitle, setCreatedTitle] = useState("");
 
   const handleTitleChange = useCallback(
     (e) => {
@@ -127,7 +131,10 @@ export default function AddNewBlogPage() {
       if (!res.ok) {
         throw new Error(data.error || "Failed to save post");
       }
-      router.push(`/admin/blogs${qs}`);
+      const post = data.post || {};
+      setCreatedSlug(post.slug || slug.trim() || slugify(title));
+      setCreatedTitle(post.title || title.trim());
+      setShowSuccess(true);
     } catch (err) {
       alert(err.message || "Failed to save post");
     } finally {
@@ -145,6 +152,22 @@ export default function AddNewBlogPage() {
     e.preventDefault();
     submit("published");
   };
+
+  if (showSuccess) {
+    return (
+      <div className="min-h-[calc(100vh-4rem)] bg-[#F3F3F3] -mx-6 -my-8 px-6 py-8 md:px-10">
+        <div className="max-w-4xl mx-auto">
+          <BlogSuccessCard
+            slug={createdSlug}
+            title={createdTitle}
+            brand={brand}
+            isPublished={saveType === "published"}
+            onBackToList={() => router.push(`/admin/blogs${qs}`)}
+          />
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-[calc(100vh-4rem)] bg-[#F3F3F3] -mx-6 -my-8 px-6 py-8 md:px-10">

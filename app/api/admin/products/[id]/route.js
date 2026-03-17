@@ -1,5 +1,6 @@
 import { connectDB } from "@/app/lib/db";
 import Product from "@/app/models/Product";
+import { refreshImageUrls } from "@/app/lib/gcs";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
@@ -10,7 +11,8 @@ export async function GET(req, { params }) {
     if (!product) {
       return NextResponse.json({ error: "Product not found" }, { status: 404 });
     }
-    return NextResponse.json({ product });
+    const images = Array.isArray(product.images) ? await refreshImageUrls(product.images) : [];
+    return NextResponse.json({ product: { ...product, images } });
   } catch (error) {
     console.error("Error fetching product:", error);
     return NextResponse.json(
@@ -35,6 +37,8 @@ export async function PATCH(req, { params }) {
       images,
       price,
       discountPercentage,
+      type,
+      digitalFiles,
     } = body;
 
     if (!name) {
@@ -53,6 +57,10 @@ export async function PATCH(req, { params }) {
     if (price !== undefined) update.price = Number(price) || 0;
     if (discountPercentage !== undefined)
       update.discountPercentage = Math.min(100, Math.max(0, Number(discountPercentage) || 0));
+    if (type === "digital" || type === "physical") update.type = type;
+    if (type === "digital" && Array.isArray(digitalFiles))
+      update.digitalFiles = digitalFiles.filter((f) => f && f.gcsPath && f.filename && f.mimeType);
+    else if (type === "physical") update.digitalFiles = [];
 
     const product = await Product.findByIdAndUpdate(id, update, { new: true });
 

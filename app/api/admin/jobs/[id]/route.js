@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { connectDB } from "@/app/lib/db";
+import { refreshJobJdLink } from "@/app/lib/gcs";
 import Job from "@/app/models/Job";
 
 export async function GET(req, { params }) {
@@ -25,6 +26,7 @@ export async function GET(req, { params }) {
       if (!job) {
         return NextResponse.json({ error: "Job not found" }, { status: 404 });
       }
+      await refreshJobJdLink(job);
       return NextResponse.json({ job });
     },
   });

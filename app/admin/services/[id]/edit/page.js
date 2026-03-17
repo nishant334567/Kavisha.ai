@@ -13,6 +13,7 @@ import {
   TextCursorInput,
   Undo2,
 } from "lucide-react";
+import { ServiceSuccessCard } from "@/app/admin/components/PublishSuccessCard";
 
 const INPUT_CLASS =
   "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E]";
@@ -32,6 +33,8 @@ export default function EditServicePage() {
 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [showSuccess, setShowSuccess] = useState(false);
+  const [openHoursSet, setOpenHoursSet] = useState(true);
   const [uploading, setUploading] = useState(false);
   const [imagePreview, setImagePreview] = useState("");
   const [imageUrl, setImageUrl] = useState("");
@@ -85,6 +88,25 @@ export default function EditServicePage() {
       }
     })();
   }, [serviceId]);
+
+  useEffect(() => {
+    if (!brand) return;
+    fetch(`/api/admin/booking-availability?brand=${encodeURIComponent(brand)}`, {
+      credentials: "include",
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        const schedule = data.weeklySchedule || [];
+        const hasHours = schedule.some(
+          (day) =>
+            day.enabled &&
+            Array.isArray(day.intervals) &&
+            day.intervals.length > 0
+        );
+        setOpenHoursSet(!!hasHours);
+      })
+      .catch(() => setOpenHoursSet(false));
+  }, [brand]);
 
   const updateField = (key) => (event) => {
     setForm((prev) => ({ ...prev, [key]: event.target.value }));
@@ -149,7 +171,7 @@ export default function EditServicePage() {
       if (!response.ok || !data?.service) {
         throw new Error(data.error || "Failed to update booking service");
       }
-      router.push(`/admin/services${qs}`);
+      setShowSuccess(true);
     } catch (error) {
       alert(error.message || "Failed to update booking service");
     } finally {
@@ -161,11 +183,31 @@ export default function EditServicePage() {
     return <p className="text-sm text-gray-500">Loading service...</p>;
   }
 
+  if (showSuccess) {
+    return (
+      <div className="-mx-6 -my-8 px-6 py-8 md:px-10 bg-[#F3F3F3] min-h-[calc(100vh-4rem)]">
+        <ServiceSuccessCard
+          serviceId={serviceId}
+          serviceTitle={form.title}
+          brand={brand}
+          onBackToList={() => router.push(`/admin/services${qs}`)}
+        />
+      </div>
+    );
+  }
+
   return (
     <div className="-mx-6 -my-8 px-6 py-8 md:px-10 bg-[#F3F3F3] min-h-[calc(100vh-4rem)]">
       <h1 className="mb-8 text-3xl font-semibold tracking-wide text-[#111111]">
         Edit booking service
       </h1>
+
+      {!openHoursSet && (
+        <div className="mb-6 flex items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm font-medium text-amber-800">
+          <span className="inline-block h-2.5 w-2.5 shrink-0 rounded-full bg-amber-500" />
+          Not live — Open hours not set
+        </div>
+      )}
 
       <form className="space-y-6" onSubmit={handleSubmit}>
             <div className="grid grid-cols-1 gap-6 md:grid-cols-[220px_1fr]">

@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { connectDB } from "@/app/lib/db";
 import Job from "@/app/models/Job";
+import { refreshJobJdLink } from "@/app/lib/gcs";
 
 export async function GET(req, { params }) {
   try {
@@ -20,6 +21,7 @@ export async function GET(req, { params }) {
     if (!job) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
+    await refreshJobJdLink(job);
     return NextResponse.json({ job });
   } catch (e) {
     console.error("jobs [id] GET:", e);

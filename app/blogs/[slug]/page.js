@@ -107,6 +107,7 @@ export default function BlogPostPage() {
       </button>
       <BlogPostContent
         post={post}
+        brand={brand}
         brandName={brandContext?.brandName}
         brandImageUrl={brandContext?.logoUrl || brandContext?.brandImageUrl}
       />

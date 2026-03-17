@@ -17,17 +17,32 @@ export default function ServicesListPage() {
   const qs = brand ? `?subdomain=${encodeURIComponent(brand)}` : "";
   const [services, setServices] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [openHoursSet, setOpenHoursSet] = useState(false);
 
   useEffect(() => {
     if (!brand) {
       setLoading(false);
       return;
     }
-    fetch(`/api/admin/booking-services?brand=${encodeURIComponent(brand)}`, {
-      credentials: "include",
-    })
-      .then((response) => response.json())
-      .then((data) => setServices(data.services || []))
+    Promise.all([
+      fetch(`/api/admin/booking-services?brand=${encodeURIComponent(brand)}`, {
+        credentials: "include",
+      }).then((r) => r.json()),
+      fetch(`/api/admin/booking-availability?brand=${encodeURIComponent(brand)}`, {
+        credentials: "include",
+      }).then((r) => r.json()),
+    ])
+      .then(([servicesData, availabilityData]) => {
+        setServices(servicesData.services || []);
+        const schedule = availabilityData.weeklySchedule || [];
+        const hasHours = schedule.some(
+          (day) =>
+            day.enabled &&
+            Array.isArray(day.intervals) &&
+            day.intervals.length > 0
+        );
+        setOpenHoursSet(!!hasHours);
+      })
       .catch(() => setServices([]))
       .finally(() => setLoading(false));
   }, [brand]);
@@ -60,6 +75,8 @@ export default function ServicesListPage() {
                 <ServiceCard
                   key={service._id}
                   service={service}
+                  brand={brand}
+                  openHoursSet={openHoursSet}
                   href={`/admin/services/${service._id}/edit${qs}`}
                   showBookingsHref={`/admin/services/orders${qs}${qs ? "&" : "?"}serviceId=${service._id}`}
                 />

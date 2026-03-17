@@ -39,7 +39,7 @@ export default function ServicesPage() {
         <CalendarClock className="w-10 h-10 mx-auto text-gray-400 mb-3" />
         <p className="text-gray-700 font-medium">No services yet</p>
         <p className="text-sm text-gray-500 mt-1">
-          Services created by admin will appear here.
+          Services will appear here once the brand has set open hours and added booking services.
         </p>
       </div>
     );

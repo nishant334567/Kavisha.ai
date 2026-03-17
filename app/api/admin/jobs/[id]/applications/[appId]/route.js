@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { connectDB } from "@/app/lib/db";
+import { refreshJobJdLink, refreshImageUrl } from "@/app/lib/gcs";
 import Job from "@/app/models/Job";
 import JobApplication from "@/app/models/JobApplication";
 import User from "@/app/models/Users";
@@ -26,6 +27,7 @@ async function toApplicationResponse(app) {
     const u = await User.findOne({ email: (app.applicantEmail || "").toLowerCase() }).select("_id").lean();
     applicantUserId = u?._id?.toString() || null;
   }
+  const resumeLink = app.resumeLink ? await refreshImageUrl(app.resumeLink) : "";
   return {
     _id: app._id,
     applicantEmail: app.applicantEmail,
@@ -35,7 +37,7 @@ async function toApplicationResponse(app) {
     status: app.status || "",
     starred: !!app.starred,
     assignedTo: Array.isArray(app.assignedTo) ? app.assignedTo : [],
-    resumeLink: app.resumeLink,
+    resumeLink,
     questionsAnswers: app.questionsAnswers || [],
     createdAt: app.createdAt,
     applicationSummary: app.applicationSummary || "",
@@ -78,6 +80,7 @@ export async function GET(req, { params }) {
           { status: 404 }
         );
       }
+      await refreshJobJdLink(job);
       return NextResponse.json({
         job: {
           _id: job._id,

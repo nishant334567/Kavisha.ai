@@ -1,5 +1,6 @@
 import { connectDB } from "@/app/lib/db";
 import Product from "@/app/models/Product";
+import { refreshImageUrls } from "@/app/lib/gcs";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
@@ -21,7 +22,18 @@ export async function GET(req, { params }) {
             return NextResponse.json({ error: "Product not found" }, { status: 404 });
         }
 
-        return NextResponse.json({ product });
+        const { digitalFiles, ...rest } = product;
+        const images = Array.isArray(product.images) ? await refreshImageUrls(product.images) : [];
+        const sanitized = {
+            ...rest,
+            images,
+            type: product.type || "physical",
+            digitalFiles: Array.isArray(digitalFiles)
+                ? digitalFiles.map((f) => ({ filename: f.filename, mimeType: f.mimeType }))
+                : [],
+        };
+
+        return NextResponse.json({ product: sanitized });
     } catch (error) {
         console.error("Error fetching product:", error);
         return NextResponse.json(

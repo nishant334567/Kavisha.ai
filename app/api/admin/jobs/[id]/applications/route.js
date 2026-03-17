@@ -3,6 +3,7 @@ import mongoose from "mongoose";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { connectDB } from "@/app/lib/db";
+import { refreshImageUrl } from "@/app/lib/gcs";
 import Job from "@/app/models/Job";
 import JobApplication from "@/app/models/JobApplication";
 import User from "@/app/models/Users";
@@ -36,6 +37,25 @@ export async function GET(req, { params }) {
         const users = await User.find({ email: { $in: emails } }).select("_id email").lean();
         users.forEach((u) => userByEmail.set((u.email || "").toLowerCase(), u._id.toString()));
       }
+      const applicationsWithFreshResumeLinks = await Promise.all(
+        applications.map(async (a) => {
+          const resumeLink = a.resumeLink ? await refreshImageUrl(a.resumeLink) : "";
+          return {
+            _id: a._id,
+            applicantEmail: a.applicantEmail,
+            applicantName: a.applicantName || "",
+            applicantImage: a.applicantImage || "",
+            applicantUserId: userByEmail.get((a.applicantEmail || "").toLowerCase()) || null,
+            status: a.status || "",
+            starred: !!a.starred,
+            assignedTo: Array.isArray(a.assignedTo) ? a.assignedTo : [],
+            resumeLink,
+            questionsAnswers: a.questionsAnswers || [],
+            createdAt: a.createdAt,
+            applicationSummary: a.applicationSummary || "",
+          };
+        })
+      );
       return NextResponse.json({
         job: {
           _id: job._id,
@@ -43,20 +63,7 @@ export async function GET(req, { params }) {
           description: job.description || "",
           statusCategories: Array.isArray(job.statusCategories) ? job.statusCategories : [],
         },
-        applications: applications.map((a) => ({
-          _id: a._id,
-          applicantEmail: a.applicantEmail,
-          applicantName: a.applicantName || "",
-          applicantImage: a.applicantImage || "",
-          applicantUserId: userByEmail.get((a.applicantEmail || "").toLowerCase()) || null,
-          status: a.status || "",
-          starred: !!a.starred,
-          assignedTo: Array.isArray(a.assignedTo) ? a.assignedTo : [],
-          resumeLink: a.resumeLink,
-          questionsAnswers: a.questionsAnswers || [],
-          createdAt: a.createdAt,
-          applicationSummary: a.applicationSummary || "",
-        })),
+        applications: applicationsWithFreshResumeLinks,
       });
     },
     onUnauthenticated: async () => {

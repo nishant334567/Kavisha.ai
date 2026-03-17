@@ -38,6 +38,7 @@ export default function AddProductPage() {
     brandContext?.subdomain;
 
   const fileInputRef = useRef(null);
+  const digitalFileInputRef = useRef(null);
   const [form, setForm] = useState({
     productName: "",
     tagline: "",
@@ -47,9 +48,12 @@ export default function AddProductPage() {
     images: [],
     price: "",
     discountPercentage: "",
+    productType: "physical",
+    digitalFiles: [],
   });
   const [submitting, setSubmitting] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [uploadingDigital, setUploadingDigital] = useState(false);
   const [removingIndex, setRemovingIndex] = useState(null);
 
   const update = (key) => (e) =>
@@ -115,6 +119,47 @@ export default function AddProductPage() {
     }
   };
 
+  const handleDigitalFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file || !brand) return;
+
+    setUploadingDigital(true);
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      fd.append("brand", brand);
+      const res = await fetch("/api/admin/upload-digital-product-file", {
+        method: "POST",
+        body: fd,
+        credentials: "include",
+      });
+      const data = await res.json();
+      if (res.ok && data.gcsPath) {
+        setForm((prev) => ({
+          ...prev,
+          digitalFiles: [
+            ...prev.digitalFiles,
+            { filename: data.filename, mimeType: data.mimeType, gcsPath: data.gcsPath, size: data.size || 0 },
+          ],
+        }));
+      } else {
+        alert(data.error || "Upload failed");
+      }
+    } catch {
+      alert("Upload failed");
+    } finally {
+      setUploadingDigital(false);
+      e.target.value = "";
+    }
+  };
+
+  const removeDigitalFile = (i) => {
+    setForm((prev) => ({
+      ...prev,
+      digitalFiles: prev.digitalFiles.filter((_, j) => j !== i),
+    }));
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!form.productName.trim() || !brand) {
@@ -138,6 +183,8 @@ export default function AddProductPage() {
           price: form.price,
           discountPercentage: form.discountPercentage,
           brand,
+          type: form.productType,
+          digitalFiles: form.productType === "digital" ? form.digitalFiles : [],
         }),
       });
       const data = await res.json();
@@ -215,6 +262,68 @@ export default function AddProductPage() {
             placeholder="Add return, replacement, usage or legal terms for this product"
           />
         </FormField>
+
+        <FormField id="product-type" label="Product type">
+          <div className="flex gap-4">
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="productType"
+                checked={form.productType === "physical"}
+                onChange={() => setForm((p) => ({ ...p, productType: "physical" }))}
+                className="rounded border-gray-300"
+              />
+              <span>Physical</span>
+            </label>
+            <label className="flex items-center gap-2 cursor-pointer">
+              <input
+                type="radio"
+                name="productType"
+                checked={form.productType === "digital"}
+                onChange={() => setForm((p) => ({ ...p, productType: "digital" }))}
+                className="rounded border-gray-300"
+              />
+              <span>Digital (customer gets download links by email after payment)</span>
+            </label>
+          </div>
+        </FormField>
+
+        {form.productType === "digital" && (
+          <div>
+            <label className={LABEL_CLASS}>Digital files (PDF, MP4, WAV, ZIP — max 100MB each)</label>
+            <ul className="space-y-2 mb-2">
+              {form.digitalFiles.map((f, i) => (
+                <li key={i} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg text-sm">
+                  <span className="truncate">{f.filename}</span>
+                  <button
+                    type="button"
+                    onClick={() => removeDigitalFile(i)}
+                    className="shrink-0 p-1 text-red-600 hover:bg-red-50 rounded"
+                    aria-label="Remove file"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </li>
+              ))}
+            </ul>
+            <button
+              type="button"
+              onClick={() => digitalFileInputRef.current?.click()}
+              disabled={uploadingDigital}
+              className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+            >
+              {uploadingDigital ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
+              Add file
+            </button>
+            <input
+              ref={digitalFileInputRef}
+              type="file"
+              accept=".pdf,.mp4,.wav,.zip,application/pdf,video/mp4,audio/wav,audio/x-wav,application/zip"
+              onChange={handleDigitalFileChange}
+              className="hidden"
+            />
+          </div>
+        )}
 
         <div>
           <label className={LABEL_CLASS}>
