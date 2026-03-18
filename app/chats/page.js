@@ -203,7 +203,7 @@ export default function HomePage() {
                     />
                 </div>
 
-                <div className="w-full h-full flex flex-col overflow-hidden">
+                <div className="w-full h-full flex flex-col overflow-hidden pt-28 md:pt-0">
                     <SelectChatType
                         servicesWithStats={servicesWithStats}
                         userDisplayName={user?.displayName || user?.name || "there"}

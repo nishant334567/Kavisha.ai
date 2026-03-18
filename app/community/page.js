@@ -373,7 +373,7 @@ export default function Community() {
                         defaultCollapsed={true}
                     />
                 </div>
-                <div className="w-full flex flex-col flex-1 min-h-0 min-w-0">
+                <div className="w-full flex flex-col flex-1 min-h-0 min-w-0 pt-28 md:pt-0">
                     <div className="flex-1 min-h-0 overflow-auto">
                         <div className="mt-14 ">
                             {/* Back button - pl-12/pl-14 reserves space for collapsed sidebar toggle */}
