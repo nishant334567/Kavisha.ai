@@ -21,9 +21,16 @@ export default function ChatSidebar({
   onSelectService,
   isCreatingSession = false,
   defaultCollapsed = true,
+  openRequest, // when passed (e.g. from /chats), parent controls open/close; when undefined, sidebar manages itself
 }) {
   const { user } = useFirebaseSession();
   const [isCollapsed, setIscollapsed] = useState(defaultCollapsed);
+
+  // When parent passes openRequest, sync sidebar to it (open when true, close when false)
+  useEffect(() => {
+    if (openRequest === undefined) return;
+    setIscollapsed(!openRequest);
+  }, [openRequest]);
   const [newChatLoading, setNewChatLoading] = useState(false);
   const [showNewChatDropdown, setShowNewChatDropdown] = useState(false);
   const [showCommunityNewDropdown, setShowCommunityNewDropdown] = useState(false);

@@ -47,6 +47,7 @@ export default function AdminNavbar() {
     ...(brand?.enableBooking ? [{ name: "Booking Services", path: `/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
     ...(brand?.enableJobs ? [{ name: "My Jobs", path: `/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
     ...(brand?.enableBlogs ? [{ name: "Blogs", path: `/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
+    { name: "Links", path: `/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}` },
     { name: "Train My Avataar", path: `/admin/${brand?.subdomain}/train/v2` },
     { name: "My Profile", path: `/admin/${brand?.subdomain}/edit-profile` },
   ];
@@ -107,6 +108,13 @@ export default function AdminNavbar() {
                 BLOGS
               </li>
             )}
+            <li
+              className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/admin/links") ? "font-semibold text-gray-900" : ""
+                }`}
+              onClick={() => go(`/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
+            >
+              LINKS
+            </li>
             <li
               className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/train") ? "font-semibold text-gray-900" : ""
                 }`}
