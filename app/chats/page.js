@@ -1,15 +1,15 @@
 "use client";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useEffect, useLayoutEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import SelectChatType from "../components/SelectType";
-import ChatBox from "../components/ChatBox";
 import ChatSidebar from "../components/ChatSidebar";
 import Loader from "../components/Loader";
 import Homepage from "../components/Homepage";
 import AvatarHomepage from "../components/AvatarHomepage";
 import PoweredByKavisha from "../components/PoweredByKavisha";
+import { ArrowRight, ArrowLeft } from "lucide-react";
 
 export default function HomePage() {
     const { user, loading } = useFirebaseSession();
@@ -53,15 +53,7 @@ export default function HomePage() {
     }, [user, loading, brandContext, router]);
 
 
-    useEffect(() => {
-        if (!user || !brandContext) return;
-        const key = `lastChat:${user.id}:${brandContext.brandName}`;
-        const saved = localStorage.getItem(key);
-        const key2 = `lastChatType:${user.id}`;
-        const savedType = localStorage.getItem(key2);
-        if (savedType && !currentChatType) setCurrentChatType(savedType);
-        if (saved && !currentChatId) setCurrentChatId(saved);
-    }, []);
+    // Do not restore previous chat on /chats – show only cards; history is in the left sidebar.
 
     useEffect(() => {
         if (!brandContext) return;
@@ -123,14 +115,6 @@ export default function HomePage() {
             .finally(() => setLoadingServicesWithStats(false));
     }, [user, brandContext]);
 
-    useEffect(() => {
-        if (!user || !brandContext || !currentChatId) return;
-        const key = `lastChat:${user.id}:${brandContext.brandName}`;
-        const key2 = `lastChatType:${user.id}`;
-        localStorage.setItem(key, currentChatId);
-        localStorage.setItem(key2, currentChatType);
-    }, [currentChatId, currentChatType, user, brandContext]);
-
     const selectChatType = async (
         type,
         initialMessage,
@@ -162,8 +146,7 @@ export default function HomePage() {
             });
             const data = await res.json();
             if (data?.success && data?.sessionId) {
-                setCurrentChatId(data.sessionId);
-                // Redirect to the new chat
+                // Go to chat page; /chats always shows cards only
                 router.push(`/chats/${data.sessionId}`);
             }
         } catch (e) {
@@ -216,6 +199,7 @@ export default function HomePage() {
                         isCreatingSession={creatingSession}
                         defaultCollapsed={true}
                         homePath="/chats"
+                        openRequest={!isSidebarCollapsed}
                     />
                 </div>
 
@@ -228,18 +212,26 @@ export default function HomePage() {
                         creatingForServiceKey={creatingForServiceKey}
                         loading={loadingServicesWithStats}
                     />
-
-                    {currentChatId && (
-                        <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center px-4 md:px-0">
-                            <ChatBox
-                                currentChatId={currentChatId}
-                                currentChatType={currentChatType}
-                                updateChatId={setCurrentChatId}
-                                showInbox={showInbox}
-                                setShowInbox={setShowInbox}
-                            />
-                        </div>
-                    )}
+                    <div className="w-full max-w-2xl mx-auto px-4 pt-4 pb-8">
+                        <button
+                            type="button"
+                            onClick={() => setIsSidebarCollapsed((prev) => !prev)}
+                            className="inline-flex items-center gap-1.5 text-[#00888E] hover:underline font-medium text-sm"
+                        >
+                            {isSidebarCollapsed ? (
+                                <>
+                                    Your chats
+                                    <ArrowRight className="w-4 h-4 shrink-0" />
+                                </>
+                            ) : (
+                                <>
+                                    <ArrowLeft className="w-4 h-4 shrink-0" />
+                                    Close
+                                </>
+                            )}
+                        </button>
+                    </div>
+                    {/* Chat UI only at /chats/[id]; this page always shows cards only */}
                 </div>
             </div>
             <PoweredByKavisha />
