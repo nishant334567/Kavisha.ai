@@ -5,7 +5,7 @@ import { signOut } from "../lib/firebase/logout";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { X, ChevronsRight, PanelLeftClose, Trash2 } from "lucide-react";
+import { X, PanelLeftClose, GripVertical, Trash2 } from "lucide-react";
 
 export default function ChatSidebar({
   allChats,
@@ -428,18 +428,15 @@ export default function ChatSidebar({
           </>
         )}
         {isCollapsed && (
-          <>
-            {/* Mobile: Small toggle button */}
-            <div className=" fixed top-16 z-40">
-              <button
-                onClick={() => toggleLeftSideBar()}
-                className="w-10 h-10 flex items-center justify-center rounded-r text-foreground shadow-xl border border-border hover:bg-[#59646F] hover:text-[#FFEED8] transition-colors"
-                title="Open sidebar"
-              >
-                <ChevronsRight className="w-5 h-5" />
-              </button>
-            </div>
-          </>
+          <button
+            onClick={() => toggleLeftSideBar()}
+            className="fixed left-0 top-16 z-40 w-6 h-12 flex items-center justify-center rounded-r opacity-90 hover:opacity-100 bg-[#00888E] hover:bg-[#006d72] text-white transition-all border-0 shadow-sm hover:shadow-md focus:outline-none focus:ring-0"
+            style={{ touchAction: "manipulation" }}
+            title="Open sidebar"
+            aria-label="Open sidebar"
+          >
+            <GripVertical className="w-4 h-4 shrink-0" strokeWidth={2} />
+          </button>
         )}
       </div>
     </div>

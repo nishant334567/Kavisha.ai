@@ -31,9 +31,9 @@ export default function GlobalMessages() {
 
   return (
     <>
-      {/* Messages Button - Mobile: below left sidebar icon; Desktop: bottom-right */}
+      {/* Messages Button - bottom-right on all client pages */}
       <button
-        className="fixed left-0 top-28 z-40 md:left-auto md:right-4 md:top-auto md:bottom-4 w-10 h-10 md:w-14 md:h-14 md:p-4 flex items-center justify-center rounded-r md:rounded-full bg-[#264653] text-white shadow-lg hover:bg-[#1e383e] transition-colors border border-l-0 border-border md:border-0"
+        className="fixed right-4 bottom-4 z-40 w-10 h-10 md:w-14 md:h-14 md:p-4 flex items-center justify-center rounded-full bg-[#264653] text-white shadow-lg hover:bg-[#1e383e] transition-colors border-0"
         onClick={() => setShowInbox(true)}
         title="Open Messages"
         aria-label="Open Messages"
