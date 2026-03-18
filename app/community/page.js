@@ -373,13 +373,13 @@ export default function Community() {
                         defaultCollapsed={true}
                     />
                 </div>
-                <div className="w-full flex flex-col flex-1 min-h-0 min-w-0 pt-28 md:pt-0">
+                <div className="w-full flex flex-col flex-1 min-h-0 min-w-0">
                     <div className="flex-1 min-h-0 overflow-auto">
-                        <div className="mt-14 ">
+                        <div className="mt-4 ">
                             {/* Back button - pl-12/pl-14 reserves space for collapsed sidebar toggle */}
                             <button
                                 onClick={() => router.push("/")}
-                                className="flex pl-12 items-center gap-2 text-[#3D5E6B] hover:text-[#2d4e5b] transition-colors py-1 -mb-1"
+                                className="flex pl-4 items-center gap-2 text-[#3D5E6B] hover:text-[#2d4e5b] transition-colors py-1 -mb-1"
                             >
                                 <ArrowLeft className="w-5 h-5 flex-shrink-0" />
                                 <span className="font-fredoka text-sm sm:text-base">Back</span>
@@ -391,7 +391,7 @@ export default function Community() {
                                 </div>
                             ) : (
                                 <>
-                                    <div className="px-8 font-fredoka flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-4 sm:py-3">
+                                    <div className="px-4 font-fredoka flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-4 sm:py-3">
                                         <div className="min-w-0">
                                             <p className="text-[#3D5E6B] text-2xl sm:text-3xl lg:text-4xl">Community</p>
                                             <p className="text-sm sm:text-base font-extralight mt-1">

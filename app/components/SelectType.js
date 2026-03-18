@@ -39,11 +39,12 @@ export default function SelectChatType({
 
   return (
     <div className="font-baloo tracking-[0.08em] flex flex-1 flex-col items-start justify-center px-4 py-8 w-full max-w-2xl mx-auto min-h-0">
-      <div className="text-left mb-8 w-full">
+      <div className="text-center md:text-left mb-8 w-full">
         <h1 className="text-2xl md:text-3xl font-regular text-gray-900">
           Hi{" "}
           <span className="text-[#00888E]">
             {displayName.charAt(0).toUpperCase() + displayName.slice(1)}!
+            
           </span>
         </h1>
         <p className="mt-2 text-gray-600">What&apos;s on your mind?</p>

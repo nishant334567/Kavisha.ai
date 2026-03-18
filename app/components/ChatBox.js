@@ -5,7 +5,7 @@ import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import Resume from "./Resume";
 import FormatText from "./FormatText";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { Mic, MicOff, Send, Paperclip } from "lucide-react";
+import { Mic, MicOff, Send, Paperclip, ChevronLeft, ChevronRight } from "lucide-react";
 import Matches from "@/app/components/Matches";
 
 export default function ChatBox({
@@ -16,6 +16,7 @@ export default function ChatBox({
   // setShowInbox,
 }) {
   const endOfMessagesRef = useRef(null);
+  const suggestedQuestionsScrollRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [messageLoading, setMessageLoading] = useState(false);
@@ -635,7 +636,7 @@ export default function ChatBox({
                   )}
                   {m.role === "user" ? (
                     <div className="flex justify-end w-full min-w-0">
-                      <div className="text-white font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-[#004A4E]">
+                      <div className="text-xs text-white font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-[#004A4E]">
                         {m.message}
                       </div>
                     </div>
@@ -647,20 +648,20 @@ export default function ChatBox({
                           className="rounded-full w-[32px] h-[32px] md:w-[40px] md:h-[40px] min-w-[32px] min-h-[32px] md:min-w-[40px] md:min-h-[40px] object-cover shadow-sm flex-shrink-0"
                         />
                       </div>
-                      <div className="font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-muted-bg min-w-0">
+                      <div className="text-xs font-normal font-figtree leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-muted-bg min-w-0">
                         <FormatText text={m.message} />
                       </div>
                     </div>
                   )}
 
                   {/* Show requery for user messages */}
-                  {m.role === "user" && m.requery && (
+                  {/* {m.role === "user" && m.requery && (
                     <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0">
                       <p className="text-xs text-muted italic break-words">
                         🔍 {m.requery}
                       </p>
                     </div>
-                  )}
+                  )} */}
                   {/* Show sources for assistant messages */}
                   {m.role === "assistant" && m.sourceUrls?.length > 0 && (
                     <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0 flex flex-wrap gap-1.5">
@@ -736,18 +737,44 @@ export default function ChatBox({
                 .slice(0, 5)
                 .filter(Boolean);
               if (questions.length === 0) return null;
+              const scrollStep = 240;
+              const scrollLeft = () =>
+                suggestedQuestionsScrollRef.current?.scrollBy({ left: -scrollStep, behavior: "smooth" });
+              const scrollRight = () =>
+                suggestedQuestionsScrollRef.current?.scrollBy({ left: scrollStep, behavior: "smooth" });
               return (
-                <div className="flex flex-wrap gap-2 py-2 px-0">
-                  {questions.map((q, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => handleSubmit(String(q).trim())}
-                      className="text-left px-3 py-2 rounded-xl border border-border bg-muted-bg hover:bg-border/30 text-foreground text-sm transition-colors"
-                    >
-                      {q}
-                    </button>
-                  ))}
+                <div className="flex items-center gap-1 py-2">
+                  <button
+                    type="button"
+                    onClick={scrollLeft}
+                    aria-label="Scroll suggested questions left"
+                    className="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full border border-border bg-muted-bg hover:bg-border/30 text-foreground transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5" />
+                  </button>
+                  <div
+                    ref={suggestedQuestionsScrollRef}
+                    className="flex overflow-x-auto gap-2 flex-1 min-w-0 flex-nowrap overflow-y-hidden scrollbar-thin scroll-smooth"
+                  >
+                    {questions.map((q, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => handleSubmit(String(q).trim())}
+                        className="text-left px-3 py-2 rounded-xl border border-border bg-muted-bg hover:bg-border/30 text-foreground text-xs transition-colors flex-shrink-0 min-w-0 max-w-[85vw] md:max-w-[320px] whitespace-normal"
+                      >
+                        {q}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    type="button"
+                    onClick={scrollRight}
+                    aria-label="Scroll suggested questions right"
+                    className="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full border border-border bg-muted-bg hover:bg-border/30 text-foreground transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5" />
+                  </button>
                 </div>
               );
             })()}
