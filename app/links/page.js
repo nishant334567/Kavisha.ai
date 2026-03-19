@@ -100,18 +100,23 @@ export default function LinksPage() {
     }
   };
 
+  const shellClass =
+    "font-baloo flex min-h-screen items-center justify-center bg-background p-4 text-gray-700 dark:text-gray-300 md:bg-teal-50 md:text-foreground md:dark:bg-muted-bg";
+
   if (loading) {
     return (
-      <div className="font-baloo min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "#00888E" }}>
-        <p className="text-white">Loading…</p>
+      <div className={shellClass}>
+        <p>Loading…</p>
       </div>
     );
   }
 
   if (!brand) {
     return (
-      <div className="font-baloo min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "#00888E" }}>
-        <p className="text-white">Add ?brand=... to the URL to view a link tree.</p>
+      <div className={shellClass}>
+        <p className="text-center">
+          Add ?brand=... to the URL to view a link tree.
+        </p>
       </div>
     );
   }
@@ -121,8 +126,8 @@ export default function LinksPage() {
 
   if (!hasLinks) {
     return (
-      <div className="font-baloo min-h-screen flex items-center justify-center p-4" style={{ backgroundColor: "#00888E" }}>
-        <p className="text-white">No links yet for this brand.</p>
+      <div className={shellClass}>
+        <p className="text-center">No links yet for this brand.</p>
       </div>
     );
   }
@@ -131,11 +136,10 @@ export default function LinksPage() {
 
   return (
     <div
-      className="font-baloo min-h-screen py-8 px-4 flex items-center justify-center"
-      style={{ backgroundColor: "#00888E" }}
+      className="font-baloo flex min-h-[100dvh] w-full flex-col bg-background md:min-h-screen md:flex-row md:items-center md:justify-center md:bg-teal-50 md:py-8 md:px-4 md:dark:bg-muted-bg"
     >
-      <div className="w-full max-w-md flex flex-col max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)]">
-        <div className="bg-white rounded-2xl shadow-xl overflow-hidden relative flex flex-col max-h-[calc(100vh-2rem)] md:max-h-[calc(100vh-4rem)]">
+      <div className="flex w-full flex-1 flex-col md:max-h-[calc(100vh-4rem)] md:max-w-md md:flex-none">
+        <div className="relative flex flex-1 flex-col overflow-hidden bg-white md:max-h-[calc(100vh-4rem)] md:rounded-2xl md:shadow-xl dark:bg-card">
           <div className="absolute top-4 right-4 z-10">
             <button
               type="button"
