@@ -143,7 +143,7 @@ export default function Homepage() {
 
         <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
       </div>
-      <div className="flex flex-col justify-center items-center font-fredoka max-w-[90%] md:max-w-[60%] mx-auto text-center px-4">
+      <div className="flex flex-col justify-center items-center max-w-[90%] md:max-w-[60%] mx-auto text-center px-4">
         <p className="text-[#004A4E] text-3xl sm:text-5xl md:text-7xl lg:text-[90px] font-normal leading-tight">
           Future of <span className="text-[#00B5BD]">Digital</span> Profiles
         </p>
@@ -179,7 +179,7 @@ export default function Homepage() {
         </div>
       )}
 
-      <div className="font-akshar gap-2 md:gap-4 flex flex-col md:flex-row flex-wrap justify-center items-center mb-8 px-4">
+      <div className="gap-2 md:gap-4 flex flex-col md:flex-row flex-wrap justify-center items-center mb-8 px-4">
         <button
           onClick={() => {
             if (user) {
@@ -226,18 +226,18 @@ export default function Homepage() {
         </div>
         {/* Top cream section */}
         <div className="bg-[#F9F1D8] text-[#3D5A5E] h-[120px] md:h-[160px] flex justify-center items-center px-4">
-          <p className="font-noto-serif text-xl sm:text-2xl md:text-4xl lg:text-5xl text-center">
+          <p className="font-baloo text-xl sm:text-2xl md:text-4xl lg:text-5xl text-center">
             Your Digital Avataar on Kavisha
           </p>
         </div>
         {/* Bottom teal section */}
         <div className="bg-[#4A6670] text-white h-auto min-h-[150px] md:h-[180px] flex flex-col justify-center items-center px-4 py-6 md:py-0">
-          <p className="font-noto-serif text-lg sm:text-xl md:text-3xl lg:text-4xl mb-2 md:mb-3 text-center">
+          <p className="font-baloo text-lg sm:text-xl md:text-3xl lg:text-4xl mb-2 md:mb-3 text-center">
             Your (Knowledge <span className="text-[#E8B84A]">+</span> History{" "}
             <span className="text-[#E8B84A]">+</span> Personality{" "}
             <span className="text-[#E8B84A]">+</span> Style)
           </p>
-          <p className="text-[#B8C5C9] font-assistant text-sm md:text-lg text-center">
+          <p className="text-[#B8C5C9] text-sm md:text-lg text-center">
             With Kavisha, you'll be able to give your fans delightful
             interactions 24x7x365
           </p>
@@ -245,7 +245,7 @@ export default function Homepage() {
       </div>
       {/* Avatar cards */}
       <div className="flex items-center gap-4 my-6 px-4 md:px-8">
-        <p className="font-fredoka text-lg md:text-2xl text-[#264653] whitespace-nowrap">
+        <p className="text-lg md:text-2xl text-[#264653] whitespace-nowrap">
           Talk to Avataars
         </p>
         <div className="flex-1 h-[1px] bg-[#6B6B6B]"></div>
@@ -334,7 +334,7 @@ export default function Homepage() {
         {/* Header with line */}
         <div className="flex items-center gap-4 mb-6 px-4 md:px-8">
           <div className="flex-1 h-[1px] bg-[#6B6B6B]"></div>
-          <p className="font-fredoka text-lg md:text-2xl text-[#264653] whitespace-nowrap">
+          <p className="text-lg md:text-2xl text-[#264653] whitespace-nowrap">
             Connect with people
           </p>
         </div>
@@ -342,8 +342,8 @@ export default function Homepage() {
         {/* Two column layout */}
         <div className="flex flex-col md:flex-row">
           {/* Left - Teal section: on mobile full-width paragraph + centered button */}
-          <div className="font-akshar md:flex-[4] bg-[#35515b] text-white px-6 md:px-10 py-8 md:py-12 flex flex-col justify-center text-center md:text-left items-center md:items-start">
-            <p className="w-full max-w-full text-3xl md:text-5xl lg:text-6xl font-fredoka leading-snug mb-4 md:mb-6">
+          <div className="md:flex-[4] bg-[#35515b] text-white px-6 md:px-10 py-8 md:py-12 flex flex-col justify-center text-center md:text-left items-center md:items-start">
+            <p className="w-full max-w-full text-3xl md:text-5xl lg:text-6xl leading-snug mb-4 md:mb-6">
               <span className="md:block">Your fans can </span>
               <span className="md:block">
                 <span className="text-[#f2d75e]">connect </span> with
@@ -359,15 +359,15 @@ export default function Homepage() {
                 }
               }}
               disabled={signingIn || isBlocked}
-              className="w-fit mx-auto md:mx-0 px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl font-akshar hover:bg-white hover:text-[#35515b] transition-colors disabled:opacity-50"
+              className="w-fit mx-auto md:mx-0 px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl hover:bg-white hover:text-[#35515b] transition-colors disabled:opacity-50"
             >
               {signingIn ? "Signing in..." : "Connect with people"}
             </button>
           </div>
 
           {/* Right - Cream section */}
-          <div className="font-assistant md:flex-[6] bg-[#f7f0dd] text-[#264653] px-6 md:px-10 py-8 md:py-12 flex items-center">
-            <p className="text-lg leading-relaxed font-assistant text-center md:text-left">
+          <div className="md:flex-[6] bg-[#f7f0dd] text-[#264653] px-6 md:px-10 py-8 md:py-12 flex items-center">
+            <p className="text-lg leading-relaxed text-center md:text-left">
               Your Digital Avataar doesn't just enable conversations between you
               and your fans, it also gives your fans a chance to connect with
               each other. This makes <span className="font-semibold">you</span>{" "}
@@ -382,7 +382,7 @@ export default function Homepage() {
 
             <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
           </div>
-          <p className="font-fredoka text-base md:text-xl font-light text-center text-[#264653] max-w-3xl tracking-wide">
+          <p className="text-base md:text-xl font-light text-center text-[#264653] max-w-3xl tracking-wide">
             With Kavisha, influencers and brands can interact with their fans,
             create opportunities for them, and make them happy. Like never
             before.

@@ -46,11 +46,11 @@ export default function QuizCard({ quiz, onViewAttempts }) {
       <div className="flex-1">
         {/* Title and Type Tag */}
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-lg font-semibold text-[#264653] flex-1 pr-2 font-fredoka">
+          <h3 className="text-lg font-semibold text-[#264653] flex-1 pr-2">
             {quiz.title || "Quiz title"}
           </h3>
           <span
-            className={`px-2.5 py-1 text-xs font-normal rounded-full whitespace-nowrap font-fredoka ${quiz.type === "quiz"
+            className={`px-2.5 py-1 text-xs font-normal rounded-full whitespace-nowrap ${quiz.type === "quiz"
                 ? "bg-blue-100 text-blue-700"
                 : "bg-yellow-100 text-yellow-700"
               }`}
@@ -61,18 +61,18 @@ export default function QuizCard({ quiz, onViewAttempts }) {
 
         {/* Subtitle */}
         {quiz.subtitle && (
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2 font-fredoka">
+          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
             {quiz.subtitle}
           </p>
         )}
 
         {/* Details */}
         <div className="space-y-1.5 mb-4">
-          <div className="text-sm text-gray-600 font-fredoka">
+          <div className="text-sm text-gray-600">
             {quiz.questionCount || 0} questions
           </div>
           {quiz.createdAt && (
-            <div className="text-sm text-gray-600 font-fredoka">
+            <div className="text-sm text-gray-600">
               Created: {formatDate(quiz.createdAt)}
             </div>
           )}
@@ -86,13 +86,13 @@ export default function QuizCard({ quiz, onViewAttempts }) {
             e.stopPropagation();
             onViewAttempts();
           }}
-          className="flex-1 px-4 py-2.5 text-sm font-medium text-[#264653] bg-[#F2FFFF] rounded-full shadow-md transition-colors font-fredoka"
+          className="flex-1 px-4 py-2.5 text-sm font-medium text-[#264653] bg-[#F2FFFF] rounded-full shadow-md transition-colors"
         >
           View Attempts
         </button>
         <button
           onClick={handleStartAttempt}
-          className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-[#264653] hover:bg-[#1e383e] rounded-full transition-colors flex items-center justify-center gap-2 font-fredoka"
+          className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-[#264653] hover:bg-[#1e383e] rounded-full transition-colors flex items-center justify-center gap-2"
         >
           <Play className="w-4 h-4" />
           Start

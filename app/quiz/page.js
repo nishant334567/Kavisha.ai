@@ -47,7 +47,7 @@ export default function QuizPage() {
         {/* Back Button */}
         <button
           onClick={() => router.push("/")}
-          className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-4 sm:mb-6 text-xs sm:text-sm font-medium font-fredoka group"
+          className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-4 sm:mb-6 text-xs sm:text-sm font-medium group"
         >
           <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 group-hover:-translate-x-1 transition-transform" />
           <span className="hidden sm:inline">Back to Home</span>
@@ -57,11 +57,11 @@ export default function QuizPage() {
         {/* Header Section */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-semibold text-[#264653] font-fredoka">
+            <h1 className="text-3xl font-semibold text-[#264653]">
               Quizzes and Surveys
             </h1>
           </div>
-          {/* <p className="text-sm text-gray-600 font-fredoka">
+          {/* <p className="text-sm text-gray-600">
             Manage your quizzes and surveys
           </p> */}
         </div>
@@ -70,10 +70,10 @@ export default function QuizPage() {
         {quizzes.length === 0 ? (
           <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
             <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg font-medium mb-2 font-fredoka">
+            <p className="text-gray-500 text-lg font-medium mb-2">
               No quizzes available yet.
             </p>
-            <p className="text-gray-400 text-sm font-fredoka">
+            <p className="text-gray-400 text-sm">
               Check back later for new quizzes and surveys.
             </p>
           </div>

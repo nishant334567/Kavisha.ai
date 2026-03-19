@@ -69,7 +69,7 @@ export default function LoginPage() {
           className="rounded-full w-10 h-10 object-cover"
         />
         <div className="flex justify-center items-center">
-          <p className="font-akshar font-medium">
+          <p className="font-medium">
             {brand.brandName?.toUpperCase()}
           </p>
         </div>
@@ -82,10 +82,10 @@ export default function LoginPage() {
       {/* </div> */}
 
       <div className="text-center mx-auto max-w-4xl px-4">
-        <p className="font-fredoka font-normal text-3xl my-2 mb-4">
+        <p className="font-normal text-3xl my-2 mb-4">
           {brand?.title}
         </p>
-        <p className="font-fredoka leading-relaxed px-4">{brand?.subtitle}</p>
+        <p className="leading-relaxed px-4">{brand?.subtitle}</p>
       </div>
 
       {error && (
@@ -119,7 +119,7 @@ export default function LoginPage() {
           <button
             onClick={handleSignIn}
             disabled={signingIn}
-            className="font-akshar px-6 py-3 rounded-full bg-[#59646F] text-md disabled:opacity-50 flex items-center gap-2 text-[#FFEED8] hover:bg-[#4a5568] transition-colors my-4"
+            className="px-6 py-3 rounded-full bg-[#59646F] text-md disabled:opacity-50 flex items-center gap-2 text-[#FFEED8] hover:bg-[#4a5568] transition-colors my-4"
           >
             {signingIn ? (
               <span>Signing in...</span>

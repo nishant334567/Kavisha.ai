@@ -6,7 +6,7 @@ export default function CommunityPostDialog({ name, description, date, requireme
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={onClose}>
       <div
-        className="bg-card border border-border shadow-2xl rounded-xl font-fredoka w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden"
+        className="bg-card border border-border shadow-2xl rounded-xl w-full max-w-lg max-h-[85vh] flex flex-col overflow-hidden"
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 p-4 sm:p-6 border-b border-border shrink-0">

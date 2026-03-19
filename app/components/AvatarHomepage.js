@@ -45,50 +45,45 @@ export default function AvatarHomepage() {
     }
   };
 
-  const qs = brand?.subdomain ? `?subdomain=${encodeURIComponent(brand.subdomain)}` : "";
-  const enabledLinks = [
-    { label: "YOUR CHATS", path: "/chats", primary: true },
-    ...(brand?.enableCommunityOnboarding
-      ? [{ label: (brand?.communityName || "Community").toUpperCase(), path: "/community" }]
-      : []),
-    ...(brand?.enableQuiz
-      ? [{ label: (brand?.quizName || "Take quiz/survey").toUpperCase(), path: "/quiz" }]
-      : []),
-    ...(brand?.enableJobs ? [{ label: "JOBS", path: "/jobs" }] : []),
-    ...(brand?.enableProducts ? [{ label: "PRODUCTS", path: "/products" }] : []),
-    ...(brand?.enableBooking ? [{ label: "SERVICES", path: `/services${qs}` }] : []),
-    ...(brand?.enableBlogs ? [{ label: "BLOG", path: `/blogs${qs}` }] : []),
+  const linksQs = brand?.subdomain
+    ? `?brand=${encodeURIComponent(brand.subdomain)}`
+    : "";
+  /** Logged-in homepage CTAs: only these three */
+  const homepageActionLinks = [
+    { label: "TALK TO ME", path: "/chats", primary: true },
+    { label: "COMMUNITY", path: "/community" },
+    { label: "LINKS", path: `/links${linksQs}` },
   ];
 
   return (
     <div className="h-full flex flex-col bg-background">
-      <div className="md:mt-12 flex-1 overflow-y-auto mx-auto w-full md:max-w-[60%] md:px-8 pt-2 space-y-4 pb-8 md:pb-24">
-        <div className="md:hidden flex gap-4 my-2 px-4">
+      <div className="flex-1 overflow-y-auto mx-auto w-full md:max-w-[60%] md:px-8 pt-2 md:pt-0 space-y-4 pb-32 md:pb-24">
+        {/* <div className="md:hidden flex gap-4 my-2 px-4">
           <img
             src={brand?.logoUrl}
             className="rounded-full w-10 h-10 object-cover"
             alt={brand?.brandName}
           />
           <div className="flex justify-center items-center">
-            <p className="font-akshar font-medium text-foreground">
+            <p className="font-baloo font-medium text-foreground">
               {brand?.brandName?.toUpperCase()}
             </p>
           </div>
-        </div>
+        </div> */}
 
         {brand?.brandImageUrl && (
           <img
             src={brand.brandImageUrl}
             alt={brand?.brandName?.toUpperCase() || "Brand"}
-            className="w-full md:max-h-[50vh] object-cover md:rounded-lg"
+            className="w-full h-[250px] md:max-h-[50vh] object-cover md:rounded-lg"
           />
         )}
 
         <div className="text-center mx-auto max-w-4xl px-4">
-          <p className="font-fredoka font-normal text-3xl my-2 mb-4 text-foreground">
+          <p className="font-baloo font-normal text-2xl my-2 mt-6 mb-4 text-foreground">
             {brand?.title}
           </p>
-          <p className="font-fredoka leading-relaxed px-4 text-foreground">
+          <p className="font-baloo px-2 text-md text-foreground text-gray-500 text-justify">
             {brand?.subtitle}
           </p>
         </div>
@@ -119,19 +114,19 @@ export default function AvatarHomepage() {
           </div>
         )}
 
-        {/* Button in normal flow for both mobile and desktop; hide when in-app browser on mobile */}
-        <div className="flex justify-center items-center gap-3 py-6 flex-wrap">
+        {/* Mobile: fixed above bottom nav; md+: normal flow in page */}
+        <div className="flex min-h-[3.25rem] w-full items-center justify-center gap-4 px-4 py-4 max-md:fixed max-md:bottom-14 max-md:left-0 max-md:right-0 max-md:z-40 max-md:border-t max-md:border-b max-md:border-gray-200/80 max-md:bg-white/90 max-md:py-4 max-md:backdrop-blur-sm max-md:dark:border-gray-700/80 max-md:dark:bg-gray-950/90 md:relative md:z-auto md:border-0 md:bg-transparent md:py-6 md:backdrop-blur-none md:dark:bg-transparent">
           {!(isInAppBrowser && isMobile) && (
             user ? (
               <>
-                {enabledLinks.map((item) => (
+                {homepageActionLinks.map((item) => (
                   <button
                     key={item.path}
                     onClick={() => router.push(item.path)}
-                    className={`font-akshar px-6 py-3 rounded-full text-md border-2 transition-colors ${
+                    className={`font-baloo px-2 py-1 rounded-full text-base font-medium transition-all ${
                       item.primary
-                        ? "bg-[#59646F] dark:bg-muted-bg border-[#59646F] dark:border-border text-[#FFEED8] dark:text-foreground hover:bg-[#4a5568] dark:hover:bg-border"
-                        : "bg-white dark:bg-background border-[#59646F] dark:border-border text-[#59646F] dark:text-foreground hover:bg-gray-50 dark:hover:bg-muted-bg"
+                        ? "border-0 bg-gradient-to-r from-[#008282] to-[#17638C] text-white shadow-sm hover:brightness-110 active:brightness-95 dark:from-[#008282] dark:to-[#17638C]"
+                        : "border-2 border-[#008282] bg-white text-[#17638C] hover:bg-[#008282]/8 active:bg-[#008282]/12 dark:border-[#008282] dark:bg-background dark:text-[#7dd3fc] dark:hover:bg-[#008282]/20"
                     }`}
                   >
                     {item.label}
@@ -142,7 +137,7 @@ export default function AvatarHomepage() {
               <button
                 onClick={handleSignIn}
                 disabled={signingIn}
-                className="font-akshar px-6 py-3 rounded-full bg-[#59646F] dark:bg-muted-bg text-md disabled:opacity-50 flex items-center gap-2 text-[#FFEED8] dark:text-foreground hover:bg-[#4a5568] dark:hover:bg-border transition-colors"
+                className="font-baloo flex items-center gap-2 rounded-full bg-gradient-to-r from-[#008282] to-[#17638C] px-6 py-3 text-base font-medium text-white shadow-sm transition-all hover:brightness-110 active:brightness-95 disabled:opacity-50 dark:from-[#008282] dark:to-[#17638C]"
               >
                 {signingIn ? (
                   <span>Signing in...</span>

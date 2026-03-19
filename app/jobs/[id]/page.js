@@ -129,7 +129,11 @@ export default function JobDetailPage() {
             </Link>
           ) : (
             <Link
-              href={`/job-apply/${job._id}`}
+              href={
+                brand
+                  ? `/jobs/${job._id}/apply?brand=${encodeURIComponent(brand)}`
+                  : `/jobs/${job._id}/apply`
+              }
               className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 transition-opacity"
             >
               <Send className="w-4 h-4" /> Apply

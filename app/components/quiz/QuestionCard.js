@@ -32,12 +32,12 @@ export default function QuestionCard({
       <div className="flex items-start justify-between mb-4">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-3">
-            <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-700 font-fredoka">
+            <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-orange-100 text-orange-700">
               Question {index + 1}
             </span>
             {questionResult && (
               <span
-                className={`px-2.5 py-1 rounded-full text-xs font-semibold font-fredoka ${questionResult.isCorrect
+                className={`px-2.5 py-1 rounded-full text-xs font-semibold ${questionResult.isCorrect
                     ? "bg-green-100 text-green-700"
                     : "bg-red-100 text-red-700"
                   }`}
@@ -46,7 +46,7 @@ export default function QuestionCard({
               </span>
             )}
           </div>
-          <p className="text-sm sm:text-base font-medium text-gray-700 leading-relaxed font-fredoka">
+          <p className="text-sm sm:text-base font-medium text-gray-700 leading-relaxed">
             {question?.questionText}
           </p>
           {/* Question Images */}
@@ -64,7 +64,7 @@ export default function QuestionCard({
           )}
         </div>
         {question?.maxMarks && (
-          <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-pink-100 text-pink-700 font-fredoka whitespace-nowrap ml-2">
+          <span className="px-2.5 py-1 text-xs font-semibold rounded-full bg-pink-100 text-pink-700 whitespace-nowrap ml-2">
             {question.maxMarks} Mark{question.maxMarks !== 1 ? "s" : ""}
           </span>
         )}
@@ -92,7 +92,7 @@ export default function QuestionCard({
                 }`}
             />
             <span
-              className={`text-sm font-fredoka ${isCompleted ? "text-gray-600" : "text-gray-700"
+              className={`text-sm ${isCompleted ? "text-gray-600" : "text-gray-700"
                 }`}
             >
               {option?.text}
@@ -102,7 +102,7 @@ export default function QuestionCard({
       </div>
 
       {questionResult && (
-        <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-gray-300 space-y-1.5 sm:space-y-2 text-xs sm:text-sm font-fredoka">
+        <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-gray-300 space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
           <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-2">
             <span className="font-semibold text-gray-700 sm:min-w-[100px]">
               Your Answer:

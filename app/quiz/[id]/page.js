@@ -93,7 +93,7 @@ export default function QuizInfo() {
         {/* Back Button */}
         <button
           onClick={() => router.push("/quiz")}
-          className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6 text-sm font-medium font-fredoka group"
+          className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6 text-sm font-medium group"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to Quizzes
@@ -103,7 +103,7 @@ export default function QuizInfo() {
         <div className="mb-8">
           <div className="flex items-center gap-3 mb-3">
             <span
-              className={`px-3 py-1 text-sm font-normal rounded-full font-fredoka ${
+              className={`px-3 py-1 text-sm font-normal rounded-full ${
                 quiz.type === "quiz"
                   ? "bg-blue-100 text-blue-700"
                   : "bg-yellow-100 text-yellow-700"
@@ -112,11 +112,11 @@ export default function QuizInfo() {
               {quiz.type === "quiz" ? "Quiz" : "Survey"}
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold text-[#264653] mb-3 font-fredoka">
+          <h1 className="text-3xl sm:text-4xl font-semibold text-[#264653] mb-3">
             {quiz.title}
           </h1>
           {quiz.subtitle && (
-            <p className="text-lg text-gray-600 font-fredoka">
+            <p className="text-lg text-gray-600">
               {quiz.subtitle}
             </p>
           )}
@@ -124,7 +124,7 @@ export default function QuizInfo() {
 
         {/* Quiz Information Card */}
         <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8 mb-6">
-          <h2 className="text-xl font-semibold text-[#264653] mb-6 font-fredoka">
+          <h2 className="text-xl font-semibold text-[#264653] mb-6">
             Quiz Information
           </h2>
 
@@ -135,8 +135,8 @@ export default function QuizInfo() {
                 <FileText className="w-5 h-5 text-[#264653]" />
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-600 font-fredoka">Questions</p>
-                <p className="text-lg font-semibold text-[#264653] font-fredoka">
+                <p className="text-sm text-gray-600">Questions</p>
+                <p className="text-lg font-semibold text-[#264653]">
                   {questionCount}{" "}
                   {questionCount === 1 ? "question" : "questions"}
                 </p>
@@ -150,8 +150,8 @@ export default function QuizInfo() {
                   <Clock className="w-5 h-5 text-[#264653]" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-600 font-fredoka">Duration</p>
-                  <p className="text-lg font-semibold text-[#264653] font-fredoka">
+                  <p className="text-sm text-gray-600">Duration</p>
+                  <p className="text-lg font-semibold text-[#264653]">
                     {quiz.durationInMinutes}{" "}
                     {quiz.durationInMinutes === 1 ? "minute" : "minutes"}
                   </p>
@@ -166,10 +166,10 @@ export default function QuizInfo() {
                   <Award className="w-5 h-5 text-[#264653]" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-600 font-fredoka">
+                  <p className="text-sm text-gray-600">
                     Total Marks
                   </p>
-                  <p className="text-lg font-semibold text-[#264653] font-fredoka">
+                  <p className="text-lg font-semibold text-[#264653]">
                     {quiz.totalMarks} {quiz.totalMarks === 1 ? "mark" : "marks"}
                   </p>
                 </div>
@@ -183,10 +183,10 @@ export default function QuizInfo() {
                   <BookOpen className="w-5 h-5 text-[#264653]" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-600 font-fredoka mb-2">
+                  <p className="text-sm text-gray-600 mb-2">
                     Objective
                   </p>
-                  <p className="text-base text-gray-700 font-fredoka whitespace-pre-line">
+                  <p className="text-base text-gray-700 whitespace-pre-line">
                     {quiz.objective}
                   </p>
                 </div>
@@ -200,10 +200,10 @@ export default function QuizInfo() {
                   <FileText className="w-5 h-5 text-[#264653]" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-600 font-fredoka mb-2">
+                  <p className="text-sm text-gray-600 mb-2">
                     Instructions
                   </p>
-                  <p className="text-base text-gray-700 font-fredoka whitespace-pre-line">
+                  <p className="text-base text-gray-700 whitespace-pre-line">
                     {quiz.instructions}
                   </p>
                 </div>
@@ -217,10 +217,10 @@ export default function QuizInfo() {
                   <FileText className="w-5 h-5 text-[#264653]" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-600 font-fredoka mb-2">
+                  <p className="text-sm text-gray-600 mb-2">
                     Response Scale
                   </p>
-                  <p className="text-base text-gray-700 font-fredoka whitespace-pre-line">
+                  <p className="text-base text-gray-700 whitespace-pre-line">
                     {quiz.legend}
                   </p>
                 </div>
@@ -234,7 +234,7 @@ export default function QuizInfo() {
           <button
             onClick={handleStartQuiz}
             disabled={starting}
-            className="w-full sm:w-auto px-8 py-3 bg-[#264653] text-white rounded-full hover:bg-[#1e383e] disabled:bg-gray-400 disabled:cursor-not-allowed text-base font-medium shadow-sm transition-all flex items-center justify-center gap-2 font-fredoka"
+            className="w-full sm:w-auto px-8 py-3 bg-[#264653] text-white rounded-full hover:bg-[#1e383e] disabled:bg-gray-400 disabled:cursor-not-allowed text-base font-medium shadow-sm transition-all flex items-center justify-center gap-2"
           >
             {starting ? (
               <>

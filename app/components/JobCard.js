@@ -13,7 +13,11 @@ export default function JobCard({ job, alreadyApplied = false, brand, className 
   const { _id, title, description = "", jdLink } = job;
   const truncatedDescription =
     description && description.length > 180 ? description.slice(0, 179).trim() + "…" : description;
-  const applyHref = _id ? `/job-apply/${_id}` : "#";
+  const applyHref = _id
+    ? brand
+      ? `/jobs/${_id}/apply?brand=${encodeURIComponent(brand)}`
+      : `/jobs/${_id}/apply`
+    : "#";
   const jobPageHref = _id ? `/jobs/${_id}` : "#";
   const viewApplicationHref = _id
     ? brand

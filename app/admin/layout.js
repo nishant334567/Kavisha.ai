@@ -81,5 +81,5 @@ export default function AdminLayout({ children }) {
     );
   }
 
-  return <>{children}</>;
+  return <div className="font-akshar min-h-screen">{children}</div>;
 }

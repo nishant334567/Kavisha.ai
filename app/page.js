@@ -87,18 +87,14 @@ export default function HomePage() {
     return <Loader loadingMessage="Redirecting to admin dashboard..." />;
   }
 
-  const displayName = (
-    user?.name ||
-    user?.email?.split("@")[0] ||
-    "there"
-  ).toUpperCase();
+  const displayName = user?.name || "there";
 
   return (
     <div className="min-h-screen">
       {user && (
-        <div className="sm:pt-16 pt-4 pl-4">
-          <p className="font-akshar text-[#3D5A5E] text-lg text-left uppercase">
-            Welcome back, <span className="font-semibold">{displayName}</span>!
+        <div className="my-2 pt-4 pl-4 md:pt-2 md:pl-8 md:max-w-[60%] md:mx-auto md:w-full">
+          <p className="font-baloo text-[#3D5A5E] text-md text-left">
+            WELCOME  BACK
           </p>
         </div>
       )}

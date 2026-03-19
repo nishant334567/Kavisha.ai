@@ -11,7 +11,7 @@ export default function SurveyReportCard({ report }) {
         <div className="p-2 bg-teal-100 rounded-lg">
           <Sparkles className="w-5 h-5 sm:w-6 sm:h-6 text-[#264653]" />
         </div>
-        <h2 className="text-lg sm:text-xl font-semibold text-[#264653] font-fredoka">
+        <h2 className="text-lg sm:text-xl font-semibold text-[#264653]">
           Survey Analysis Report
         </h2>
       </div>
@@ -19,7 +19,7 @@ export default function SurveyReportCard({ report }) {
         <FormatText text={report.llmAnalysis} />
       </div>
       {report.generatedAt && (
-        <div className="text-xs text-gray-500 mt-3 sm:mt-4 text-center font-fredoka">
+        <div className="text-xs text-gray-500 mt-3 sm:mt-4 text-center">
           Generated on {new Date(report.generatedAt).toLocaleString()}
         </div>
       )}

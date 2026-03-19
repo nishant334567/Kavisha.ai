@@ -17,7 +17,7 @@ export default function ConfirmModal({
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30" onClick={onCancel}>
             <div
-                className="bg-white border border-gray-200 shadow-2xl rounded-2xl w-full max-w-sm overflow-hidden font-fredoka"
+                className="bg-white border border-gray-200 shadow-2xl rounded-2xl w-full max-w-sm overflow-hidden"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6">

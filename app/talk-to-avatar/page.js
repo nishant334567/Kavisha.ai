@@ -68,7 +68,7 @@ export default function TalkToAvatarPage() {
         <div className="mb-8 md:mb-12 mt-4">
           <button
             onClick={() => router.push("/")}
-            className="flex items-center gap-2 text-[#3D5E6B] hover:text-[#2d4752] transition-colors mb-6 font-akshar"
+            className="flex items-center gap-2 text-[#3D5E6B] hover:text-[#2d4752] transition-colors mb-6"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Back</span>
@@ -78,10 +78,10 @@ export default function TalkToAvatarPage() {
             <div className="flex flex-col items-center justify-center">
               <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
             </div>
-            <h1 className="text-6xl font-fredoka text-[#3D5E6B] my-4">
+            <h1 className="text-6xl text-[#3D5E6B] my-4">
               Talk to <span className="text-[#00B5BD]">Avataars</span>
             </h1>
-            <p className="text-lg text-gray-700 max-w-3xl mx-auto font-fredoka leading-relaxed">
+            <p className="text-lg text-gray-700 max-w-3xl mx-auto leading-relaxed">
               Talk to leaders in the world of business, finance, art and academia. Interact, learn and grow. Also, connect with other fans while you’re at it.
             </p>
           </div>
@@ -97,7 +97,7 @@ export default function TalkToAvatarPage() {
             <p className="text-red-600 mb-4">{error}</p>
             <button
               onClick={() => window.location.reload()}
-              className="px-6 py-2 text-white rounded-lg transition-colors font-akshar"
+              className="px-6 py-2 text-white rounded-lg transition-colors"
             >
               Retry
             </button>
@@ -109,7 +109,7 @@ export default function TalkToAvatarPage() {
         ) : (
           <>
             <div className="mb-6">
-              <h2 className="text-2xl md:text-3xl font-fredoka text-[#264653]">
+              <h2 className="text-2xl md:text-3xl text-[#264653]">
                 All Avataars
               </h2>
             </div>
@@ -137,7 +137,7 @@ export default function TalkToAvatarPage() {
 
         {/* Footer */}
         <div className="mt-16 md:mt-20 text-center">
-          <p className="text-gray-600 font-assistant">
+          <p className="text-gray-600">
             Powered by <span className="font-semibold text-[#3D5E6B]">KAVISHA</span>
           </p>
         </div>

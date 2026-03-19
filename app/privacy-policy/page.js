@@ -8,7 +8,7 @@ export default function PrivacyPolicy() {
 
     return (
         <div>
-            <div className="max-w-4xl mx-auto px-4 py-8 font-fredoka mt-8">
+            <div className="max-w-4xl mx-auto px-4 py-8 mt-8">
                 {/* Back Button */}
                 <button
                     onClick={() => router.back()}
