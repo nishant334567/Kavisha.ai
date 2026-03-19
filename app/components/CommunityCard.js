@@ -30,7 +30,7 @@ export default function CommunityCard({ name, description, date, requirement, on
     };
     return (
         <>
-            <div className="shadow-xl rounded-lg px-4 sm:px-6 md:px-8 py-4 font-fredoka border border-border flex flex-col h-full min-w-0 bg-card">
+            <div className="shadow-xl rounded-lg px-4 sm:px-6 md:px-8 py-4 border border-border flex flex-col h-full min-w-0 bg-card">
                 <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-2 mb-4 min-w-0">
                     <p className="text-xl sm:text-2xl md:text-3xl text-[#004A4E] truncate sm:break-words">{name}</p>
                     <div className="inline-flex items-center gap-2 shrink-0 self-start">

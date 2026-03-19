@@ -111,7 +111,7 @@ export default function CommunitySelectionDialog({ isOpen, onClose }) {
                 type="button"
                 onClick={() => handleSelect(item)}
                 disabled={!!creating}
-                className="w-full text-left px-4 py-3 rounded-lg border border-border text-foreground hover:bg-muted-bg transition-colors font-akshar uppercase text-sm font-light disabled:opacity-60 disabled:cursor-not-allowed"
+                className="w-full text-left px-4 py-3 rounded-lg border border-border text-foreground hover:bg-muted-bg transition-colors uppercase text-sm font-light disabled:opacity-60 disabled:cursor-not-allowed"
               >
                 {isThisCreating ? (
                   <span className="inline-flex items-center gap-2">

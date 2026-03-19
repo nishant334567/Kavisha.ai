@@ -1,11 +1,15 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import Link from "next/link";
 import { useRouter, useParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { ArrowLeft, FileText, ExternalLink, Send, Upload, FileCheck } from "lucide-react";
 
+/**
+ * Apply for a job — lives under /jobs/[id]/apply (same APIs as before: /api/job-apply/*).
+ */
 export default function JobApplyPage() {
   const router = useRouter();
   const params = useParams();
@@ -22,13 +26,21 @@ export default function JobApplyPage() {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
 
+  const jobId = params?.id;
+
+  const applicationPageHref = jobId
+    ? brand
+      ? `/jobs/${jobId}/application?brand=${encodeURIComponent(brand)}`
+      : `/jobs/${jobId}/application`
+    : "/jobs";
+
   useEffect(() => {
-    if (!params?.id) return;
+    if (!jobId) return;
     (async () => {
       try {
         const url = brand
-          ? `/api/jobs/${params.id}?brand=${encodeURIComponent(brand)}`
-          : `/api/jobs/${params.id}`;
+          ? `/api/jobs/${jobId}?brand=${encodeURIComponent(brand)}`
+          : `/api/jobs/${jobId}`;
         const res = await fetch(url);
         const data = await res.json();
         if (res.ok && data.job) {
@@ -44,10 +56,10 @@ export default function JobApplyPage() {
         setLoading(false);
       }
     })();
-  }, [brand, params?.id]);
+  }, [brand, jobId]);
 
   useEffect(() => {
-    if (!user || !params?.id) {
+    if (!user || !jobId) {
       setAppliedCheckDone(true);
       if (!user) setAlreadyApplied(false);
       return;
@@ -57,24 +69,24 @@ export default function JobApplyPage() {
         const res = await fetch("/api/job-apply/applied-ids", { credentials: "include" });
         const data = await res.json().catch(() => ({}));
         const jobIds = res.ok && Array.isArray(data.jobIds) ? data.jobIds : [];
-        setAlreadyApplied(jobIds.includes(String(params.id)));
+        setAlreadyApplied(jobIds.includes(String(jobId)));
       } catch {
         setAlreadyApplied(false);
       } finally {
         setAppliedCheckDone(true);
       }
     })();
-  }, [user, params?.id]);
+  }, [user, jobId]);
 
   useEffect(() => {
-    if (!appliedCheckDone || !alreadyApplied || !params?.id) {
+    if (!appliedCheckDone || !alreadyApplied || !jobId) {
       setApplicationData(null);
       return;
     }
     setApplicationLoading(true);
     (async () => {
       try {
-        const res = await fetch(`/api/job-apply/${params.id}/application`, {
+        const res = await fetch(`/api/job-apply/${jobId}/application`, {
           credentials: "include",
         });
         const data = await res.json().catch(() => ({}));
@@ -89,7 +101,7 @@ export default function JobApplyPage() {
         setApplicationLoading(false);
       }
     })();
-  }, [appliedCheckDone, alreadyApplied, params?.id]);
+  }, [appliedCheckDone, alreadyApplied, jobId]);
 
   const setAnswer = (index, value) => {
     setAnswers((prev) => {
@@ -107,7 +119,8 @@ export default function JobApplyPage() {
       return;
     }
     const questions = Array.isArray(job.questions) ? job.questions : [];
-    const allAnswered = questions.length === 0 || answers.every((a, i) => String(answers[i] ?? "").trim() !== "");
+    const allAnswered =
+      questions.length === 0 || answers.every((a, i) => String(answers[i] ?? "").trim() !== "");
     if (!allAnswered) {
       setError("Please answer all questions.");
       return;
@@ -190,6 +203,12 @@ export default function JobApplyPage() {
         <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 mb-6">
           <h1 className="text-2xl font-bold text-[#004A4E] leading-tight mb-1">{job.title}</h1>
           <p className="text-sm text-gray-500">You have already applied for this job.</p>
+          <Link
+            href={applicationPageHref}
+            className="inline-flex mt-4 text-sm font-medium text-[#004A4E] hover:underline"
+          >
+            View full application →
+          </Link>
         </div>
 
         {applicationLoading ? (
@@ -236,6 +255,12 @@ export default function JobApplyPage() {
         ) : (
           <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-center">
             <p className="text-amber-800 font-medium">You have already applied for this job.</p>
+            <Link
+              href={applicationPageHref}
+              className="inline-flex mt-3 text-sm font-medium text-[#004A4E] hover:underline"
+            >
+              View application page →
+            </Link>
           </div>
         )}
       </div>
@@ -264,7 +289,6 @@ export default function JobApplyPage() {
         </div>
       ) : null}
 
-      {/* Top: full job info */}
       <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 mb-6">
         <h1 className="text-2xl font-bold text-[#004A4E] leading-tight mb-4">
           {job.title}
@@ -286,9 +310,7 @@ export default function JobApplyPage() {
         )}
       </div>
 
-      {/* Bottom: left = questions, right = actions */}
       <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row gap-6">
-        {/* Left: questions with input boxes */}
         <div className="flex-1 min-w-0">
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6">
             <h2 className="text-lg font-semibold text-gray-900 mb-4">Questions</h2>
@@ -315,7 +337,6 @@ export default function JobApplyPage() {
           </div>
         </div>
 
-        {/* Right: submit, upload resume, view JD */}
         <div className="lg:w-72 flex-shrink-0">
           <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 space-y-4 sticky top-4">
             <h2 className="text-lg font-semibold text-gray-900">Application</h2>

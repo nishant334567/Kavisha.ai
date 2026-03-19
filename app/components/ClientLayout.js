@@ -11,6 +11,7 @@ import Loader from "./Loader";
 import { usePathname } from "next/navigation";
 import AdminNavbar from "../admin/components/AdminNavbar";
 import GlobalMessages from "./GlobalMessages";
+import MobileBottomNav from "./MobileBottomNav";
 import { CartContextProvider } from "../context/cart/CartContextProvider"
 
 export default function ClientLayout({ children }) {
@@ -22,10 +23,19 @@ export default function ClientLayout({ children }) {
     <FirebaseSessionProvider>
       <BrandContextProvider>
         <CartContextProvider>
-          <SocketSessionWrapper>
+          <SocketSessionWrapper isAdmin={isAdmin}>
             {!isMaintenancePage && !isAdmin && <Navbar />}
             {!isMaintenancePage && isAdmin && <AdminNavbar />}
-            <div className={!isMaintenancePage ? "pt-0 md:pt-14" : ""}>{children}</div>
+            <div
+              className={
+                !isMaintenancePage
+                  ? `pt-0 md:pt-14 ${!isAdmin ? "pb-[4.5rem] md:pb-0" : ""}`
+                  : ""
+              }
+            >
+              {children}
+            </div>
+            {!isMaintenancePage && !isAdmin && <MobileBottomNav />}
             {!isMaintenancePage && !isAdmin && pathname !== "/" && <GlobalMessages />}
           </SocketSessionWrapper>
         </CartContextProvider>
@@ -33,11 +43,20 @@ export default function ClientLayout({ children }) {
     </FirebaseSessionProvider>
   );
 
-  function SocketSessionWrapper({ children }) {
+  function SocketSessionWrapper({ children, isAdmin }) {
     const { user, loading } = useFirebaseSession();
+    const shellClass = isAdmin ? "min-h-screen" : "font-baloo min-h-screen";
     if (loading) {
-      return <Loader loadingMessage="Loading Session..." />;
+      return (
+        <div className={shellClass}>
+          <Loader loadingMessage="Loading Session..." />
+        </div>
+      );
     }
-    return <SocketProvider userId={user?.id}>{children}</SocketProvider>;
+    return (
+      <SocketProvider userId={user?.id}>
+        <div className={shellClass}>{children}</div>
+      </SocketProvider>
+    );
   }
 }

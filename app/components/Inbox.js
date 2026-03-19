@@ -70,7 +70,7 @@ export default function Inbox({ onOpenChat, onClose }) {
                         {chat.otherUser}
                       </div>
                       {chat.lastMessage && (
-                        <div className="font-dosis text-sm text-muted truncate mt-0.5">
+                        <div className="text-sm text-muted truncate mt-0.5">
                           {chat.lastMessage}
                         </div>
                       )}

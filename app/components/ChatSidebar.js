@@ -182,7 +182,7 @@ export default function ChatSidebar({
                             >
                               <button
                                 type="button"
-                                className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-foreground hover:bg-muted-bg transition-colors"
+                                className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
                                 onClick={() => {
                                   onNewCommunityChat("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)");
                                   setShowCommunityNewDropdown(false);
@@ -192,7 +192,7 @@ export default function ChatSidebar({
                               </button>
                               <button
                                 type="button"
-                                className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-foreground hover:bg-muted-bg transition-colors"
+                                className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
                                 onClick={() => {
                                   onNewCommunityChat("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)");
                                   setShowCommunityNewDropdown(false);
@@ -202,7 +202,7 @@ export default function ChatSidebar({
                               </button>
                               <button
                                 type="button"
-                                className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-foreground hover:bg-muted-bg transition-colors"
+                                className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
                                 onClick={() => {
                                   onNewCommunityChat("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)");
                                   setShowCommunityNewDropdown(false);
@@ -276,7 +276,7 @@ export default function ChatSidebar({
                                   <button
                                     key={item._key || idx}
                                     type="button"
-                                    className="w-full px-3 py-2 text-left text-xs font-akshar uppercase text-foreground hover:bg-muted-bg transition-colors"
+                                    className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
                                     onClick={() => {
                                       onSelectService(
                                         item.name,

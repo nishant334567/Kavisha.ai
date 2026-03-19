@@ -46,7 +46,7 @@ export default function Footer() {
       <button
         type="button"
         onClick={openInChrome}
-        className="hover:underline text-left font-normal bg-transparent border-0 p-0 cursor-pointer font-fredoka"
+        className="hover:underline text-left font-normal bg-transparent border-0 p-0 cursor-pointer"
       >
         Open in Chrome to sign in
       </button>
@@ -54,14 +54,14 @@ export default function Footer() {
       <button
         type="button"
         onClick={() => handleSignIn(href)}
-        className="hover:underline text-left font-normal bg-transparent border-0 p-0 cursor-pointer font-fredoka"
+        className="hover:underline text-left font-normal bg-transparent border-0 p-0 cursor-pointer"
       >
         {label}
       </button>
     );
 
   return (
-    <footer className="bg-[#F9F9F9] py-12 px-4 font-fredoka border-t border-gray-200">
+    <footer className="bg-[#F9F9F9] py-12 px-4 border-t border-gray-200">
       <div className="max-w-6xl mx-auto">
         {/* Main Footer Content */}
         <div className="flex flex-col md:flex-row justify-between gap-8 mb-8">

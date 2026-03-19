@@ -321,7 +321,7 @@ export default function Community() {
         return (
             <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#EDF4F7] to-white px-4">
                 <div className="max-w-md w-full text-center">
-                    <h1 className="font-fredoka text-2xl md:text-3xl text-[#3D5E6B] mb-4">Community</h1>
+                    <h1 className="text-2xl md:text-3xl text-[#3D5E6B] mb-4">Community</h1>
                     <p className="text-[#4A6670] mb-8">
                         Sign in to browse connection requests and connect with people.
                     </p>
@@ -331,7 +331,7 @@ export default function Community() {
                     {isBlocked ? (
                         <button
                             onClick={openInChrome}
-                            className="px-6 py-3 rounded-full bg-[#3D5E6B] text-white font-akshar hover:bg-[#2d4e5b] transition-colors"
+                            className="px-6 py-3 rounded-full bg-[#3D5E6B] text-white hover:bg-[#2d4e5b] transition-colors"
                         >
                             Open in Chrome to sign in
                         </button>
@@ -339,7 +339,7 @@ export default function Community() {
                         <button
                             onClick={handleSignInToCommunity}
                             disabled={signingIn}
-                            className="px-6 py-3 rounded-full bg-[#3D5E6B] text-white font-akshar hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                            className="px-6 py-3 rounded-full bg-[#3D5E6B] text-white hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
                         >
                             {signingIn ? "Signing in..." : "Sign in to continue"}
                         </button>
@@ -382,16 +382,16 @@ export default function Community() {
                                 className="flex pl-4 items-center gap-2 text-[#3D5E6B] hover:text-[#2d4e5b] transition-colors py-1 -mb-1"
                             >
                                 <ArrowLeft className="w-5 h-5 flex-shrink-0" />
-                                <span className="font-fredoka text-sm sm:text-base">Back</span>
+                                <span className="text-sm sm:text-base">Back</span>
                             </button>
 
                             {!brand?.enableProfessionalConnect && !brand?.enableFriendConnect ? (
-                                <div className="px-8 py-12 text-center font-fredoka text-[#3D5E6B] text-lg opacity-60">
+                                <div className="px-8 py-12 text-center text-[#3D5E6B] text-lg opacity-60">
                                     Community is not available right now.
                                 </div>
                             ) : (
                                 <>
-                                    <div className="px-4 font-fredoka flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-4 sm:py-3">
+                                    <div className="px-4 flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-4 sm:py-3">
                                         <div className="min-w-0">
                                             <p className="text-[#3D5E6B] text-2xl sm:text-3xl lg:text-4xl">Community</p>
                                             <p className="text-sm sm:text-base font-extralight mt-1">

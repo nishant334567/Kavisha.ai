@@ -67,7 +67,7 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
     >
       <div className="bg-white rounded-lg sm:rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col border border-gray-200">
         <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-white">
-          <h3 className="text-lg sm:text-xl font-semibold text-[#264653] font-fredoka">
+          <h3 className="text-lg sm:text-xl font-semibold text-[#264653]">
             Previous Attempts
           </h3>
           <button
@@ -83,13 +83,13 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
           {loading ? (
             <div className="text-center py-12 text-gray-500">
               <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#264653]"></div>
-              <p className="mt-4 font-fredoka">Loading attempts...</p>
+              <p className="mt-4">Loading attempts...</p>
             </div>
           ) : attempts.length === 0 ? (
             <div className="text-center py-12">
               <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 font-medium font-fredoka">No attempts found</p>
-              <p className="text-gray-400 text-sm mt-2 font-fredoka">
+              <p className="text-gray-500 font-medium">No attempts found</p>
+              <p className="text-gray-400 text-sm mt-2">
                 Start a new quiz to see your attempts here
               </p>
             </div>
@@ -118,14 +118,14 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
                           >
                             {attempt.status.replace("-", " ")}
                           </span>
-                          <div className="text-xs text-gray-500 mt-1 font-fredoka">
+                          <div className="text-xs text-gray-500 mt-1">
                             {new Date(attempt.startedAt).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
                       {attempt.score !== null && (
                         <div className="text-left sm:text-right">
-                            <div className="text-xl sm:text-2xl font-bold text-[#264653] font-fredoka">
+                            <div className="text-xl sm:text-2xl font-bold text-[#264653]">
                             {attempt.score}
                             {attempt.totalMarks && (
                               <span className="text-gray-400 text-base sm:text-lg font-normal">
@@ -134,7 +134,7 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
                             )}
                           </div>
                           {attempt.correctCount !== null && (
-                            <div className="text-xs text-gray-600 font-fredoka">
+                            <div className="text-xs text-gray-600">
                               {attempt.correctCount} correct
                             </div>
                           )}
@@ -142,7 +142,7 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
                       )}
                     </div>
                     {attempt.completedAt && (
-                      <div className="text-xs text-gray-500 mb-3 sm:mb-4 font-fredoka">
+                      <div className="text-xs text-gray-500 mb-3 sm:mb-4">
                         Completed:{" "}
                         <span className="hidden sm:inline">
                           {new Date(attempt.completedAt).toLocaleString()}
@@ -157,7 +157,7 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
                         router.push(`/quiz/${quizId}/${attempt.id}`);
                         onClose();
                       }}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-[#264653] text-white rounded-full hover:bg-[#1e383e] transition-colors text-sm sm:text-base font-medium flex items-center justify-center gap-2 shadow-sm font-fredoka"
+                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-[#264653] text-white rounded-full hover:bg-[#1e383e] transition-colors text-sm sm:text-base font-medium flex items-center justify-center gap-2 shadow-sm"
                     >
                       {attempt.status === "in-progress" ? (
                         <>

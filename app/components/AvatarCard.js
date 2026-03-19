@@ -18,7 +18,7 @@ export default function AvatarCard({ image, name, title, subtitle }) {
           </div>
         )}
       </div>
-      <div className="px-4 py-4 font-akshar flex-1 flex flex-col min-h-0">
+      <div className="px-4 py-4 flex-1 flex flex-col min-h-0">
         <h3 className="text-lg font-semibold text-[#1f2933] mb-1">{name}</h3>
         {title && <p className="text-sm text-[#1f2933] mb-2">{title}</p>}
         {/* {subtitle && (

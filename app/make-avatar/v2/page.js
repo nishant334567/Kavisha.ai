@@ -202,7 +202,7 @@ export default function MakeAvatar() {
   };
 
   const StepIndicator = () => (
-    <div className="flex items-center justify-center gap-2 mb-8 font-akshar">
+    <div className="flex items-center justify-center gap-2 mb-8">
       <span
         className={`text-sm md:text-base font-medium ${currentStep === stages.BASIC_INFO ? "text-[#00838F]" : "text-gray-500"
           }`}
@@ -400,7 +400,7 @@ export default function MakeAvatar() {
 
           {/* Title */}
           <div className="text-center mb-6">
-            <h1 className="font-fredoka text-2xl md:text-3xl text-gray-800">
+            <h1 className="text-2xl md:text-3xl text-gray-800">
               Create your{" "}
               <span className="text-[#00838F]">Digital Avataar</span>
             </h1>
@@ -415,7 +415,7 @@ export default function MakeAvatar() {
           {/* Step 1: Basic Info */}
           {currentStep === stages.BASIC_INFO && (
             <div>
-              <h2 className="font-fredoka text-xl md:text-2xl text-center text-gray-800 mb-6">
+              <h2 className="text-xl md:text-2xl text-center text-gray-800 mb-6">
                 Tell us about yourself
               </h2>
 
@@ -475,7 +475,7 @@ export default function MakeAvatar() {
           {/* Step 2: Customize */}
           {currentStep === stages.CUSTOMIZE && (
             <div>
-              <h2 className="font-fredoka text-xl md:text-2xl text-center text-gray-800 mb-6">
+              <h2 className="text-xl md:text-2xl text-center text-gray-800 mb-6">
                 Customize your Avataar
               </h2>
 
@@ -819,7 +819,7 @@ export default function MakeAvatar() {
           {/* Step 3: Review */}
           {currentStep === stages.REVIEW && (
             <div>
-              <h2 className="font-fredoka text-xl md:text-2xl text-center text-gray-800 mb-6">
+              <h2 className="text-xl md:text-2xl text-center text-gray-800 mb-6">
                 Review your Avataar
               </h2>
 

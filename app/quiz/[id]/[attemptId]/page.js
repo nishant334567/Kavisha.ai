@@ -230,23 +230,23 @@ export default function QuizAttempt() {
         <div className="mb-6 sm:mb-8">
           <button
             onClick={() => router.push("/quiz")}
-            className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-4 sm:mb-6 text-xs sm:text-sm font-medium font-fredoka group"
+            className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-4 sm:mb-6 text-xs sm:text-sm font-medium group"
           >
             <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 group-hover:-translate-x-1 transition-transform" />
             <span className="hidden sm:inline">Back to Quizzes</span>
             <span className="sm:hidden">Back</span>
           </button>
           <div>
-            <h1 className="text-2xl sm:text-3xl font-semibold text-[#264653] mb-2 font-fredoka">
+            <h1 className="text-2xl sm:text-3xl font-semibold text-[#264653] mb-2">
               {assessmentData?.title}
             </h1>
             {assessmentData?.subtitle && (
-              <p className="text-sm sm:text-base text-gray-500 font-fredoka">
+              <p className="text-sm sm:text-base text-gray-500">
                 {assessmentData.subtitle}
               </p>
             )}
             {isCompleted && (
-              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 mt-2 font-fredoka">
+              <div className="flex items-center gap-2 text-xs sm:text-sm text-gray-600 mt-2">
                 <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
                 <span>Completed</span>
               </div>
@@ -259,10 +259,10 @@ export default function QuizAttempt() {
           assessmentData?.legend &&
           !isCompleted && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
-              <h2 className="text-lg sm:text-xl font-semibold text-[#264653] mb-3 font-fredoka">
+              <h2 className="text-lg sm:text-xl font-semibold text-[#264653] mb-3">
                 Response Scale
               </h2>
-              <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line font-fredoka">
+              <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
                 {assessmentData.legend}
               </div>
             </div>
@@ -271,10 +271,10 @@ export default function QuizAttempt() {
         {/* Instructions */}
         {assessmentData?.instructions && !isCompleted && (
           <div className="bg-gray-50 border border-gray-200 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
-            <h2 className="text-lg sm:text-xl font-semibold text-[#264653] mb-3 font-fredoka">
+            <h2 className="text-lg sm:text-xl font-semibold text-[#264653] mb-3">
               Instructions
             </h2>
-            <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line font-fredoka">
+            <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
               {assessmentData.instructions}
             </div>
           </div>
@@ -295,10 +295,10 @@ export default function QuizAttempt() {
           <>
             {assessmentData?.scoringInfo && (
               <div className="bg-purple-50 border border-purple-200 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-[#264653] mb-3 font-fredoka">
+                <h2 className="text-lg sm:text-xl font-semibold text-[#264653] mb-3">
                   Scoring Instructions
                 </h2>
-                <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line font-fredoka">
+                <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
                   {assessmentData.scoringInfo}
                 </div>
               </div>
@@ -306,10 +306,10 @@ export default function QuizAttempt() {
 
             {assessmentData?.trends && (
               <div className="bg-green-50 border border-green-200 rounded-lg sm:rounded-xl p-4 sm:p-6 mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold text-[#264653] mb-3 font-fredoka">
+                <h2 className="text-lg sm:text-xl font-semibold text-[#264653] mb-3">
                   Trends & Interpretation
                 </h2>
-                <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line font-fredoka">
+                <div className="text-sm sm:text-base text-gray-700 whitespace-pre-line">
                   {assessmentData.trends}
                 </div>
               </div>
@@ -343,7 +343,7 @@ export default function QuizAttempt() {
             <button
               onClick={handleQuizSubmit}
               disabled={isSubmitting}
-              className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-[#264653] text-white rounded-full hover:bg-[#1e383e] disabled:bg-gray-400 disabled:cursor-not-allowed text-sm sm:text-base font-medium shadow-sm transition-all flex items-center justify-center gap-2 font-fredoka"
+              className="w-full sm:w-auto px-6 sm:px-8 py-2.5 sm:py-3 bg-[#264653] text-white rounded-full hover:bg-[#1e383e] disabled:bg-gray-400 disabled:cursor-not-allowed text-sm sm:text-base font-medium shadow-sm transition-all flex items-center justify-center gap-2"
             >
               {isSubmitting ? (
                 <>

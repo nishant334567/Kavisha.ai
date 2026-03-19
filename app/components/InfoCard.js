@@ -16,7 +16,7 @@ export default function InfoCard({ title, body, variant = "teal", variantMobile 
   const cls = pairKey && responsivePairs[pairKey] ? responsivePairs[pairKey] : (colorClasses[mobileV] || colorClasses.teal);
   return (
     <div
-      className={`${cls} rounded-2xl md:rounded-3xl px-5 py-5 md:px-8 md:py-8 font-noto-serif`}
+      className={`${cls} rounded-2xl md:rounded-3xl px-5 py-5 md:px-8 md:py-8 font-baloo`}
     >
       <h3 className="text-xl md:text-3xl font-light leading-tight mb-2 md:mb-4">
         {title}

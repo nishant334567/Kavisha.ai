@@ -156,6 +156,14 @@ export default {
       initialValue: false,
     },
     {
+      name: "enableJobs",
+      title: "Enable Jobs",
+      type: "boolean",
+      description:
+        "When enabled, users can browse jobs and apply. Admins can create and manage job listings.",
+      initialValue: false,
+    },
+    {
       name: "services",
       title: "Services",
       type: "array",
