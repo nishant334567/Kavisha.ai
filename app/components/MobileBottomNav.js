@@ -20,12 +20,17 @@ const items = [
   { href: "/links", label: "Links", icon: Link2, match: (p) => p.startsWith("/links") },
 ];
 
-export default function MobileBottomNav() {
+export default function MobileBottomNav({ embedded = false }) {
   const pathname = usePathname() || "";
 
   return (
     <nav
-      className="md:hidden fixed bottom-0 left-0 right-0 z-30 bg-white border-t border-gray-200 shadow-[0_-4px_14px_rgba(0,0,0,0.06)]"
+      className={[
+        "md:hidden",
+        embedded
+          ? "border-t border-gray-200 bg-transparent"
+          : "fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white shadow-[0_-4px_14px_rgba(0,0,0,0.06)]",
+      ].join(" ")}
       style={{
         paddingBottom: "max(0.5rem, env(safe-area-inset-bottom, 0px))",
       }}

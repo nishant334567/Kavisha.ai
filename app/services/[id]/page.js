@@ -4,7 +4,14 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useSearchParams, useRouter } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
-import { ChevronLeft, ChevronRight, Globe } from "lucide-react";
+import {
+  Banknote,
+  ChevronLeft,
+  ChevronRight,
+  Clock3,
+  Globe,
+  MapPin,
+} from "lucide-react";
 
 function ensureRazorpayLoaded() {
   if (typeof window === "undefined" || window.Razorpay) return Promise.resolve();
@@ -39,14 +46,14 @@ function DetailChip({ active, onClick, top, bottom }) {
       type="button"
       onClick={onClick}
       className={[
-        "min-w-[88px] rounded-xl border px-3 py-2 text-center transition-colors",
+        "min-w-[88px] rounded-xl border px-2 py-1 text-center transition-colors",
         active
           ? "border-[#2D545E] bg-[#2D545E] text-white"
           : "border-gray-200 bg-white text-gray-700 hover:border-[#2D545E]/40",
       ].join(" ")}
     >
-      <p className="text-[11px] leading-none">{top}</p>
-      <p className="mt-1 text-[11px] leading-none">{bottom}</p>
+      <p className="text-sm leading-none font-semibold">{top}</p>
+      <p className="mt-1 text-sm leading-none">{bottom}</p>
     </button>
   );
 }
@@ -250,18 +257,16 @@ export default function ServiceDetailPage() {
     <main className="px-6 py-8">
         <div className="grid grid-cols-1 gap-8 lg:grid-cols-[1fr_1.1fr]">
           <section>
-            <p className="mb-4 text-[28px] font-medium text-[#1B5A67]">
-              {resolvedService.host}
-            </p>
+      
 
             <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
               <div className="flex items-start justify-between gap-3 bg-[#D8E8EC] p-4">
                 <div>
-                  <h1 className="text-4xl font-medium tracking-wide text-gray-900">
+                  <h1 className="text-3xl font-semibold text-gray-900">
                     {resolvedService.title}
                   </h1>
                   {resolvedService.subtitle ? (
-                    <p className="mt-1 text-xl text-gray-700">
+                    <p className="mt-1 text-sm text-justify text-gray-700">
                       {resolvedService.subtitle}
                     </p>
                   ) : null}
@@ -282,24 +287,37 @@ export default function ServiceDetailPage() {
                 </div>
               </div>
 
-              <div className="border-y border-gray-200 px-4 py-3 text-sm text-gray-700">
-                <span className="font-medium text-[#21A128]">
-                  Price: Rs. {resolvedService.price}/-
+              <div className="flex flex-wrap items-center gap-3 border-y border-gray-200 px-4 py-3 text-sm text-gray-700">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1">
+                  <Banknote className="h-4 w-4 text-[#21A128]" />
+                  <span className="font-medium text-[#21A128]">
+                    Rs. {resolvedService.price}/-
+                  </span>
                 </span>
-                <span className="mx-4 text-gray-400">|</span>
-                <span>
-                  Duration: {resolvedService.duration}{" "}
-                  {resolvedService.durationUnit}
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1">
+                  <Clock3 className="h-4 w-4 text-[#2A7F98]" />
+                  <span>
+                    {resolvedService.duration} {resolvedService.durationUnit}
+                  </span>
                 </span>
-                <span className="mx-4 text-gray-400">|</span>
-                <span>Mode: {resolvedService.mode}</span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1">
+                  {(resolvedService.mode || "").toLowerCase().includes("online") ? (
+                    <Globe className="h-4 w-4 text-[#2D545E]" />
+                  ) : (
+                    <MapPin className="h-4 w-4 text-[#2D545E]" />
+                  )}
+                  <span>{resolvedService.mode}</span>
+                </span>
               </div>
 
               {resolvedService.description ? (
                 <div className="p-4">
-                  <p className="text-sm leading-6 text-gray-600">
-                    {resolvedService.description}
-                  </p>
+                  <div
+                    className="prose prose-gray max-w-none text-justify text-gray-600 prose-p:text-gray-600 prose-headings:text-center prose-headings:text-gray-900 prose-strong:text-gray-900 prose-a:text-[#2D545E]"
+                    dangerouslySetInnerHTML={{
+                      __html: resolvedService.description,
+                    }}
+                  />
                 </div>
               ) : null}
             </article>

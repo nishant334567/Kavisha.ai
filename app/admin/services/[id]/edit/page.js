@@ -14,6 +14,7 @@ import {
   Undo2,
 } from "lucide-react";
 import { ServiceSuccessCard } from "@/app/admin/components/PublishSuccessCard";
+import { BlogEditor } from "@/app/admin/components/blog";
 
 const INPUT_CLASS =
   "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E]";
@@ -157,7 +158,7 @@ export default function EditServicePage() {
         body: JSON.stringify({
           title: form.title.trim(),
           subtitle: form.subtitle.trim(),
-          description: form.description.trim(),
+          description: form.description || "",
           image: imageUrl,
           duration: form.duration,
           durationUnit: form.durationUnit,
@@ -251,16 +252,6 @@ export default function EditServicePage() {
                     className={`${INPUT_CLASS} pl-11`}
                   />
                 </div>
-                <div className="relative">
-                  <FileText className="pointer-events-none absolute left-3 top-4 h-5 w-5 text-gray-400" />
-                  <textarea
-                    rows={4}
-                    value={form.description}
-                    onChange={updateField("description")}
-                    placeholder="Description..."
-                    className={`${INPUT_CLASS} resize-none pl-11`}
-                  />
-                </div>
               </div>
             </div>
 
@@ -271,6 +262,21 @@ export default function EditServicePage() {
               onChange={handleImageChange}
               className="hidden"
             />
+
+            <label className="block space-y-2">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                <FileText className="h-4 w-4" />
+                Description
+              </span>
+              <BlogEditor
+                value={form.description}
+                onChange={(value) =>
+                  setForm((prev) => ({ ...prev, description: value }))
+                }
+                brand={brand || "kavisha"}
+                placeholder="Write the service description..."
+              />
+            </label>
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <label className="space-y-2">

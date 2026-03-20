@@ -16,7 +16,12 @@ import {
   ListOrdered,
 } from "lucide-react";
 
-export default function BlogEditor({ value, onChange, brand = "kavisha" }) {
+export default function BlogEditor({
+  value,
+  onChange,
+  brand = "kavisha",
+  placeholder = "Write your blog post...",
+}) {
   const [imageUploading, setImageUploading] = useState(false);
 
   const editor = useEditor({
@@ -24,7 +29,7 @@ export default function BlogEditor({ value, onChange, brand = "kavisha" }) {
     extensions: [
       StarterKit.configure({ heading: { levels: [1, 2, 3] } }),
       Image,
-      Placeholder.configure({ placeholder: "Write your blog post..." }),
+      Placeholder.configure({ placeholder }),
     ],
     content: value || "<p></p>",
     onUpdate: ({ editor }) => onChange(editor.getHTML()),

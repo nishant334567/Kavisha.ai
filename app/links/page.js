@@ -3,7 +3,15 @@
 import { useState, useEffect } from "react";
 import { useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { Share2, Check, MoreVertical } from "lucide-react";
+import {
+  Share2,
+  Check,
+  MoreVertical,
+  Youtube,
+  Linkedin,
+  Twitter,
+  Instagram,
+} from "lucide-react";
 
 function domainLabel(url) {
   if (!url || typeof url !== "string") return "";
@@ -14,6 +22,28 @@ function domainLabel(url) {
   } catch {
     return "";
   }
+}
+
+const SOCIAL_ICONS = [
+  { key: "youtube", label: "YouTube", Icon: Youtube },
+  { key: "linkedin", label: "LinkedIn", Icon: Linkedin },
+  { key: "twitter", label: "Twitter", Icon: Twitter },
+  { key: "instagram", label: "Instagram", Icon: Instagram },
+];
+
+function socialHref(url) {
+  const u = (url || "").trim();
+  if (!u) return "#";
+  if (/^https?:\/\//i.test(u)) return u;
+  return `https://${u}`;
+}
+
+function hasVisibleSocial(social) {
+  if (!social || typeof social !== "object") return false;
+  return SOCIAL_ICONS.some(({ key }) => {
+    const s = social[key];
+    return !!(s?.enabled && (s?.url || "").trim());
+  });
 }
 
 export default function LinksPage() {
@@ -123,8 +153,10 @@ export default function LinksPage() {
 
   const links = linkTree?.links ?? [];
   const hasLinks = links.some((l) => (l.label || "").trim() && (l.url || "").trim());
+  const social = linkTree?.social;
+  const anySocial = hasVisibleSocial(social);
 
-  if (!hasLinks) {
+  if (!hasLinks && !anySocial) {
     return (
       <div className={shellClass}>
         <p className="text-center">No links yet for this brand.</p>
@@ -182,9 +214,12 @@ export default function LinksPage() {
               ) : null}
             </div>
 
-            <div className="mt-6 space-y-3 flex-1 min-h-0 overflow-y-auto">
+            <div
+              className={`mt-6 flex-1 min-h-0 overflow-y-auto ${visibleLinks.length ? "space-y-3" : ""}`}
+            >
               {visibleLinks.map((link, index) => {
-                const initial = (link.label || "").charAt(0).toUpperCase() || "?";
+                const initial =
+                  (link.label || "").charAt(0).toUpperCase() || "?";
                 const hasImage = link.image && link.image.trim();
                 const subtitle = domainLabel(link.url);
                 return (
@@ -223,6 +258,27 @@ export default function LinksPage() {
                 );
               })}
             </div>
+
+            {anySocial ? (
+              <div className="mt-auto flex flex-shrink-0 flex-wrap items-center justify-center gap-6 border-t border-gray-100 py-4 dark:border-gray-800">
+                {SOCIAL_ICONS.map(({ key, label, Icon }) => {
+                  const s = social[key];
+                  if (!s?.enabled || !(s.url || "").trim()) return null;
+                  return (
+                    <a
+                      key={key}
+                      href={socialHref(s.url)}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      aria-label={label}
+                      className="text-gray-500 transition-colors hover:text-[#00888E] dark:text-gray-400 dark:hover:text-teal-400"
+                    >
+                      <Icon className="h-6 w-6" strokeWidth={1.75} />
+                    </a>
+                  );
+                })}
+              </div>
+            ) : null}
           </div>
         </div>
       </div>

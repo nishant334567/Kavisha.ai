@@ -64,11 +64,26 @@ export function detectInAppBrowser() {
 
 export function openInChrome() {
   if (typeof window === "undefined") return;
-  try {
-    const currentUrl = window.location.href;
-    const chromeUrl = `googlechrome://${currentUrl.replace(/^https?:\/\//, "")}`;
-    window.location.href = chromeUrl;
-  } catch (_) {
-    window.open(window.location.href, "_blank");
+  const currentUrl = window.location.href;
+  const ua = navigator.userAgent || "";
+  const isIOS = /iPad|iPhone|iPod/i.test(ua);
+  const isAndroid = /Android/i.test(ua);
+
+  if (isAndroid) {
+    const withoutScheme = currentUrl.replace(/^https?:\/\//, "");
+    const scheme = currentUrl.startsWith("https://") ? "https" : "http";
+    window.location.href =
+      `intent://${withoutScheme}#Intent;scheme=${scheme};package=com.android.chrome;end`;
+    return;
   }
+
+  if (isIOS) {
+    const chromeUrl = currentUrl.startsWith("https://")
+      ? currentUrl.replace(/^https:\/\//, "googlechromes://")
+      : currentUrl.replace(/^http:\/\//, "googlechrome://");
+    window.location.href = chromeUrl;
+    return;
+  }
+
+  window.location.href = currentUrl;
 }

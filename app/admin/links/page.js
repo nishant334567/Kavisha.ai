@@ -8,6 +8,35 @@ import { ArrowLeft, Plus, Trash2, Upload, X } from "lucide-react";
 const INPUT_CLASS =
   "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E] text-sm";
 
+const EMPTY_SOCIAL = {
+  youtube: { enabled: false, url: "" },
+  linkedin: { enabled: false, url: "" },
+  twitter: { enabled: false, url: "" },
+  instagram: { enabled: false, url: "" },
+};
+
+const SOCIAL_FIELDS = [
+  { key: "youtube", label: "YouTube" },
+  { key: "linkedin", label: "LinkedIn" },
+  { key: "twitter", label: "Twitter / X" },
+  { key: "instagram", label: "Instagram" },
+];
+
+function mergeSocial(raw) {
+  const next = { ...EMPTY_SOCIAL };
+  if (!raw || typeof raw !== "object") return next;
+  for (const { key } of SOCIAL_FIELDS) {
+    const s = raw[key];
+    if (s && typeof s === "object") {
+      next[key] = {
+        enabled: !!s.enabled,
+        url: (s.url || "").toString(),
+      };
+    }
+  }
+  return next;
+}
+
 export default function AdminLinksPage() {
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -20,10 +49,9 @@ export default function AdminLinksPage() {
   const [brandName, setBrandName] = useState("");
   const [title, setTitle] = useState("My links");
   const [links, setLinks] = useState([{ label: "", url: "", image: "" }]);
+  const [social, setSocial] = useState(EMPTY_SOCIAL);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-
-  const qs = brand ? `?subdomain=${encodeURIComponent(brand)}` : "";
 
   useEffect(() => {
     if (!brand) {
@@ -46,9 +74,13 @@ export default function AdminLinksPage() {
               ? lt.links.map((l) => ({ label: l.label || "", url: l.url || "", image: l.image || "", displayUrl: undefined }))
               : [{ label: "", url: "", image: "", displayUrl: undefined }]
           );
+          setSocial(mergeSocial(lt.social));
         }
       } catch {
-        if (!cancelled) setLinks([{ label: "", url: "", image: "" }]);
+        if (!cancelled) {
+          setLinks([{ label: "", url: "", image: "" }]);
+          setSocial(EMPTY_SOCIAL);
+        }
       } finally {
         if (!cancelled) setLoading(false);
       }
@@ -122,6 +154,7 @@ export default function AdminLinksPage() {
             image: (l.image || "").trim(),
           }))
           .filter((l) => l.label && l.url),
+        social,
       };
       const res = await fetch("/api/admin/links", {
         method: "PUT",
@@ -285,6 +318,52 @@ export default function AdminLinksPage() {
             ))}
           </div>
         </div>
+
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Social links
+          </label>
+          <p className="text-xs text-gray-500 mb-3">
+            Shown as icons at the bottom of the public link page when enabled.
+          </p>
+          <div className="space-y-3">
+            {SOCIAL_FIELDS.map(({ key, label }) => (
+              <div
+                key={key}
+                className="rounded-lg border border-gray-200 p-3 bg-gray-50/50 space-y-2"
+              >
+                <label className="flex items-center gap-2 text-sm font-medium text-gray-800">
+                  <input
+                    type="checkbox"
+                    checked={social[key].enabled}
+                    onChange={(e) =>
+                      setSocial((prev) => ({
+                        ...prev,
+                        [key]: { ...prev[key], enabled: e.target.checked },
+                      }))
+                    }
+                    className="rounded border-gray-300 text-[#2D545E] focus:ring-[#2D545E]"
+                  />
+                  {label}
+                </label>
+                <input
+                  type="url"
+                  value={social[key].url}
+                  onChange={(e) =>
+                    setSocial((prev) => ({
+                      ...prev,
+                      [key]: { ...prev[key], url: e.target.value },
+                    }))
+                  }
+                  placeholder="https://…"
+                  disabled={!social[key].enabled}
+                  className={`${INPUT_CLASS} ${!social[key].enabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
+
         <div className="flex gap-3">
           <button
             type="submit"
@@ -294,7 +373,7 @@ export default function AdminLinksPage() {
             {saving ? "Saving…" : "Save"}
           </button>
           <a
-            href={`/links${brand ? `?brand=${encodeURIComponent(brand)}` : ""}`}
+            href={`/links${brand ? `?subdomain=${encodeURIComponent(brand)}` : ""}`}
             target="_blank"
             rel="noopener noreferrer"
             className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50"
