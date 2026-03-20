@@ -18,6 +18,7 @@ import {
 } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { ServiceSuccessCard } from "@/app/admin/components/PublishSuccessCard";
+import { BlogEditor } from "@/app/admin/components/blog";
 
 const INPUT_CLASS =
   "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-[18px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E]";
@@ -123,7 +124,7 @@ export default function AddBookingPage() {
           brand,
           title: form.title.trim(),
           subtitle: form.subtitle.trim(),
-          description: form.description.trim(),
+          description: form.description || "",
           image: imageUrl,
           duration: form.duration,
           durationUnit: form.durationUnit,
@@ -207,16 +208,6 @@ export default function AddBookingPage() {
                     className={`${INPUT_CLASS} pl-11`}
                   />
                 </div>
-                <div className="relative">
-                  <FileText className="pointer-events-none absolute left-3 top-4 h-5 w-5 text-gray-400" />
-                  <textarea
-                    rows={4}
-                    value={form.description}
-                    onChange={updateField("description")}
-                    placeholder="Description..."
-                    className={`${INPUT_CLASS} resize-none pl-11`}
-                  />
-                </div>
               </div>
             </div>
 
@@ -227,6 +218,19 @@ export default function AddBookingPage() {
               onChange={handleImageChange}
               className="hidden"
             />
+
+            <Field label="Description" icon={FileText}>
+              <div className="max-w-3xl">
+                <BlogEditor
+                  value={form.description}
+                  onChange={(value) =>
+                    setForm((prev) => ({ ...prev, description: value }))
+                  }
+                  brand={brand || "kavisha"}
+                  placeholder="Write the service description..."
+                />
+              </div>
+            </Field>
 
             <section className="space-y-6">
               <h2 className="text-[30px] font-medium tracking-wide text-gray-800">

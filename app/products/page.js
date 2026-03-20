@@ -34,23 +34,25 @@ export default function Products() {
 
     if (loading) {
         return (
-            <div className="px-6 py-8">
+            <div className="px-4 py-8 sm:px-6 lg:px-8">
                 <p className="text-gray-500">Loading products...</p>
             </div>
         );
     }
 
     return (
-        <div className="px-6 py-8 max-w-4xl mx-auto">
-            <div className="space-y-4">
-                {products.length === 0 ? (
-                    <p className="text-gray-500">No products yet.</p>
-                ) : (
-                    products.map((product) => (
-                        <ProductCardUser key={product._id} product={product} />
-                    ))
-                )}
-            </div>
+        <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+            {products.length === 0 ? (
+                <p className="text-gray-500">No products yet.</p>
+            ) : (
+                <ul className="grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
+                    {products.map((product) => (
+                        <li key={product._id} className="min-w-0">
+                            <ProductCardUser product={product} />
+                        </li>
+                    ))}
+                </ul>
+            )}
         </div>
     );
 }

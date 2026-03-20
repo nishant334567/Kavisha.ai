@@ -2,12 +2,12 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { PanelLeft } from "lucide-react";
+import { MoreVertical } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import UserServicesSidebar from "./components/UserServicesSidebar";
 
 export default function ServicesLayout({ children }) {
-  const [sidebarOpen, setSidebarOpen] = useState(true);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const brandContext = useBrandContext();
   const router = useRouter();
 
@@ -42,24 +42,15 @@ export default function ServicesLayout({ children }) {
               <UserServicesSidebar onClose={() => setSidebarOpen(false)} />
             </div>
           </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(true)}
-            className="fixed left-0 top-16 z-40 md:hidden p-2 rounded-r-lg bg-white border border-l-0 border-gray-200 shadow-sm hover:bg-gray-50"
-            aria-label="Open panel"
-          >
-            <PanelLeft className="w-5 h-5 text-gray-600" />
-          </button>
-        )}
+        ) : null}
         {!sidebarOpen && (
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="fixed left-0 top-4 z-40 hidden md:block p-2 rounded-r-lg bg-white border border-l-0 border-gray-200 shadow-sm hover:bg-gray-50"
+            className="fixed left-0 top-16 z-[60] flex h-10 w-6 items-center justify-center rounded-r-md border border-l-0 border-gray-200 bg-white/95 text-gray-500 shadow-sm transition-all hover:w-7 hover:bg-gray-50 hover:text-gray-700 md:top-14"
             aria-label="Open panel"
           >
-            <PanelLeft className="w-5 h-5 text-gray-600" />
+            <MoreVertical className="h-4 w-4" />
           </button>
         )}
         <main className="flex-1 min-w-0 overflow-auto">{children}</main>

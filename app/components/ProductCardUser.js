@@ -45,42 +45,9 @@ export default function ProductCardUser({ product }) {
     };
 
     return (
-        <div className="flex gap-6 p-6 rounded-2xl border border-gray-200 bg-white shadow-sm">
-            {/* Left: Product details */}
-            <div className="flex-1 min-w-0 flex flex-col justify-between">
-                <div>
-                    <Link href={detailHref}>
-                        <h3
-                            className="font-bold text-lg hover:underline"
-                            style={{ color: TEAL }}
-                        >
-                            {product.name || "Untitled"}
-                        </h3>
-                    </Link>
-                    <p className="text-sm text-gray-500 mt-2">{description}</p>
-                    <p className="text-sm mt-2 font-medium" style={{ color: GREEN }}>
-                        In stock
-                    </p>
-                    <div className="mt-3">
-                        <span className="font-bold text-gray-800">
-                            Rs. {Math.round(currentPrice)}/-
-                        </span>
-                        {discount > 0 && (
-                            <span className="ml-2 text-sm text-gray-400 line-through">
-                                Rs. {Math.round(originalPrice)}/-
-                            </span>
-                        )}
-                        {discount > 0 && (
-                            <span className="ml-2 text-sm font-medium" style={{ color: GREEN }}>
-                                {Math.round(discount)}% off
-                            </span>
-                        )}
-                    </div>
-                </div>
-            </div>
-
-            {/* Right: Image + Quantity controls */}
-            <div className="shrink-0 flex flex-col items-center gap-4 w-[40%] max-w-[200px]">
+        <div className="flex items-stretch gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
+            {/* Left: Image + Quantity controls */}
+            <div className="w-[40%] shrink-0 max-w-[180px] self-stretch flex flex-col sm:w-[42%]">
                 <Link href={detailHref} className="w-full block">
                     <div className="w-full aspect-square rounded-2xl bg-gray-100 overflow-hidden flex items-center justify-center hover:opacity-90 transition-opacity">
                         {imageUrl ? (
@@ -97,52 +64,92 @@ export default function ProductCardUser({ product }) {
                         )}
                     </div>
                 </Link>
-                {!isAuthenticated ? (
-                    <button
-                        type="button"
-                        disabled
-                        className="w-full py-2.5 px-4 rounded-lg font-medium text-sm border-2 opacity-60 cursor-not-allowed"
-                        style={{ borderColor: TEAL, color: TEAL }}
-                    >
-                        Sign in to add to cart
-                    </button>
-                ) : quantityInCart > 0 ? (
-                    <div className="w-full flex items-center justify-center gap-2 py-2 px-3 rounded-lg border-2" style={{ borderColor: TEAL }}>
+                <div className="mt-auto w-full pt-2">
+                    {!isAuthenticated ? (
                         <button
                             type="button"
-                            onClick={handleDecrease}
-                            disabled={loading}
-                            className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 transition-colors"
-                            style={{ color: TEAL }}
-                            aria-label="Decrease quantity"
+                            disabled
+                            className="w-full rounded-lg border-2 px-2 py-1.5 text-[11px] font-medium leading-4 opacity-60 cursor-not-allowed sm:text-xs"
+                            style={{ borderColor: TEAL, color: TEAL }}
                         >
-                            <Minus className="w-4 h-4" />
+                            Sign in to add
                         </button>
-                        <span className="min-w-[24px] text-center font-semibold" style={{ color: TEAL }}>
-                            {quantityInCart}
-                        </span>
+                    ) : quantityInCart > 0 ? (
+                        <div
+                            className="flex w-full items-center justify-center gap-1 rounded-lg border-2 px-1.5 py-1"
+                            style={{ borderColor: TEAL }}
+                        >
+                            <button
+                                type="button"
+                                onClick={handleDecrease}
+                                disabled={loading}
+                                className="rounded p-1 hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                                style={{ color: TEAL }}
+                                aria-label="Decrease quantity"
+                            >
+                                <Minus className="w-3.5 h-3.5" />
+                            </button>
+                            <span className="min-w-[22px] text-center text-sm font-semibold" style={{ color: TEAL }}>
+                                {quantityInCart}
+                            </span>
+                            <button
+                                type="button"
+                                onClick={handleIncrease}
+                                disabled={loading}
+                                className="rounded p-1 hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                                style={{ color: TEAL }}
+                                aria-label="Increase quantity"
+                            >
+                                <Plus className="w-3.5 h-3.5" />
+                            </button>
+                        </div>
+                    ) : (
                         <button
                             type="button"
                             onClick={handleIncrease}
                             disabled={loading}
-                            className="p-1.5 rounded hover:bg-gray-100 disabled:opacity-50 transition-colors"
-                            style={{ color: TEAL }}
-                            aria-label="Increase quantity"
+                            className="w-full rounded-lg border-2 px-2 py-1.5 text-[11px] font-medium leading-4 transition-colors hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed sm:text-xs"
+                            style={{ borderColor: TEAL, color: TEAL }}
                         >
-                            <Plus className="w-4 h-4" />
+                            Add to cart
                         </button>
+                    )}
+                </div>
+            </div>
+
+            {/* Right: Product details */}
+            <div className="min-w-0 flex-1 self-stretch">
+                <div className="flex h-full flex-col justify-between">
+                    <div>
+                    <Link href={detailHref}>
+                        <h3
+                            className="font-bold text-sm sm:text-base hover:underline leading-tight"
+                            style={{ color: TEAL }}
+                        >
+                            {product.name || "Untitled"}
+                        </h3>
+                    </Link>
+                    <p className="text-xs sm:text-sm text-gray-500 mt-1.5 line-clamp-4">{description}</p>
+                    <p className="text-xs sm:text-sm mt-1.5 font-medium" style={{ color: GREEN }}>
+                        In stock
+                    </p>
                     </div>
-                ) : (
-                    <button
-                        type="button"
-                        onClick={handleIncrease}
-                        disabled={loading}
-                        className="w-full py-2.5 px-4 rounded-lg font-medium text-sm border-2 transition-colors hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed"
-                        style={{ borderColor: TEAL, color: TEAL }}
-                    >
-                        Add to cart
-                    </button>
-                )}
+                    <div className="mt-2 pt-2">
+                        <span className="font-bold text-gray-800 text-sm sm:text-base">
+                            Rs. {Math.round(currentPrice)}/-
+                        </span>
+                        {discount > 0 ? (
+                            <div className="mt-0.5 flex flex-wrap items-center gap-x-2">
+                                <span className="text-xs sm:text-sm text-gray-400 line-through">
+                                    Rs. {Math.round(originalPrice)}/-
+                                </span>
+                                <span className="text-xs sm:text-sm font-medium" style={{ color: GREEN }}>
+                                    {Math.round(discount)}% off
+                                </span>
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
             </div>
         </div>
     );

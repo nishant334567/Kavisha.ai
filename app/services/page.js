@@ -61,7 +61,7 @@ export default function ServicesPage() {
 
   return (
     <main className="px-6 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Services</h1>
+      <h1 className="text-2xl font-bold text-gray-900 mb-6">Book My Services</h1>
       {content}
     </main>
   );
