@@ -5,6 +5,21 @@ import { connectDB } from "@/app/lib/db";
 import LinkTree from "@/app/models/LinkTree";
 import { refreshImageUrl } from "@/app/lib/gcs";
 
+const SOCIAL_KEYS = ["youtube", "linkedin", "twitter", "instagram"];
+
+function parseSocialFromBody(body) {
+  const raw = body?.social && typeof body.social === "object" ? body.social : {};
+  const social = {};
+  for (const key of SOCIAL_KEYS) {
+    const s = raw[key];
+    social[key] = {
+      enabled: !!(s && s.enabled),
+      url: (s?.url ?? "").toString().trim(),
+    };
+  }
+  return social;
+}
+
 export async function GET(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
@@ -52,6 +67,7 @@ export async function PUT(req) {
               image: (l.image || "").toString().trim(),
             }))
           : [];
+        const social = parseSocialFromBody(body);
 
         if (!brand) {
           return NextResponse.json({ error: "brand required" }, { status: 400 });
@@ -64,7 +80,7 @@ export async function PUT(req) {
         await connectDB();
         const doc = await LinkTree.findOneAndUpdate(
           { brand },
-          { brand, brandName, title, links },
+          { brand, brandName, title, links, social },
           { new: true, upsert: true }
         ).lean();
 

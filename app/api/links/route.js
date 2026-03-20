@@ -11,7 +11,7 @@ export async function GET(req) {
     }
     await connectDB();
     const doc = await LinkTree.findOne({ brand })
-      .select("brand brandName title links")
+      .select("brand brandName title links social")
       .lean();
     if (!doc) {
       return NextResponse.json({ linkTree: null });
