@@ -45,16 +45,6 @@ export default function AvatarHomepage() {
     }
   };
 
-  const linksQs = brand?.subdomain
-    ? `?brand=${encodeURIComponent(brand.subdomain)}`
-    : "";
-  /** Logged-in homepage CTAs: only these three */
-  const homepageActionLinks = [
-    { label: "TALK TO ME", path: "/chats", primary: true },
-    { label: "COMMUNITY", path: "/community" },
-    { label: "LINKS", path: `/links${linksQs}` },
-  ];
-
   return (
     <div className="h-full flex flex-col bg-background">
       <div className="flex-1 overflow-y-auto mx-auto w-full md:max-w-[60%] md:px-8 pt-2 md:pt-0 space-y-4 pb-32 md:pb-24">
@@ -114,40 +104,21 @@ export default function AvatarHomepage() {
           </div>
         )}
 
-        {/* Mobile: fixed above bottom nav; md+: normal flow in page */}
-        <div className="flex min-h-[3.25rem] w-full items-center justify-center gap-4 px-4 py-4 max-md:fixed max-md:bottom-14 max-md:left-0 max-md:right-0 max-md:z-40 max-md:border-t max-md:border-b max-md:border-gray-200/80 max-md:bg-white/90 max-md:py-4 max-md:backdrop-blur-sm max-md:dark:border-gray-700/80 max-md:dark:bg-gray-950/90 md:relative md:z-auto md:border-0 md:bg-transparent md:py-6 md:backdrop-blur-none md:dark:bg-transparent">
-          {!(isInAppBrowser && isMobile) && (
-            user ? (
-              <>
-                {homepageActionLinks.map((item) => (
-                  <button
-                    key={item.path}
-                    onClick={() => router.push(item.path)}
-                    className={`font-baloo px-2 py-1 rounded-full text-base font-medium transition-all ${
-                      item.primary
-                        ? "border-0 bg-gradient-to-r from-[#008282] to-[#17638C] text-white shadow-sm hover:brightness-110 active:brightness-95 dark:from-[#008282] dark:to-[#17638C]"
-                        : "border-2 border-[#008282] bg-white text-[#17638C] hover:bg-[#008282]/8 active:bg-[#008282]/12 dark:border-[#008282] dark:bg-background dark:text-[#7dd3fc] dark:hover:bg-[#008282]/20"
-                    }`}
-                  >
-                    {item.label}
-                  </button>
-                ))}
-              </>
-            ) : (
-              <button
-                onClick={handleSignIn}
-                disabled={signingIn}
-                className="font-baloo flex items-center gap-2 rounded-full bg-gradient-to-r from-[#008282] to-[#17638C] px-6 py-3 text-base font-medium text-white shadow-sm transition-all hover:brightness-110 active:brightness-95 disabled:opacity-50 dark:from-[#008282] dark:to-[#17638C]"
-              >
-                {signingIn ? (
-                  <span>Signing in...</span>
-                ) : (
-                  brand?.loginButtonText?.toUpperCase() || "TALK TO ME NOW"
-                )}
-              </button>
-            )
-          )}
-        </div>
+        {!user && !(isInAppBrowser && isMobile) && (
+          <div className="flex min-h-[3.25rem] w-full items-center justify-center px-4 py-4 md:py-6">
+            <button
+              onClick={handleSignIn}
+              disabled={signingIn}
+              className="font-baloo flex items-center gap-2 rounded-full bg-gradient-to-r from-[#008282] to-[#17638C] px-6 py-3 text-base font-medium text-white shadow-sm transition-all hover:brightness-110 active:brightness-95 disabled:opacity-50 dark:from-[#008282] dark:to-[#17638C]"
+            >
+              {signingIn ? (
+                <span>Signing in...</span>
+              ) : (
+                brand?.loginButtonText?.toUpperCase() || "TALK TO ME NOW"
+              )}
+            </button>
+          </div>
+        )}
       </div>
     </div>
   );
