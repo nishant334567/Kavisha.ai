@@ -23,10 +23,10 @@ export default function ServiceCardUser({ service, bookHref = "#" }) {
     "This is a small description of the service or anything the admin wants to write to give the first impression.";
 
   return (
-    <article className="flex items-stretch gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
+    <article className="flex items-stretch gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm sm:gap-4 sm:p-4">
       <div className="w-[40%] shrink-0 max-w-[180px] self-stretch flex flex-col sm:w-[42%]">
         <Link href={bookHref} className="w-full block">
-          <div className="w-full aspect-square rounded-2xl bg-gray-100 overflow-hidden flex items-center justify-center hover:opacity-90 transition-opacity">
+          <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted-bg transition-opacity hover:opacity-90">
             {imageUrl ? (
               <img
                 src={imageUrl}
@@ -35,7 +35,7 @@ export default function ServiceCardUser({ service, bookHref = "#" }) {
                 referrerPolicy="no-referrer"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+              <div className="flex h-full w-full items-center justify-center text-xs text-muted">
                 No image
               </div>
             )}
@@ -44,7 +44,7 @@ export default function ServiceCardUser({ service, bookHref = "#" }) {
         <div className="mt-auto w-full pt-2">
           <Link
             href={bookHref}
-            className="inline-flex w-full items-center justify-center rounded-full px-2 py-2 text-[11px] font-medium leading-4 text-gray-900 shadow-sm transition-opacity hover:opacity-90 sm:text-xs"
+            className="inline-flex w-full items-center justify-center rounded-full px-2 py-2 text-[11px] font-medium leading-4 text-[#1f2937] shadow-sm transition-opacity hover:opacity-90 dark:text-[#0f172a] sm:text-xs"
             style={{ background: CARD_GRADIENT }}
           >
             Book now
@@ -62,18 +62,18 @@ export default function ServiceCardUser({ service, bookHref = "#" }) {
               </span>
             </div>
             <Link href={bookHref}>
-              <h3 className="font-semibold text-xl hover:underline leading-tight text-gray-700">
+              <h3 className="text-xl font-semibold leading-tight text-foreground hover:underline">
                 {service?.title || "Untitled service"}
               </h3>
             </Link>
-            <p className="text-xs sm:text-sm text-gray-500 mt-1.5 line-clamp-4">
+            <p className="mt-1.5 line-clamp-4 text-xs text-muted sm:text-sm">
               {description}
             </p>
 
           </div>
           <div className="mt-2 pt-2">
             <div>
-              <p className="font-bold text-gray-800 text-sm sm:text-base">
+              <p className="text-sm font-bold text-foreground sm:text-base">
                 Rs. {Math.round(service?.price || 0)}/-
               </p>
             </div>

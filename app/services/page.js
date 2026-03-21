@@ -32,13 +32,13 @@ export default function ServicesPage() {
 
   let content = null;
   if (loading) {
-    content = <p className="text-gray-500">Loading services...</p>;
+    content = <p className="text-muted">Loading services...</p>;
   } else if (services.length === 0) {
     content = (
-      <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
-        <CalendarClock className="w-10 h-10 mx-auto text-gray-400 mb-3" />
-        <p className="text-gray-700 font-medium">No services yet</p>
-        <p className="text-sm text-gray-500 mt-1">
+      <div className="rounded-xl border border-border bg-card p-8 text-center shadow-sm">
+        <CalendarClock className="mx-auto mb-3 h-10 w-10 text-muted" />
+        <p className="font-medium text-foreground">No services yet</p>
+        <p className="mt-1 text-sm text-muted">
           Services will appear here once the brand has set open hours and added booking services.
         </p>
       </div>
@@ -61,7 +61,7 @@ export default function ServicesPage() {
 
   return (
     <main className="px-6 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">Book My Services</h1>
+      <h1 className="mb-6 text-2xl font-bold text-foreground">Book My Services</h1>
       {content}
     </main>
   );

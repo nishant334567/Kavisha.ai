@@ -13,9 +13,9 @@ export default function ServicesLayout({ children }) {
 
   if (!brandContext?.enableBooking) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
         <div className="text-center max-w-md">
-          <p className="text-gray-600 mb-4">Booking and services are not enabled for this brand.</p>
+          <p className="mb-4 text-muted">Booking and services are not enabled for this brand.</p>
           <button
             type="button"
             onClick={() => router.push("/")}
@@ -29,7 +29,7 @@ export default function ServicesLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-white flex justify-center">
+    <div className="min-h-screen bg-background text-foreground flex justify-center">
       <div className="w-full max-w-6xl flex min-h-screen relative">
         {sidebarOpen ? (
           <>
@@ -47,7 +47,7 @@ export default function ServicesLayout({ children }) {
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="fixed left-0 top-16 z-[60] flex h-10 w-6 items-center justify-center rounded-r-md border border-l-0 border-gray-200 bg-white/95 text-gray-500 shadow-sm transition-all hover:w-7 hover:bg-gray-50 hover:text-gray-700 md:top-14"
+            className="fixed left-0 top-16 z-[60] flex h-10 w-6 items-center justify-center rounded-r-md border border-l-0 border-border bg-background/95 text-muted shadow-sm transition-all hover:w-7 hover:bg-muted-bg hover:text-foreground md:top-14"
             aria-label="Open panel"
           >
             <MoreVertical className="h-4 w-4" />

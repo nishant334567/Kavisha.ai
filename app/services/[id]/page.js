@@ -49,7 +49,7 @@ function DetailChip({ active, onClick, top, bottom }) {
         "min-w-[88px] rounded-xl border px-2 py-1 text-center transition-colors",
         active
           ? "border-[#2D545E] bg-[#2D545E] text-white"
-          : "border-gray-200 bg-white text-gray-700 hover:border-[#2D545E]/40",
+          : "border-border bg-card text-foreground hover:border-[#2D545E]/40",
       ].join(" ")}
     >
       <p className="text-sm leading-none font-semibold">{top}</p>
@@ -228,7 +228,7 @@ export default function ServiceDetailPage() {
   if (loading) {
     return (
       <main className="px-6 py-8">
-        <p className="text-sm text-gray-500">Loading service details...</p>
+        <p className="text-sm text-muted">Loading service details...</p>
       </main>
     );
   }
@@ -259,19 +259,19 @@ export default function ServiceDetailPage() {
           <section>
       
 
-            <article className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm">
-              <div className="flex items-start justify-between gap-3 bg-[#D8E8EC] p-4">
+            <article className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+              <div className="flex items-start justify-between gap-3 border-b border-border bg-muted-bg p-4">
                 <div>
-                  <h1 className="text-3xl font-semibold text-gray-900">
+                  <h1 className="text-3xl font-semibold text-foreground">
                     {resolvedService.title}
                   </h1>
                   {resolvedService.subtitle ? (
-                    <p className="mt-1 text-sm text-justify text-gray-700">
+                    <p className="mt-1 text-sm text-justify text-muted">
                       {resolvedService.subtitle}
                     </p>
                   ) : null}
                 </div>
-                <div className="h-[88px] w-[88px] shrink-0 overflow-hidden rounded-xl border border-white/70 bg-gray-100">
+                <div className="h-[88px] w-[88px] shrink-0 overflow-hidden rounded-xl border border-border bg-background">
                   {resolvedService.image ? (
                     <img
                       src={resolvedService.image}
@@ -280,27 +280,27 @@ export default function ServiceDetailPage() {
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="flex h-full w-full items-center justify-center text-xs text-gray-400">
+                    <div className="flex h-full w-full items-center justify-center text-xs text-muted">
                       No image
                     </div>
                   )}
                 </div>
               </div>
 
-              <div className="flex flex-wrap items-center gap-3 border-y border-gray-200 px-4 py-3 text-sm text-gray-700">
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1">
+              <div className="flex flex-wrap items-center gap-3 border-y border-border px-4 py-3 text-sm text-foreground">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-muted-bg px-3 py-1">
                   <Banknote className="h-4 w-4 text-[#21A128]" />
                   <span className="font-medium text-[#21A128]">
                     Rs. {resolvedService.price}/-
                   </span>
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-muted-bg px-3 py-1">
                   <Clock3 className="h-4 w-4 text-[#2A7F98]" />
                   <span>
                     {resolvedService.duration} {resolvedService.durationUnit}
                   </span>
                 </span>
-                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-50 px-3 py-1">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-muted-bg px-3 py-1">
                   {(resolvedService.mode || "").toLowerCase().includes("online") ? (
                     <Globe className="h-4 w-4 text-[#2D545E]" />
                   ) : (
@@ -313,7 +313,7 @@ export default function ServiceDetailPage() {
               {resolvedService.description ? (
                 <div className="p-4">
                   <div
-                    className="prose prose-gray max-w-none text-justify text-gray-600 prose-p:text-gray-600 prose-headings:text-center prose-headings:text-gray-900 prose-strong:text-gray-900 prose-a:text-[#2D545E]"
+                    className="prose prose-gray max-w-none text-justify text-muted prose-p:text-muted prose-headings:text-center prose-headings:text-foreground prose-strong:text-foreground prose-a:text-[#2D545E]"
                     dangerouslySetInnerHTML={{
                       __html: resolvedService.description,
                     }}
@@ -324,12 +324,12 @@ export default function ServiceDetailPage() {
           </section>
 
           <section>
-            <h2 className="text-[28px] font-medium text-[#1B5A67]">
+            <h2 className="text-[28px] font-medium text-[#1B5A67] dark:text-[#7dd3fc]">
               Select date and time
             </h2>
 
             {slotsApiLoading ? (
-              <p className="mt-4 text-sm text-gray-500">Loading dates…</p>
+              <p className="mt-4 text-sm text-muted">Loading dates…</p>
             ) : slotsApiError ? (
               <p className="mt-4 text-sm text-red-600">{slotsApiError}</p>
             ) : (
@@ -339,7 +339,7 @@ export default function ServiceDetailPage() {
                     type="button"
                     onClick={() => setWeekOffset((o) => Math.max(0, o - 1))}
                     disabled={weekOffset === 0}
-                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 disabled:opacity-40"
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground disabled:opacity-40"
                   >
                     <ChevronLeft className="h-5 w-5" />
                   </button>
@@ -361,18 +361,18 @@ export default function ServiceDetailPage() {
                       setWeekOffset((o) => Math.min(maxWeekOffset, o + 1))
                     }
                     disabled={weekOffset >= maxWeekOffset}
-                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-gray-300 bg-white text-gray-700 disabled:opacity-40"
+                    className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border bg-card text-foreground disabled:opacity-40"
                   >
                     <ChevronRight className="h-5 w-5" />
                   </button>
                 </div>
 
-                <h3 className="mt-8 text-lg font-medium text-gray-700">
+                <h3 className="mt-8 text-lg font-medium text-foreground">
                   Select time
                 </h3>
                 {selectedDate ? (
                   timeSlots.length === 0 ? (
-                    <p className="mt-2 text-sm text-gray-500">
+                    <p className="mt-2 text-sm text-muted">
                       No slots available this day.
                     </p>
                   ) : (
@@ -386,7 +386,7 @@ export default function ServiceDetailPage() {
                             "rounded-xl border px-5 py-2 text-sm transition-colors",
                             selectedTime === hhmm
                               ? "border-[#2D545E] bg-[#2D545E] text-white"
-                              : "border-gray-200 bg-white text-gray-700 hover:border-[#2D545E]/40",
+                              : "border-border bg-card text-foreground hover:border-[#2D545E]/40",
                           ].join(" ")}
                         >
                           {formatTimeSlot(hhmm)}
@@ -395,12 +395,12 @@ export default function ServiceDetailPage() {
                     </div>
                   )
                 ) : (
-                  <p className="mt-2 text-sm text-gray-500">
+                  <p className="mt-2 text-sm text-muted">
                     Pick a date to see times.
                   </p>
                 )}
 
-                <div className="mt-8 flex items-center gap-2 text-sm text-gray-500">
+                <div className="mt-8 flex items-center gap-2 text-sm text-muted">
                   <Globe className="h-4 w-4" />
                   GMT +5:30
                 </div>
@@ -410,7 +410,7 @@ export default function ServiceDetailPage() {
                 )}
 
                 {!user ? (
-                  <p className="mt-6 text-sm text-gray-500">
+                  <p className="mt-6 text-sm text-muted">
                     Sign in to book this service.
                   </p>
                 ) : (

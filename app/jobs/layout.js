@@ -9,9 +9,9 @@ export default function JobsLayout({ children }) {
 
   if (!brandContext?.enableJobs) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
         <div className="text-center max-w-md">
-          <p className="text-gray-600 mb-4">Jobs are not enabled for this brand.</p>
+          <p className="mb-4 text-muted">Jobs are not enabled for this brand.</p>
           <button
             type="button"
             onClick={() => router.push("/")}
@@ -24,5 +24,5 @@ export default function JobsLayout({ children }) {
     );
   }
 
-  return <div className="min-h-screen bg-white">{children}</div>;
+  return <div className="min-h-screen bg-background text-foreground">{children}</div>;
 }

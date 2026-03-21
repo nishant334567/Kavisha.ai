@@ -1,13 +1,39 @@
-import OpenAI from "openai";
+import { GoogleAuth } from "google-auth-library";
 
 export const runtime = "nodejs";
 export const maxDuration = 60; // seconds
 
+const SPEECH_SCOPE = "https://www.googleapis.com/auth/cloud-platform";
+
+function getGoogleAccessToken() {
+  const clientEmail = process.env.GCP_CLIENT_EMAIL;
+  const privateKey = process.env.GCP_PRIVATE_KEY?.replace(/\\n/g, "\n");
+
+  if (!clientEmail || !privateKey) {
+    return null;
+  }
+
+  const auth = new GoogleAuth({
+    credentials: {
+      client_email: clientEmail,
+      private_key: privateKey,
+    },
+    scopes: [SPEECH_SCOPE],
+  });
+
+  return auth.getClient();
+}
+
 export async function POST(req) {
   try {
-    if (!process.env.OPENAI_API_KEY) {
+    const authClient = await getGoogleAccessToken();
+
+    if (!authClient) {
       return Response.json(
-        { success: false, message: "Missing OPENAI_API_KEY" },
+        {
+          success: false,
+          message: "Missing GCP_CLIENT_EMAIL or GCP_PRIVATE_KEY",
+        },
         { status: 500 }
       );
     }
@@ -26,27 +52,63 @@ export async function POST(req) {
       );
     }
 
-    // Optional parameters
-    const language = form.get("language") || undefined;
-    const prompt = form.get("prompt") || undefined;
+    const accessTokenResponse = await authClient.getAccessToken();
+    const accessToken =
+      typeof accessTokenResponse === "string"
+        ? accessTokenResponse
+        : accessTokenResponse?.token;
 
-    const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
+    if (!accessToken) {
+      return Response.json(
+        { success: false, message: "Failed to get Google access token" },
+        { status: 500 }
+      );
+    }
 
-    // The File object from formData works directly with the OpenAI SDK in Node route handlers
-    const result = await openai.audio.transcriptions.create({
-      file,
-      model: "whisper-1",
-      language,
-      prompt,
-      // response_format: "json" // default
+    const audioBuffer = Buffer.from(await file.arrayBuffer());
+    const content = audioBuffer.toString("base64");
+
+    const response = await fetch(
+      "https://speech.googleapis.com/v1/speech:recognize",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          config: {
+            encoding: "WEBM_OPUS",
+            languageCode: "en-US",
+            enableAutomaticPunctuation: true,
+            model: "default",
+          },
+          audio: { content },
+        }),
+      }
+    );
+
+    const result = await response.json();
+
+    if (!response.ok) {
+      const message =
+        result?.error?.message || "Google Speech-to-Text request failed";
+      return Response.json({ success: false, message }, { status: 500 });
+    }
+
+    const text = (result?.results || [])
+      .flatMap((item) => item?.alternatives || [])
+      .map((item) => item?.transcript || "")
+      .join(" ")
+      .trim();
+
+    return Response.json({
+      success: true,
+      text,
     });
-
-    return Response.json({ success: true, text: result.text || "" });
   } catch (err) {
     const message =
-      err?.response?.data?.error?.message ||
-      err?.message ||
-      "Transcription failed";
+      err?.response?.data?.error?.message || err?.message || "Transcription failed";
     return Response.json({ success: false, message }, { status: 500 });
   }
 }

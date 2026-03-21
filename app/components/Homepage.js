@@ -138,23 +138,23 @@ export default function Homepage() {
     setCurrentIndex((prev) => Math.min(maxIndex, prev + 1));
   };
   return (
-    <div className="mt-8 sm:mt-16">
+    <div className="mt-8 text-foreground sm:mt-16">
       <div className="flex flex-col items-center justify-center pt-2 pb-8">
 
         <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
       </div>
       <div className="flex flex-col justify-center items-center max-w-[90%] md:max-w-[60%] mx-auto text-center px-4">
-        <p className="text-[#004A4E] text-3xl sm:text-5xl md:text-7xl lg:text-[90px] font-normal leading-tight">
+        <p className="text-3xl font-normal leading-tight text-[#004A4E] dark:text-[#c7f9fb] sm:text-5xl md:text-7xl lg:text-[90px]">
           Future of <span className="text-[#00B5BD]">Digital</span> Profiles
         </p>
 
-        <p className="my-6 md:my-8 text-lg text-[#264653] font-extralight">
+        <p className="my-6 text-lg font-extralight text-[#264653] dark:text-muted md:my-8">
           With Kavisha, Influencers and Brands create their Digital Avataars to
           engage their fans. Fans talk to them, and also find each other.
         </p>
       </div>
       {error && (
-        <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg max-w-md mx-auto text-sm text-center">
+        <div className="mx-auto mb-6 max-w-md rounded-lg border border-red-200 bg-red-50 p-4 text-center text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
           {error}
         </div>
       )}
@@ -166,13 +166,13 @@ export default function Homepage() {
       )}
 
       {isBlocked && (
-        <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg max-w-md mx-auto">
-          <p className="text-sm text-gray-700 mb-4 text-center">
+        <div className="mx-auto mb-6 max-w-md rounded-lg border border-border bg-card p-4 shadow-sm">
+          <p className="mb-4 text-center text-sm text-muted">
             Please open in Chrome to continue
           </p>
           <button
             onClick={openInChrome}
-            className="w-full py-3 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+            className="w-full rounded-lg bg-[#2D545E] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#264850]"
           >
             Open in Chrome
           </button>
@@ -245,18 +245,18 @@ export default function Homepage() {
       </div>
       {/* Avatar cards */}
       <div className="flex items-center gap-4 my-6 px-4 md:px-8">
-        <p className="text-lg md:text-2xl text-[#264653] whitespace-nowrap">
+        <p className="whitespace-nowrap text-lg text-[#264653] dark:text-foreground md:text-2xl">
           Talk to Avataars
         </p>
-        <div className="flex-1 h-[1px] bg-[#6B6B6B]"></div>
+        <div className="h-[1px] flex-1 bg-border"></div>
       </div>
       <div className="max-w-6xl mx-auto px-4 mt-8 md:mt-12">
         {avatarsLoading ? (
-          <p className="text-center text-gray-500">Loading avatars…</p>
+          <p className="text-center text-muted">Loading avatars…</p>
         ) : avatarsError ? (
           <p className="text-center text-red-600">{avatarsError}</p>
         ) : avatars.length === 0 ? (
-          <p className="text-center text-gray-500">No featured avatars yet.</p>
+          <p className="text-center text-muted">No featured avatars yet.</p>
         ) : (
           <div>
             <div className="overflow-hidden px-2 pb-4" ref={sliderRef}>
@@ -333,8 +333,8 @@ export default function Homepage() {
       <div className="mt-8 md:mt-12">
         {/* Header with line */}
         <div className="flex items-center gap-4 mb-6 px-4 md:px-8">
-          <div className="flex-1 h-[1px] bg-[#6B6B6B]"></div>
-          <p className="text-lg md:text-2xl text-[#264653] whitespace-nowrap">
+          <div className="h-[1px] flex-1 bg-border"></div>
+          <p className="whitespace-nowrap text-lg text-[#264653] dark:text-foreground md:text-2xl">
             Connect with people
           </p>
         </div>
@@ -366,7 +366,7 @@ export default function Homepage() {
           </div>
 
           {/* Right - Cream section */}
-          <div className="md:flex-[6] bg-[#f7f0dd] text-[#264653] px-6 md:px-10 py-8 md:py-12 flex items-center">
+          <div className="flex items-center bg-[#f7f0dd] px-6 py-8 text-[#264653] dark:bg-[#1d2a31] dark:text-foreground md:flex-[6] md:px-10 md:py-12">
             <p className="text-lg leading-relaxed text-center md:text-left">
               Your Digital Avataar doesn't just enable conversations between you
               and your fans, it also gives your fans a chance to connect with
@@ -377,7 +377,7 @@ export default function Homepage() {
           </div>
         </div>
         {/* Logo and tagline section */}
-        <div className="bg-[linear-gradient(180deg,#FFFFFF_34%,#EDF4F7_100%)] flex flex-col items-center justify-center py-8 md:py-12 px-4 md:px-8 border-b border-gray-200">
+        <div className="flex flex-col items-center justify-center border-b border-border bg-[linear-gradient(180deg,#FFFFFF_34%,#EDF4F7_100%)] px-4 py-8 dark:bg-[linear-gradient(180deg,#0F172A_34%,#16222E_100%)] md:px-8 md:py-12">
           <div className="flex flex-col items-center justify-center pb-4 pt-2">
 
             <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />

@@ -121,13 +121,13 @@ export default function Navbar() {
     { name: "Help", path: "/help" },
   ];
 
-  const menuIconClass = "w-5 h-5 shrink-0 text-gray-500";
+  const menuIconClass = "w-5 h-5 shrink-0 text-muted";
   const menuRowBtnClass =
-    "w-full flex items-center gap-3 text-left py-3.5 px-3 rounded-lg text-gray-900 hover:bg-gray-50 active:bg-gray-100 transition-colors";
+    "w-full flex items-center gap-3 rounded-lg px-3 py-3.5 text-left text-foreground transition-colors hover:bg-muted-bg";
 
   return (
     <div className="relative">
-      <nav className="hidden md:block w-full fixed top-0 left-0 z-50 text-gray-700 bg-white border-b border-gray-200">
+      <nav className="hidden md:block w-full fixed top-0 left-0 z-50 border-b border-border bg-background/95 text-foreground backdrop-blur">
         <div className="px-4 h-14 flex items-center justify-between">
           <div
             className="flex items-center gap-3 cursor-pointer hover:opacity-80 transition-opacity"
@@ -142,7 +142,7 @@ export default function Navbar() {
                 />
               </div>
             ) : (
-              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-blue-600 text-white text-lg font-bold">
+              <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-full bg-[#2D545E] text-lg font-bold text-white">
                 {brand?.brandName?.[0]?.toUpperCase() || "K"}
               </div>
             )}
@@ -222,7 +222,7 @@ export default function Navbar() {
                 {isBlocked ? (
                   <button
                     onClick={openInChrome}
-                    className="font-baloo text-sm text-amber-200 hover:underline"
+                    className="font-baloo text-sm text-amber-600 hover:underline dark:text-amber-300"
                   >
                     Open in Chrome to sign in
                   </button>
@@ -236,7 +236,7 @@ export default function Navbar() {
                   </button>
                 )}
                 {popupBlockedHint && !isBlocked && (
-                  <p className="text-xs text-amber-200 mt-1 text-right max-w-[200px]">
+                  <p className="mt-1 max-w-[200px] text-right text-xs text-amber-600 dark:text-amber-300">
                     Popup was blocked. Try again — it&apos;ll work.
                   </p>
                 )}
@@ -273,12 +273,12 @@ export default function Navbar() {
         </div>
       </nav>
 
-      <nav className="md:hidden bg-white border-b border-gray-200 py-2.5 px-4">
+      <nav className="md:hidden border-b border-border bg-background/95 py-2.5 px-4 text-foreground backdrop-blur">
         <div className="flex items-center justify-between gap-3">
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="font-baloo flex min-w-0 flex-1 items-center gap-3 rounded-lg py-1 pl-0 pr-2 text-left text-gray-900 transition-opacity hover:opacity-90 active:opacity-80"
+            className="font-baloo flex min-w-0 flex-1 items-center gap-3 rounded-lg py-1 pl-0 pr-2 text-left text-foreground transition-opacity hover:opacity-90 active:opacity-80"
             aria-label="Go to home"
           >
             {brand?.logoUrl ? (
@@ -290,7 +290,7 @@ export default function Navbar() {
                 />
               </div>
             ) : (
-              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-600 text-base font-bold text-white">
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#2D545E] text-base font-bold text-white">
                 {brand?.brandName?.[0]?.toUpperCase() || "K"}
               </div>
             )}
@@ -301,7 +301,7 @@ export default function Navbar() {
           <button
             type="button"
             onClick={() => setOpenmenu((prev) => !prev)}
-            className="shrink-0 rounded-lg p-2 text-gray-800 transition-colors hover:bg-gray-100"
+            className="shrink-0 rounded-lg p-2 text-foreground transition-colors hover:bg-muted-bg"
             aria-expanded={openMenu}
             aria-controls="mobile-nav-menu"
             aria-label="Open menu"
@@ -314,7 +314,7 @@ export default function Navbar() {
       {openMenu && (
         <div
           id="mobile-nav-menu"
-          className="fixed inset-0 z-[100] md:hidden flex flex-col bg-white"
+          className="fixed inset-0 z-[100] md:hidden flex flex-col bg-background text-foreground"
           style={{
             paddingTop: "max(0.75rem, env(safe-area-inset-top, 0px))",
             paddingBottom: "env(safe-area-inset-bottom, 0px)",
@@ -324,14 +324,14 @@ export default function Navbar() {
           aria-modal="true"
           aria-label="Navigation menu"
         >
-          <div className="flex items-center justify-between px-4 py-3 border-b border-gray-200 flex-shrink-0 bg-white">
-            <span className="font-baloo font-semibold text-gray-900 text-lg tracking-wide">
+          <div className="flex flex-shrink-0 items-center justify-between border-b border-border bg-background px-4 py-3">
+            <span className="font-baloo text-lg font-semibold tracking-wide text-foreground">
               Menu
             </span>
             <button
               type="button"
               onClick={() => setOpenmenu(false)}
-              className="p-2 rounded-lg text-gray-700 hover:bg-gray-100 transition-colors"
+              className="rounded-lg p-2 text-foreground transition-colors hover:bg-muted-bg"
               aria-label="Close menu"
             >
               <X className="w-6 h-6" strokeWidth={2} />
@@ -517,12 +517,12 @@ export default function Navbar() {
                 </button>
               </li>
             )}
-            <li className="pt-2 border-t border-gray-100 mt-2">
+            <li className="mt-2 border-t border-border pt-2">
               {loading ? (
                 <button
                   type="button"
                   disabled
-                  className={`${menuRowBtnClass} text-gray-400 cursor-not-allowed hover:bg-transparent active:bg-transparent`}
+                  className={`${menuRowBtnClass} cursor-not-allowed text-muted hover:bg-transparent`}
                 >
                   <Loader2 className={`${menuIconClass} animate-spin`} strokeWidth={2} />
                   Loading...

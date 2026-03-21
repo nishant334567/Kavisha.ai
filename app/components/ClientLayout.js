@@ -17,6 +17,9 @@ import GlobalMessages from "./GlobalMessages";
 import MobileBottomNav from "./MobileBottomNav";
 import { CartContextProvider } from "../context/cart/CartContextProvider";
 
+const LIGHT_CHAT_GRADIENT =
+  "linear-gradient(to right, #DBF8F8 0%, #DBF3F8 50%, #DBEEF8 100%)";
+
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
   const isMaintenancePage = pathname === "/maintenance";
@@ -54,7 +57,9 @@ export default function ClientLayout({ children }) {
 
   function SocketSessionWrapper({ children, isAdmin }) {
     const { user, loading } = useFirebaseSession();
-    const shellClass = isAdmin ? "min-h-screen" : "font-baloo min-h-screen";
+    const shellClass = isAdmin
+      ? "min-h-screen bg-background text-foreground"
+      : "font-baloo min-h-screen bg-background text-foreground";
     if (loading) {
       return (
         <div className={shellClass}>
@@ -88,18 +93,15 @@ export default function ClientLayout({ children }) {
     }
 
     return (
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-gray-200 bg-white/95 backdrop-blur-sm md:hidden">
-        <div className="border-b border-gray-200/80 px-3 py-3">
+      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur-sm md:hidden">
+        <div className="border-b border-border px-3 py-3">
           <div className="flex flex-wrap items-center justify-center gap-2">
             {homepageActionLinks.map((item) => (
               <Link
                 key={item.path}
                 href={item.path}
-                className={`font-baloo rounded-full px-3 py-2 text-sm font-medium transition-all ${
-                  item.primary
-                    ? "border-0 bg-gradient-to-r from-[#008282] to-[#17638C] text-white shadow-sm hover:brightness-110 active:brightness-95"
-                    : "border-2 border-[#008282] bg-white text-[#17638C] hover:bg-[#008282]/8 active:bg-[#008282]/12"
-                }`}
+                className="font-baloo rounded-full px-3 py-2 text-sm font-medium text-[#1f2937] shadow-sm transition-opacity hover:opacity-90 dark:text-[#0f172a]"
+                style={{ background: LIGHT_CHAT_GRADIENT }}
               >
                 {item.label}
               </Link>
