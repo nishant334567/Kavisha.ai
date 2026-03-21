@@ -13,9 +13,9 @@ export default function ServiceOrdersLayout({ children }) {
 
   if (!brandContext?.enableBooking) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="min-h-screen bg-background text-foreground flex items-center justify-center p-4">
         <div className="text-center max-w-md">
-          <p className="text-gray-600 mb-4">Booking and services are not enabled for this brand.</p>
+          <p className="mb-4 text-muted">Booking and services are not enabled for this brand.</p>
           <button
             type="button"
             onClick={() => router.push("/")}
@@ -29,7 +29,7 @@ export default function ServiceOrdersLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-white flex justify-center">
+    <div className="min-h-screen bg-background text-foreground flex justify-center">
       <div className="w-full max-w-6xl flex min-h-screen relative">
         {sidebarOpen ? (
           <>
@@ -46,20 +46,20 @@ export default function ServiceOrdersLayout({ children }) {
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="fixed left-0 top-16 z-40 md:hidden p-2 rounded-r-lg bg-white border border-l-0 border-gray-200 shadow-sm hover:bg-gray-50"
+            className="fixed left-0 top-16 z-40 rounded-r-lg border border-l-0 border-border bg-background p-2 text-muted shadow-sm hover:bg-muted-bg hover:text-foreground md:hidden"
             aria-label="Open panel"
           >
-            <PanelLeft className="w-5 h-5 text-gray-600" />
+            <PanelLeft className="h-5 w-5" />
           </button>
         )}
         {!sidebarOpen && (
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="fixed left-0 top-4 z-40 hidden md:block p-2 rounded-r-lg bg-white border border-l-0 border-gray-200 shadow-sm hover:bg-gray-50"
+            className="fixed left-0 top-4 z-40 hidden rounded-r-lg border border-l-0 border-border bg-background p-2 text-muted shadow-sm hover:bg-muted-bg hover:text-foreground md:block"
             aria-label="Open panel"
           >
-            <PanelLeft className="w-5 h-5 text-gray-600" />
+            <PanelLeft className="h-5 w-5" />
           </button>
         )}
         <main className="flex-1 min-w-0 overflow-auto">{children}</main>

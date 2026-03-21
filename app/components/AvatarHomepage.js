@@ -10,6 +10,9 @@ import {
   openInChrome,
 } from "../lib/in-app-browser";
 
+const LIGHT_CHAT_GRADIENT =
+  "linear-gradient(to right, #DBF8F8 0%, #DBF3F8 50%, #DBEEF8 100%)";
+
 export default function AvatarHomepage() {
   const brand = useBrandContext();
   const router = useRouter();
@@ -45,6 +48,15 @@ export default function AvatarHomepage() {
     }
   };
 
+  const linksQs = brand?.subdomain
+    ? `?brand=${encodeURIComponent(brand.subdomain)}`
+    : "";
+  const homepageActionLinks = [
+    { label: "TALK TO ME", path: "/chats", primary: true },
+    { label: "COMMUNITY", path: "/community" },
+    { label: "LINKS", path: `/links${linksQs}` },
+  ];
+
   return (
     <div className="h-full flex flex-col bg-background">
       <div className="flex-1 overflow-y-auto mx-auto w-full md:max-w-[60%] md:px-8 pt-2 md:pt-0 space-y-4 pb-32 md:pb-24">
@@ -73,7 +85,7 @@ export default function AvatarHomepage() {
           <p className="font-baloo font-normal text-2xl my-2 mt-6 mb-4 text-foreground">
             {brand?.title}
           </p>
-          <p className="font-baloo px-2 text-md text-foreground text-gray-500 text-justify">
+          <p className="font-baloo px-2 text-justify text-md text-muted">
             {brand?.subtitle}
           </p>
         </div>
@@ -91,16 +103,31 @@ export default function AvatarHomepage() {
         )}
 
         {isInAppBrowser && isMobile && (
-          <div className="mb-6 p-4 bg-gray-50 dark:bg-gray-900/50 border border-gray-200 dark:border-gray-700 rounded-lg max-w-md mx-auto">
-            <p className="text-sm text-gray-700 dark:text-gray-300 mb-4 text-center">
+          <div className="mx-auto mb-6 max-w-md rounded-lg border border-border bg-card p-4 shadow-sm">
+            <p className="mb-4 text-center text-sm text-muted">
               Please open in Chrome to continue
             </p>
             <button
               onClick={openInChrome}
-              className="w-full py-3 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+              className="w-full rounded-lg bg-[#2D545E] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#264850]"
             >
               Open in Chrome
             </button>
+          </div>
+        )}
+
+        {user && (
+          <div className="hidden w-full items-center justify-center gap-4 px-4 py-6 md:flex">
+            {homepageActionLinks.map((item) => (
+              <button
+                key={item.path}
+                onClick={() => router.push(item.path)}
+                className="font-baloo rounded-full px-4 py-2 text-base font-medium text-[#1f2937] shadow-sm transition-opacity hover:opacity-90 dark:text-[#0f172a]"
+                style={{ background: LIGHT_CHAT_GRADIENT }}
+              >
+                {item.label}
+              </button>
+            ))}
           </div>
         )}
 

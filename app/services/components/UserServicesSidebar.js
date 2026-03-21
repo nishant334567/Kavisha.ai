@@ -32,18 +32,18 @@ export default function UserServicesSidebar({ onClose }) {
   ];
 
   return (
-    <aside className="h-full w-56 shrink-0 border-r border-gray-200 py-6 px-4 overflow-y-auto bg-white relative">
+    <aside className="relative h-full w-56 shrink-0 overflow-y-auto border-r border-border bg-card px-4 py-6 text-foreground">
       {onClose && (
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-3 p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+          className="absolute top-4 right-3 rounded-lg p-1.5 text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
           aria-label="Close panel"
         >
           <X className="w-5 h-5" />
         </button>
       )}
-      <h2 className="text-lg font-bold text-gray-900 mb-5">Bookings</h2>
+      <h2 className="mb-5 text-lg font-bold text-foreground">Bookings</h2>
       <nav className="flex flex-col gap-1">
         {navItems.map((item) => {
           const active =
@@ -57,8 +57,8 @@ export default function UserServicesSidebar({ onClose }) {
               className={[
                 "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
                 active
-                  ? "bg-gray-100 text-gray-900"
-                  : "text-gray-500 hover:text-gray-800 hover:bg-gray-50",
+                  ? "bg-muted-bg text-foreground"
+                  : "text-muted hover:bg-muted-bg hover:text-foreground",
               ].join(" ")}
             >
               <Icon className="w-4 h-4" />

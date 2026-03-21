@@ -8,19 +8,19 @@ export default function AvatarCard({ image, name, title, subtitle }) {
   };
 
   return (
-    <div className="w-full max-w-xs bg-white rounded-2xl shadow-md overflow-hidden text-center h-[400px] flex flex-col">
+    <div className="flex h-[400px] w-full max-w-xs flex-col overflow-hidden rounded-2xl border border-border bg-card text-center shadow-md">
       <div className="w-full h-[280px] flex-shrink-0">
         {image ? (
           <img src={image} alt={name} className="w-full h-full object-cover" />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-gray-400">
+          <div className="flex h-full w-full items-center justify-center text-muted">
             No image
           </div>
         )}
       </div>
       <div className="px-4 py-4 flex-1 flex flex-col min-h-0">
-        <h3 className="text-lg font-semibold text-[#1f2933] mb-1">{name}</h3>
-        {title && <p className="text-sm text-[#1f2933] mb-2">{title}</p>}
+        <h3 className="mb-1 text-lg font-semibold text-foreground">{name}</h3>
+        {title && <p className="mb-2 text-sm text-muted">{title}</p>}
         {/* {subtitle && (
           <p className="text-sm text-gray-600 leading-relaxed line-clamp-4 overflow-hidden">
             {truncateText(subtitle, 30)}

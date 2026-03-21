@@ -45,11 +45,11 @@ export default function ProductCardUser({ product }) {
     };
 
     return (
-        <div className="flex items-stretch gap-3 rounded-2xl border border-gray-200 bg-white p-3 shadow-sm sm:gap-4 sm:p-4">
+        <div className="flex items-stretch gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm sm:gap-4 sm:p-4">
             {/* Left: Image + Quantity controls */}
             <div className="w-[40%] shrink-0 max-w-[180px] self-stretch flex flex-col sm:w-[42%]">
                 <Link href={detailHref} className="w-full block">
-                    <div className="w-full aspect-square rounded-2xl bg-gray-100 overflow-hidden flex items-center justify-center hover:opacity-90 transition-opacity">
+                    <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-2xl bg-muted-bg transition-opacity hover:opacity-90">
                         {imageUrl ? (
                             <img
                                 src={imageUrl}
@@ -58,7 +58,7 @@ export default function ProductCardUser({ product }) {
                                 referrerPolicy="no-referrer"
                             />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                            <div className="flex h-full w-full items-center justify-center text-xs text-muted">
                                 No image
                             </div>
                         )}
@@ -83,7 +83,7 @@ export default function ProductCardUser({ product }) {
                                 type="button"
                                 onClick={handleDecrease}
                                 disabled={loading}
-                                className="rounded p-1 hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                                className="rounded p-1 transition-colors hover:bg-muted-bg disabled:opacity-50"
                                 style={{ color: TEAL }}
                                 aria-label="Decrease quantity"
                             >
@@ -96,7 +96,7 @@ export default function ProductCardUser({ product }) {
                                 type="button"
                                 onClick={handleIncrease}
                                 disabled={loading}
-                                className="rounded p-1 hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                                className="rounded p-1 transition-colors hover:bg-muted-bg disabled:opacity-50"
                                 style={{ color: TEAL }}
                                 aria-label="Increase quantity"
                             >
@@ -108,7 +108,7 @@ export default function ProductCardUser({ product }) {
                             type="button"
                             onClick={handleIncrease}
                             disabled={loading}
-                            className="w-full rounded-lg border-2 px-2 py-1.5 text-[11px] font-medium leading-4 transition-colors hover:bg-gray-50 disabled:opacity-60 disabled:cursor-not-allowed sm:text-xs"
+                            className="w-full rounded-lg border-2 px-2 py-1.5 text-[11px] font-medium leading-4 transition-colors hover:bg-muted-bg disabled:cursor-not-allowed disabled:opacity-60 sm:text-xs"
                             style={{ borderColor: TEAL, color: TEAL }}
                         >
                             Add to cart
@@ -129,18 +129,18 @@ export default function ProductCardUser({ product }) {
                             {product.name || "Untitled"}
                         </h3>
                     </Link>
-                    <p className="text-xs sm:text-sm text-gray-500 mt-1.5 line-clamp-4">{description}</p>
+                    <p className="mt-1.5 line-clamp-4 text-xs text-muted sm:text-sm">{description}</p>
                     <p className="text-xs sm:text-sm mt-1.5 font-medium" style={{ color: GREEN }}>
                         In stock
                     </p>
                     </div>
                     <div className="mt-2 pt-2">
-                        <span className="font-bold text-gray-800 text-sm sm:text-base">
+                        <span className="text-sm font-bold text-foreground sm:text-base">
                             Rs. {Math.round(currentPrice)}/-
                         </span>
                         {discount > 0 ? (
                             <div className="mt-0.5 flex flex-wrap items-center gap-x-2">
-                                <span className="text-xs sm:text-sm text-gray-400 line-through">
+                                <span className="text-xs text-muted line-through sm:text-sm">
                                     Rs. {Math.round(originalPrice)}/-
                                 </span>
                                 <span className="text-xs sm:text-sm font-medium" style={{ color: GREEN }}>

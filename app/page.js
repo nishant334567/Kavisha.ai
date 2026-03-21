@@ -93,7 +93,7 @@ export default function HomePage() {
     <div className="min-h-screen">
       {user && (
         <div className="my-2 pt-4 pl-4 md:pt-2 md:pl-8 md:max-w-[60%] md:mx-auto md:w-full">
-          <p className="font-baloo text-left text-md text-[#3D5A5E]">
+          <p className="font-baloo text-left text-md text-[#3D5A5E] dark:text-muted">
             Welcome Back{" "}
             <span className="bg-gradient-to-r from-[#008282] to-[#17638C] bg-clip-text font-medium  text-transparent">
               {displayName} !!

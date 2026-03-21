@@ -61,7 +61,7 @@ export default function Footer() {
     );
 
   return (
-    <footer className="bg-[#F9F9F9] py-12 px-4 border-t border-gray-200">
+    <footer className="border-t border-border bg-muted-bg px-4 py-12 text-foreground">
       <div className="max-w-6xl mx-auto">
         {/* Main Footer Content */}
         <div className="flex flex-col md:flex-row justify-between gap-8 mb-8">
@@ -136,7 +136,7 @@ export default function Footer() {
 
         {/* Copyright */}
         <div className="text-center pt-8 border-t border-gray-200">
-          <p className="font-normal text-gray-600">
+          <p className="font-normal text-muted">
             Copyright © 2026 Kavisha. All rights reserved.
           </p>
         </div>
