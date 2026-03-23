@@ -18,93 +18,110 @@ function estimateTokens(text) {
   return Math.ceil(words.length * 1.33);
 }
 
+function serializeError(error) {
+  if (!error) return null;
+
+  return {
+    name: error.name || "Error",
+    message: error.message || "Unknown error",
+    ...(error.code ? { code: error.code } : {}),
+    ...(error.status ? { status: error.status } : {}),
+    ...(error.stack ? { stack: error.stack } : {}),
+  };
+}
+
+function errorResponse(status, error, stage, details = null) {
+  return NextResponse.json(
+    {
+      error,
+      stage,
+      ...(details ? { details } : {}),
+    },
+    { status }
+  );
+}
+
 export async function POST(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
-      const { userMessage, history, sessionId, summary } = await req.json();
-      const user = await getUserFromDB(decodedToken.email);
-      if (!user) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-      }
-      if (!sessionId) {
-        return NextResponse.json(
-          { error: "Missing sessionId" },
-          { status: 400 }
+      try {
+        const { userMessage, history, sessionId, summary } = await req.json();
+        const user = await getUserFromDB(decodedToken.email);
+        if (!user) {
+          return errorResponse(404, "User not found", "load-user");
+        }
+        if (!sessionId) {
+          return errorResponse(400, "Missing sessionId", "validate-session");
+        }
+        await connectDB();
+
+        // Get brand and serviceKey from session (single source of truth; no client override)
+        const session = await Session.findById(sessionId)
+          .select("brand serviceKey")
+          .lean();
+        if (!session) {
+          return errorResponse(404, "Session not found", "load-session");
+        }
+        const brand = session.brand;
+        const serviceKey = session.serviceKey;
+        if (!brand || !serviceKey) {
+          return errorResponse(
+            400,
+            "Session missing brand or serviceKey",
+            "validate-session-config",
+            { brandPresent: Boolean(brand), serviceKeyPresent: Boolean(serviceKey) }
+          );
+        }
+
+        const prompt = await getLeadPromptFromSanity(brand, serviceKey);
+        console.log("[lead-journey] Fetched prompt (brand=%s, serviceKey=%s):", brand, serviceKey, prompt || "(empty)");
+
+        let inputToken = 0;
+        let outputToken = 0;
+        let sourceChunkIds = [];
+        let sourceUrls = [];
+        const model = getGeminiModel(process.env.AI_MODEL ?? "gemini-2.5-flash");
+
+        if (!model) {
+          return errorResponse(500, "AI model not available", "load-model");
+        }
+        // Get messages excluding the current/last message
+        const messagesExcludingCurrent =
+          history.length > 1 ? history.slice(0, -1) : [];
+
+        const fullFormattedHistory = history
+          .map((h) => `${h.role}: ${h.message || h.text || ""}`)
+          .join("\n");
+        const lastTwoPairs =
+          messagesExcludingCurrent.length >= 4
+            ? messagesExcludingCurrent.slice(-4) // Last 4 messages
+            : messagesExcludingCurrent.length >= 2
+              ? messagesExcludingCurrent.slice(-2) // Last 2 messages
+              : messagesExcludingCurrent; // All available (0, 1, or 2)
+        const formattedHistory = lastTwoPairs
+          .map((h) => `${h.role}: ${h.message || h.text || ""}`)
+          .join("\n");
+
+        const rewritePrompt = buildLeadRewritePrompt(
+          formattedHistory,
+          userMessage
         );
-      }
-      await connectDB();
-
-      // Get brand and serviceKey from session (single source of truth; no client override)
-      const session = await Session.findById(sessionId)
-        .select("brand serviceKey")
-        .lean();
-      if (!session) {
-        return NextResponse.json(
-          { error: "Session not found" },
-          { status: 404 }
-        );
-      }
-      const brand = session.brand;
-      const serviceKey = session.serviceKey;
-      if (!brand || !serviceKey) {
-        return NextResponse.json(
-          { error: "Session missing brand or serviceKey" },
-          { status: 400 }
-        );
-      }
-
-      const prompt = await getLeadPromptFromSanity(brand, serviceKey);
-      console.log("[lead-journey] Fetched prompt (brand=%s, serviceKey=%s):", brand, serviceKey, prompt || "(empty)");
-
-      let inputToken = 0;
-      let outputToken = 0;
-      let sourceChunkIds = [];
-      let sourceUrls = [];
-      const model = getGeminiModel(process.env.AI_MODEL ?? "gemini-2.5-flash");
-
-      if (!model) {
-        return NextResponse.json(
-          { error: "AI model not available" },
-          { status: 500 }
-        );
-      }
-      // Get messages excluding the current/last message
-      const messagesExcludingCurrent =
-        history.length > 1 ? history.slice(0, -1) : [];
-
-      const fullFormattedHistory = history
-        .map((h) => `${h.role}: ${h.message || h.text || ""}`)
-        .join("\n");
-      const lastTwoPairs =
-        messagesExcludingCurrent.length >= 4
-          ? messagesExcludingCurrent.slice(-4) // Last 4 messages
-          : messagesExcludingCurrent.length >= 2
-            ? messagesExcludingCurrent.slice(-2) // Last 2 messages
-            : messagesExcludingCurrent; // All available (0, 1, or 2)
-      const formattedHistory = lastTwoPairs
-        .map((h) => `${h.role}: ${h.message || h.text || ""}`)
-        .join("\n");
-
-      const rewritePrompt = buildLeadRewritePrompt(
-        formattedHistory,
-        userMessage
-      );
-      inputToken += estimateTokens(rewritePrompt);
-      const responseQuery = await model.generateContent({
-        contents: [
-          {
-            role: "user",
-            parts: [{ text: rewritePrompt }],
+        inputToken += estimateTokens(rewritePrompt);
+        const responseQuery = await model.generateContent({
+          contents: [
+            {
+              role: "user",
+              parts: [{ text: rewritePrompt }],
+            },
+          ],
+          generationConfig: {
+            temperature: 0.2,
           },
-        ],
-        generationConfig: {
-          temperature: 0.2,
-        },
-      });
+        });
 
-      let responseText =
-        responseQuery.response.candidates[0].content.parts[0].text.trim();
-      outputToken += estimateTokens(responseText);
+        let responseText =
+          responseQuery.response.candidates[0].content.parts[0].text.trim();
+        outputToken += estimateTokens(responseText);
 
       // Extract JSON if wrapped in markdown
       let jsonText = responseText;
@@ -113,19 +130,19 @@ export async function POST(req) {
         if (match) jsonText = match[1];
       }
 
-      let parsedResponse;
-      try {
-        parsedResponse = JSON.parse(jsonText);
-      } catch (error) {
-        parsedResponse = { requery: userMessage };
-      }
+        let parsedResponse;
+        try {
+          parsedResponse = JSON.parse(jsonText);
+        } catch (error) {
+          parsedResponse = { requery: userMessage };
+        }
 
-      const requery = parsedResponse?.requery;
-      let betterQuery =
-        requery !== undefined && requery !== null
-          ? String(requery).trim()
-          : userMessage;
-      console.log("[lead-journey] Rewriter – userMessage:", userMessage, "| requery:", requery, "| betterQuery:", betterQuery);
+        const requery = parsedResponse?.requery;
+        let betterQuery =
+          requery !== undefined && requery !== null
+            ? String(requery).trim()
+            : userMessage;
+        console.log("[lead-journey] Rewriter – userMessage:", userMessage, "| requery:", requery, "| betterQuery:", betterQuery);
 
       let context = "";
       const uniqueContext = new Map(); // Declare at higher scope so it's always available
@@ -139,18 +156,12 @@ export async function POST(req) {
           userMessageEmbedding === 0 ||
           !Array.isArray(userMessageEmbedding)
         ) {
-          return NextResponse.json(
-            { error: "Failed to generate embedding" },
-            { status: 500 }
-          );
+          return errorResponse(500, "Failed to generate embedding", "generate-embedding");
         }
 
         // Validate embedding is a proper array with values
         if (userMessageEmbedding.length === 0) {
-          return NextResponse.json(
-            { error: "Invalid embedding generated" },
-            { status: 500 }
-          );
+          return errorResponse(500, "Invalid embedding generated", "validate-embedding");
         }
         try {
           const [results, results2] = await Promise.all([
@@ -497,15 +508,29 @@ export async function POST(req) {
             totalTokens: inputToken + outputToken,
           });
         } else {
-          return NextResponse.json(
-            { error: "Unexpected response format from AI model" },
-            { status: 500 }
+          return errorResponse(
+            500,
+            "Unexpected response format from AI model",
+            "format-main-response",
+            { partsReceived: reParts.length }
           );
         }
       } catch (error) {
-        return NextResponse.json(
-          { error: "Failed to generate AI response", details: error.message },
-          { status: 500 }
+        console.error("[lead-journey] Failed to generate AI response:", error);
+        return errorResponse(
+          500,
+          "Failed to generate AI response",
+          "generate-main-response",
+          serializeError(error)
+        );
+      }
+      } catch (error) {
+        console.error("[lead-journey] Unhandled request error:", error);
+        return errorResponse(
+          500,
+          "Lead journey request failed",
+          "unhandled",
+          serializeError(error)
         );
       }
     },

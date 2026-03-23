@@ -319,34 +319,6 @@ export default function ChatBox({
     }
   };
 
-  // Function to get service-specific prompt based on chat type or serviceKey (for multiple lead_journey)
-  const getServicePrompt = () => {
-    if (!brandContext?.services) return "";
-    // Prefer serviceKey when present (multiple lead_journey or same-name services)
-    let service;
-    if (serviceKey) {
-      service = brandContext.services.find((s) => s._key === serviceKey);
-    }
-    if (!service && currentChatType) {
-      service = brandContext.services.find(
-        (s) => s.name?.toLowerCase() === currentChatType?.toLowerCase(),
-      );
-    }
-    if (!service) return "";
-
-    const parts = [];
-    if (service.about?.trim())
-      parts.push(
-        `About the person you represent (real world): ${service.about.trim()}`,
-      );
-    if (service.rules?.trim())
-      parts.push(`Rules to follow: ${service.rules.trim()}`);
-    if (service.behaviour?.trim())
-      parts.push(`How to behave as this avatar: ${service.behaviour.trim()}`);
-
-    return parts.length > 0 ? parts.join(". ") + " " : "";
-  };
-
   const handleSubmit = async (voiceText = null, isRetry = false) => {
     let sessionId = currentChatId;
     let messageText, updatedMessages, historyToUse;
@@ -381,38 +353,7 @@ export default function ChatBox({
     setMessageLoading(true);
     let response;
 
-    if (currentChatType === "buy_my_product") {
-      response = await fetch("/api/buy-my-product", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          history: historyToUse,
-          userMessage: messageText || "",
-          sessionId,
-          // resume: resumeData?.resumeSummary || "",
-          type: currentChatType,
-          prompt: getServicePrompt() || "",
-          userId: user?.id,
-        }),
-      });
-    } else if (currentChatType === "buy_my_service") {
-      response = await fetch("/api/buy-my-service", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          history: historyToUse,
-          userMessage: messageText || "",
-          sessionId,
-          type: currentChatType,
-          prompt: getServicePrompt() || "",
-          userId: user?.id,
-        }),
-      });
-    } else if (currentChatType !== "lead_journey") {
+    if (currentChatType !== "lead_journey") {
       response = await fetch("/api/ai", {
         method: "POST",
         body: JSON.stringify({
@@ -478,23 +419,17 @@ export default function ChatBox({
       setRetryIndex(undefined);
     }
 
-    // Handle matches and data collection status (skip for buy_my_product and buy_my_service)
     if (
-      currentChatType !== "buy_my_product" &&
-      currentChatType !== "buy_my_service"
+      data?.matchesWithObjectIds?.length > 0 &&
+      data?.allDataCollected === "true"
     ) {
-      if (
-        data?.matchesWithObjectIds?.length > 0 &&
-        data?.allDataCollected === "true"
-      ) {
-        setMatches(data?.matchesWithObjectIds);
-        setHasDatacollected(true);
-      } else if (data?.allDataCollected === "true") {
-        setMatches([]);
-        setHasDatacollected(true);
-      } else if (data?.allDataCollected === "false") {
-        setHasDatacollected(false);
-      }
+      setMatches(data?.matchesWithObjectIds);
+      setHasDatacollected(true);
+    } else if (data?.allDataCollected === "true") {
+      setMatches([]);
+      setHasDatacollected(true);
+    } else if (data?.allDataCollected === "false") {
+      setHasDatacollected(false);
     }
   };
   useEffect(() => {
