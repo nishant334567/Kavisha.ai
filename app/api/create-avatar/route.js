@@ -15,6 +15,7 @@ const SERVICE_NAME = process.env.NODE_ENV === "staging" ? "kavisha-staging" : "k
 const REGION = "us-central1";
 const ROOT_DOMAIN = "kavisha.ai";
 const ROOT_HOST = process.env.NODE_ENV === "staging" ? "staging.kavisha.ai" : ROOT_DOMAIN;
+const UNLIMITED_AVATAR_CREATOR_EMAIL = "hello@kavisha.ai";
 
 const auth = new GoogleAuth({
   ...(process.env.GCP_CLIENT_EMAIL && process.env.GCP_PRIVATE_KEY
@@ -39,6 +40,9 @@ export async function POST(request) {
   return withAuth(request, {
     onAuthenticated: async ({ decodedToken }) => {
       const creatorEmail = decodedToken?.email;
+      const normalizedCreatorEmail = String(creatorEmail || "").trim().toLowerCase();
+      const canCreateUnlimitedAvatars =
+        normalizedCreatorEmail === UNLIMITED_AVATAR_CREATOR_EMAIL;
       if (!creatorEmail) {
         return NextResponse.json(
           { error: "Please sign in to create an avatar." },
@@ -62,7 +66,7 @@ export async function POST(request) {
           { status: 403 }
         );
       }
-      if (user.hasCreatedAvatar) {
+      if (user.hasCreatedAvatar && !canCreateUnlimitedAvatars) {
         return NextResponse.json(
           { error: "You can only create one avatar per account. You have already created one." },
           { status: 400 }

@@ -11,6 +11,8 @@ import {
   openInChrome,
 } from "../lib/in-app-browser";
 
+const UNLIMITED_AVATAR_CREATOR_EMAIL = "hello@kavisha.ai";
+
 export default function MakeAvatarLandingPage() {
   const router = useRouter();
   const { user, refresh } = useFirebaseSession();
@@ -27,6 +29,8 @@ export default function MakeAvatarLandingPage() {
   }, []);
 
   const isBlocked = isInAppBrowser && isMobile;
+  const canCreateUnlimitedAvatars =
+    String(user?.email || "").trim().toLowerCase() === UNLIMITED_AVATAR_CREATOR_EMAIL;
 
   useEffect(() => {
     if (!user?.email) {
@@ -38,7 +42,13 @@ export default function MakeAvatarLandingPage() {
       try {
         const res = await fetch("/api/user");
         const data = res.ok ? await res.json() : null;
-        if (!cancelled && data?.user?.hasCreatedAvatar) setHasCreatedAvatar(true);
+        if (
+          !cancelled &&
+          data?.user?.hasCreatedAvatar &&
+          !canCreateUnlimitedAvatars
+        ) {
+          setHasCreatedAvatar(true);
+        }
       } catch {
         // ignore
       } finally {
@@ -46,7 +56,7 @@ export default function MakeAvatarLandingPage() {
       }
     })();
     return () => { cancelled = true; };
-  }, [user?.email]);
+  }, [user?.email, canCreateUnlimitedAvatars]);
 
   const handleGetStarted = async () => {
     if (hasCreatedAvatar) return;
