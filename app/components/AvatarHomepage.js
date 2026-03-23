@@ -22,6 +22,7 @@ export default function AvatarHomepage() {
   const [popupBlocked, setPopupBlocked] = useState(false);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [loadingPath, setLoadingPath] = useState(null);
 
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
@@ -121,11 +122,15 @@ export default function AvatarHomepage() {
             {homepageActionLinks.map((item) => (
               <button
                 key={item.path}
-                onClick={() => router.push(item.path)}
+                onClick={() => {
+                  setLoadingPath(item.path);
+                  router.push(item.path);
+                }}
+                disabled={loadingPath !== null}
                 className="font-baloo rounded-full px-4 py-2 text-base font-medium text-[#1f2937] shadow-sm transition-opacity hover:opacity-90 dark:text-[#0f172a]"
                 style={{ background: LIGHT_CHAT_GRADIENT }}
               >
-                {item.label}
+                {loadingPath === item.path ? "Opening..." : item.label}
               </button>
             ))}
           </div>

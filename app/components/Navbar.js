@@ -37,6 +37,7 @@ export default function Navbar() {
   const brand = useBrandContext();
   const router = useRouter();
   const [signingIn, setSigningIn] = useState(false);
+  const [loadingPath, setLoadingPath] = useState(null);
   const [popupBlockedHint, setPopupBlockedHint] = useState(false);
   const [openMenu, setOpenmenu] = useState(false);
   const [showSettingDropdown, setShowsettingDropdown] = useState(false);
@@ -90,6 +91,7 @@ export default function Navbar() {
       window.location.hostname.replace(/^www\./, "").split(".").length === 2);
 
   const isBlocked = isInAppBrowser && isMobile;
+  const isNavigating = loadingPath !== null;
 
   const handleSignIn = async (redirectPath) => {
     setSigningIn(true);
@@ -114,6 +116,16 @@ export default function Navbar() {
       setSigningIn(false);
     }
   };
+
+  const handleNavigate = (path, { closeMenu = false, closeSettings = false } = {}) => {
+    setLoadingPath(path);
+    if (closeMenu) setOpenmenu(false);
+    if (closeSettings) setShowsettingDropdown(false);
+    router.push(path);
+  };
+
+  const getNavLabel = (path, label) =>
+    loadingPath === path ? "Opening..." : label;
 
   const settingOptions = [
     { name: "Privacy Policy", path: "/privacy-policy" },
@@ -156,30 +168,44 @@ export default function Navbar() {
               <button
                 onClick={() => {
                   if (user) {
-                    router.push("/talk-to-avatar");
+                    handleNavigate("/talk-to-avatar");
                   } else if (!isBlocked) {
                     handleSignIn("/talk-to-avatar");
                   }
                 }}
-                disabled={isBlocked}
-                className={isBlocked ? "opacity-60 cursor-not-allowed" : ""}
+                disabled={isBlocked || isNavigating}
+                className={
+                  isBlocked || isNavigating ? "opacity-60 cursor-not-allowed" : ""
+                }
               >
-                TALK TO AVATAARS
+                {getNavLabel("/talk-to-avatar", "TALK TO AVATAARS")}
               </button>
             )}
             {isMainDomain && (
               <button
-                onClick={() => router.push("/make-avatar")}
+                onClick={() => handleNavigate("/make-avatar")}
+                disabled={isNavigating}
+                className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
                 // className="px-3 py-1.5 rounded-md text-sm bg-blue-600 hover:bg-blue-700 transition-colors"
               >
-                MAKE MY AVATAAR
+                {getNavLabel("/make-avatar", "MAKE MY AVATAAR")}
               </button>
             )}
             {user && (
               <>
-                <button onClick={() => router.push("/chats")}>CHATS</button>
-                <button onClick={() => router.push("/community")}>
-                  COMMUNITY
+                <button
+                  onClick={() => handleNavigate("/chats")}
+                  disabled={isNavigating}
+                  className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
+                >
+                  {getNavLabel("/chats", "CHATS")}
+                </button>
+                <button
+                  onClick={() => handleNavigate("/community")}
+                  disabled={isNavigating}
+                  className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
+                >
+                  {getNavLabel("/community", "COMMUNITY")}
                 </button>
               </>
             )}
@@ -187,32 +213,55 @@ export default function Navbar() {
               <button
                 type="button"
                 onClick={() =>
-                  router.push(
-                    `/links?brand=${encodeURIComponent(brand.subdomain)}`,
-                  )
+                  handleNavigate(`/links?brand=${encodeURIComponent(brand.subdomain)}`)
                 }
+                disabled={isNavigating}
+                className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
               >
-                LINKS
+                {getNavLabel(
+                  `/links?brand=${encodeURIComponent(brand.subdomain)}`,
+                  "LINKS",
+                )}
               </button>
             )}
             {brand?.enableProducts && (
-              <button onClick={() => router.push("/products")}>PRODUCTS</button>
+              <button
+                onClick={() => handleNavigate("/products")}
+                disabled={isNavigating}
+                className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
+              >
+                {getNavLabel("/products", "PRODUCTS")}
+              </button>
             )}
             {brand?.enableJobs && (
-              <button onClick={() => router.push("/jobs")}>JOBS</button>
+              <button
+                onClick={() => handleNavigate("/jobs")}
+                disabled={isNavigating}
+                className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
+              >
+                {getNavLabel("/jobs", "JOBS")}
+              </button>
             )}
             {brand?.enableBlogs && (
               <button
                 onClick={() =>
-                  router.push(
+                  handleNavigate(
                     "/blogs" +
                       (brand?.subdomain
                         ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
                         : ""),
                   )
                 }
+                disabled={isNavigating}
+                className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
               >
-                BLOGS
+                {getNavLabel(
+                  "/blogs" +
+                    (brand?.subdomain
+                      ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
+                      : ""),
+                  "BLOGS",
+                )}
               </button>
             )}
             {loading ? (
@@ -258,11 +307,10 @@ export default function Navbar() {
                         key={index}
                         className="w-full text-left px-4 py-2 text-sm text-foreground hover:bg-muted-bg first:rounded-t-lg last:rounded-b-lg transition-colors"
                         onClick={() => {
-                          setShowsettingDropdown(false);
-                          router.push(item?.path);
+                          handleNavigate(item?.path, { closeSettings: true });
                         }}
                       >
-                        {item?.name}
+                        {getNavLabel(item?.path, item?.name)}
                       </button>
                     );
                   })}
@@ -343,12 +391,12 @@ export default function Navbar() {
                 type="button"
                 className={menuRowBtnClass}
                 onClick={() => {
-                  setOpenmenu(false);
-                  router.push("/featured");
+                  handleNavigate("/featured", { closeMenu: true });
                 }}
+                disabled={isNavigating}
               >
                 <LayoutGrid className={menuIconClass} strokeWidth={2} />
-                Services
+                {getNavLabel("/featured", "Services")}
               </button>
             </li>
             <li>
@@ -356,12 +404,12 @@ export default function Navbar() {
                 type="button"
                 className={menuRowBtnClass}
                 onClick={() => {
-                  setOpenmenu(false);
-                  router.push("/help");
+                  handleNavigate("/help", { closeMenu: true });
                 }}
+                disabled={isNavigating}
               >
                 <HelpCircle className={menuIconClass} strokeWidth={2} />
-                Help
+                {getNavLabel("/help", "Help")}
               </button>
             </li>
             <li>
@@ -369,12 +417,12 @@ export default function Navbar() {
                 type="button"
                 className={menuRowBtnClass}
                 onClick={() => {
-                  setOpenmenu(false);
-                  router.push("/privacy-policy");
+                  handleNavigate("/privacy-policy", { closeMenu: true });
                 }}
+                disabled={isNavigating}
               >
                 <Shield className={menuIconClass} strokeWidth={2} />
-                Privacy Policy
+                {getNavLabel("/privacy-policy", "Privacy Policy")}
               </button>
             </li>
             <li>
@@ -382,12 +430,12 @@ export default function Navbar() {
                 type="button"
                 className={menuRowBtnClass}
                 onClick={() => {
-                  setOpenmenu(false);
-                  router.push("/tnc");
+                  handleNavigate("/tnc", { closeMenu: true });
                 }}
+                disabled={isNavigating}
               >
                 <FileText className={menuIconClass} strokeWidth={2} />
-                Terms and Conditions
+                {getNavLabel("/tnc", "Terms and Conditions")}
               </button>
             </li>
             {brand?.subdomain === "kavisha" && (
@@ -396,12 +444,12 @@ export default function Navbar() {
                   type="button"
                   className={menuRowBtnClass}
                   onClick={() => {
-                    setOpenmenu(false);
-                    router.push("/make-avatar");
+                    handleNavigate("/make-avatar", { closeMenu: true });
                   }}
+                  disabled={isNavigating}
                 >
                   <Sparkles className={menuIconClass} strokeWidth={2} />
-                  Make my Avataar
+                  {getNavLabel("/make-avatar", "Make my Avataar")}
                 </button>
               </li>
             )}
@@ -411,12 +459,12 @@ export default function Navbar() {
                   type="button"
                   className={menuRowBtnClass}
                   onClick={() => {
-                    setOpenmenu(false);
-                    router.push("/talk-to-avatar");
+                    handleNavigate("/talk-to-avatar", { closeMenu: true });
                   }}
+                  disabled={isNavigating}
                 >
                   <MessageCircle className={menuIconClass} strokeWidth={2} />
-                  Talk to Avataars
+                  {getNavLabel("/talk-to-avatar", "Talk to Avataars")}
                 </button>
               </li>
             )}
@@ -427,12 +475,12 @@ export default function Navbar() {
                     type="button"
                     className={menuRowBtnClass}
                     onClick={() => {
-                      setOpenmenu(false);
-                      router.push("/chats");
+                      handleNavigate("/chats", { closeMenu: true });
                     }}
+                    disabled={isNavigating}
                   >
                     <MessagesSquare className={menuIconClass} strokeWidth={2} />
-                    Chats
+                    {getNavLabel("/chats", "Chats")}
                   </button>
                 </li>
                 <li>
@@ -440,12 +488,12 @@ export default function Navbar() {
                     type="button"
                     className={menuRowBtnClass}
                     onClick={() => {
-                      setOpenmenu(false);
-                      router.push("/community");
+                      handleNavigate("/community", { closeMenu: true });
                     }}
+                    disabled={isNavigating}
                   >
                     <Users className={menuIconClass} strokeWidth={2} />
-                    Community
+                    {getNavLabel("/community", "Community")}
                   </button>
                 </li>
               </>
@@ -456,14 +504,18 @@ export default function Navbar() {
                   type="button"
                   className={menuRowBtnClass}
                   onClick={() => {
-                    setOpenmenu(false);
-                    router.push(
-                      `/links?brand=${encodeURIComponent(brand.subdomain)}`,
-                    );
+                  handleNavigate(
+                    `/links?brand=${encodeURIComponent(brand.subdomain)}`,
+                    { closeMenu: true },
+                  );
                   }}
+                disabled={isNavigating}
                 >
                   <Link2 className={menuIconClass} strokeWidth={2} />
-                  Links
+                {getNavLabel(
+                  `/links?brand=${encodeURIComponent(brand.subdomain)}`,
+                  "Links",
+                )}
                 </button>
               </li>
             )}
@@ -473,12 +525,12 @@ export default function Navbar() {
                   type="button"
                   className={menuRowBtnClass}
                   onClick={() => {
-                    setOpenmenu(false);
-                    router.push("/products");
+                    handleNavigate("/products", { closeMenu: true });
                   }}
+                  disabled={isNavigating}
                 >
                   <ShoppingBag className={menuIconClass} strokeWidth={2} />
-                  Products
+                  {getNavLabel("/products", "Products")}
                 </button>
               </li>
             )}
@@ -488,12 +540,12 @@ export default function Navbar() {
                   type="button"
                   className={menuRowBtnClass}
                   onClick={() => {
-                    setOpenmenu(false);
-                    router.push("/jobs");
+                    handleNavigate("/jobs", { closeMenu: true });
                   }}
+                  disabled={isNavigating}
                 >
                   <Briefcase className={menuIconClass} strokeWidth={2} />
-                  Jobs
+                  {getNavLabel("/jobs", "Jobs")}
                 </button>
               </li>
             )}
@@ -503,17 +555,24 @@ export default function Navbar() {
                   type="button"
                   className={menuRowBtnClass}
                   onClick={() => {
-                    setOpenmenu(false);
-                    router.push(
+                    handleNavigate(
                       "/blogs" +
                         (brand?.subdomain
                           ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
                           : ""),
+                      { closeMenu: true },
                     );
                   }}
+                  disabled={isNavigating}
                 >
                   <BookOpen className={menuIconClass} strokeWidth={2} />
-                  Blogs
+                  {getNavLabel(
+                    "/blogs" +
+                      (brand?.subdomain
+                        ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
+                        : ""),
+                    "Blogs",
+                  )}
                 </button>
               </li>
             )}

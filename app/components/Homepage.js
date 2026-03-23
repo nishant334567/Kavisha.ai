@@ -60,6 +60,7 @@ export default function Homepage() {
   const [avatarsError, setAvatarsError] = useState(null);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [loadingPath, setLoadingPath] = useState(null);
 
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
@@ -183,34 +184,48 @@ export default function Homepage() {
         <button
           onClick={() => {
             if (user) {
+              setLoadingPath("/talk-to-avatar");
               router.push("/talk-to-avatar");
             } else if (!isBlocked) {
               handleSignIn("/talk-to-avatar");
             }
           }}
-          disabled={signingIn || isBlocked}
+          disabled={signingIn || isBlocked || loadingPath !== null}
           className="w-[80%] md:w-auto min-w-0 px-3 md:px-4 py-2 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
         >
-          {signingIn ? "Signing in..." : "Talk to Avataars"}
+          {signingIn
+            ? "Signing in..."
+            : loadingPath === "/talk-to-avatar"
+              ? "Opening..."
+              : "Talk to Avataars"}
         </button>
         <button
-          onClick={() => router.push("/make-avatar")}
-          className="w-[80%] md:w-auto min-w-0 px-3 md:px-4 py-2 text-sm md:text-base rounded-lg bg-[#3D5E6B] text-white shadow-md hover:bg-[#2d4752] transition-colors"
+          onClick={() => {
+            setLoadingPath("/make-avatar");
+            router.push("/make-avatar");
+          }}
+          disabled={loadingPath !== null}
+          className="w-[80%] md:w-auto min-w-0 px-3 md:px-4 py-2 text-sm md:text-base rounded-lg bg-[#3D5E6B] text-white shadow-md hover:bg-[#2d4752] transition-colors disabled:opacity-50"
         >
-          Make my Avataar
+          {loadingPath === "/make-avatar" ? "Opening..." : "Make my Avataar"}
         </button>
         <button
           onClick={() => {
             if (user) {
+              setLoadingPath("/community");
               router.push("/community");
             } else if (!isBlocked) {
               handleSignIn("/community");
             }
           }}
-          disabled={signingIn || isBlocked}
+          disabled={signingIn || isBlocked || loadingPath !== null}
           className="w-[80%] md:w-auto min-w-0 px-4 py-2 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
         >
-          {signingIn ? "Signing in..." : "Connect with people"}
+          {signingIn
+            ? "Signing in..."
+            : loadingPath === "/community"
+              ? "Opening..."
+              : "Connect with people"}
         </button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-[85%] mx-auto my-16">
