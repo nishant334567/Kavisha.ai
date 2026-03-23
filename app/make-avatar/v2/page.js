@@ -4,8 +4,11 @@ import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Settings, User, Camera, Info } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useBrandContext } from "../../context/brand/BrandContextProvider";
+import { useFirebaseSession } from "../../lib/firebase/FirebaseSessionProvider";
 import Loader from "../../components/Loader";
 import { BEHAVIOUR_TEMPLATES } from "./behaviourTemplates";
+
+const UNLIMITED_AVATAR_CREATOR_EMAIL = "hello@kavisha.ai";
 
 const stages = {
   BASIC_INFO: 1,
@@ -16,6 +19,7 @@ const stages = {
 export default function MakeAvatar() {
   const router = useRouter();
   const brandContext = useBrandContext();
+  const { user } = useFirebaseSession();
   const fileInputRef = useRef(null);
   const [currentStep, setCurrentStep] = useState(stages.BASIC_INFO);
   const [loading, setLoading] = useState(false);
@@ -50,6 +54,9 @@ export default function MakeAvatar() {
   const [hasCreatedAvatar, setHasCreatedAvatar] = useState(false);
   const [checkingAvatar, setCheckingAvatar] = useState(true);
   const [domainSuffix, setDomainSuffix] = useState(".kavisha.ai");
+  const canCreateUnlimitedAvatars =
+    String(user?.email || "").trim().toLowerCase() ===
+    UNLIMITED_AVATAR_CREATOR_EMAIL;
   useEffect(() => {
     const onStaging = typeof window !== "undefined" && window.location.hostname.includes(".staging.");
     setDomainSuffix(onStaging ? ".staging.kavisha.ai" : ".kavisha.ai");
@@ -305,7 +312,13 @@ export default function MakeAvatar() {
       try {
         const res = await fetch("/api/user");
         const data = res.ok ? await res.json() : null;
-        if (!cancelled && data?.user?.hasCreatedAvatar) setHasCreatedAvatar(true);
+        if (
+          !cancelled &&
+          data?.user?.hasCreatedAvatar &&
+          !canCreateUnlimitedAvatars
+        ) {
+          setHasCreatedAvatar(true);
+        }
       } catch {
         // ignore
       } finally {
@@ -313,7 +326,7 @@ export default function MakeAvatar() {
       }
     })();
     return () => { cancelled = true; };
-  }, []);
+  }, [canCreateUnlimitedAvatars]);
 
   if (!brandContext) {
     return <Loader loadingMessage="Loading..." />;
