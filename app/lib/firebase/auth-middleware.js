@@ -3,6 +3,18 @@ import { authMiddleware } from "next-firebase-auth-edge";
 import { serverConfig } from "./config";
 import { getCookieOptions } from "./cookie-config";
 
+function serializeError(error) {
+  if (!error) return null;
+
+  return {
+    name: error.name || "Error",
+    message: error.message || "Unknown error",
+    ...(error.reason ? { reason: error.reason } : {}),
+    ...(error.code ? { code: error.code } : {}),
+    ...(error.stack ? { stack: error.stack } : {}),
+  };
+}
+
 /**
  * Simplified auth wrapper for API routes
  */
@@ -24,8 +36,12 @@ export function withAuth(request, { onAuthenticated, onUnauthenticated }) {
         : NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     },
     handleError: async (error) => {
+      console.error("[withAuth] Authentication middleware error:", error);
       return NextResponse.json(
-        { error: "Authentication failed" },
+        {
+          error: "Authentication failed",
+          details: serializeError(error),
+        },
         { status: 500 }
       );
     },
