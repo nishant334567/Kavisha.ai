@@ -1,7 +1,15 @@
 "use client";
 import { useRef, useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, FolderPlus, Trash2, FolderInput } from "lucide-react";
+import {
+  ArrowLeft,
+  FolderPlus,
+  Trash2,
+  FolderInput,
+  Loader2,
+  CheckCircle2,
+  X,
+} from "lucide-react";
 import TextTrainingModal from "@/app/admin/components/TextTrainingModal";
 import DocumentViewModal from "@/app/admin/components/DocumentViewModal";
 import DocumentCard from "@/app/admin/components/DocumentCard";
@@ -35,6 +43,20 @@ export default function Train() {
   const [selectedDocs, setSelectedDocs] = useState(new Set());
   const [moveTargetFolderId, setMoveTargetFolderId] = useState("");
   const [moving, setMoving] = useState(false);
+  const [activeTraining, setActiveTraining] = useState(null);
+  const [trainingResult, setTrainingResult] = useState(null);
+  const isTraining = Boolean(activeTraining);
+
+  const getResponsePayload = async (response) => {
+    try {
+      return await response.json();
+    } catch {
+      return {};
+    }
+  };
+
+  const getResponseError = (payload, fallback) =>
+    payload?.error || payload?.message || fallback;
 
   const fetchFolders = async () => {
     if (!brand?.subdomain) return;
@@ -138,15 +160,24 @@ export default function Train() {
         ...(sourceUrl && { sourceUrl }),
       }),
     });
-    if (!embRes.ok) throw new Error((await embRes.json()).error);
+    const payload = await getResponsePayload(embRes);
+    if (!embRes.ok) {
+      throw new Error(getResponseError(payload, "Training failed"));
+    }
+
+    return payload;
   };
 
   const handleFileChange = async (e) => {
     const file = e.target.files[0];
-    if (!file) return;
+    if (!file || isTraining) return;
 
     setSelectedFileName(file.name);
     setUploading(true);
+    setActiveTraining({
+      type: "upload",
+      title: file.name.replace(/\.[^/.]+$/, ""),
+    });
     try {
       // Extract title from filename and truncate to 50 characters (DB limit)
       const fullTitle = file.name.replace(/\.[^/.]+$/, "");
@@ -171,8 +202,20 @@ export default function Train() {
         throw new Error("Only PDF and text files allowed");
       }
 
-      await processText(title, text, uploadFolderId || undefined, uploadSourceUrl || "");
-      alert("File uploaded successfully!");
+      const data = await processText(
+        title,
+        text,
+        uploadFolderId || undefined,
+        uploadSourceUrl || ""
+      );
+
+      setTrainingResult({
+        title,
+        docid: data.docid,
+        chunkCount: data.chunkIds?.length || 0,
+        message: data.message || "Training completed successfully",
+      });
+
       fileInputRef.current.value = "";
       setSelectedFileName("");
       setUploadSourceUrl("");
@@ -181,25 +224,39 @@ export default function Train() {
       alert(`Error: ${error.message}`);
     } finally {
       setUploading(false);
+      setActiveTraining(null);
     }
   };
 
   const handleSaveText = async (data) => {
-    if (!data.title || !data.content) return;
+    if (!data.title || !data.content || isTraining) return;
+
+    const title =
+      data.title.length > 50 ? data.title.substring(0, 50) : data.title;
 
     setUploading(true);
+    setIsModalOpen(false);
+    setActiveTraining({ type: "text", title });
     try {
-      // Truncate title to 50 characters (DB limit)
-      const title =
-        data.title.length > 50 ? data.title.substring(0, 50) : data.title;
-      await processText(title, data.content, textUploadFolderId || undefined, data.sourceUrl || "");
-      alert("Text saved successfully!");
-      setIsModalOpen(false);
+      const result = await processText(
+        title,
+        data.content,
+        textUploadFolderId || undefined,
+        data.sourceUrl || ""
+      );
+
+      setTrainingResult({
+        title,
+        docid: result.docid,
+        chunkCount: result.chunkIds?.length || 0,
+        message: result.message || "Training completed successfully",
+      });
       fetchDocuments(1, selectedFolderId);
     } catch (error) {
       alert(`Error: ${error.message}`);
     } finally {
       setUploading(false);
+      setActiveTraining(null);
     }
   };
 
@@ -288,6 +345,7 @@ export default function Train() {
   }
 
   const handleEditDocument = async (doc) => {
+    if (isTraining) return;
     setOpenMenuId(null);
     const res = await fetch(
       `/api/admin/training-documents?brand=${brand?.subdomain}&docid=${doc.docid}`
@@ -303,14 +361,24 @@ export default function Train() {
   };
 
   const handleUpdateDocument = async (updateData) => {
-    if (!editingDocument) return;
+    if (!editingDocument || isTraining) return;
+
+    const currentDocument = editingDocument;
+    const trainingTitle = updateData.title || currentDocument.title;
+
     setUploading(true);
+    setIsEditModalOpen(false);
+    setEditingDocument(null);
+    setActiveTraining({
+      type: "edit",
+      title: trainingTitle,
+    });
     try {
       const res = await fetch("/api/embeddings", {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          docid: editingDocument.docid,
+          docid: currentDocument.docid,
           text: updateData.content,
           brand: brand?.subdomain,
           title: updateData.title,
@@ -318,15 +386,23 @@ export default function Train() {
           ...(updateData.sourceUrl && { sourceUrl: updateData.sourceUrl }),
         }),
       });
-      if (!res.ok) throw new Error((await res.json()).error);
-      alert("Document updated successfully!");
-      setIsEditModalOpen(false);
-      setEditingDocument(null);
+      const payload = await getResponsePayload(res);
+      if (!res.ok) {
+        throw new Error(getResponseError(payload, "Document update failed"));
+      }
+
+      setTrainingResult({
+        title: trainingTitle,
+        docid: payload.docid || currentDocument.docid,
+        chunkCount: payload.chunkIds?.length || 0,
+        message: payload.message || "Document updated successfully",
+      });
       fetchDocuments(currentPage, selectedFolderId);
     } catch (error) {
       alert(`Error: ${error.message}`);
     } finally {
       setUploading(false);
+      setActiveTraining(null);
     }
   };
 
@@ -369,6 +445,19 @@ export default function Train() {
           </h1>
         </div>
 
+        {isTraining && (
+          <div className="mb-6 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+            <Loader2 className="mt-0.5 h-4 w-4 animate-spin shrink-0" />
+            <div>
+              <p className="font-semibold">Training in progress</p>
+              <p>
+                {activeTraining?.title || "Document"} is being trained. New
+                training is disabled until this completes.
+              </p>
+            </div>
+          </div>
+        )}
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {/* PDF Document Card */}
           <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow flex flex-col h-full">
@@ -381,7 +470,8 @@ export default function Train() {
             <select
               value={uploadFolderId}
               onChange={(e) => setUploadFolderId(e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2"
+              disabled={isTraining}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2 disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <option value="">Unfiled</option>
               {folders.map((f) => (
@@ -395,7 +485,8 @@ export default function Train() {
               value={uploadSourceUrl}
               onChange={(e) => setUploadSourceUrl(e.target.value)}
               placeholder="Source URL (optional)"
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2 placeholder:text-gray-400"
+              disabled={isTraining}
+              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
             />
             <input
               type="file"
@@ -411,10 +502,10 @@ export default function Train() {
             </div>
             <button
               onClick={() => fileInputRef.current?.click()}
-              disabled={uploading}
+              disabled={uploading || isTraining}
               className="w-full px-4 py-2 bg-[#EBF3FF] text-[#242473] rounded-lg hover:bg-white transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
             >
-              {uploading ? "Uploading..." : "Choose file"}
+              {isTraining ? "Training..." : uploading ? "Uploading..." : "Choose file"}
             </button>
           </div>
 
@@ -452,9 +543,10 @@ export default function Train() {
             </p>
             <button
               onClick={() => setIsModalOpen(true)}
-              className="w-full px-4 py-2 bg-[#DBFFD5] rounded-lg hover:bg-green-600 hover:text-white transition-colors text-sm font-medium mt-auto"
+              disabled={isTraining}
+              className="w-full px-4 py-2 bg-[#DBFFD5] rounded-lg hover:bg-green-600 hover:text-white transition-colors text-sm font-medium mt-auto disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Add text
+              {isTraining ? "Training..." : "Add text"}
             </button>
           </div>
         </div>
@@ -584,6 +676,7 @@ export default function Train() {
                       isSelected={selectedDocs.has(doc.docid)}
                       onToggleSelect={() => toggleSelect(doc.docid)}
                       folderName={folders.find((f) => String(f._id) === String(doc.folderId))?.name ?? null}
+                      trainingLocked={isTraining}
                     />
                   ))}
                 </div>
@@ -624,6 +717,7 @@ export default function Train() {
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
         onSave={handleSaveText}
+        isSaving={isTraining}
         folders={folders}
         folderId={textUploadFolderId}
         onFolderChange={setTextUploadFolderId}
@@ -641,6 +735,7 @@ export default function Train() {
         initialContent={editingDocument?.text || ""}
         initialSourceUrl={editingDocument?.sourceUrl || ""}
         isEditMode={true}
+        isSaving={isTraining}
         folders={folders}
         folderId={editFolderId}
         onFolderChange={setEditFolderId}
@@ -654,6 +749,62 @@ export default function Train() {
         }}
         document={selectedDocument}
       />
+
+      {trainingResult && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
+          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+            <div className="mb-4 flex items-start justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="h-8 w-8 text-green-600" />
+                <div>
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Training Completed
+                  </h2>
+                  <p className="text-sm text-gray-500">
+                    {trainingResult.message}
+                  </p>
+                </div>
+              </div>
+              <button
+                onClick={() => setTrainingResult(null)}
+                className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            <div className="space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
+              <div>
+                <p className="text-gray-500">Document</p>
+                <p className="font-medium text-gray-900 break-words">
+                  {trainingResult.title}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Doc ID</p>
+                <p className="font-mono text-xs text-gray-900 break-all">
+                  {trainingResult.docid}
+                </p>
+              </div>
+              <div>
+                <p className="text-gray-500">Chunks trained</p>
+                <p className="font-medium text-gray-900">
+                  {trainingResult.chunkCount}
+                </p>
+              </div>
+            </div>
+
+            <div className="mt-5 flex justify-end">
+              <button
+                onClick={() => setTrainingResult(null)}
+                className="rounded-xl bg-[#242473] px-4 py-2 text-sm font-medium text-white hover:bg-[#1d1d62]"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </>
   );
 }
