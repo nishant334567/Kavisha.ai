@@ -263,7 +263,10 @@ export default function Community() {
                             razorpay_signature: response.razorpay_signature,
                             userId: thisUser,
                             type: "community_connect",
-                            metadata: { targetUserId: otherUser },
+                            metadata: {
+                                targetUserId: otherUser,
+                                brand: brand?.subdomain || "",
+                            },
                             amount: data.amount,
                             currency: data.currency || "INR",
                         }),

@@ -45,6 +45,11 @@ export async function POST(request) {
           amount,
           currency = "INR",
         } = body ?? {};
+        const normalizedType = String(type || "").trim();
+        const normalizedMetadata =
+          metadata && typeof metadata === "object" && !Array.isArray(metadata)
+            ? { ...metadata }
+            : {};
         if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
           return NextResponse.json(
             { success: false, error: "Missing payment details" },
@@ -93,19 +98,68 @@ export async function POST(request) {
           );
         }
 
+        if (!normalizedType) {
+          return NextResponse.json(
+            { success: false, error: "type required" },
+            { status: 400 },
+          );
+        }
+
+        let appointment = null;
+        let paymentBrand = String(normalizedMetadata.brand || "").trim();
+
+        if (normalizedType === "booking") {
+          const appointmentId = normalizedMetadata?.appointmentId;
+          if (!appointmentId) {
+            return NextResponse.json(
+              { success: false, error: "Missing appointmentId" },
+              { status: 400 },
+            );
+          }
+          appointment = await BookingAppointment.findOne({
+            _id: new mongoose.Types.ObjectId(appointmentId),
+            paymentStatus: "pending",
+          });
+          if (!appointment) {
+            return NextResponse.json(
+              {
+                success: false,
+                error: "Appointment not found or already paid",
+              },
+              { status: 400 },
+            );
+          }
+          if (String(appointment.customerId) !== String(payerUserId)) {
+            return NextResponse.json(
+              { success: false, error: "Appointment does not belong to payer" },
+              { status: 403 },
+            );
+          }
+          paymentBrand = String(appointment.brand || paymentBrand || "").trim();
+          normalizedMetadata.brand = paymentBrand;
+        }
+
+        if (!paymentBrand) {
+          return NextResponse.json(
+            { success: false, error: "brand required" },
+            { status: 400 },
+          );
+        }
+
         await Payment.create({
           razorpayOrderId: razorpay_order_id,
           razorpayPaymentId: razorpay_payment_id,
           payerUserId,
           amount: amount != null ? amount : 2000,
           currency,
-          type,
-          metadata,
+          type: normalizedType,
+          brand: paymentBrand,
+          metadata: normalizedMetadata,
         });
 
-        if (type === "community_connect" && metadata?.targetUserId) {
+        if (normalizedType === "community_connect" && normalizedMetadata?.targetUserId) {
           const [targetUser, payerUser] = await Promise.all([
-            User.findById(metadata.targetUserId).select("email name").lean(),
+            User.findById(normalizedMetadata.targetUserId).select("email name").lean(),
             User.findById(payerUserId).select("name").lean(),
           ]);
           const to = targetUser?.email;
@@ -122,13 +176,13 @@ export async function POST(request) {
           }
         }
 
-        if (type === "product_order") {
+        if (normalizedType === "product_order") {
           const {
             brand,
             cartItems = [],
             shippingPhone = "",
             shippingAddress = "",
-          } = metadata;
+          } = normalizedMetadata;
           if (!brand || !Array.isArray(cartItems) || cartItems.length === 0) {
             return NextResponse.json(
               { success: false, error: "Invalid product order metadata" },
@@ -245,33 +299,7 @@ export async function POST(request) {
           }
         }
 
-        if (type === "booking") {
-          const appointmentId = metadata?.appointmentId;
-          if (!appointmentId) {
-            return NextResponse.json(
-              { success: false, error: "Missing appointmentId" },
-              { status: 400 },
-            );
-          }
-          const appointment = await BookingAppointment.findOne({
-            _id: new mongoose.Types.ObjectId(appointmentId),
-            paymentStatus: "pending",
-          });
-          if (!appointment) {
-            return NextResponse.json(
-              {
-                success: false,
-                error: "Appointment not found or already paid",
-              },
-              { status: 400 },
-            );
-          }
-          if (String(appointment.customerId) !== String(payerUserId)) {
-            return NextResponse.json(
-              { success: false, error: "Appointment does not belong to payer" },
-              { status: 403 },
-            );
-          }
+        if (normalizedType === "booking" && appointment) {
           await BookingAppointment.updateOne(
             { _id: appointment._id },
             {

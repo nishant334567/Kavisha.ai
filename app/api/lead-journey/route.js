@@ -113,7 +113,6 @@ export async function POST(req) {
         }
 
         const prompt = await getLeadPromptFromSanity(brand, serviceKey);
-        console.log("[lead-journey] Fetched prompt (brand=%s, serviceKey=%s):", brand, serviceKey, prompt || "(empty)");
 
         let inputToken = 0;
         let outputToken = 0;
@@ -182,7 +181,6 @@ export async function POST(req) {
           requery !== undefined && requery !== null
             ? String(requery).trim()
             : userMessage;
-        console.log("[lead-journey] Rewriter – userMessage:", userMessage, "| requery:", requery, "| betterQuery:", betterQuery);
 
       let context = "";
       const uniqueContext = new Map(); // Declare at higher scope so it's always available
