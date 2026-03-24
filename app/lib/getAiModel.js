@@ -8,7 +8,7 @@ export function getGeminiModel(modelName = "gemini-2.5-pro") {
     const privateKey = process.env.GCP_PRIVATE_KEY
       ? process.env.GCP_PRIVATE_KEY.replace(/\\n/g, "\n")
       : undefined;
-    const location = 'global';
+    const location = process.env.GOOGLE_CLOUD_LOCATION || "us-central1";
 
     if (!projectId || !clientEmail || !privateKey) {
       return null;
