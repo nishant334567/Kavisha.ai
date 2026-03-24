@@ -13,6 +13,7 @@ const EMPTY_SOCIAL = {
   linkedin: { enabled: false, url: "" },
   twitter: { enabled: false, url: "" },
   instagram: { enabled: false, url: "" },
+  facebook: { enabled: false, url: "" },
 };
 
 const SOCIAL_FIELDS = [
@@ -20,6 +21,7 @@ const SOCIAL_FIELDS = [
   { key: "linkedin", label: "LinkedIn" },
   { key: "twitter", label: "Twitter / X" },
   { key: "instagram", label: "Instagram" },
+  { key: "facebook", label: "Facebook" },
 ];
 
 function mergeSocial(raw) {
@@ -46,8 +48,6 @@ export default function AdminLinksPage() {
     searchParams?.get("brand")?.trim() ||
     brandContext?.subdomain;
 
-  const [brandName, setBrandName] = useState("");
-  const [title, setTitle] = useState("My links");
   const [links, setLinks] = useState([{ label: "", url: "", image: "" }]);
   const [social, setSocial] = useState(EMPTY_SOCIAL);
   const [loading, setLoading] = useState(true);
@@ -67,8 +67,6 @@ export default function AdminLinksPage() {
         const data = await res.json();
         if (!cancelled && res.ok && data?.linkTree) {
           const lt = data.linkTree;
-          setBrandName(lt.brandName || "");
-          setTitle(lt.title || "My links");
           setLinks(
             Array.isArray(lt.links) && lt.links.length > 0
               ? lt.links.map((l) => ({ label: l.label || "", url: l.url || "", image: l.image || "", displayUrl: undefined }))
@@ -145,8 +143,6 @@ export default function AdminLinksPage() {
     try {
       const payload = {
         brand,
-        brandName: brandName.trim(),
-        title: title.trim() || "My links",
         links: links
           .map((l) => ({
             label: (l.label || "").trim(),
@@ -202,30 +198,6 @@ export default function AdminLinksPage() {
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Brand name (display)
-          </label>
-          <input
-            type="text"
-            value={brandName}
-            onChange={(e) => setBrandName(e.target.value)}
-            placeholder="e.g. John Doe"
-            className={INPUT_CLASS}
-          />
-        </div>
-        <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
-            Title
-          </label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            placeholder="My links"
-            className={INPUT_CLASS}
-          />
-        </div>
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="block text-sm font-medium text-gray-700">Links</label>

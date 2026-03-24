@@ -149,7 +149,7 @@ export default function ChatSidebar({
               onClick={() => toggleLeftSideBar()}
             ></div>
 
-            <div className="font-baloo h-full max-h-[100vh] md:mt-12 md:h-[calc(100vh-3rem)] fixed top-0 left-0 z-40 flex flex-col w-[280px] border-r border-border bg-white shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div className="font-baloo h-full max-h-[100vh] md:mt-12 md:h-[calc(100vh-3rem)] fixed top-0 left-0 z-40 flex flex-col w-[280px] border-r border-border bg-background shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
               <div className="flex-1 flex flex-col min-h-0 p-4">
               <div className="flex justify-between">
                 <p className="font-semibold text-muted">Your Chats</p>
@@ -164,7 +164,7 @@ export default function ChatSidebar({
                     <>
                       <div className="relative">
                         <button
-                          className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors"
+                        className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors"
                           onClick={() => setShowCommunityNewDropdown((v) => !v)}
                         >
                           New
@@ -214,20 +214,6 @@ export default function ChatSidebar({
                           </>
                         )}
                       </div>
-                      <button
-                        type="button"
-                        className="flex gap-2 justify-center text-xs bg-muted-bg text-foreground w-full p-2 rounded-md font-medium hover:bg-muted-bg/80 transition-colors mt-2"
-                        onClick={() => {
-                          if (pathname === "/chats") {
-                            setIscollapsed(true);
-                            onCollapsedChange?.(true);
-                          } else {
-                            router.push("/chats");
-                          }
-                        }}
-                      >
-                        Avataar chats
-                      </button>
                       <button
                         type="button"
                         className="flex gap-2 justify-center text-xs bg-muted-bg text-foreground w-full p-2 rounded-md font-medium hover:bg-muted-bg/80 transition-colors mt-2"
@@ -295,20 +281,6 @@ export default function ChatSidebar({
                             </>
                           )}
                       </div>
-                      <button
-                        type="button"
-                        className="flex gap-2 justify-center text-xs bg-muted-bg text-foreground w-full p-2 rounded-md font-medium hover:bg-muted-bg/80 transition-colors mt-2"
-                        onClick={() => {
-                          if (pathname === "/community") {
-                            setIscollapsed(true);
-                            onCollapsedChange?.(true);
-                          } else {
-                            router.push("/community");
-                          }
-                        }}
-                      >
-                        Community
-                      </button>
                     </>
                   )}
                 </div>
@@ -328,12 +300,12 @@ export default function ChatSidebar({
                   ) : allChats?.sessionIds?.length > 0 ? (
                     allChats.sessionIds.map((id, idx) => (
                       <div
-                        className={`flex items-center w-full gap-2 rounded-md transition-colors ${currentChatId === id ? "bg-gray-100" : ""} hover:bg-gray-100`}
+                        className={`flex items-center w-full gap-2 rounded-md transition-colors ${currentChatId === id ? "bg-muted-bg" : ""} hover:bg-muted-bg`}
                         key={id}
                       >
                         <button
                           className={`text-muted px-2 py-3 flex-1 text-left min-w-0 truncate text-sm rounded-md
-                    ${currentChatId === id ? "font-semibold text-foreground" : ""}
+                    ${currentChatId === id ? "font-semibold text-foreground" : "text-foreground"}
                   `}
                           type="button"
                           onClick={() => {
@@ -398,17 +370,17 @@ export default function ChatSidebar({
               </div>
 
               {/* Profile card - fixed at bottom */}
-              <div className="font-baloo flex-shrink-0 border-t border-gray-200 pt-3 pb-2 mt-auto">
+              <div className="font-baloo flex-shrink-0 border-t border-border pt-3 pb-2 mt-auto">
                 <div className="flex items-center gap-3 w-full">
                   <div className="flex flex-col overflow-hidden min-w-0 flex-1">
-                    <span className="font-bold text-gray-900 text-sm uppercase tracking-[0.08em] truncate">
+                    <span className="font-bold text-foreground text-sm uppercase tracking-[0.08em] truncate">
                       {user?.name || "User"}
                     </span>
-                    <span className="text-xs text-gray-600 truncate mt-0.5">
+                    <span className="text-xs text-muted truncate mt-0.5">
                       {user?.email}
                     </span>
                   </div>
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex-shrink-0 overflow-hidden flex items-center justify-center">
+                  <div className="w-10 h-10 rounded-full bg-muted-bg flex-shrink-0 overflow-hidden flex items-center justify-center">
                     {user?.image ? (
                       <img
                         src={user.image}
@@ -416,7 +388,7 @@ export default function ChatSidebar({
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <span className="text-sm font-semibold text-gray-600">
+                      <span className="text-sm font-semibold text-muted">
                         {(user?.name || "U").charAt(0).toUpperCase()}
                       </span>
                     )}

@@ -29,6 +29,7 @@ const LinkTreeSchema = new mongoose.Schema(
       linkedin: { type: SocialEntrySchema, default: () => ({ enabled: false, url: "" }) },
       twitter: { type: SocialEntrySchema, default: () => ({ enabled: false, url: "" }) },
       instagram: { type: SocialEntrySchema, default: () => ({ enabled: false, url: "" }) },
+      facebook: { type: SocialEntrySchema, default: () => ({ enabled: false, url: "" }) },
     },
   },
   { timestamps: true }
