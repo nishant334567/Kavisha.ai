@@ -49,6 +49,7 @@ export default function AdminNavbar() {
     ...(brand?.enableBlogs ? [{ name: "Blogs", path: `/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
     { name: "Links", path: `/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}` },
     { name: "Train My Avataar", path: `/admin/${brand?.subdomain}/train/v2` },
+    { name: "Revenue", path: `/admin/${brand?.subdomain}/revenue` },
     { name: "My Profile", path: `/admin/${brand?.subdomain}/edit-profile` },
   ];
   return (
@@ -121,6 +122,13 @@ export default function AdminNavbar() {
               onClick={() => go(`/admin/${brand?.subdomain}/train/v2`)}
             >
               TRAIN MY AVATAAR
+            </li>
+            <li
+              className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/revenue") ? "font-semibold text-gray-900" : ""
+                }`}
+              onClick={() => go(`/admin/${brand?.subdomain}/revenue`)}
+            >
+              REVENUE
             </li>
             <li
               className={`cursor-pointer uppercase tracking-wide flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/edit-profile") ? "font-semibold text-gray-900" : ""

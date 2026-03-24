@@ -182,7 +182,7 @@ export default function ServiceDetailPage() {
               razorpay_signature: response.razorpay_signature,
               userId: user.id,
               type: "booking",
-              metadata: { appointmentId: data.appointmentId },
+              metadata: { appointmentId: data.appointmentId, brand },
               amount: data.amount,
               currency: data.currency || "INR",
             }),

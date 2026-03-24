@@ -45,9 +45,6 @@ export default function ChatRequests() {
     key === "" ? users.length : users.filter((u) => u.sessions?.some((s) => s.serviceKey === key)).length;
 
 
-  useEffect(() => {
-    console.log("List of Emails:", emailList)
-  }, [emailList])
   const handleAssignSuccess = () => {
     applyFilters(filters);
   };

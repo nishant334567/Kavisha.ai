@@ -281,6 +281,9 @@ export default function AdminOrdersPage() {
                                 <p>
                                     <strong>Type:</strong> {paymentModal.payment?.type || "—"}
                                 </p>
+                                <p>
+                                    <strong>Brand:</strong> {paymentModal.payment?.brand || "—"}
+                                </p>
                             </div>
                         )}
                         <button

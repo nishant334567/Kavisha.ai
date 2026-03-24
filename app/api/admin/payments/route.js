@@ -2,6 +2,15 @@ import { connectDB } from "@/app/lib/db";
 import Payment from "@/app/models/Payment";
 import { NextResponse } from "next/server";
 
+function normalizePayment(payment) {
+    if (!payment) return payment;
+    return {
+        ...payment,
+        type: payment.type || payment.metadata?.type || "",
+        brand: payment.brand || payment.metadata?.brand || "",
+    };
+}
+
 export async function GET(req) {
     try {
         await connectDB();
@@ -14,14 +23,20 @@ export async function GET(req) {
             if (!payment) {
                 return NextResponse.json({ error: "Payment not found" }, { status: 404 });
             }
-            return NextResponse.json({ payment }, { status: 200 });
+            return NextResponse.json({ payment: normalizePayment(payment) }, { status: 200 });
         }
 
         if (brand) {
-            const payments = await Payment.find({ type: "product_order", "metadata.brand": brand })
+            const payments = await Payment.find({
+                type: "product_order",
+                $or: [{ brand }, { "metadata.brand": brand }],
+            })
                 .sort({ createdAt: -1 })
                 .lean();
-            return NextResponse.json({ payments }, { status: 200 });
+            return NextResponse.json(
+                { payments: payments.map(normalizePayment) },
+                { status: 200 }
+            );
         }
 
         return NextResponse.json({ error: "razorpayOrderId or brand required" }, { status: 400 });
