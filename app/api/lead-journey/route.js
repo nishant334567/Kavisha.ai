@@ -14,12 +14,17 @@ import {
 } from "../../lib/gemini-rest.js";
 import { connectDB } from "../../lib/db.js";
 
+const LEAD_JOURNEY_GEMINI_MAX_429_RETRIES = 2;
+const LEAD_JOURNEY_GEMINI_RETRY_DELAY_MS = 1500;
+
 // Simple token estimation: words * 1.33
 function estimateTokens(text) {
   if (!text || typeof text !== "string") return 0;
   const words = text.trim().split(/\s+/).filter(Boolean);
   return Math.ceil(words.length * 1.33);
 }
+
+const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 function serializeError(error) {
   if (!error) return null;
@@ -42,6 +47,37 @@ function errorResponse(status, error, stage, details = null) {
     },
     { status }
   );
+}
+
+function isRetryableGemini429(error) {
+  return error?.status === 429 || error?.vertexStatus === "RESOURCE_EXHAUSTED";
+}
+
+async function generateLeadJourneyGeminiContent(params) {
+  let lastError;
+
+  for (
+    let attempt = 0;
+    attempt <= LEAD_JOURNEY_GEMINI_MAX_429_RETRIES;
+    attempt++
+  ) {
+    try {
+      return await generateGeminiContentRest(params);
+    } catch (error) {
+      lastError = error;
+
+      if (
+        attempt === LEAD_JOURNEY_GEMINI_MAX_429_RETRIES ||
+        !isRetryableGemini429(error)
+      ) {
+        throw error;
+      }
+
+      await delay(LEAD_JOURNEY_GEMINI_RETRY_DELAY_MS * (attempt + 1));
+    }
+  }
+
+  throw lastError;
 }
 
 export async function POST(req) {
@@ -110,7 +146,7 @@ export async function POST(req) {
           userMessage
         );
         inputToken += estimateTokens(rewritePrompt);
-        const responseQuery = await generateGeminiContentRest({
+        const responseQuery = await generateLeadJourneyGeminiContent({
           modelName,
           location: "global",
           contents: [
@@ -338,7 +374,7 @@ export async function POST(req) {
       ];
 
       try {
-        let responseGemini = await generateGeminiContentRest({
+        let responseGemini = await generateLeadJourneyGeminiContent({
           modelName,
           location: "global",
           contents: geminiContents,
@@ -405,7 +441,7 @@ export async function POST(req) {
           const strictPrompt = `CRITICAL ERROR: Your previous response had ${reParts.length} parts but the format requires EXACTLY 4 parts separated by ////.\n\nYou MUST follow the format specified in the system instructions. This is MANDATORY, not optional.\n\nREMINDER: Do NOT include [CHUNK_ID:...] markers in your response text. Only list the chunk IDs in Part 4.\n\nPlease retry with the correct 4-part format.`;
 
           inputToken += estimateTokens(strictPrompt);
-          responseGemini = await generateGeminiContentRest({
+          responseGemini = await generateLeadJourneyGeminiContent({
             modelName,
             location: "global",
             contents: [
