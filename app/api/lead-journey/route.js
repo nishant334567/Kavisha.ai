@@ -8,7 +8,10 @@ import { getUserFromDB } from "../../lib/firebase/get-user";
 import { SYSTEM_PROMPT_LEAD } from "../../lib/systemPrompt.js";
 import { buildLeadRewritePrompt } from "../../lib/rewriteLeadQueryPrompt.js";
 import { getLeadPromptFromSanity } from "../../lib/getLeadPromptFromSanity.js";
-import getGeminiModel from "../../lib/getAiModel.js";
+import {
+  extractGeminiText,
+  generateGeminiContentRest,
+} from "../../lib/gemini-rest.js";
 import { connectDB } from "../../lib/db.js";
 
 // Simple token estimation: words * 1.33
@@ -80,10 +83,10 @@ export async function POST(req) {
         let outputToken = 0;
         let sourceChunkIds = [];
         let sourceUrls = [];
-        const model = getGeminiModel(process.env.AI_MODEL ?? "gemini-2.5-flash");
+        const modelName = process.env.AI_MODEL ?? "gemini-2.5-flash";
 
-        if (!model) {
-          return errorResponse(500, "AI model not available", "load-model");
+        if (!modelName) {
+          return errorResponse(500, "AI model not configured", "load-model");
         }
         // Get messages excluding the current/last message
         const messagesExcludingCurrent =
@@ -107,7 +110,9 @@ export async function POST(req) {
           userMessage
         );
         inputToken += estimateTokens(rewritePrompt);
-        const responseQuery = await model.generateContent({
+        const responseQuery = await generateGeminiContentRest({
+          modelName,
+          location: "global",
           contents: [
             {
               role: "user",
@@ -119,8 +124,7 @@ export async function POST(req) {
           },
         });
 
-        let responseText =
-          responseQuery.response.candidates[0].content.parts[0].text.trim();
+        let responseText = extractGeminiText(responseQuery);
         outputToken += estimateTokens(responseText);
 
       // Extract JSON if wrapped in markdown
@@ -334,12 +338,13 @@ export async function POST(req) {
       ];
 
       try {
-        let responseGemini = await model.generateContent({
+        let responseGemini = await generateGeminiContentRest({
+          modelName,
+          location: "global",
           contents: geminiContents,
         });
 
-        let responseText =
-          responseGemini.response.candidates[0].content.parts[0].text;
+        let responseText = extractGeminiText(responseGemini);
         outputToken += estimateTokens(responseText);
 
         let reParts = responseText.split("////").map((item) => item.trim());
@@ -400,7 +405,9 @@ export async function POST(req) {
           const strictPrompt = `CRITICAL ERROR: Your previous response had ${reParts.length} parts but the format requires EXACTLY 4 parts separated by ////.\n\nYou MUST follow the format specified in the system instructions. This is MANDATORY, not optional.\n\nREMINDER: Do NOT include [CHUNK_ID:...] markers in your response text. Only list the chunk IDs in Part 4.\n\nPlease retry with the correct 4-part format.`;
 
           inputToken += estimateTokens(strictPrompt);
-          responseGemini = await model.generateContent({
+          responseGemini = await generateGeminiContentRest({
+            modelName,
+            location: "global",
             contents: [
               {
                 role: "user",
@@ -413,8 +420,7 @@ export async function POST(req) {
             ],
           });
 
-          responseText =
-            responseGemini.response.candidates[0].content.parts[0].text;
+          responseText = extractGeminiText(responseGemini);
           outputToken = estimateTokens(responseText);
           reParts = responseText.split("////").map((item) => item.trim());
 

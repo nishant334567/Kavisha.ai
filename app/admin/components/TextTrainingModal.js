@@ -13,6 +13,7 @@ export default function TextTrainingModal({
   folderId = "",
   onFolderChange,
   initialSourceUrl = "",
+  isSaving = false,
 }) {
   const [title, setTitle] = useState("");
   const [content, setContent] = useState("");
@@ -32,16 +33,15 @@ export default function TextTrainingModal({
 
   if (!isOpen) return null;
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (onSave && title && content) {
-      onSave({
+      await onSave({
         title,
         content,
         ...(onFolderChange && { folderId: folderId ?? "" }),
         sourceUrl: sourceUrl || "",
       });
     }
-    onClose();
   };
 
   return (
@@ -54,6 +54,7 @@ export default function TextTrainingModal({
           </h2>
           <button
             onClick={onClose}
+            disabled={isSaving}
             className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
           >
             <X className="w-5 h-5" />
@@ -70,8 +71,9 @@ export default function TextTrainingModal({
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
+              disabled={isSaving}
               placeholder="Enter document title"
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 text-gray-900"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
           {onFolderChange && (
@@ -82,7 +84,8 @@ export default function TextTrainingModal({
               <select
                 value={folderId}
                 onChange={(e) => onFolderChange(e.target.value)}
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 text-gray-900"
+                disabled={isSaving}
+                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <option value="">Unfiled</option>
                 {folders.map((f) => (
@@ -101,8 +104,9 @@ export default function TextTrainingModal({
               type="url"
               value={sourceUrl}
               onChange={(e) => setSourceUrl(e.target.value)}
+              disabled={isSaving}
               placeholder="https://example.com/article"
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 text-gray-900"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
           <div>
@@ -112,9 +116,10 @@ export default function TextTrainingModal({
             <textarea
               value={content}
               onChange={(e) => setContent(e.target.value)}
+              disabled={isSaving}
               placeholder="Enter your content here..."
               rows={14}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent resize-none transition-all duration-200 placeholder:text-gray-400 text-gray-900 leading-relaxed"
+              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent resize-none transition-all duration-200 placeholder:text-gray-400 text-gray-900 leading-relaxed disabled:opacity-50 disabled:cursor-not-allowed"
             />
           </div>
         </div>
@@ -123,16 +128,17 @@ export default function TextTrainingModal({
         <div className="flex justify-end gap-3 px-8 py-5 border-t border-gray-100 bg-white">
           <button
             onClick={onClose}
-            className="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium shadow-sm"
+            disabled={isSaving}
+            className="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
-            disabled={!title || !content}
+            disabled={!title || !content || isSaving}
             className="px-6 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
           >
-            {isEditMode ? "Update" : "Save"}
+            {isSaving ? "Training..." : isEditMode ? "Update" : "Save"}
           </button>
         </div>
       </div>

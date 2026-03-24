@@ -3,6 +3,12 @@ import pc from "@/app/lib/pinecone";
 import { connectDB } from "@/app/lib/db";
 import TrainingData from "@/app/models/TrainingData";
 
+function buildChunkId(docid, index, embeddingVersion = 0) {
+  return embeddingVersion > 0
+    ? `${docid}_v${embeddingVersion}_${index}`
+    : `${docid}_${index}`;
+}
+
 export async function GET(req) {
   const { searchParams } = new URL(req.url);
   const docid = searchParams.get("docid");
@@ -24,13 +30,14 @@ export async function GET(req) {
   }
 
   const totalChunks = doc.totalChunks || 0;
+  const embeddingVersion = doc.embeddingVersion ?? 0;
   if (totalChunks === 0) {
     return NextResponse.json({ chunks: [], totalChunks: 0 }, { status: 200 });
   }
 
   const chunkIds = Array(totalChunks)
     .fill(null)
-    .map((_, index) => `${docid}_${index}`);
+    .map((_, index) => buildChunkId(docid, index, embeddingVersion));
 
   const result = await pc
     .index("intelligent-kavisha")

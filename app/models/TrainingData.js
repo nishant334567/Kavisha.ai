@@ -29,6 +29,11 @@ const TrainingDataSchema = new mongoose.Schema(
       type: Number,
       required: true,
     },
+    embeddingVersion: {
+      type: Number,
+      required: false,
+      default: 0,
+    },
     chunkSize: {
       type: Number,
     },

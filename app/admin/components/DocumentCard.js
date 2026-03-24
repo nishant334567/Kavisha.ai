@@ -14,6 +14,7 @@ export default function DocumentCard({
   isSelected,
   onToggleSelect,
   folderName,
+  trainingLocked = false,
 }) {
 
   const card = (
@@ -58,9 +59,10 @@ export default function DocumentCard({
                 e.stopPropagation();
                 onEdit(doc);
               }}
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              disabled={trainingLocked}
+              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:text-gray-400 disabled:bg-transparent disabled:cursor-not-allowed"
             >
-              Edit
+              {trainingLocked ? "Edit disabled" : "Edit"}
             </button>
             <button
               onClick={(e) => {
