@@ -11,6 +11,7 @@ import {
   Linkedin,
   Twitter,
   Instagram,
+  Facebook,
 } from "lucide-react";
 
 function domainLabel(url) {
@@ -29,6 +30,7 @@ const SOCIAL_ICONS = [
   { key: "linkedin", label: "LinkedIn", Icon: Linkedin },
   { key: "twitter", label: "Twitter", Icon: Twitter },
   { key: "instagram", label: "Instagram", Icon: Instagram },
+  { key: "facebook", label: "Facebook", Icon: Facebook },
 ];
 
 function socialHref(url) {
@@ -58,14 +60,9 @@ export default function LinksPage() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
 
-  const isCurrentBrand = brand && brandContext?.subdomain === brand;
-  const headerName = isCurrentBrand
-    ? (brandContext?.brandName ?? "")
-    : (linkTree?.brandName?.trim() ?? brand ?? "");
-  const headerImage = isCurrentBrand ? brandContext?.brandImageUrl ?? null : null;
-  const headerTitle = isCurrentBrand
-    ? (brandContext?.title ?? "")
-    : (linkTree?.title?.trim() ?? "");
+  const headerName = brandContext?.brandName?.trim() || brand || "";
+  const headerImage = brandContext?.brandImageUrl ?? null;
+  const headerTitle = brandContext?.title?.trim() || "";
 
   useEffect(() => {
     if (!brand) {
@@ -97,7 +94,7 @@ export default function LinksPage() {
     try {
       if (navigator.share) {
         await navigator.share({
-          title: linkTree?.title || "My links",
+          title: headerTitle || headerName || "My links",
           text: headerName || "Check out my links",
           url: shareUrl,
         });

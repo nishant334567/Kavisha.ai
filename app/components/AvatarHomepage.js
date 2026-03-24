@@ -57,10 +57,11 @@ export default function AvatarHomepage() {
     { label: "COMMUNITY", path: "/community" },
     { label: "LINKS", path: `/links${linksQs}` },
   ];
+  const contentSpacingClass = user ? "pt-2 md:pt-0" : "pt-2 md:pt-4";
 
   return (
     <div className="h-full flex flex-col bg-background">
-      <div className="flex-1 overflow-y-auto mx-auto w-full md:max-w-[60%] md:px-8 pt-2 md:pt-0 space-y-4 pb-32 md:pb-24">
+      <div className={`flex-1 overflow-y-auto mx-auto w-full md:max-w-[60%] md:px-8 ${contentSpacingClass} space-y-4 pb-32 md:pb-24`}>
         {/* <div className="md:hidden flex gap-4 my-2 px-4">
           <img
             src={brand?.logoUrl}
@@ -141,7 +142,8 @@ export default function AvatarHomepage() {
             <button
               onClick={handleSignIn}
               disabled={signingIn}
-              className="font-baloo flex items-center gap-2 rounded-full bg-gradient-to-r from-[#008282] to-[#17638C] px-6 py-3 text-base font-medium text-white shadow-sm transition-all hover:brightness-110 active:brightness-95 disabled:opacity-50 dark:from-[#008282] dark:to-[#17638C]"
+              className="font-baloo flex items-center gap-2 rounded-full px-6 py-3 text-base font-medium text-[#1f2937] shadow-sm transition-opacity hover:opacity-90 active:opacity-95 disabled:opacity-50 dark:text-[#0f172a]"
+              style={{ background: LIGHT_CHAT_GRADIENT }}
             >
               {signingIn ? (
                 <span>Signing in...</span>

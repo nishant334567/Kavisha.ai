@@ -5,7 +5,7 @@ import { connectDB } from "@/app/lib/db";
 import LinkTree from "@/app/models/LinkTree";
 import { refreshImageUrl } from "@/app/lib/gcs";
 
-const SOCIAL_KEYS = ["youtube", "linkedin", "twitter", "instagram"];
+const SOCIAL_KEYS = ["youtube", "linkedin", "twitter", "instagram", "facebook"];
 
 function parseSocialFromBody(body) {
   const raw = body?.social && typeof body.social === "object" ? body.social : {};
@@ -56,8 +56,6 @@ export async function PUT(req) {
       try {
         const body = await req.json().catch(() => ({}));
         const brand = (body.brand || "").toString().trim();
-        const brandName = (body.brandName || "").toString().trim();
-        const title = (body.title || "").toString().trim() || "My links";
         const links = Array.isArray(body.links)
           ? body.links
             .filter((l) => l && (l.label || "").toString().trim() && (l.url || "").toString().trim())
@@ -80,7 +78,7 @@ export async function PUT(req) {
         await connectDB();
         const doc = await LinkTree.findOneAndUpdate(
           { brand },
-          { brand, brandName, title, links, social },
+          { brand, brandName: "", title: "", links, social },
           { new: true, upsert: true }
         ).lean();
 
