@@ -83,7 +83,7 @@ export default function AdminBlogsPage() {
         <button
           type="button"
           onClick={() => router.push(`/admin/blogs/add-new${qs}`)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#2D545E] text-white text-sm font-medium hover:opacity-90"
+          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#2D545E] bg-[#2D545E]/5 text-[#2D545E] text-sm font-medium hover:bg-[#2D545E]/10 transition-colors"
         >
           <Plus className="w-4 h-4" />
           New post

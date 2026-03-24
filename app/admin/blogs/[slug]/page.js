@@ -116,8 +116,8 @@ export default function AdminBlogViewPage() {
         <div className="flex items-center gap-2">
           <Link
             href={`/admin/blogs/${post.slug}/edit${qs}`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90"
-            style={{ backgroundColor: TEAL }}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium hover:bg-[#2D545E]/10 transition-colors"
+            style={{ borderColor: TEAL, color: TEAL, backgroundColor: `${TEAL}0D` }}
           >
             <Pencil className="w-4 h-4" />
             Edit
@@ -126,7 +126,7 @@ export default function AdminBlogViewPage() {
             type="button"
             onClick={handleDelete}
             disabled={deleting}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50"
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 disabled:opacity-50 transition-colors"
           >
             <Trash2 className="w-4 h-4" />
             {deleting ? "Deleting…" : "Delete"}

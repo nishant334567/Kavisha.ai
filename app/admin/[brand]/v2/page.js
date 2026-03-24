@@ -65,6 +65,33 @@ export default function AdminHome() {
       setShowInbox(false);
     }
   };
+  const topButtons = [
+    {
+      label: "Chat Requests",
+      path: `/admin/${brand?.subdomain}/chat-requests`,
+      count: countsLoading ? <LoadingDots /> : chatRequestCount,
+    },
+    {
+      label: "Community",
+      path: `/admin/${brand?.subdomain}/my-community`,
+      count: countsLoading ? <LoadingDots /> : communityCount,
+    },
+    ...(brand?.enableQuiz
+      ? [
+          {
+            label: "Quizzes/Survey",
+            path: `/admin/quiz`,
+            count: countsLoading ? <LoadingDots /> : quizSurveyAttemptCount,
+          },
+        ]
+      : []),
+  ];
+  const bottomButtons = [
+    {
+      label: "Revenue",
+      path: `/admin/${brand?.subdomain}/revenue`,
+    },
+  ];
   return (
     <div className="relative flex flex-col h-[calc(100vh-56px)] bg-white">
       <div className="flex-1 flex flex-col items-center justify-center">
@@ -73,49 +100,38 @@ export default function AdminHome() {
             Welcome, {brand?.brandName?.split(" ")?.[0]} !
           </p>
         </div>
-        <div className="mt-8 flex items-center justify-center gap-4 font-akshar">
-          <button
-            onClick={() => go(`/admin/${brand?.subdomain}/chat-requests`)}
-            className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl flex items-center gap-2"
-          >
-            Chat Requests
-            <span className="bg-gray-200 text-gray-700 text-sm md:text-base px-2 py-0.5 rounded font-normal min-w-[2ch]">
-              {countsLoading ? <LoadingDots /> : chatRequestCount}
-            </span>
-          </button>
-          <div className="w-px h-6 bg-gray-300 self-center"></div>
-          <button
-            onClick={() => go(`/admin/${brand?.subdomain}/my-community`)}
-            className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl flex items-center gap-2"
-          >
-            Community
-            <span className="bg-gray-200 text-gray-700 text-sm md:text-base px-2 py-0.5 rounded font-normal min-w-[2ch]">
-              {countsLoading ? <LoadingDots /> : communityCount}
-            </span>
-          </button>
-          {brand?.enableQuiz && (
+        <div className="mt-8 flex flex-col items-center justify-center gap-4 font-akshar">
+          <div className="flex flex-wrap items-center justify-center gap-y-3">
+            {topButtons.map((button, index) => (
+              <div key={button.label} className="flex items-center">
+                {index > 0 && <div className="mx-1 h-6 w-px bg-gray-300 self-center" />}
+                <button
+                  onClick={() => go(button.path)}
+                  className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl flex items-center gap-2"
+                >
+                  {button.label}
+                  <span className="bg-gray-200 text-gray-700 text-sm md:text-base px-2 py-0.5 rounded font-normal min-w-[2ch]">
+                    {button.count}
+                  </span>
+                </button>
+              </div>
+            ))}
+          </div>
+          {bottomButtons.length > 0 && (
             <>
-              <div className="w-px h-6 bg-gray-300 self-center"></div>
-              <button
-                onClick={() => go(`/admin/quiz`)}
-                className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl flex items-center gap-2"
-              >
-                Quizzes/Survey
-                <span className="bg-gray-200 text-gray-700 text-sm md:text-base px-2 py-0.5 rounded font-normal min-w-[2ch]">
-                  {countsLoading ? <LoadingDots /> : quizSurveyAttemptCount}
-                </span>
-              </button>
-            </>
-          )}
-          {brand?.enableProducts && (
-            <>
-              <div className="w-px h-6 bg-gray-300 self-center"></div>
-              <button
-                onClick={() => go(`/admin/products?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
-                className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl flex items-center gap-2"
-              >
-                Products
-              </button>
+              <div className="flex flex-wrap items-center justify-center gap-y-3">
+                {bottomButtons.map((button, index) => (
+                  <div key={button.label} className="flex items-center">
+                    {index > 0 && <div className="mx-1 h-6 w-px bg-gray-300 self-center" />}
+                    <button
+                      onClick={() => go(button.path)}
+                      className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl flex items-center gap-2"
+                    >
+                      {button.label}
+                    </button>
+                  </div>
+                ))}
+              </div>
             </>
           )}
         </div>
