@@ -230,7 +230,7 @@ export default function Navbar() {
                 disabled={isNavigating}
                 className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
               >
-                {getNavLabel("/products", "PRODUCTS")}
+                {getNavLabel("/products", "STORE")}
               </button>
             )}
             {brand?.enableJobs && (
@@ -530,7 +530,7 @@ export default function Navbar() {
                   disabled={isNavigating}
                 >
                   <ShoppingBag className={menuIconClass} strokeWidth={2} />
-                  {getNavLabel("/products", "Products")}
+                  {getNavLabel("/products", "Store")}
                 </button>
               </li>
             )}

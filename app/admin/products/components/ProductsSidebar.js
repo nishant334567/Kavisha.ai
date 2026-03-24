@@ -61,7 +61,7 @@ export default function ProductsSidebar({ onClose }) {
         <ArrowLeft className="w-5 h-5" />
       </button>
 
-      <h2 className="text-lg font-bold text-gray-900 mb-4">My Products</h2>
+      <h2 className="text-lg font-bold text-gray-900 mb-4">Store</h2>
 
       <Link
         href={addNewHref}
@@ -79,7 +79,7 @@ export default function ProductsSidebar({ onClose }) {
           Back
         </button>
         <Link href={listHref} className={navLinkClass(listHref)}>
-          List of products
+          Store items
         </Link>
         <Link href={ordersHref} className={navLinkClass(ordersHref)}>
           Orders

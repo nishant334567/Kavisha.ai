@@ -102,8 +102,8 @@ export default function BlogCardAdmin({
           </Link>
           <Link
             href={editHref}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-white text-sm font-medium hover:opacity-90 transition-opacity"
-            style={{ backgroundColor: TEAL }}
+            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-[#2D545E]/10"
+            style={{ borderColor: TEAL, color: TEAL, backgroundColor: `${TEAL}0D` }}
           >
             <Pencil className="w-4 h-4" />
             Edit
@@ -113,7 +113,7 @@ export default function BlogCardAdmin({
               type="button"
               onClick={handleDelete}
               disabled={deleting}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-red-500 text-white text-sm font-medium hover:bg-red-600 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 disabled:opacity-50 transition-colors"
             >
               <Trash2 className="w-4 h-4" />
               {deleting ? "Deleting…" : "Delete"}

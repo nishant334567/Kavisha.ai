@@ -20,7 +20,7 @@ export default function UserProductsSidebar({ onClose }) {
 
   const navItems = [
     {
-      label: "Products",
+      label: "Store",
       href: `/products${qs}`,
       match: "/products",
       icon: Package,
@@ -52,7 +52,7 @@ export default function UserProductsSidebar({ onClose }) {
           <X className="w-5 h-5" />
         </button>
       )}
-      <h2 className="mb-5 text-lg font-bold text-foreground">Shop</h2>
+      <h2 className="mb-5 text-lg font-bold text-foreground">Store</h2>
       <nav className="flex flex-col gap-1">
         {navItems.map((item) => {
           const active =

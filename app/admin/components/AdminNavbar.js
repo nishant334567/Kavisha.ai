@@ -11,9 +11,9 @@ export default function AdminNavbar() {
   const router = useRouter();
   const brand = useBrandContext();
   const pathname = usePathname();
-  const go = (path) => router.push(path);
   const [showNavoption, setShowNavoption] = useState(false);
   const [showSettingDropdown, setShowsettingDropdown] = useState(false);
+  const [loadingPath, setLoadingPath] = useState(null);
 
   const settingDropdownRef = useRef(null);
 
@@ -43,8 +43,18 @@ export default function AdminNavbar() {
 
   const navOptions = [
     { name: "Home", path: `/admin/${brand?.subdomain}/v2` },
+    {
+      name: "Chat Requests",
+      path: `/admin/${brand?.subdomain}/chat-requests`,
+    },
+    {
+      name: "Community",
+      path: `/admin/${brand?.subdomain}/my-community`,
+    },
     { name: "My Services", path: `/admin/${brand?.subdomain}/my-services` },
     ...(brand?.enableBooking ? [{ name: "Booking Services", path: `/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
+    ...(brand?.enableQuiz ? [{ name: "Quizzes/Survey", path: `/admin/quiz` }] : []),
+    ...(brand?.enableProducts ? [{ name: "Store", path: `/admin/products?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
     ...(brand?.enableJobs ? [{ name: "My Jobs", path: `/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
     ...(brand?.enableBlogs ? [{ name: "Blogs", path: `/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
     { name: "Links", path: `/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}` },
@@ -52,6 +62,16 @@ export default function AdminNavbar() {
     { name: "Revenue", path: `/admin/${brand?.subdomain}/revenue` },
     { name: "My Profile", path: `/admin/${brand?.subdomain}/edit-profile` },
   ];
+
+  const handleNavigate = (path, { closeMenu = false, closeSettings = false } = {}) => {
+    setLoadingPath(path);
+    if (closeMenu) setShowNavoption(false);
+    if (closeSettings) setShowsettingDropdown(false);
+    router.push(path);
+  };
+
+  const getNavLabel = (path, label) =>
+    loadingPath === path ? "Opening..." : label;
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 w-full h-14 bg-white border-b border-gray-200 z-50 text-gray-700">
@@ -65,10 +85,10 @@ export default function AdminNavbar() {
               />
             </div>
             <button
-              onClick={() => go(`/admin/${brand?.subdomain}/v2`)}
+              onClick={() => handleNavigate(`/admin/${brand?.subdomain}/v2`)}
               className="uppercase tracking-wide hover:opacity-80 transition-opacity text-gray-700"
             >
-              Home
+              {getNavLabel(`/admin/${brand?.subdomain}/v2`, "Home")}
             </button>
           </div>
           <button onClick={() => setShowNavoption(true)} className="md:hidden">
@@ -76,66 +96,98 @@ export default function AdminNavbar() {
           </button>
           <ul className="items-center gap-6 hidden md:flex">
             <li
+              className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/chat-requests") ? "font-semibold text-gray-900" : ""
+                }`}
+              onClick={() => handleNavigate(`/admin/${brand?.subdomain}/chat-requests`)}
+            >
+              {getNavLabel(`/admin/${brand?.subdomain}/chat-requests`, "CHAT REQUESTS")}
+            </li>
+            <li
+              className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/my-community") ? "font-semibold text-gray-900" : ""
+                }`}
+              onClick={() => handleNavigate(`/admin/${brand?.subdomain}/my-community`)}
+            >
+              {getNavLabel(`/admin/${brand?.subdomain}/my-community`, "COMMUNITY")}
+            </li>
+            <li
               className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/my-services") ? "font-semibold text-gray-900" : ""
                 }`}
-              onClick={() => go(`/admin/${brand?.subdomain}/my-services`)}
+              onClick={() => handleNavigate(`/admin/${brand?.subdomain}/my-services`)}
             >
-              MY SERVICES
+              {getNavLabel(`/admin/${brand?.subdomain}/my-services`, "MY SERVICES")}
             </li>
             {brand?.enableBooking && (
               <li
                 className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/admin/services") ? "font-semibold text-gray-900" : ""
                   }`}
-                onClick={() => go(`/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
+                onClick={() => handleNavigate(`/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
               >
-                BOOKING SERVICES
+                {getNavLabel(`/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}`, "BOOKING SERVICES")}
+              </li>
+            )}
+            {brand?.enableQuiz && (
+              <li
+                className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname === "/admin/quiz" || pathname?.startsWith("/admin/quiz/") ? "font-semibold text-gray-900" : ""
+                  }`}
+                onClick={() => handleNavigate(`/admin/quiz`)}
+              >
+                {getNavLabel(`/admin/quiz`, "QUIZZES/SURVEY")}
+              </li>
+            )}
+            {brand?.enableProducts && (
+              <li
+                className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/admin/products") ? "font-semibold text-gray-900" : ""
+                  }`}
+                onClick={() => handleNavigate(`/admin/products?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
+              >
+                {getNavLabel(`/admin/products?subdomain=${encodeURIComponent(brand?.subdomain || "")}`, "STORE")}
               </li>
             )}
             {brand?.enableJobs && (
               <li
                 className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/jobs") ? "font-semibold text-gray-900" : ""
                   }`}
-                onClick={() => go(`/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
+                onClick={() => handleNavigate(`/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
               >
-                MY JOBS
+                {getNavLabel(`/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`, "MY JOBS")}
               </li>
             )}
             {brand?.enableBlogs && (
               <li
                 className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/blogs") ? "font-semibold text-gray-900" : ""
                   }`}
-                onClick={() => go(`/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
+                onClick={() => handleNavigate(`/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
               >
-                BLOGS
+                {getNavLabel(`/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`, "BLOGS")}
               </li>
             )}
             <li
               className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/admin/links") ? "font-semibold text-gray-900" : ""
                 }`}
-              onClick={() => go(`/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
+              onClick={() => handleNavigate(`/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
             >
-              LINKS
+              {getNavLabel(`/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}`, "LINKS")}
             </li>
             <li
               className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/train") ? "font-semibold text-gray-900" : ""
                 }`}
-              onClick={() => go(`/admin/${brand?.subdomain}/train/v2`)}
+              onClick={() => handleNavigate(`/admin/${brand?.subdomain}/train/v2`)}
             >
-              TRAIN MY AVATAAR
+              {getNavLabel(`/admin/${brand?.subdomain}/train/v2`, "TRAIN MY AVATAAR")}
             </li>
             <li
               className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/revenue") ? "font-semibold text-gray-900" : ""
                 }`}
-              onClick={() => go(`/admin/${brand?.subdomain}/revenue`)}
+              onClick={() => handleNavigate(`/admin/${brand?.subdomain}/revenue`)}
             >
-              REVENUE
+              {getNavLabel(`/admin/${brand?.subdomain}/revenue`, "REVENUE")}
             </li>
             <li
               className={`cursor-pointer uppercase tracking-wide flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/edit-profile") ? "font-semibold text-gray-900" : ""
                 }`}
-              onClick={() => go(`/admin/${brand?.subdomain}/edit-profile`)}
+              onClick={() => handleNavigate(`/admin/${brand?.subdomain}/edit-profile`)}
             >
-              MY PROFILE
+              {getNavLabel(`/admin/${brand?.subdomain}/edit-profile`, "MY PROFILE")}
             </li>
             <li className="relative" ref={settingDropdownRef}>
               <button onClick={() => setShowsettingDropdown((prev) => !prev)} className="text-gray-600 hover:text-gray-900 transition-colors">
@@ -149,11 +201,10 @@ export default function AdminNavbar() {
                         key={index}
                         className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg transition-colors"
                         onClick={() => {
-                          setShowsettingDropdown(false);
                           if (item?.name === "Sign Out") {
                             signOut();
                           } else if (item?.path) {
-                            router.push(item?.path);
+                            handleNavigate(item?.path, { closeSettings: true });
                           }
                         }}
                       >
@@ -201,14 +252,14 @@ export default function AdminNavbar() {
                   key={index}
                   onClick={() => {
                     setShowNavoption(false);
-                    go(item.path);
+                    handleNavigate(item.path, { closeMenu: true });
                   }}
                   className={`w-full text-left px-4 py-3 font-akshar text-sm uppercase tracking-wide transition-colors border-b border-gray-100 ${pathname === item.path
                     ? "bg-gray-50 text-gray-900 font-semibold"
                     : "text-gray-700 hover:bg-gray-50"
                     }`}
                 >
-                  {item.name}
+                  {getNavLabel(item.path, item.name)}
                 </button>
               ))}
               {settingOptions.map((item, index) => {
