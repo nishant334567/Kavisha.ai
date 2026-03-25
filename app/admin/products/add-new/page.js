@@ -362,7 +362,7 @@ export default function AddProductPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="flex h-20 w-20 items-center justify-center rounded-lg border-2 border-dashed border-border text-muted transition-colors hover:border-[#2D545E] hover:text-[#2D545E] disabled:opacity-50"
+                className="flex h-20 w-20 items-center justify-center rounded-lg border-2 border-dashed border-border text-muted transition-colors hover:border-highlight hover:text-highlight disabled:opacity-50"
               >
                 {uploading ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
@@ -418,7 +418,7 @@ export default function AddProductPage() {
         <button
           type="submit"
           disabled={submitting}
-          className="px-6 py-2.5 rounded-lg bg-[#2D545E] text-white font-medium hover:opacity-90 disabled:opacity-50"
+          className="rounded-lg bg-highlight px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-50"
         >
           {submitting ? "Creating…" : "Add product"}
         </button>

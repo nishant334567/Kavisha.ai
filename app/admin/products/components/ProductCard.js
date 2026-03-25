@@ -2,8 +2,6 @@
 
 import Link from "next/link";
 
-const TEAL = "#2D545E";
-
 export default function ProductCard({
   product,
   onDelete,
@@ -37,10 +35,7 @@ export default function ProductCard({
           <p className="mt-1.5 min-h-[2.75rem] line-clamp-2 text-sm text-muted">
             {description}
           </p>
-          <p
-            className="mt-2 font-semibold"
-            style={{ color: TEAL }}
-          >
+          <p className="mt-2 font-semibold text-highlight">
             Rs. {priceAfterDiscount.toFixed(0)}/-
             {discount > 0 && (
               <span className="ml-1 text-sm font-normal text-muted line-through">
@@ -66,32 +61,25 @@ export default function ProductCard({
         </div>
 
         <div className="flex min-w-[140px] shrink-0 flex-col items-stretch gap-3">
-          <div className="grid grid-cols-2 overflow-hidden rounded-full border border-border">
+          <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-border">
             <span className="bg-card px-3 py-2 text-center text-sm font-medium text-foreground">
               Orders
             </span>
-            <span
-              className="px-3 py-2 text-sm font-medium text-white text-center"
-              style={{ backgroundColor: TEAL }}
-            >
+            <span className="bg-highlight px-3 py-2 text-center text-sm font-medium text-white">
               {orders}
             </span>
           </div>
-          <div className="grid grid-cols-2 overflow-hidden rounded-full border border-border">
+          <div className="grid grid-cols-2 overflow-hidden rounded-lg border border-border">
             <span className="bg-card px-3 py-2 text-center text-sm font-medium text-foreground">
               Revenue
             </span>
-            <span
-              className="px-3 py-2 text-sm font-medium text-white text-center whitespace-nowrap"
-              style={{ backgroundColor: TEAL }}
-            >
+            <span className="bg-highlight px-3 py-2 text-center text-sm font-medium whitespace-nowrap text-white">
               Rs. {Number(revenue || 0).toLocaleString()}/-
             </span>
           </div>
           <Link
             href={editHref}
-            className="px-4 py-2 rounded-full text-sm font-medium text-white hover:opacity-90 text-center"
-            style={{ backgroundColor: TEAL }}
+            className="inline-flex items-center justify-center rounded-lg bg-highlight px-4 py-2 text-center text-sm font-medium text-white transition-opacity hover:opacity-90"
           >
             Edit product
           </Link>
@@ -99,7 +87,7 @@ export default function ProductCard({
             type="button"
             onClick={() => onDelete?.(product)}
             disabled={deleting}
-            className="px-4 py-2 rounded-full text-sm font-medium bg-red-500 text-white hover:bg-red-600 disabled:opacity-50"
+            className="inline-flex items-center justify-center rounded-lg border border-red-200 px-4 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-muted-bg disabled:opacity-50"
           >
             {deleting ? "Deleting…" : "Delete product"}
           </button>

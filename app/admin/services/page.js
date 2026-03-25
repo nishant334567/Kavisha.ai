@@ -4,7 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { CalendarClock } from "lucide-react";
+import { CalendarClock, Plus } from "lucide-react";
 import ServiceCard from "./components/ServiceCard";
 
 export default function ServicesListPage() {
@@ -53,8 +53,9 @@ export default function ServicesListPage() {
             <h1 className="text-2xl font-bold text-foreground">List of services</h1>
             <Link
               href={`/admin/services/add-new${qs}`}
-              className="rounded-lg bg-[#2D545E] px-4 py-2 text-sm font-medium text-white hover:bg-[#24454E]"
+              className="inline-flex items-center gap-2 rounded-lg border border-highlight bg-highlight/5 px-4 py-2.5 text-sm font-medium text-highlight transition-colors hover:bg-highlight/10"
             >
+              <Plus className="h-4 w-4" />
               Add booking
             </Link>
           </div>

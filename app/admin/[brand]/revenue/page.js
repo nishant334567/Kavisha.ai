@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft, IndianRupee } from "lucide-react";
+import { ArrowLeft, IndianRupee, Info } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 
 function formatCurrency(value) {
@@ -13,11 +13,47 @@ function formatCurrency(value) {
   }).format(Number(value) || 0);
 }
 
-function RevenueSection({ title, rows, emptyMessage, metricLabel }) {
+function InfoTooltip({ message }) {
+  const [isOpen, setIsOpen] = useState(false);
+
+  return (
+    <div className="group relative inline-flex items-center">
+      <button
+        type="button"
+        aria-label="Revenue info"
+        className="inline-flex items-center justify-center rounded-full p-0.5 text-muted transition-colors hover:bg-muted-bg hover:text-highlight focus:outline-none"
+        onClick={() => setIsOpen((prev) => !prev)}
+        onBlur={() => setIsOpen(false)}
+      >
+        <Info className="h-4 w-4" />
+      </button>
+      <div
+        className={`pointer-events-none absolute left-0 top-full z-10 mt-2 w-64 rounded-lg border border-border bg-muted-bg px-3 py-2 text-xs leading-5 text-muted shadow-sm transition-opacity duration-150 ${
+          isOpen
+            ? "visible opacity-100"
+            : "invisible opacity-0 group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100"
+        }`}
+      >
+        {message}
+      </div>
+    </div>
+  );
+}
+
+function RevenueSection({
+  title,
+  rows,
+  emptyMessage,
+  metricLabel,
+  infoMessage,
+}) {
   return (
     <div className="rounded-2xl border border-border bg-card shadow-sm">
       <div className="border-b border-border px-6 py-4">
-        <h2 className="text-lg font-semibold text-highlight">{title}</h2>
+        <div className="flex items-center gap-2">
+          <h2 className="text-lg font-semibold text-highlight">{title}</h2>
+          {infoMessage ? <InfoTooltip message={infoMessage} /> : null}
+        </div>
       </div>
       {rows.length === 0 ? (
         <div className="px-6 py-8 text-sm text-muted">{emptyMessage}</div>
@@ -33,7 +69,7 @@ function RevenueSection({ title, rows, emptyMessage, metricLabel }) {
                   {metricLabel}
                 </th>
                 <th className="px-6 py-3 text-right font-medium text-muted">
-                  Revenue
+                  Your Revenue
                 </th>
               </tr>
             </thead>
@@ -100,9 +136,21 @@ export default function RevenuePage() {
     const totals = revenueData?.totals || {};
     return [
       { label: "Total Revenue", value: totals.overall || 0 },
-      { label: "Products", value: totals.products || 0 },
-      { label: "Services", value: totals.services || 0 },
-      { label: "Community", value: totals.community || 0 },
+      {
+        label: "Products",
+        value: totals.products || 0,
+        infoMessage: "Kavisha keeps a cut of 5%, and the rest is yours.",
+      },
+      {
+        label: "Bookings",
+        value: totals.services || 0,
+        infoMessage: "Kavisha keeps a cut of 5%, and the rest is yours.",
+      },
+      {
+        label: "Community",
+        value: totals.community || 0,
+        infoMessage: "Kavisha keeps 50%, and the rest is yours.",
+      },
     ];
   }, [revenueData]);
 
@@ -138,9 +186,10 @@ export default function RevenuePage() {
               >
                 <div className="mb-3 flex items-center gap-2 text-highlight">
                   <IndianRupee className="h-4 w-4" />
-                  <p className="text-sm font-medium text-muted">
-                    {card.label}
-                  </p>
+                  <p className="text-sm font-medium text-muted">{card.label}</p>
+                  {card.infoMessage ? (
+                    <InfoTooltip message={card.infoMessage} />
+                  ) : null}
                 </div>
                 <p className="text-2xl font-semibold text-highlight">
                   {formatCurrency(card.value)}
@@ -154,13 +203,15 @@ export default function RevenuePage() {
             rows={revenueData?.breakdown?.products || []}
             metricLabel="Units Sold"
             emptyMessage="No completed product revenue yet."
+            infoMessage="Transaction charges of 5%, inclusive of taxes."
           />
 
           <RevenueSection
-            title="Service Revenue"
+            title="Booking Revenue"
             rows={revenueData?.breakdown?.services || []}
             metricLabel="Bookings"
             emptyMessage="No completed service revenue yet."
+            infoMessage="Transaction charges of 5%, inclusive of taxes."
           />
 
           <RevenueSection
@@ -168,6 +219,7 @@ export default function RevenuePage() {
             rows={revenueData?.breakdown?.community || []}
             metricLabel="Payments"
             emptyMessage="No community revenue tracked for this brand yet."
+            infoMessage="Earnings split 50:50 between you and the platform."
           />
         </div>
       )}

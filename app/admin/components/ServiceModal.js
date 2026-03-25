@@ -182,7 +182,7 @@ export default function ServiceModal({
                 onClick={handleDelete}
                 disabled={deleting}
                 title="Delete service"
-                className="p-1.5 text-red-600 hover:bg-red-50 rounded transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                className="inline-flex items-center justify-center rounded-lg border border-red-200 p-1.5 text-red-700 transition-colors hover:bg-muted-bg disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <Trash2 className="w-5 h-5" />
               </button>

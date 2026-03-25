@@ -8,6 +8,13 @@ function roundCurrency(value) {
   return Math.round((Number(value) || 0) * 100) / 100;
 }
 
+const PRODUCT_AND_SERVICE_OWNER_SHARE = 0.95;
+const COMMUNITY_OWNER_SHARE = 0.5;
+
+function applyRevenueShare(value, share) {
+  return roundCurrency((Number(value) || 0) * share);
+}
+
 export async function GET(req) {
   try {
     await connectDB();
@@ -72,21 +79,30 @@ export async function GET(req) {
       name: item.name || "Untitled product",
       orders: item.orders || 0,
       quantity: item.quantity || 0,
-      revenue: roundCurrency(item.revenue),
+      revenue: applyRevenueShare(
+        item.revenue,
+        PRODUCT_AND_SERVICE_OWNER_SHARE
+      ),
     }));
 
     const services = serviceRevenue.map((item) => ({
       id: item._id?.toString?.() || "",
       name: item.title || "Untitled service",
       bookings: item.bookings || 0,
-      revenue: roundCurrency(item.revenue),
+      revenue: applyRevenueShare(
+        item.revenue,
+        PRODUCT_AND_SERVICE_OWNER_SHARE
+      ),
     }));
 
     const community = communityRevenue.map((item) => ({
       id: item._id,
       name: "Community Connect",
       payments: item.payments || 0,
-      revenue: roundCurrency((item.revenuePaise || 0) / 100),
+      revenue: applyRevenueShare(
+        (item.revenuePaise || 0) / 100,
+        COMMUNITY_OWNER_SHARE
+      ),
     }));
 
     const totals = {
