@@ -40,13 +40,13 @@ export default function QuizCard({ quiz, onViewAttempts }) {
   return (
     <div
       onClick={handleCardClick}
-      className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-all cursor-pointer flex flex-col h-full"
+      className="flex h-full cursor-pointer flex-col rounded-lg border border-border bg-card p-6 text-foreground transition-all hover:shadow-md"
     >
       {/* Content Section - flex-1 to push buttons down */}
       <div className="flex-1">
         {/* Title and Type Tag */}
         <div className="flex items-start justify-between mb-3">
-          <h3 className="text-lg font-semibold text-[#264653] flex-1 pr-2">
+          <h3 className="flex-1 pr-2 text-lg font-semibold text-highlight">
             {quiz.title || "Quiz title"}
           </h3>
           <span
@@ -61,18 +61,18 @@ export default function QuizCard({ quiz, onViewAttempts }) {
 
         {/* Subtitle */}
         {quiz.subtitle && (
-          <p className="text-sm text-gray-600 mb-4 line-clamp-2">
+          <p className="mb-4 line-clamp-2 text-sm text-muted">
             {quiz.subtitle}
           </p>
         )}
 
         {/* Details */}
         <div className="space-y-1.5 mb-4">
-          <div className="text-sm text-gray-600">
+          <div className="text-sm text-muted">
             {quiz.questionCount || 0} questions
           </div>
           {quiz.createdAt && (
-            <div className="text-sm text-gray-600">
+            <div className="text-sm text-muted">
               Created: {formatDate(quiz.createdAt)}
             </div>
           )}
@@ -86,13 +86,13 @@ export default function QuizCard({ quiz, onViewAttempts }) {
             e.stopPropagation();
             onViewAttempts();
           }}
-          className="flex-1 px-4 py-2.5 text-sm font-medium text-[#264653] bg-[#F2FFFF] rounded-full shadow-md transition-colors"
+          className="flex-1 rounded-full bg-muted-bg px-4 py-2.5 text-sm font-medium text-highlight shadow-md transition-colors hover:bg-background"
         >
           View Attempts
         </button>
         <button
           onClick={handleStartAttempt}
-          className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-[#264653] hover:bg-[#1e383e] rounded-full transition-colors flex items-center justify-center gap-2"
+          className="flex flex-1 items-center justify-center gap-2 rounded-full bg-highlight px-4 py-2.5 text-sm font-medium text-white transition-colors hover:opacity-90"
         >
           <Play className="w-4 h-4" />
           Start

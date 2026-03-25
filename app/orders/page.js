@@ -40,7 +40,7 @@ export default function MyOrdersPage() {
     if (!user) {
         content = (
             <div className="px-6 py-12 max-w-2xl mx-auto text-center">
-                <p className="text-gray-600 mb-4">Sign in to view your orders.</p>
+                <p className="mb-4 text-muted">Sign in to view your orders.</p>
                 <button
                     onClick={() => router.push("/")}
                     className="px-4 py-2 rounded-lg bg-[#2b6a5b] text-white hover:bg-[#235a4d] transition-colors"
@@ -52,7 +52,7 @@ export default function MyOrdersPage() {
     } else if (loading) {
         content = (
             <div className="px-6 py-12 max-w-2xl mx-auto text-center">
-                <p className="text-gray-500">Loading orders...</p>
+                <p className="text-muted">Loading orders...</p>
             </div>
         );
     }
@@ -76,13 +76,13 @@ export default function MyOrdersPage() {
     if (!content) {
         content = (
             <div className="px-6 py-8 max-w-2xl mx-auto">
-                <h1 className="text-xl font-bold text-gray-800 mb-6">My Orders</h1>
+                <h1 className="mb-6 text-xl font-bold text-foreground">My Orders</h1>
 
                 {orderGroups.length === 0 ? (
-                    <div className="text-center py-12 rounded-xl border border-gray-200 bg-gray-50">
-                        <Package className="w-12 h-12 text-gray-400 mx-auto mb-3" />
-                        <p className="text-gray-600 mb-2">No orders yet</p>
-                        <p className="text-sm text-gray-500 mb-4">Your orders will appear here.</p>
+                    <div className="rounded-xl border border-border bg-muted-bg py-12 text-center">
+                        <Package className="mx-auto mb-3 h-12 w-12 text-muted" />
+                        <p className="mb-2 text-muted">No orders yet</p>
+                        <p className="mb-4 text-sm text-muted">Your orders will appear here.</p>
                         <button
                             onClick={() => router.push("/products")}
                             className="px-4 py-2 rounded-lg bg-[#2b6a5b] text-white hover:bg-[#235a4d] transition-colors"
@@ -95,23 +95,23 @@ export default function MyOrdersPage() {
                         {orderGroups.map((group) => (
                             <div
                                 key={group.orderId}
-                                className="rounded-xl border border-gray-200 bg-white overflow-hidden"
+                                className="overflow-hidden rounded-xl border border-border bg-card"
                             >
-                                <div className="px-4 py-3 bg-gray-50 border-b border-gray-200 flex justify-between items-center">
-                                    <span className="text-sm font-medium text-gray-600">
+                                <div className="flex items-center justify-between border-b border-border bg-muted-bg px-4 py-3">
+                                    <span className="text-sm font-medium text-muted">
                                         Order #{group.orderId.slice(-8)}
                                     </span>
-                                    <span className="text-sm text-gray-500">
+                                    <span className="text-sm text-muted">
                                         {formatDate(group.date)}
                                     </span>
                                 </div>
-                                <div className="divide-y divide-gray-100">
+                                <div className="divide-y divide-border">
                                     {group.items.map((item) => (
                                         <div
                                             key={item._id}
                                             className="flex gap-4 p-4"
                                         >
-                                            <div className="w-14 h-14 shrink-0 rounded-lg bg-gray-100 overflow-hidden">
+                                            <div className="h-14 w-14 shrink-0 overflow-hidden rounded-lg bg-muted-bg">
                                                 {item.productSnapshot?.images?.[0] ? (
                                                     <img
                                                         src={item.productSnapshot.images[0]}
@@ -120,16 +120,16 @@ export default function MyOrdersPage() {
                                                         referrerPolicy="no-referrer"
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                                                    <div className="flex h-full w-full items-center justify-center text-xs text-muted">
                                                         —
                                                     </div>
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-gray-800 truncate">
+                                                <p className="truncate font-medium text-foreground">
                                                     {item.productSnapshot?.name || "Product"}
                                                 </p>
-                                                <p className="text-sm text-gray-500">
+                                                <p className="text-sm text-muted">
                                                     Qty: {item.quantity} × Rs.{" "}
                                                     {Math.round(
                                                         (item.totalAmount || 0) / (item.quantity || 1)
@@ -138,14 +138,14 @@ export default function MyOrdersPage() {
                                                 </p>
                                             </div>
                                             <div className="shrink-0 text-right">
-                                                <p className="font-semibold text-gray-800">
+                                                <p className="font-semibold text-foreground">
                                                     Rs. {Math.round(item.totalAmount || 0)}/-
                                                 </p>
                                                 <span
                                                     className={`text-xs px-2 py-0.5 rounded ${
                                                         item.paymentStatus === "completed"
                                                             ? "bg-green-100 text-green-700"
-                                                            : "bg-gray-100 text-gray-600"
+                                                            : "bg-muted-bg text-muted"
                                                     }`}
                                                 >
                                                     {item.paymentStatus === "completed"
@@ -156,21 +156,21 @@ export default function MyOrdersPage() {
                                         </div>
                                     ))}
                                 </div>
-                                <div className="px-4 py-3 border-t border-gray-200 flex justify-between items-center bg-gray-50">
-                                    <span className="font-medium text-gray-700">Total</span>
-                                    <span className="font-bold text-gray-900">
+                                <div className="flex items-center justify-between border-t border-border bg-muted-bg px-4 py-3">
+                                    <span className="font-medium text-foreground">Total</span>
+                                    <span className="font-bold text-foreground">
                                         Rs. {Math.round(group.total)}/-
                                     </span>
                                 </div>
-                                <div className="px-4 py-3 border-t border-gray-200 bg-white">
-                                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-1">
+                                <div className="border-t border-border bg-card px-4 py-3">
+                                    <p className="mb-1 text-xs font-semibold uppercase tracking-wide text-muted">
                                         Delivery details
                                     </p>
-                                    <p className="text-sm text-gray-700">
+                                    <p className="text-sm text-foreground">
                                         <span className="font-medium">Phone:</span>{" "}
                                         {group.shippingPhone || "—"}
                                     </p>
-                                    <p className="text-sm text-gray-700 break-words">
+                                    <p className="break-words text-sm text-foreground">
                                         <span className="font-medium">Address:</span>{" "}
                                         {group.shippingAddress || "—"}
                                     </p>
@@ -184,7 +184,7 @@ export default function MyOrdersPage() {
     }
 
     return (
-        <div className="min-h-screen bg-white flex justify-center">
+        <div className="flex min-h-screen justify-center bg-background text-foreground">
             <div className="w-full max-w-6xl flex min-h-screen relative">
                 <div className="hidden md:block">
                     <UserProductsSidebar />
@@ -205,10 +205,10 @@ export default function MyOrdersPage() {
                     <button
                         type="button"
                         onClick={() => setMobileSidebarOpen(true)}
-                        className="fixed left-0 top-16 z-40 md:hidden p-2 rounded-r-lg bg-white border border-l-0 border-gray-200 shadow-sm hover:bg-gray-50"
+                        className="fixed left-0 top-16 z-40 rounded-r-lg border border-border border-l-0 bg-card p-2 shadow-sm hover:bg-muted-bg md:hidden"
                         aria-label="Open panel"
                     >
-                        <PanelLeft className="w-5 h-5 text-gray-600" />
+                        <PanelLeft className="h-5 w-5 text-muted" />
                     </button>
                 )}
                 <main className="flex-1 min-w-0 overflow-auto">{content}</main>

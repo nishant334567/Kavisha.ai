@@ -166,14 +166,14 @@ export default function ServiceModal({
   const serviceName = service?.title || "";
 
   return (
-    <div className="fixed inset-0 z-50 bg-white flex flex-col h-screen">
-      <div className="flex-1 overflow-y-auto bg-white">
+    <div className="fixed inset-0 z-50 flex h-screen flex-col bg-background text-foreground">
+      <div className="flex-1 overflow-y-auto bg-background">
         <div className="max-w-3xl mx-auto px-6 py-8">
           {/* Back button and Delete (when editing) */}
           <div className="mb-6 flex items-center justify-between">
             <button
               onClick={onClose}
-              className="text-black hover:opacity-70 transition-opacity"
+              className="text-foreground transition-opacity hover:opacity-70"
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
@@ -190,7 +190,7 @@ export default function ServiceModal({
           </div>
 
           <div>
-            <h1 className="text-4xl md:text-5xl font-black text-purple-900 mb-12 text-center leading-tight tracking-tight normal-case font-mono">
+            <h1 className="mb-12 text-center font-mono text-4xl font-black leading-tight tracking-tight text-highlight normal-case md:text-5xl">
               {addNewservice ? "Add a service" : serviceName}
             </h1>
 
@@ -198,21 +198,21 @@ export default function ServiceModal({
             <div className="space-y-8">
               {/* Service title */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-foreground">
                   Service title
                 </label>
                 <input
                   type="text"
                   value={formData.serviceTitle}
                   onChange={(e) => handleChange("serviceTitle", e.target.value)}
-                  className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500"
+                  className="w-full rounded border border-border bg-input px-4 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   placeholder="Enter service title"
                 />
               </div>
 
               {/* Welcoming message */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-foreground">
                   Welcoming message
                 </label>
                 <textarea
@@ -221,7 +221,7 @@ export default function ServiceModal({
                   onChange={(e) =>
                     handleChange("welcomingMessage", e.target.value)
                   }
-                  className="w-full px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none"
+                  className="w-full resize-none rounded border border-border bg-input px-4 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   placeholder="Enter welcoming message"
                 />
               </div>
@@ -229,7 +229,7 @@ export default function ServiceModal({
               {/* Template (only for new Talk to me) */}
               {addNewservice && service?.name === "lead_journey" && (
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-foreground">
                     Start from template
                   </label>
                   <select
@@ -250,14 +250,14 @@ export default function ServiceModal({
                         }
                       }
                     }}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 text-sm"
+                    className="w-full rounded-lg border border-border bg-input px-4 py-2.5 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   >
                     {BEHAVIOUR_TEMPLATES.map((t) => (
                       <option key={t.id} value={t.id}>{t.label}</option>
                     ))}
                     <option value="custom">Custom (start from scratch)</option>
                   </select>
-                  <p className="mt-1 text-xs text-gray-500">
+                  <p className="mt-1 text-xs text-muted">
                     Pick a template to pre-fill behaviour & rules, or start custom. You can edit after selecting.
                   </p>
                 </div>
@@ -265,23 +265,23 @@ export default function ServiceModal({
 
               {/* Personality core — three separate sections like create avatar */}
               <div className="space-y-6">
-                <p className="text-sm font-medium text-gray-700">Personality Core</p>
+                <p className="text-sm font-medium text-foreground">Personality Core</p>
 
                 {/* About */}
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <label className="block text-sm font-medium text-gray-700">About</label>
+                    <label className="block text-sm font-medium text-foreground">About</label>
                     <button
                       type="button"
                       onClick={() => setInfoSection((s) => (s === "about" ? null : "about"))}
-                      className="p-0.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-purple-600 transition-colors"
+                      className="rounded-full p-0.5 text-muted transition-colors hover:bg-muted-bg hover:text-highlight"
                       aria-label="About this section"
                     >
                       <Info className="w-4 h-4" />
                     </button>
                   </div>
                   {infoSection === "about" && (
-                    <p className="text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 mb-2">
+                    <p className="mb-2 rounded-lg border border-border bg-muted-bg px-3 py-2 text-xs text-muted">
                       {PERSONALITY_INFO.about}
                     </p>
                   )}
@@ -290,25 +290,25 @@ export default function ServiceModal({
                     value={formData.about || ""}
                     onChange={(e) => handleChange("about", e.target.value)}
                     placeholder="Enter about..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none bg-white text-sm"
+                    className="w-full resize-none rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
                 {/* Behaviour */}
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <label className="block text-sm font-medium text-gray-700">Behaviour</label>
+                    <label className="block text-sm font-medium text-foreground">Behaviour</label>
                     <button
                       type="button"
                       onClick={() => setInfoSection((s) => (s === "behaviour" ? null : "behaviour"))}
-                      className="p-0.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-purple-600 transition-colors"
+                      className="rounded-full p-0.5 text-muted transition-colors hover:bg-muted-bg hover:text-highlight"
                       aria-label="About behaviour"
                     >
                       <Info className="w-4 h-4" />
                     </button>
                   </div>
                   {infoSection === "behaviour" && (
-                    <p className="text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 mb-2">
+                    <p className="mb-2 rounded-lg border border-border bg-muted-bg px-3 py-2 text-xs text-muted">
                       {PERSONALITY_INFO.behaviour}
                     </p>
                   )}
@@ -317,25 +317,25 @@ export default function ServiceModal({
                     value={formData.behaviour || ""}
                     onChange={(e) => handleChange("behaviour", e.target.value)}
                     placeholder="Enter behaviour..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none bg-white text-sm"
+                    className="w-full resize-none rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
 
                 {/* Rules */}
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <label className="block text-sm font-medium text-gray-700">Rules</label>
+                    <label className="block text-sm font-medium text-foreground">Rules</label>
                     <button
                       type="button"
                       onClick={() => setInfoSection((s) => (s === "rules" ? null : "rules"))}
-                      className="p-0.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-purple-600 transition-colors"
+                      className="rounded-full p-0.5 text-muted transition-colors hover:bg-muted-bg hover:text-highlight"
                       aria-label="About rules"
                     >
                       <Info className="w-4 h-4" />
                     </button>
                   </div>
                   {infoSection === "rules" && (
-                    <p className="text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 mb-2">
+                    <p className="mb-2 rounded-lg border border-border bg-muted-bg px-3 py-2 text-xs text-muted">
                       {PERSONALITY_INFO.rules}
                     </p>
                   )}
@@ -344,17 +344,17 @@ export default function ServiceModal({
                     value={formData.rules || ""}
                     onChange={(e) => handleChange("rules", e.target.value)}
                     placeholder="Enter rules..."
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-1 focus:ring-purple-500 resize-none bg-white text-sm"
+                    className="w-full resize-none rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
               </div>
 
               {/* Initial Questions (up to 5) */}
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">
+                <label className="mb-2 block text-sm font-medium text-foreground">
                   Initial Questions (up to 5)
                 </label>
-                <p className="text-xs text-gray-500 mb-2">
+                <p className="mb-2 text-xs text-muted">
                   Shown as quick prompts when the chat has 0–1 messages. Users can tap to send.
                 </p>
                 {(formData.introquestions || []).map((q, i) => (
@@ -370,7 +370,7 @@ export default function ServiceModal({
                           ),
                         }))
                       }
-                      className="flex-1 px-4 py-2 border border-gray-300 rounded bg-white focus:outline-none focus:ring-1 focus:ring-purple-500 text-sm"
+                      className="flex-1 rounded border border-border bg-input px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
                       placeholder={`Question ${i + 1}`}
                     />
                     <button
@@ -381,7 +381,7 @@ export default function ServiceModal({
                           introquestions: (prev.introquestions || []).filter((_, j) => j !== i),
                         }))
                       }
-                      className="p-2 text-red-600 hover:bg-red-50 rounded transition-colors"
+                      className="rounded p-2 text-red-600 transition-colors hover:bg-muted-bg"
                       aria-label="Remove question"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -397,7 +397,7 @@ export default function ServiceModal({
                         introquestions: [...(prev.introquestions || []), ""].slice(0, 5),
                       }))
                     }
-                    className="mt-1 px-3 py-1.5 text-sm border border-gray-300 rounded bg-gray-50 hover:bg-gray-100 text-gray-700 transition-colors"
+                    className="mt-1 rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-muted-bg"
                   >
                     + Add question
                   </button>
@@ -413,7 +413,7 @@ export default function ServiceModal({
                   formData.serviceName === "buy_my_product") && (
                     <button
                       onClick={() => setShowProductModal(true)}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                    className="rounded bg-muted-bg px-4 py-2 text-foreground transition-colors hover:bg-card"
                     >
                       My Products
                     </button>
@@ -422,7 +422,7 @@ export default function ServiceModal({
                   formData.serviceName === "buy_my_service") && (
                     <button
                       onClick={() => setShowServiceModalForBuy(true)}
-                      className="px-4 py-2 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 transition-colors"
+                    className="rounded bg-muted-bg px-4 py-2 text-foreground transition-colors hover:bg-card"
                     >
                       My Services
                     </button>
@@ -430,7 +430,7 @@ export default function ServiceModal({
                 <button
                   onClick={handleSave}
                   disabled={loading}
-                  className="px-8 py-3 bg-purple-900 text-white uppercase font-semibold rounded-lg hover:bg-purple-700 transition-all shadow-md hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:bg-purple-600"
+                  className="rounded-lg bg-highlight px-8 py-3 font-semibold uppercase text-white shadow-md transition-all hover:opacity-90 hover:shadow-lg disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   {loading ? "SAVING..." : service?.name ? "UPDATE" : "SAVE"}
                 </button>
@@ -453,7 +453,7 @@ export default function ServiceModal({
       </div>
       {/* Footer */}
       <div className="w-full h-12 flex items-center justify-center">
-        <p className="text-black text-sm">Powered by KAVISHA</p>
+        <p className="text-sm text-muted">Powered by KAVISHA</p>
       </div>
     </div>
   );

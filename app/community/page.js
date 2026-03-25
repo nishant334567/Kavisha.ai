@@ -322,10 +322,10 @@ export default function Community() {
     // Sign-in gate: show when not logged in (user lands on /community directly)
     if (!user) {
         return (
-            <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-[#EDF4F7] to-white px-4">
+            <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-foreground">
                 <div className="max-w-md w-full text-center">
-                    <h1 className="text-2xl md:text-3xl text-[#3D5E6B] mb-4">Community</h1>
-                    <p className="text-[#4A6670] mb-8">
+                    <h1 className="mb-4 text-2xl text-highlight md:text-3xl">Community</h1>
+                    <p className="mb-8 text-muted">
                         Sign in to browse connection requests and connect with people.
                     </p>
                     {popupBlockedHint && !isBlocked && (
@@ -334,7 +334,7 @@ export default function Community() {
                     {isBlocked ? (
                         <button
                             onClick={openInChrome}
-                            className="px-6 py-3 rounded-full bg-[#3D5E6B] text-white hover:bg-[#2d4e5b] transition-colors"
+                            className="rounded-full bg-highlight px-6 py-3 text-white transition-colors hover:opacity-90"
                         >
                             Open in Chrome to sign in
                         </button>
@@ -342,14 +342,14 @@ export default function Community() {
                         <button
                             onClick={handleSignInToCommunity}
                             disabled={signingIn}
-                            className="px-6 py-3 rounded-full bg-[#3D5E6B] text-white hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                            className="rounded-full bg-highlight px-6 py-3 text-white transition-colors hover:opacity-90 disabled:opacity-50"
                         >
                             {signingIn ? "Signing in..." : "Sign in to continue"}
                         </button>
                     )}
                     <button
                         onClick={() => router.push("/")}
-                        className="mt-6 flex items-center justify-center gap-2 text-[#3D5E6B] hover:opacity-80 mx-auto"
+                            className="mx-auto mt-6 flex items-center justify-center gap-2 text-highlight hover:opacity-80"
                     >
                         <ArrowLeft className="w-4 h-4" />
                         <span className="text-sm">Back to home</span>
@@ -382,21 +382,21 @@ export default function Community() {
                             {/* Back button - pl-12/pl-14 reserves space for collapsed sidebar toggle */}
                             <button
                                 onClick={() => router.push("/")}
-                                className="flex pl-4 items-center gap-2 text-[#3D5E6B] hover:text-[#2d4e5b] transition-colors py-1 -mb-1"
+                                className="-mb-1 flex items-center gap-2 py-1 pl-4 text-highlight transition-colors hover:opacity-80"
                             >
                                 <ArrowLeft className="w-5 h-5 flex-shrink-0" />
                                 <span className="text-sm sm:text-base">Back</span>
                             </button>
 
                             {!brand?.enableProfessionalConnect && !brand?.enableFriendConnect ? (
-                                <div className="px-8 py-12 text-center text-[#3D5E6B] text-lg opacity-60">
+                                <div className="px-8 py-12 text-center text-lg text-muted opacity-60">
                                     Community is not available right now.
                                 </div>
                             ) : (
                                 <>
                                     <div className="px-4 flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-4 sm:py-3">
                                         <div className="min-w-0">
-                                            <p className="text-[#3D5E6B] text-2xl sm:text-3xl lg:text-4xl">Community</p>
+                                            <p className="text-2xl text-highlight sm:text-3xl lg:text-4xl">Community</p>
                                             <p className="text-sm sm:text-base font-extralight mt-1">
                                                 Browse through all connection requests and get connecting. Or create your own! :)
                                             </p>
@@ -407,7 +407,7 @@ export default function Community() {
                                                     <button
                                                         type="button"
                                                         disabled={creating === "job_seeker"}
-                                                        className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                                                        className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
                                                         onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
                                                     >
                                                         {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
@@ -415,7 +415,7 @@ export default function Community() {
                                                     <button
                                                         type="button"
                                                         disabled={creating === "recruiter"}
-                                                        className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                                                        className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
                                                         onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
                                                     >
                                                         {creating === "recruiter" ? "Creating..." : "Hire People"}
@@ -426,7 +426,7 @@ export default function Community() {
                                                 <button
                                                     type="button"
                                                     disabled={creating === "friends"}
-                                                    className="rounded-full bg-[#3D5E6B] text-white px-3 py-1.5 sm:px-4 text-sm sm:text-base hover:bg-[#2d4e5b] transition-colors disabled:opacity-50"
+                                                    className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
                                                     onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
                                                 >
                                                     {creating === "friends" ? "Creating..." : "Find Friends"}
@@ -477,12 +477,12 @@ export default function Community() {
             {/* Connecting overlay: from Connect click until chat opens */}
             {connectingToUserId && (
                 <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-                    <div className="flex flex-col items-center gap-3 rounded-xl bg-white/95 px-8 py-6 shadow-xl">
+                    <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-8 py-6 shadow-xl">
                         <div className="relative">
-                            <div className="w-10 h-10 border-4 border-gray-200 rounded-full" />
-                            <div className="absolute inset-0 w-10 h-10 border-4 border-transparent border-t-[#59646F] rounded-full animate-spin" />
+                            <div className="h-10 w-10 rounded-full border-4 border-border" />
+                            <div className="absolute inset-0 h-10 w-10 animate-spin rounded-full border-4 border-transparent border-t-highlight" />
                         </div>
-                        <span className="text-[#59646F] text-sm font-medium">Connecting...</span>
+                        <span className="text-sm font-medium text-highlight">Connecting...</span>
                     </div>
                 </div>
             )}

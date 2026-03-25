@@ -174,33 +174,33 @@ export default function Livechat({
 
   const content = (
     <div
-      className={`bg-white rounded-xl ${isEmbedded ? "w-full h-full" : "w-full h-full md:max-w-sm md:h-[500px]"} border border-[#004A4E]/20 shadow-lg flex flex-col overflow-hidden`}
+      className={`flex flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-lg ${isEmbedded ? "h-full w-full" : "h-full w-full md:h-[500px] md:max-w-sm"}`}
     >
-      <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 bg-[#004A4E]/5 border-b border-[#004A4E]/20 rounded-t-xl">
+      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-muted-bg px-4 py-3">
         <div>
-          <div className="w-10 h-10 bg-[#004A4E] rounded-full flex items-center justify-center text-white font-semibold text-sm">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-highlight text-sm font-semibold text-white">
             {(displayName || "U").charAt(0).toUpperCase()}
           </div>
-          <div className="uppercase font-baloo font-semibold text-lg py-2 text-[#004A4E]">
+          <div className="py-2 text-lg font-semibold uppercase text-highlight font-baloo">
             {displayName}
           </div>
         </div>
         <button
           onClick={onClose}
-          className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-[#004A4E]/10 transition-colors"
+          className="flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-card"
           aria-label="Close Chat"
         >
-          <X className="w-4 h-4 text-[#004A4E]" />
+          <X className="h-4 w-4 text-highlight" />
         </button>
       </div>
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto scrollbar-none p-2 bg-[#004A4E]/[0.03]" ref={listRef}>
+      <div className="flex-1 overflow-y-auto bg-background p-2 scrollbar-none" ref={listRef}>
         {connectionLoading ? (
-          <div className="flex items-center justify-center h-full min-h-[200px] text-gray-500 text-sm">
+          <div className="flex h-full min-h-[200px] items-center justify-center text-sm text-muted">
             Loading chat...
           </div>
         ) : messages.length === 0 ? (
-          <div className="text-center py-8 text-gray-500 text-sm">
+          <div className="py-8 text-center text-sm text-muted">
             No messages yet. Start the conversation!
           </div>
         ) : (
@@ -209,7 +209,7 @@ export default function Livechat({
               <div key={date}>
                 {/* Date Header */}
                 <div className="text-center py-2">
-                  <span className="text-xs text-gray-500 bg-[#004A4E]/5 px-3 py-1 rounded-full">
+                  <span className="rounded-full bg-muted-bg px-3 py-1 text-xs text-muted">
                     {formatDate(date)}
                   </span>
                 </div>
@@ -223,20 +223,20 @@ export default function Livechat({
                   return (
                     <div key={`${date}-${i}`}>
                       <div className="flex gap-2 px-4 py-2">
-                        <div className="w-8 h-8 rounded-full bg-[#004A4E] flex items-center justify-center text-white text-xs font-semibold flex-shrink-0">
+                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-highlight text-xs font-semibold text-white">
                           {(senderName || "U").charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="text-sm font-medium font-baloo text-[#004A4E]">
+                          <p className="font-baloo text-sm font-medium text-highlight">
                             {senderName}
                           </p>
-                          <p className="text-xs text-gray-600 font-baloo">
+                          <p className="font-baloo text-xs text-muted">
                             {text}
                           </p>
                         </div>
                       </div>
                       {i !== msgs.length - 1 && (
-                        <div className="h-[0.5px] w-full bg-[#004A4E]/10"></div>
+                        <div className="h-[0.5px] w-full bg-border/60"></div>
                       )}
                     </div>
                   );
@@ -247,18 +247,18 @@ export default function Livechat({
         )}
       </div>
       {/* Message Input */}
-      <div className="w-full px-3 py-3 border-t border-[#004A4E]/20">
+      <div className="w-full border-t border-border px-3 py-3 bg-card">
         <textarea
           rows={4}
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyPress={handleKeyPress}
           disabled={connectionLoading}
-          className="font-baloo w-full border border-[#004A4E]/20 rounded-xl px-3 py-2 text-gray-800 bg-white focus:outline-none focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] text-sm transition resize-none disabled:opacity-60 disabled:cursor-not-allowed"
+          className="font-baloo w-full resize-none rounded-xl border border-border bg-input px-3 py-2 text-sm text-foreground transition placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-60"
           placeholder={connectionLoading ? "Loading..." : "Write a message..."}
         />
       </div>
-      <div className="flex justify-end p-2 border-t border-[#004A4E]/20 rounded-b-xl">
+      <div className="flex justify-end border-t border-border bg-card p-2">
         <button
           onClick={(e) => {
             e.preventDefault();
@@ -266,7 +266,7 @@ export default function Livechat({
           }}
           type="submit"
           disabled={connectionLoading || !message.trim()}
-          className="shadow-sm px-8 py-2 bg-[#004A4E] disabled:bg-gray-200 disabled:cursor-not-allowed text-white font-medium rounded-lg transition-colors text-sm hover:opacity-90"
+          className="rounded-lg bg-highlight px-8 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted-bg disabled:text-muted"
         >
           Send
         </button>

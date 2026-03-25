@@ -28,32 +28,29 @@ export default function ProductCard({
     "This is a small description of the product or anything the admin wants to write to give the first impression.";
 
   return (
-    <div className="flex gap-6 p-6 rounded-xl border border-gray-200 bg-white shadow-md">
-      <div className="flex-1 min-w-0 flex gap-6 overflow-hidden">
-        <div className="flex-1 min-w-0">
-          <h3
-            className="font-bold text-lg"
-            style={{ color: TEAL }}
-          >
+    <div className="flex min-h-[228px] gap-6 rounded-xl border border-border bg-card p-6 shadow-md">
+      <div className="flex min-w-0 flex-1 items-stretch gap-6 overflow-hidden">
+        <div className="flex min-w-0 flex-1 flex-col">
+          <h3 className="min-h-[3.5rem] line-clamp-2 text-lg font-bold text-highlight">
             {product.name || "Untitled"}
           </h3>
-          <p className="text-sm text-gray-500 mt-1.5 line-clamp-2">
+          <p className="mt-1.5 min-h-[2.75rem] line-clamp-2 text-sm text-muted">
             {description}
           </p>
           <p
-            className="font-semibold mt-2"
+            className="mt-2 font-semibold"
             style={{ color: TEAL }}
           >
             Rs. {priceAfterDiscount.toFixed(0)}/-
             {discount > 0 && (
-              <span className="text-gray-500 text-sm font-normal ml-1 line-through">
+              <span className="ml-1 text-sm font-normal text-muted line-through">
                 Rs. {price}/-
               </span>
             )}
           </p>
         </div>
 
-        <div className="w-24 h-24 shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-200 flex-shrink-0">
+        <div className="h-24 w-24 flex-shrink-0 shrink-0 overflow-hidden rounded-lg border border-border bg-muted-bg">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -62,15 +59,15 @@ export default function ProductCard({
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+            <div className="flex h-full w-full items-center justify-center text-xs text-muted">
               No image
             </div>
           )}
         </div>
 
-        <div className="shrink-0 flex flex-col gap-3 items-stretch min-w-[140px]">
-          <div className="grid grid-cols-2 rounded-full overflow-hidden border border-gray-200">
-            <span className="px-3 py-2 bg-white text-gray-900 text-sm font-medium text-center">
+        <div className="flex min-w-[140px] shrink-0 flex-col items-stretch gap-3">
+          <div className="grid grid-cols-2 overflow-hidden rounded-full border border-border">
+            <span className="bg-card px-3 py-2 text-center text-sm font-medium text-foreground">
               Orders
             </span>
             <span
@@ -80,8 +77,8 @@ export default function ProductCard({
               {orders}
             </span>
           </div>
-          <div className="grid grid-cols-2 rounded-full overflow-hidden border border-gray-200">
-            <span className="px-3 py-2 bg-white text-gray-900 text-sm font-medium text-center">
+          <div className="grid grid-cols-2 overflow-hidden rounded-full border border-border">
+            <span className="bg-card px-3 py-2 text-center text-sm font-medium text-foreground">
               Revenue
             </span>
             <span

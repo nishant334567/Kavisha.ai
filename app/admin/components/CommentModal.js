@@ -63,7 +63,7 @@ export default function CommentModal({ sessionId, onClose }) {
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md max-h-[80vh] flex flex-col overflow-hidden border border-gray-200">
+      <div className="flex max-h-[80vh] w-full max-w-md flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-xl">
         <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 bg-[#3D5E6B]">
           <h2 className="font-semibold text-white">Comments</h2>
           <button
@@ -75,7 +75,7 @@ export default function CommentModal({ sessionId, onClose }) {
             <X className="w-5 h-5 text-white" />
           </button>
         </div>
-        <div className="flex-1 min-h-0 overflow-y-auto p-4 bg-[#122A34]">
+        <div className="min-h-0 flex-1 overflow-y-auto bg-background p-4">
           {loading ? (
             <p className="text-sm text-white/70">Loading...</p>
           ) : comments.length === 0 ? (
@@ -93,8 +93,8 @@ export default function CommentModal({ sessionId, onClose }) {
                       {initial}
                     </div>
                     <div className="min-w-0 flex-1">
-                      <p className="text-white whitespace-pre-wrap">{c.comment}</p>
-                      <p className="text-xs text-white/70 mt-0.5">{formatTime(c.createdAt)}</p>
+                      <p className="whitespace-pre-wrap text-foreground">{c.comment}</p>
+                      <p className="mt-0.5 text-xs text-muted">{formatTime(c.createdAt)}</p>
                     </div>
                   </li>
                 );
@@ -102,14 +102,14 @@ export default function CommentModal({ sessionId, onClose }) {
             </ul>
           )}
         </div>
-        <div className="bg-[#122A34] flex-shrink-0 p-4">
+        <div className="flex-shrink-0 border-t border-border bg-card p-4">
           <div className="relative flex items-end">
             <textarea
               value={text}
               onChange={(e) => setText(e.target.value)}
               placeholder="Add a comment..."
               rows={2}
-              className="w-full min-w-0 rounded-2xl bg-[#DBEAEA] pl-4 pr-12 py-2.5 text-sm resize-none focus:outline-none focus:ring-2 focus:ring-[#004A4E] focus:border-transparent"
+              className="w-full min-w-0 resize-none rounded-2xl bg-input py-2.5 pl-4 pr-12 text-sm text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
             />
             <button
               type="button"

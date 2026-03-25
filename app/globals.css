@@ -11,6 +11,7 @@
   --card: #ffffff;
   --input: #ffffff;
   --ring: #0d9488;
+  --highlight: #2d545e;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -23,6 +24,7 @@
     --card: #171717;
     --input: #262626;
     --ring: #2dd4bf;
+    --highlight: #00888e;
   }
 }
 
@@ -35,6 +37,7 @@
   --card: #171717;
   --input: #262626;
   --ring: #2dd4bf;
+  --highlight: #00888e;
 }
 
 body {

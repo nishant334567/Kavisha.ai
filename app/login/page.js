@@ -89,7 +89,7 @@ export default function LoginPage() {
       </div>
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 text-red-700 border border-red-200 rounded-lg max-w-md mx-auto text-sm text-center">
+        <div className="mx-auto mb-6 max-w-md rounded-lg border border-red-300/60 bg-red-500/10 p-4 text-center text-sm text-red-700 dark:text-red-300">
           {error}
         </div>
       )}
@@ -101,13 +101,13 @@ export default function LoginPage() {
       )}
 
       {isBlocked && (
-        <div className="mb-6 p-4 bg-gray-50 border border-gray-200 rounded-lg max-w-md mx-auto">
-          <p className="text-sm text-gray-700 mb-4 text-center">
+        <div className="mx-auto mb-6 max-w-md rounded-lg border border-border bg-card p-4">
+          <p className="mb-4 text-center text-sm text-foreground">
             Please open in Chrome to continue
           </p>
           <button
             onClick={openInChrome}
-            className="w-full py-3 px-4 bg-gray-600 text-white rounded-lg hover:bg-gray-700 transition-colors text-sm font-medium"
+            className="w-full rounded-lg bg-highlight px-4 py-3 text-sm font-medium text-white transition-colors hover:opacity-90"
           >
             Open in Chrome
           </button>

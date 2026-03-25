@@ -18,8 +18,8 @@ function slugify(text) {
 }
 
 const INPUT_CLASS =
-  "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E]";
-const LABEL_CLASS = "text-sm font-semibold text-gray-700 mb-1.5 block";
+  "w-full rounded-xl border border-border bg-input px-4 py-3 text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30";
+const LABEL_CLASS = "mb-1.5 block text-sm font-semibold text-foreground";
 
 export default function AdminBlogEditPage() {
   const router = useRouter();
@@ -185,25 +185,25 @@ export default function AdminBlogEditPage() {
 
   if (!loaded) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8 text-[#2D545E]">
+      <div className="max-w-4xl mx-auto px-4 py-8 text-highlight">
         Loading…
       </div>
     );
   }
 
   return (
-    <div className="min-h-[calc(100vh-4rem)] bg-[#F3F3F3] -mx-6 -my-8 px-6 py-8 md:px-10">
+    <div className="-mx-6 -my-8 min-h-[calc(100vh-4rem)] bg-background px-6 py-8 text-foreground md:px-10">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <button
             type="button"
             onClick={() => router.push(`/admin/blogs/${slug}${qs}`)}
-            className="p-2 rounded-lg text-gray-600 hover:bg-gray-200 hover:text-gray-900 transition-colors"
+            className="rounded-lg p-2 text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
             aria-label="Back to post"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-3xl font-semibold tracking-tight text-gray-900">
+          <h1 className="text-3xl font-semibold tracking-tight text-highlight">
             Edit post
           </h1>
         </div>
@@ -231,7 +231,7 @@ export default function AdminBlogEditPage() {
                 className={`${INPUT_CLASS} font-mono text-sm`}
               />
               {brand && (
-                <p className="mt-1 text-xs text-gray-500">
+                <p className="mt-1 text-xs text-muted">
                   Preview: .../blogs/{slugField || "untitled"}
                 </p>
               )}
@@ -256,7 +256,7 @@ export default function AdminBlogEditPage() {
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
                 disabled={uploading}
-                className="flex h-40 w-full sm:w-48 items-center justify-center rounded-xl border-2 border-dashed border-gray-300 bg-white text-gray-500 hover:border-[#2D545E] hover:bg-gray-50 transition-colors disabled:opacity-60"
+                className="flex h-40 w-full items-center justify-center rounded-xl border-2 border-dashed border-border bg-card text-muted transition-colors hover:bg-muted-bg disabled:opacity-60 sm:w-48"
               >
                 {featuredPreview ? (
                   <img
@@ -307,11 +307,11 @@ export default function AdminBlogEditPage() {
             />
           </div>
 
-          <details className="rounded-xl border border-gray-300 bg-white overflow-hidden">
-            <summary className="px-4 py-3 cursor-pointer font-medium text-gray-700 hover:bg-gray-50">
+          <details className="overflow-hidden rounded-xl border border-border bg-card">
+            <summary className="cursor-pointer px-4 py-3 font-medium text-foreground hover:bg-muted-bg">
               SEO (meta title & description)
             </summary>
-            <div className="px-4 pb-4 pt-2 space-y-3 border-t border-gray-100">
+            <div className="space-y-3 border-t border-border px-4 pb-4 pt-2">
               <div>
                 <label className={LABEL_CLASS}>Meta title</label>
                 <input
@@ -335,11 +335,11 @@ export default function AdminBlogEditPage() {
             </div>
           </details>
 
-          <div className="flex flex-wrap items-center justify-end gap-3 pt-4 border-t border-gray-200">
+          <div className="flex flex-wrap items-center justify-end gap-3 border-t border-border pt-4">
             <button
               type="button"
               onClick={() => router.push(`/admin/blogs/${slug}${qs}`)}
-              className="px-5 py-2.5 rounded-xl border border-gray-300 bg-white text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              className="rounded-xl border border-border bg-card px-5 py-2.5 font-medium text-foreground transition-colors hover:bg-muted-bg"
             >
               Cancel
             </button>
@@ -347,7 +347,7 @@ export default function AdminBlogEditPage() {
               type="button"
               onClick={handleSaveDraft}
               disabled={saving || uploading}
-              className="inline-flex items-center gap-2 rounded-xl bg-gray-600 px-6 py-2.5 text-white font-medium hover:bg-gray-700 disabled:opacity-60 transition-colors"
+              className="inline-flex items-center gap-2 rounded-xl bg-muted-bg px-6 py-2.5 font-medium text-foreground transition-colors hover:bg-card disabled:opacity-60"
             >
               <Save className="w-4 h-4" />
               {saving && saveType === "draft" ? "Saving..." : "Save as draft"}

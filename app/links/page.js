@@ -128,7 +128,7 @@ export default function LinksPage() {
   };
 
   const shellClass =
-    "font-baloo flex min-h-screen items-center justify-center bg-background p-4 text-gray-700 dark:text-gray-300 md:bg-teal-50 md:text-foreground md:dark:bg-muted-bg";
+    "font-baloo flex min-h-screen items-center justify-center bg-background p-4 text-muted md:bg-muted-bg md:text-foreground";
 
   if (loading) {
     return (
@@ -165,15 +165,15 @@ export default function LinksPage() {
 
   return (
     <div
-      className="font-baloo flex min-h-[100dvh] w-full flex-col bg-background md:min-h-screen md:flex-row md:items-center md:justify-center md:bg-teal-50 md:py-8 md:px-4 md:dark:bg-muted-bg"
+      className="font-baloo flex min-h-[100dvh] w-full flex-col bg-background md:min-h-screen md:flex-row md:items-center md:justify-center md:bg-muted-bg md:px-4 md:py-8"
     >
       <div className="flex w-full flex-1 flex-col md:max-h-[calc(100vh-4rem)] md:max-w-md md:flex-none">
-        <div className="relative flex flex-1 flex-col overflow-hidden bg-white md:max-h-[calc(100vh-4rem)] md:rounded-2xl md:shadow-xl dark:bg-card">
+        <div className="relative flex flex-1 flex-col overflow-hidden bg-card md:max-h-[calc(100vh-4rem)] md:rounded-2xl md:shadow-xl">
           <div className="absolute top-4 right-4 z-10">
             <button
               type="button"
               onClick={navigator.share ? handleShare : copyLink}
-              className="p-2 rounded-full text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+              className="rounded-full p-2 text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
               aria-label="Share"
             >
               {copied ? (
@@ -187,7 +187,7 @@ export default function LinksPage() {
           <div className="pt-10 pb-6 px-6 flex flex-col min-h-0 flex-1 overflow-hidden">
             <div className="flex flex-col items-center text-center flex-shrink-0">
               <div className="relative mb-4">
-                <div className="w-24 h-24 rounded-full border-2 border-white shadow-lg overflow-hidden bg-gray-200 ring-2 ring-gray-100">
+                <div className="h-24 w-24 overflow-hidden rounded-full border-2 border-border bg-muted-bg shadow-lg ring-2 ring-border">
                   {headerImage ? (
                     <img
                       src={headerImage}
@@ -195,17 +195,17 @@ export default function LinksPage() {
                       className="w-full h-full object-cover"
                     />
                   ) : (
-                    <span className="w-full h-full flex items-center justify-center text-2xl font-bold text-gray-500">
+                    <span className="flex h-full w-full items-center justify-center text-2xl font-bold text-muted">
                       {(headerName || "?").charAt(0).toUpperCase()}
                     </span>
                   )}
                 </div>
               </div>
-              <h1 className="text-xl font-bold text-gray-900 tracking-tight uppercase">
+              <h1 className="text-xl font-bold text-foreground tracking-tight uppercase">
                 {headerName || brand}
               </h1>
               {headerTitle ? (
-                <p className="text-sm text-gray-500 mt-1 max-w-xs">
+                <p className="mt-1 max-w-xs text-sm text-muted">
                   {headerTitle}
                 </p>
               ) : null}
@@ -225,9 +225,9 @@ export default function LinksPage() {
                     href={link.url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center gap-3 w-full rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-sm hover:shadow-md hover:border-gray-300 transition-all text-left group"
+                    className="group flex w-full items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left shadow-sm transition-all hover:bg-muted-bg hover:shadow-md"
                   >
-                    <span className="flex-shrink-0 w-12 h-12 rounded-lg bg-gray-100 overflow-hidden flex items-center justify-center text-gray-600">
+                    <span className="flex h-12 w-12 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted-bg text-muted">
                       {hasImage ? (
                         <img
                           src={link.image}
@@ -239,16 +239,16 @@ export default function LinksPage() {
                       )}
                     </span>
                     <div className="flex-1 min-w-0">
-                      <p className="font-semibold text-gray-900 truncate">
+                      <p className="truncate font-semibold text-foreground">
                         {link.label}
                       </p>
                       {subtitle ? (
-                        <p className="text-sm text-gray-500 truncate">
+                        <p className="truncate text-sm text-muted">
                           {subtitle}
                         </p>
                       ) : null}
                     </div>
-                    <span className="flex-shrink-0 p-1 text-gray-400 group-hover:text-gray-600">
+                    <span className="flex-shrink-0 p-1 text-muted group-hover:text-foreground">
                       <MoreVertical className="w-5 h-5" />
                     </span>
                   </a>
@@ -257,7 +257,7 @@ export default function LinksPage() {
             </div>
 
             {anySocial ? (
-              <div className="mt-auto flex flex-shrink-0 flex-wrap items-center justify-center gap-6 border-t border-gray-100 py-4 dark:border-gray-800">
+              <div className="mt-auto flex flex-shrink-0 flex-wrap items-center justify-center gap-6 border-t border-border py-4">
                 {SOCIAL_ICONS.map(({ key, label, Icon }) => {
                   const s = social[key];
                   if (!s?.enabled || !(s.url || "").trim()) return null;
@@ -268,7 +268,7 @@ export default function LinksPage() {
                       target="_blank"
                       rel="noopener noreferrer"
                       aria-label={label}
-                      className="text-gray-500 transition-colors hover:text-[#00888E] dark:text-gray-400 dark:hover:text-teal-400"
+                      className="text-muted transition-colors hover:text-[#00888E]"
                     >
                       <Icon className="h-6 w-6" strokeWidth={1.75} />
                     </a>

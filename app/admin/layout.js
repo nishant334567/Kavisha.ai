@@ -6,6 +6,7 @@ import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { signOut } from "@/app/lib/firebase/logout";
 import Loader from "@/app/components/Loader";
+import AdminUpdateNotice from "./components/AdminUpdateNotice";
 
 const REDIRECT_SECONDS = 5;
 
@@ -52,9 +53,9 @@ export default function AdminLayout({ children }) {
 
   if (!brandContext.isBrandAdmin) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-100 p-4">
-        <div className="w-full max-w-md rounded-2xl border border-gray-200 bg-white p-6 shadow-lg">
-          <p className="text-center text-gray-800 font-medium">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 shadow-lg">
+          <p className="text-center font-medium text-foreground">
             You are not an admin. Try logging in with an admin account.
           </p>
           <div className="mt-6 flex flex-col gap-3">
@@ -68,12 +69,12 @@ export default function AdminLayout({ children }) {
             <button
               type="button"
               onClick={() => signOut()}
-              className="w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+              className="w-full rounded-xl border border-border bg-card px-4 py-3 font-medium text-foreground transition-colors hover:bg-muted-bg"
             >
               Sign out
             </button>
           </div>
-          <p className="mt-5 text-center text-sm text-gray-500">
+          <p className="mt-5 text-center text-sm text-muted">
             Redirecting to homepage in {countdown} sec...
           </p>
         </div>
@@ -81,5 +82,10 @@ export default function AdminLayout({ children }) {
     );
   }
 
-  return <div className="font-akshar min-h-screen">{children}</div>;
+  return (
+    <div className="font-akshar min-h-screen bg-background text-foreground">
+      <AdminUpdateNotice />
+      {children}
+    </div>
+  );
 }

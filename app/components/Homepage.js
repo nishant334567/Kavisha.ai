@@ -191,7 +191,7 @@ export default function Homepage() {
             }
           }}
           disabled={signingIn || isBlocked || loadingPath !== null}
-          className="w-[80%] md:w-auto min-w-0 px-3 md:px-4 py-2 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
+          className="min-w-0 w-[80%] rounded-lg bg-muted-bg px-3 py-2 text-sm text-highlight shadow-md transition-colors hover:bg-card disabled:opacity-50 md:w-auto md:px-4 md:text-base"
         >
           {signingIn
             ? "Signing in..."
@@ -219,7 +219,7 @@ export default function Homepage() {
             }
           }}
           disabled={signingIn || isBlocked || loadingPath !== null}
-          className="w-[80%] md:w-auto min-w-0 px-4 py-2 text-sm md:text-base rounded-lg bg-[#F2FFFF] text-[#00585C] shadow-md disabled:opacity-50 hover:bg-[#E0F5F5] transition-colors"
+          className="min-w-0 w-[80%] rounded-lg bg-muted-bg px-4 py-2 text-sm text-highlight shadow-md transition-colors hover:bg-card disabled:opacity-50 md:w-auto md:text-base"
         >
           {signingIn
             ? "Signing in..."
@@ -240,7 +240,7 @@ export default function Homepage() {
           <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
         </div>
         {/* Top cream section */}
-        <div className="bg-[#F9F1D8] text-[#3D5A5E] h-[120px] md:h-[160px] flex justify-center items-center px-4">
+        <div className="flex h-[120px] items-center justify-center bg-muted-bg px-4 text-foreground md:h-[160px]">
           <p className="font-baloo text-xl sm:text-2xl md:text-4xl lg:text-5xl text-center">
             Your Digital Avataar on Kavisha
           </p>
@@ -381,7 +381,7 @@ export default function Homepage() {
           </div>
 
           {/* Right - Cream section */}
-          <div className="flex items-center bg-[#f7f0dd] px-6 py-8 text-[#264653] dark:bg-[#1d2a31] dark:text-foreground md:flex-[6] md:px-10 md:py-12">
+          <div className="flex items-center bg-card px-6 py-8 text-foreground md:flex-[6] md:px-10 md:py-12">
             <p className="text-lg leading-relaxed text-center md:text-left">
               Your Digital Avataar doesn't just enable conversations between you
               and your fans, it also gives your fans a chance to connect with
@@ -397,7 +397,7 @@ export default function Homepage() {
 
             <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
           </div>
-          <p className="text-base md:text-xl font-light text-center text-[#264653] max-w-3xl tracking-wide">
+          <p className="max-w-3xl text-center text-base font-light tracking-wide text-muted md:text-xl">
             With Kavisha, influencers and brands can interact with their fans,
             create opportunities for them, and make them happy. Like never
             before.

@@ -42,12 +42,12 @@ export default function QuizPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white pt-20 md:pt-24 pb-8">
+    <div className="min-h-screen bg-background pt-20 pb-8 text-foreground md:pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Back Button */}
         <button
           onClick={() => router.push("/")}
-          className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-4 sm:mb-6 text-xs sm:text-sm font-medium group"
+          className="group mb-4 flex items-center gap-2 text-xs font-medium text-muted transition-colors hover:text-highlight sm:mb-6 sm:text-sm"
         >
           <ArrowLeft className="w-3 h-3 sm:w-4 sm:h-4 group-hover:-translate-x-1 transition-transform" />
           <span className="hidden sm:inline">Back to Home</span>
@@ -57,7 +57,7 @@ export default function QuizPage() {
         {/* Header Section */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-semibold text-[#264653]">
+            <h1 className="text-3xl font-semibold text-highlight">
               Quizzes and Surveys
             </h1>
           </div>
@@ -68,12 +68,12 @@ export default function QuizPage() {
 
         {/* Quiz Cards Grid */}
         {quizzes.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
-            <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg font-medium mb-2">
+          <div className="rounded-xl border border-border bg-card py-16 text-center shadow-sm">
+            <BookOpen className="mx-auto mb-4 h-12 w-12 text-muted" />
+            <p className="mb-2 text-lg font-medium text-foreground">
               No quizzes available yet.
             </p>
-            <p className="text-gray-400 text-sm">
+            <p className="text-sm text-muted">
               Check back later for new quizzes and surveys.
             </p>
           </div>

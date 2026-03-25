@@ -103,15 +103,15 @@ export default function ApplicationDetailPage() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <p className="text-gray-500">Loading…</p>
+            <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+                <p className="text-muted">Loading…</p>
             </div>
         );
     }
     if (!job || !application) {
         return (
-            <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-                <p className="text-gray-500">Application not found.</p>
+            <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+                <p className="text-muted">Application not found.</p>
             </div>
         );
     }
@@ -199,22 +199,22 @@ export default function ApplicationDetailPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gray-50">
+        <div className="min-h-screen bg-background text-foreground">
             {/* Header: light, back, job title, star */}
-            <header className="bg-white border-b border-gray-200 px-4 py-4 flex items-center gap-3">
+            <header className="flex items-center gap-3 border-b border-border bg-card px-4 py-4">
                 <Link
                     href={applicationsListHref}
-                    className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-700"
+                    className="rounded-lg p-1.5 text-muted hover:bg-muted-bg hover:text-foreground"
                     aria-label="Back"
                 >
                     <ArrowLeft className="w-5 h-5" />
                 </Link>
-                <h1 className="text-lg font-bold text-gray-900 truncate flex-1">{job.title}</h1>
+                <h1 className="flex-1 truncate text-lg font-bold text-highlight">{job.title}</h1>
                 <button
                     type="button"
                     onClick={toggleStar}
                     disabled={starUpdating}
-                    className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-700 shrink-0 disabled:opacity-50"
+                    className="shrink-0 rounded-lg p-1.5 text-muted hover:bg-muted-bg hover:text-foreground disabled:opacity-50"
                     aria-label={starred ? "Unstar" : "Star"}
                 >
                     <Star className={`w-5 h-5 ${starred ? "fill-amber-400 text-amber-400" : ""}`} />
@@ -225,26 +225,26 @@ export default function ApplicationDetailPage() {
                 {/* Left column: job section + applicant summary + application form */}
                 <div className="flex-1 min-w-0 lg:min-w-[60%] space-y-8">
                     {/* Job section: collapsible */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+                    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
                         <button
                             type="button"
                             onClick={() => setJobSectionOpen((o) => !o)}
-                            className="w-full px-6 py-4 flex items-center justify-between gap-2 text-left hover:bg-gray-50"
+                            className="flex w-full items-center justify-between gap-2 px-6 py-4 text-left hover:bg-muted-bg"
                         >
-                            <span className="font-semibold text-gray-900">Job</span>
-                            <ChevronDown className={`w-5 h-5 text-gray-500 shrink-0 transition-transform ${jobSectionOpen ? "rotate-180" : ""}`} />
+                            <span className="font-semibold text-foreground">Job</span>
+                            <ChevronDown className={`w-5 h-5 shrink-0 text-muted transition-transform ${jobSectionOpen ? "rotate-180" : ""}`} />
                         </button>
                         {jobSectionOpen && (
-                            <div className="px-6 pb-6 pt-0 border-t border-gray-100">
+                            <div className="border-t border-border px-6 pb-6 pt-0">
                                 {job.description ? (
-                                    <p className="text-sm text-gray-700 leading-relaxed whitespace-pre-wrap mb-4">{job.description}</p>
+                                    <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-muted">{job.description}</p>
                                 ) : null}
                                 {job.jdLink ? (
                                     <a
                                         href={job.jdLink}
                                         target="_blank"
                                         rel="noopener noreferrer"
-                                        className="inline-flex items-center gap-2 text-sm text-[#004A4E] font-medium hover:underline"
+                                        className="inline-flex items-center gap-2 text-sm font-medium text-highlight hover:underline"
                                     >
                                         <FileText className="w-4 h-4 shrink-0" />
                                         View JD
@@ -256,9 +256,9 @@ export default function ApplicationDetailPage() {
                     </div>
 
                     {/* Applicant summary card */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                         <div className="flex gap-4 mb-4">
-                            <div className="w-14 h-14 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold text-lg shrink-0 overflow-hidden">
+                            <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted-bg text-lg font-semibold text-muted">
                                 {imageUrl ? (
                                     <img
                                         src={imageUrl}
@@ -271,31 +271,31 @@ export default function ApplicationDetailPage() {
                                 )}
                             </div>
                             <div className="min-w-0 flex-1">
-                                <h2 className="text-xl font-bold text-gray-900">{name}</h2>
+                                <h2 className="text-xl font-bold text-highlight">{name}</h2>
                             </div>
                         </div>
                         {summary ? (
-                            <p className="text-sm text-gray-700 leading-relaxed">{summary}</p>
+                            <p className="text-sm leading-relaxed text-muted">{summary}</p>
                         ) : (
-                            <p className="text-sm text-gray-500 italic">No summary available.</p>
+                            <p className="text-sm italic text-muted">No summary available.</p>
                         )}
                     </div>
 
                     {/* Application form */}
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                        <h3 className="text-lg font-bold text-gray-900 mb-6">
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h3 className="mb-6 text-lg font-bold text-foreground">
                             {name.replace(/\s+$/, "").split(" ")[0]}’s application form
                         </h3>
                         <div className="space-y-6">
                             {questionsAnswers.length === 0 ? (
-                                <p className="text-sm text-gray-500">No questions answered.</p>
+                                <p className="text-sm text-muted">No questions answered.</p>
                             ) : (
                                 questionsAnswers.map((qa, i) => (
                                     <div key={i} className="space-y-2">
-                                        <p className="text-sm font-semibold text-gray-800">
+                                        <p className="text-sm font-semibold text-foreground">
                                             {qa.question || "Question"}
                                         </p>
-                                        <p className="text-sm text-gray-600 whitespace-pre-wrap leading-relaxed">
+                                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-muted">
                                             {qa.answer || "—"}
                                         </p>
                                     </div>
@@ -307,37 +307,37 @@ export default function ApplicationDetailPage() {
 
                 {/* Right column: contact, summary, assigned, Assign to Admin */}
                 <div className="lg:w-80 shrink-0 space-y-6">
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-4">Contact</h3>
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h3 className="mb-4 text-sm font-semibold text-foreground">Contact</h3>
                         <dl className="space-y-3 text-sm">
                             <div>
-                                <dt className="text-gray-500 font-medium">Name</dt>
-                                <dd className="text-gray-900 mt-0.5">{name}</dd>
+                                <dt className="font-medium text-muted">Name</dt>
+                                <dd className="mt-0.5 text-foreground">{name}</dd>
                             </div>
                             <div>
-                                <dt className="text-gray-500 font-medium">Email</dt>
-                                <dd className="text-gray-900 mt-0.5 break-all">{email}</dd>
+                                <dt className="font-medium text-muted">Email</dt>
+                                <dd className="mt-0.5 break-all text-foreground">{email}</dd>
                             </div>
                             <div>
-                                <dt className="text-gray-500 font-medium">Phone number</dt>
-                                <dd className="text-gray-900 mt-0.5">—</dd>
+                                <dt className="font-medium text-muted">Phone number</dt>
+                                <dd className="mt-0.5 text-foreground">—</dd>
                             </div>
                             <div>
-                                <dt className="text-gray-500 font-medium">Resume</dt>
+                                <dt className="font-medium text-muted">Resume</dt>
                                 <dd className="mt-0.5">
                                     {application.resumeLink ? (
                                         <a
                                             href={application.resumeLink}
                                             target="_blank"
                                             rel="noopener noreferrer"
-                                            className="inline-flex items-center gap-1.5 text-[#004A4E] font-medium hover:underline"
+                                            className="inline-flex items-center gap-1.5 font-medium text-highlight hover:underline"
                                         >
                                             <FileText className="w-4 h-4 shrink-0" />
                                             View resume
                                             <ExternalLink className="w-3.5 h-3.5" />
                                         </a>
                                     ) : (
-                                        <span className="text-gray-500">—</span>
+                                        <span className="text-muted">—</span>
                                     )}
                                 </dd>
                             </div>
@@ -346,7 +346,7 @@ export default function ApplicationDetailPage() {
                                     <button
                                         type="button"
                                         onClick={() => openChatSession(user.id, application.applicantUserId)}
-                                        className="w-full py-2 px-3 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                                        className="w-full rounded-lg bg-highlight px-3 py-2 text-sm font-medium text-white transition-opacity hover:opacity-90"
                                     >
                                         Connect
                                     </button>
@@ -364,14 +364,14 @@ export default function ApplicationDetailPage() {
             )}
           </div> */}
 
-                    <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                        <h3 className="text-sm font-semibold text-gray-900 mb-3">Status</h3>
+                    <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                        <h3 className="mb-3 text-sm font-semibold text-foreground">Status</h3>
                         <div className="space-y-2">
                             <select
                                 value={status}
                                 onChange={handleStatusChange}
                                 disabled={statusUpdating}
-                                className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#004A4E]/30 disabled:opacity-60"
+                                className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:opacity-60"
                             >
                                 <option value="">{statusCategories.length === 0 ? "No categories" : "Select status"}</option>
                                 {statusCategories.map((cat) => (
@@ -386,14 +386,14 @@ export default function ApplicationDetailPage() {
                                         value={newCategoryName}
                                         onChange={(e) => setNewCategoryName(e.target.value)}
                                         placeholder="Category name"
-                                        className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004A4E]/30"
+                                        className="min-w-0 flex-1 rounded-lg border border-border bg-input px-3 py-1.5 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                                         onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
                                     />
                                     <button
                                         type="button"
                                         onClick={handleAddCategory}
                                         disabled={!newCategoryName.trim() || addCategorySubmitting}
-                                        className="shrink-0 px-3 py-1.5 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 flex items-center gap-1"
+                                        className="flex shrink-0 items-center gap-1 rounded-lg bg-highlight px-3 py-1.5 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
                                     >
                                         <Plus className="w-3.5 h-3.5" />
                                         Add
@@ -401,7 +401,7 @@ export default function ApplicationDetailPage() {
                                     <button
                                         type="button"
                                         onClick={() => { setShowAddCategory(false); setNewCategoryName(""); }}
-                                        className="shrink-0 text-sm text-gray-500 hover:text-gray-700"
+                                        className="shrink-0 text-sm text-muted hover:text-foreground"
                                     >
                                         Cancel
                                     </button>
@@ -411,9 +411,9 @@ export default function ApplicationDetailPage() {
                     </div>
 
                     {assignedTo.length > 0 && (
-                        <div className="bg-white rounded-xl border border-gray-200 shadow-sm p-6">
-                            <h3 className="text-sm font-semibold text-gray-900 mb-2">Assigned to</h3>
-                            <ul className="text-sm text-gray-700 space-y-1">
+                        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+                            <h3 className="mb-2 text-sm font-semibold text-foreground">Assigned to</h3>
+                            <ul className="space-y-1 text-sm text-muted">
                                 {assignedTo.map((adminEmail) => (
                                     <li key={adminEmail} className="break-all">
                                         {adminEmail}
@@ -426,7 +426,7 @@ export default function ApplicationDetailPage() {
                     <button
                         type="button"
                         onClick={() => setShowAssignModal(true)}
-                        className="w-full py-3 px-4 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 transition-opacity"
+                        className="w-full rounded-lg bg-highlight px-4 py-3 text-sm font-medium text-white transition-opacity hover:opacity-90"
                     >
                         Assign to Admin
                     </button>

@@ -80,19 +80,19 @@ export default function Resume({
     <>
       <div className="flex items-center gap-2 py-2">
         {resume && (
-          <span className="px-2 py-1 shadow-md rounded-lg text-xs text-gray-600">
+          <span className="rounded-lg bg-card px-2 py-1 text-xs text-muted shadow-md">
             {shortenFileName(resume.name)}
           </span>
         )}
         {!resume && resumeSummary !== "" && filename !== "" && (
-          <span className="px-2 py-1 shadow-md rounded-lg text-xs truncate max-w-[120px]">
+          <span className="max-w-[120px] truncate rounded-lg bg-card px-2 py-1 text-xs text-foreground shadow-md">
             {shortenFileName(filename)}
           </span>
         )}
 
         {/* Only show file input if not hidden */}
         {!hideFileInput && (
-          <label className="cursor-pointer text-xs px-2 py-1 shadow-md rounded-lg text-blue-600 hover:underline">
+          <label className="cursor-pointer rounded-lg bg-muted-bg px-2 py-1 text-xs text-highlight shadow-md hover:bg-card hover:underline">
             <input
               type="file"
               accept=".pdf,.docx"
@@ -111,7 +111,7 @@ export default function Resume({
 
         {resume && (
           <button
-            className="text-xs px-2 py-1 shadow-md rounded-lg  bg-gray-500 text-white hover:bg-gray-600 transition disabled:opacity-50"
+            className="rounded-lg bg-highlight px-2 py-1 text-xs text-white shadow-md transition hover:opacity-90 disabled:opacity-50"
             disabled={uploadloading}
             onClick={(e) => handleUpload(e)}
           >
@@ -120,7 +120,7 @@ export default function Resume({
         )}
         {filename && resumeSummary !== "" && (
           <button
-            className="text-xs px-2 py-1 shadow-md rounded-lg bg-red-500 text-white hover:bg-red-600 transition disabled:opacity-50"
+            className="rounded-lg bg-red-500 px-2 py-1 text-xs text-white shadow-md transition hover:bg-red-600 disabled:opacity-50"
             onClick={(e) => handleDelete(e)}
             disabled={isDeleting}
           >

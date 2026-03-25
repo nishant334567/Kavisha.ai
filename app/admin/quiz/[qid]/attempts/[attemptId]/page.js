@@ -140,19 +140,19 @@ export default function AdminQuizAttemptView() {
   const isCompleted = attemptStatus === "completed";
 
   return (
-    <div className="min-h-screen bg-white pt-20 md:pt-24 pb-8">
+    <div className="min-h-screen bg-background pt-20 pb-8 text-foreground md:pt-24">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Back - always to admin attempts list */}
         <button
           onClick={() => router.push(`/admin/quiz/${qid}/attempts`)}
-          className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6 text-sm font-medium font-fredoka group"
+          className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-fredoka"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to attempts
         </button>
 
         {!isCompleted ? (
-          <div className="bg-amber-50 border border-amber-200 rounded-xl p-6 text-center">
+          <div className="rounded-xl border border-amber-300/60 bg-amber-500/10 p-6 text-center">
             <p className="text-amber-800 font-medium font-fredoka">
               This attempt is still in progress.
             </p>
@@ -163,18 +163,18 @@ export default function AdminQuizAttemptView() {
         ) : (
           <>
             <div className="mb-6">
-              <h1 className="text-2xl sm:text-3xl font-semibold text-[#264653] mb-2 font-fredoka">
+              <h1 className="mb-2 text-2xl font-semibold text-highlight font-fredoka sm:text-3xl">
                 {assessmentData?.title}
               </h1>
               {assessmentData?.subtitle && (
-                <p className="text-sm text-gray-500 font-fredoka">
+                <p className="text-sm text-muted font-fredoka">
                   {assessmentData.subtitle}
                 </p>
               )}
-              <div className="flex items-center gap-2 text-sm text-gray-600 mt-2 font-fredoka">
+              <div className="mt-2 flex items-center gap-2 text-sm text-muted font-fredoka">
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
                 <span>Completed</span>
-                <span className="text-gray-400">·</span>
+                <span className="text-muted">·</span>
                 <span>Admin view</span>
               </div>
             </div>
@@ -190,21 +190,21 @@ export default function AdminQuizAttemptView() {
             {isSurvey && assessmentData && (
               <>
                 {assessmentData.scoringInfo && (
-                  <div className="bg-purple-50 border border-purple-200 rounded-xl p-4 sm:p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-[#264653] mb-3 font-fredoka">
+                  <div className="mb-6 rounded-xl border border-border bg-card p-4 sm:p-6">
+                    <h2 className="mb-3 text-lg font-semibold text-highlight font-fredoka">
                       Scoring Instructions
                     </h2>
-                    <div className="text-sm text-gray-700 whitespace-pre-line font-fredoka">
+                    <div className="whitespace-pre-line text-sm text-foreground font-fredoka">
                       {assessmentData.scoringInfo}
                     </div>
                   </div>
                 )}
                 {assessmentData.trends && (
-                  <div className="bg-green-50 border border-green-200 rounded-xl p-4 sm:p-6 mb-6">
-                    <h2 className="text-lg font-semibold text-[#264653] mb-3 font-fredoka">
+                  <div className="mb-6 rounded-xl border border-border bg-card p-4 sm:p-6">
+                    <h2 className="mb-3 text-lg font-semibold text-highlight font-fredoka">
                       Trends & Interpretation
                     </h2>
-                    <div className="text-sm text-gray-700 whitespace-pre-line font-fredoka">
+                    <div className="whitespace-pre-line text-sm text-foreground font-fredoka">
                       {assessmentData.trends}
                     </div>
                   </div>

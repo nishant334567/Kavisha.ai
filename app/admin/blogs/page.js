@@ -60,30 +60,30 @@ export default function AdminBlogsPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8 text-[#2D545E]">
+      <div className="max-w-4xl mx-auto px-4 py-8 text-highlight">
         Loading…
       </div>
     );
   }
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="mx-auto max-w-4xl bg-background px-4 py-6 text-foreground">
       <div className="flex items-center justify-between gap-4 mb-6">
         <div className="flex items-center gap-3">
           <button
             type="button"
             onClick={() => router.back()}
-            className="p-2 rounded-lg hover:bg-[#2D545E]/10 text-[#2D545E]"
+            className="rounded-lg p-2 text-highlight hover:bg-muted-bg"
             aria-label="Back"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <h1 className="text-xl font-semibold text-gray-900">Blogs</h1>
+          <h1 className="text-xl font-semibold text-highlight">Blog</h1>
         </div>
         <button
           type="button"
           onClick={() => router.push(`/admin/blogs/add-new${qs}`)}
-          className="flex items-center gap-2 px-4 py-2 rounded-lg border border-[#2D545E] bg-[#2D545E]/5 text-[#2D545E] text-sm font-medium hover:bg-[#2D545E]/10 transition-colors"
+          className="flex items-center gap-2 rounded-lg border border-[#2D545E] bg-[#2D545E]/5 px-4 py-2 text-sm font-medium text-highlight transition-colors hover:bg-[#2D545E]/10"
         >
           <Plus className="w-4 h-4" />
           New post
@@ -91,7 +91,7 @@ export default function AdminBlogsPage() {
       </div>
 
       {posts.length === 0 ? (
-        <p className="text-gray-500 text-sm">No posts yet.</p>
+        <p className="text-sm text-muted">No posts yet.</p>
       ) : (
         <div className="space-y-4">
           {posts.map((post) => (

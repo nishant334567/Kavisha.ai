@@ -159,24 +159,24 @@ export default function JobApplyPage() {
     }
   };
 
-  if (loading) return <div className="max-w-5xl mx-auto px-4 py-6 text-[#004A4E]">Loading…</div>;
-  if (!job) return <div className="max-w-5xl mx-auto px-4 py-6 text-gray-500">Job not found.</div>;
+  if (loading) return <div className="mx-auto max-w-5xl px-4 py-6 text-highlight">Loading…</div>;
+  if (!job) return <div className="mx-auto max-w-5xl px-4 py-6 text-muted">Job not found.</div>;
 
   if (!user) {
     return (
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="mx-auto max-w-5xl bg-background px-4 py-6 text-foreground">
         <div className="flex items-center gap-3 mb-6">
           <button
             type="button"
             onClick={() => router.back()}
-            className="p-2 rounded-lg hover:bg-[#004A4E]/10 text-[#004A4E]"
+            className="rounded-lg p-2 text-highlight hover:bg-muted-bg"
             aria-label="Back"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <span className="text-sm text-gray-500">Apply for job</span>
+          <span className="text-sm text-muted">Apply for job</span>
         </div>
-        <div className="rounded-xl border border-amber-200 bg-amber-50 p-6 text-center">
+        <div className="rounded-xl border border-amber-300/60 bg-amber-500/10 p-6 text-center">
           <p className="text-amber-800 font-medium">Please log in to apply for this job.</p>
           <p className="text-sm text-amber-700 mt-2">Use the avatar or sign-in option to log in with your email.</p>
         </div>
@@ -187,49 +187,49 @@ export default function JobApplyPage() {
   if (appliedCheckDone && alreadyApplied) {
     const app = applicationData;
     return (
-      <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="mx-auto max-w-5xl bg-background px-4 py-6 text-foreground">
         <div className="flex items-center gap-3 mb-6">
           <button
             type="button"
             onClick={() => router.back()}
-            className="p-2 rounded-lg hover:bg-[#004A4E]/10 text-[#004A4E]"
+            className="rounded-lg p-2 text-highlight hover:bg-muted-bg"
             aria-label="Back"
           >
             <ArrowLeft className="w-5 h-5" />
           </button>
-          <span className="text-sm text-gray-500">Your application</span>
+          <span className="text-sm text-muted">Your application</span>
         </div>
 
-        <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 mb-6">
-          <h1 className="text-2xl font-bold text-[#004A4E] leading-tight mb-1">{job.title}</h1>
-          <p className="text-sm text-gray-500">You have already applied for this job.</p>
+        <div className="mb-6 rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h1 className="mb-1 text-2xl font-bold leading-tight text-highlight">{job.title}</h1>
+          <p className="text-sm text-muted">You have already applied for this job.</p>
           <Link
             href={applicationPageHref}
-            className="inline-flex mt-4 text-sm font-medium text-[#004A4E] hover:underline"
+            className="mt-4 inline-flex text-sm font-medium text-highlight hover:underline"
           >
             View full application →
           </Link>
         </div>
 
         {applicationLoading ? (
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 text-center text-gray-500">
+          <div className="rounded-xl border border-border bg-card p-6 text-center text-muted shadow-sm">
             Loading your application…
           </div>
         ) : app ? (
           <div className="space-y-6">
-            <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-3 flex items-center gap-2">
-                <FileCheck className="w-5 h-5 text-[#004A4E]" /> Your application
+            <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+              <h2 className="mb-3 flex items-center gap-2 text-lg font-semibold text-foreground">
+                <FileCheck className="w-5 h-5 text-highlight" /> Your application
               </h2>
 
               {app.resumeLink && (
                 <div className="mb-6">
-                  <h3 className="text-sm font-semibold text-gray-700 mb-2">Resume</h3>
+                  <h3 className="mb-2 text-sm font-semibold text-foreground">Resume</h3>
                   <a
                     href={app.resumeLink}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 text-[#004A4E] font-medium hover:underline"
+                    className="inline-flex items-center gap-2 font-medium text-highlight hover:underline"
                   >
                     <FileText className="w-4 h-4" /> View / download resume
                     <ExternalLink className="w-3.5 h-3.5" />
@@ -239,12 +239,12 @@ export default function JobApplyPage() {
 
               {Array.isArray(app.questionsAnswers) && app.questionsAnswers.length > 0 && (
                 <div>
-                  <h3 className="text-sm font-semibold text-gray-700 mb-3">Questions & answers</h3>
+                  <h3 className="mb-3 text-sm font-semibold text-foreground">Questions & answers</h3>
                   <ul className="space-y-4">
                     {app.questionsAnswers.map((qa, i) => (
-                      <li key={i} className="border-b border-gray-100 pb-4 last:border-0 last:pb-0">
-                        <p className="text-sm font-medium text-gray-700 mb-1">{qa.question}</p>
-                        <p className="text-sm text-gray-600 whitespace-pre-wrap">{qa.answer || "—"}</p>
+                      <li key={i} className="border-b border-border pb-4 last:border-0 last:pb-0">
+                        <p className="mb-1 text-sm font-medium text-foreground">{qa.question}</p>
+                        <p className="whitespace-pre-wrap text-sm text-muted">{qa.answer || "—"}</p>
                       </li>
                     ))}
                   </ul>
@@ -257,7 +257,7 @@ export default function JobApplyPage() {
             <p className="text-amber-800 font-medium">You have already applied for this job.</p>
             <Link
               href={applicationPageHref}
-              className="inline-flex mt-3 text-sm font-medium text-[#004A4E] hover:underline"
+              className="mt-3 inline-flex text-sm font-medium text-highlight hover:underline"
             >
               View application page →
             </Link>
@@ -270,17 +270,17 @@ export default function JobApplyPage() {
   const questions = Array.isArray(job.questions) ? job.questions : [];
 
   return (
-    <div className="max-w-5xl mx-auto px-4 py-6">
+      <div className="mx-auto max-w-5xl bg-background px-4 py-6 text-foreground">
       <div className="flex items-center gap-3 mb-6">
         <button
           type="button"
           onClick={() => router.back()}
-          className="p-2 rounded-lg hover:bg-[#004A4E]/10 text-[#004A4E]"
+          className="rounded-lg p-2 text-highlight hover:bg-muted-bg"
           aria-label="Back"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <span className="text-sm text-gray-500">Apply for job</span>
+        <span className="text-sm text-muted">Apply for job</span>
       </div>
 
       {error ? (
@@ -289,12 +289,12 @@ export default function JobApplyPage() {
         </div>
       ) : null}
 
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 mb-6">
-        <h1 className="text-2xl font-bold text-[#004A4E] leading-tight mb-4">
+      <div className="mb-6 rounded-xl border border-border bg-card p-6 shadow-sm">
+        <h1 className="mb-4 text-2xl font-bold leading-tight text-highlight">
           {job.title}
         </h1>
         {job.description ? (
-          <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap mb-4">
+          <p className="mb-4 whitespace-pre-wrap text-sm leading-relaxed text-muted">
             {job.description}
           </p>
         ) : null}
@@ -303,7 +303,7 @@ export default function JobApplyPage() {
             href={job.jdLink}
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-flex items-center gap-2 text-sm text-[#004A4E] font-medium hover:underline"
+            className="inline-flex items-center gap-2 text-sm font-medium text-highlight hover:underline"
           >
             <FileText className="w-4 h-4 shrink-0" /> Open JD document <ExternalLink className="w-3.5 h-3.5" />
           </a>
@@ -312,22 +312,22 @@ export default function JobApplyPage() {
 
       <form onSubmit={handleSubmit} className="flex flex-col lg:flex-row gap-6">
         <div className="flex-1 min-w-0">
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Questions</h2>
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="mb-4 text-lg font-semibold text-foreground">Questions</h2>
             {questions.length === 0 ? (
-              <p className="text-sm text-gray-500">No questions for this job.</p>
+              <p className="text-sm text-muted">No questions for this job.</p>
             ) : (
               <div className="space-y-4">
                 {questions.map((q, i) => (
                   <div key={i}>
-                    <label className="block text-sm font-medium text-gray-700 mb-1.5">
+                    <label className="mb-1.5 block text-sm font-medium text-foreground">
                       {i + 1}. {q}
                     </label>
                     <textarea
                       value={answers[i] ?? ""}
                       onChange={(e) => setAnswer(i, e.target.value)}
                       rows={3}
-                      className="w-full px-0 py-2 bg-transparent border-0 border-b border-gray-300 rounded-none text-sm text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-0 focus:border-b-[#004A4E] focus:border-b-2"
+                      className="w-full rounded-none border-0 border-b border-border bg-transparent px-0 py-2 text-sm text-foreground placeholder:text-muted focus:border-b-highlight focus:outline-none focus:ring-0 focus:border-b-2"
                       placeholder="Your answer"
                     />
                   </div>
@@ -338,20 +338,20 @@ export default function JobApplyPage() {
         </div>
 
         <div className="lg:w-72 flex-shrink-0">
-          <div className="rounded-xl border border-gray-200 bg-white shadow-sm p-6 space-y-4 sticky top-4">
-            <h2 className="text-lg font-semibold text-gray-900">Application</h2>
+          <div className="sticky top-4 space-y-4 rounded-xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="text-lg font-semibold text-foreground">Application</h2>
 
             <button
               type="submit"
               disabled={submitting}
-              className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="inline-flex w-full items-center justify-center gap-2 rounded-lg bg-highlight px-4 py-3 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
             >
               <Send className="w-4 h-4" /> Submit application
             </button>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Upload resume</label>
-              <label className="flex items-center justify-center gap-2 w-full px-4 py-3 rounded-lg border-2 border-dashed border-gray-300 text-gray-600 text-sm font-medium hover:border-[#004A4E] hover:bg-[#004A4E]/5 cursor-pointer transition-colors">
+              <label className="mb-2 block text-sm font-medium text-foreground">Upload resume</label>
+              <label className="flex w-full cursor-pointer items-center justify-center gap-2 rounded-lg border-2 border-dashed border-border px-4 py-3 text-sm font-medium text-muted transition-colors hover:border-highlight hover:bg-muted-bg">
                 <Upload className="w-4 h-4" />
                 {resumeFile ? resumeFile.name : "Choose file"}
                 <input
@@ -368,7 +368,7 @@ export default function JobApplyPage() {
                 href={job.jdLink}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-lg border-2 border-[#004A4E] text-[#004A4E] text-sm font-medium hover:bg-[#004A4E]/5 transition-colors"
+                className="inline-flex w-full items-center justify-center gap-2 rounded-lg border-2 border-highlight px-4 py-3 text-sm font-medium text-highlight transition-colors hover:bg-muted-bg"
               >
                 <FileText className="w-4 h-4" /> View JD
               </a>

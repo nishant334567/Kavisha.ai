@@ -87,17 +87,17 @@ export default function UploadJob() {
         <button
           type="button"
           onClick={() => router.back()}
-          className="p-2 rounded-lg hover:bg-[#004A4E]/10 text-[#004A4E]"
+          className="rounded-lg p-2 text-highlight hover:bg-[#004A4E]/10"
           aria-label="Back"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-semibold text-[#004A4E]">Upload Your Job</h1>
+        <h1 className="text-xl font-semibold text-highlight">Upload Your Job</h1>
       </div>
 
       {/* Title & Subtitle */}
-      <section className="mb-6 p-4 rounded-xl border border-[#004A4E]/20 bg-white">
-        <label className="block text-sm font-medium text-[#004A4E] mb-2">
+      <section className="mb-6 rounded-xl border border-border bg-card p-4">
+        <label className="mb-2 block text-sm font-medium text-highlight">
           Job title <span className="text-red-500">*</span>
         </label>
         <input
@@ -105,21 +105,21 @@ export default function UploadJob() {
           value={title}
           onChange={(e) => setTitle(e.target.value)}
           placeholder="e.g. Software Engineer"
-          className="w-full px-3 py-2 border border-[#004A4E]/30 rounded-lg text-sm focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none"
+          className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
         />
-        <label className="block text-sm font-medium text-[#004A4E] mt-3 mb-2">Subtitle</label>
+        <label className="mt-3 mb-2 block text-sm font-medium text-highlight">Subtitle</label>
         <input
           type="text"
           value={subtitle}
           onChange={(e) => setSubtitle(e.target.value)}
           placeholder="Short description (optional)"
-          className="w-full px-3 py-2 border border-[#004A4E]/30 rounded-lg text-sm focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none"
+          className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
         />
       </section>
 
       {/* JD Upload */}
-      <section className="mb-6 p-4 rounded-xl border border-[#004A4E]/20 bg-[#004A4E]/[0.03]">
-        <h2 className="text-sm font-medium text-[#004A4E] mb-3">Job description (JD)</h2>
+      <section className="mb-6 rounded-xl border border-border bg-muted-bg p-4">
+        <h2 className="mb-3 text-sm font-medium text-highlight">Job description (JD)</h2>
         <div className="flex flex-wrap items-center gap-3">
           <label className="cursor-pointer px-4 py-2 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90">
             <span className="flex items-center gap-2">
@@ -133,52 +133,52 @@ export default function UploadJob() {
             />
           </label>
           {jdFile ? (
-            <span className="flex items-center gap-2 text-sm text-gray-700">
+            <span className="flex items-center gap-2 text-sm text-foreground">
               {jdFile.name}
               <button
                 type="button"
                 onClick={() => setJdFile(null)}
-                className="p-1 rounded hover:bg-gray-200 text-gray-500"
+                className="rounded p-1 text-muted hover:bg-background"
                 aria-label="Remove file"
               >
                 <X className="w-4 h-4" />
               </button>
             </span>
           ) : (
-            <span className="text-sm text-gray-500">No file chosen</span>
+            <span className="text-sm text-muted">No file chosen</span>
           )}
         </div>
       </section>
 
       {/* Questions */}
-      <section className="mb-6 p-4 rounded-xl border border-[#004A4E]/20 bg-white">
+      <section className="mb-6 rounded-xl border border-border bg-card p-4">
         <h2 className="text-sm font-medium text-[#004A4E] mb-3">Questions</h2>
         <ul className="space-y-2">
           {jobQuestions.map((item, index) => (
             <li key={index} className="flex items-center gap-2">
               {editing?.index !== index ? (
-                <p className="flex-1 min-w-0 text-sm text-gray-700">{item}</p>
+                <p className="min-w-0 flex-1 text-sm text-foreground">{item}</p>
               ) : (
                 <>
                   <input
                     value={editing?.text ?? ""}
                     onChange={(e) => setEditing((p) => ({ ...p, text: e.target.value }))}
-                    className="flex-1 min-w-0 px-2 py-1.5 border border-[#004A4E]/30 rounded text-sm"
+                    className="min-w-0 flex-1 rounded border border-border bg-input px-2 py-1.5 text-sm text-foreground"
                   />
-                  <button type="button" onClick={saveEdit} className="p-1.5 rounded hover:bg-[#004A4E]/10 text-[#004A4E]">
+                  <button type="button" onClick={saveEdit} className="rounded p-1.5 text-highlight hover:bg-[#004A4E]/10">
                     <Save className="w-4 h-4" />
                   </button>
                 </>
               )}
               {editing?.index !== index && (
                 <>
-                  <button type="button" onClick={() => setEditing({ index, text: item })} className="p-1.5 rounded hover:bg-[#004A4E]/10 text-[#004A4E]">
+                  <button type="button" onClick={() => setEditing({ index, text: item })} className="rounded p-1.5 text-highlight hover:bg-[#004A4E]/10">
                     <EditIcon className="w-4 h-4" />
                   </button>
                   <button
                     type="button"
                     onClick={() => setJobQuestions((prev) => prev.filter((_, i) => i !== index))}
-                    className="p-1.5 rounded hover:bg-red-50 text-red-600"
+                    className="rounded p-1.5 text-red-600 hover:bg-muted-bg"
                   >
                     <Trash2 className="w-4 h-4" />
                   </button>
@@ -190,7 +190,7 @@ export default function UploadJob() {
         {!showNewInput ? (
           <button
             type="button"
-            className="mt-3 text-sm text-[#004A4E] font-medium hover:underline"
+            className="mt-3 text-sm font-medium text-highlight hover:underline"
             onClick={() => setShowNewInput(true)}
           >
             Add New Question +
@@ -201,7 +201,7 @@ export default function UploadJob() {
               value={newQuestion}
               onChange={(e) => setNewQuestion(e.target.value)}
               placeholder="New question"
-              className="flex-1 px-2 py-1.5 border border-[#004A4E]/30 rounded text-sm"
+              className="flex-1 rounded border border-border bg-input px-2 py-1.5 text-sm text-foreground placeholder:text-muted"
             />
             <button
               type="button"
@@ -236,7 +236,7 @@ export default function UploadJob() {
         <button
           type="button"
           onClick={() => router.back()}
-          className="px-5 py-2.5 rounded-lg border border-[#004A4E]/30 text-[#004A4E] text-sm font-medium hover:bg-[#004A4E]/5"
+          className="rounded-lg border border-border px-5 py-2.5 text-sm font-medium text-foreground hover:bg-muted-bg"
         >
           Cancel
         </button>

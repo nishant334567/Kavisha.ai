@@ -27,10 +27,10 @@ export default function JobCard({ job, alreadyApplied = false, brand, className 
 
   return (
     <article
-      className={`relative flex flex-col bg-white rounded-xl border border-gray-200 shadow-sm hover:shadow-md transition-shadow p-5 min-h-[200px] ${className}`}
+      className={`relative flex min-h-[200px] flex-col rounded-xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md ${className}`}
     >
       {alreadyApplied && (
-        <span className="absolute top-3 right-3 rounded-full bg-gray-200 text-gray-600 text-xs font-medium px-2.5 py-1">
+        <span className="absolute right-3 top-3 rounded-full bg-muted-bg px-2.5 py-1 text-xs font-medium text-muted">
           Applied
         </span>
       )}
@@ -39,12 +39,12 @@ export default function JobCard({ job, alreadyApplied = false, brand, className 
         href={jobPageHref}
         className="block flex-1 min-h-0 group cursor-pointer pr-16"
       >
-        <h2 className="text-[#004A4E] font-bold text-lg leading-tight group-hover:underline">
+        <h2 className="text-highlight font-bold text-lg leading-tight group-hover:underline">
           {title}
         </h2>
 
         {truncatedDescription ? (
-          <p className="text-sm text-gray-600 leading-relaxed mt-2 line-clamp-3">
+          <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">
             {truncatedDescription}
           </p>
         ) : (

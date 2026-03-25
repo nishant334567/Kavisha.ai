@@ -17,28 +17,28 @@ export default function ConfirmModal({
     return (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/30" onClick={onCancel}>
             <div
-                className="bg-white border border-gray-200 shadow-2xl rounded-2xl w-full max-w-sm overflow-hidden"
+                className="w-full max-w-sm overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-2xl"
                 onClick={(e) => e.stopPropagation()}
             >
                 <div className="p-6">
                     {hasPaymentLayout ? (
                         <>
-                            <h3 className="text-lg font-semibold text-gray-900 mb-4 text-center">
+                            <h3 className="mb-4 text-center text-lg font-semibold text-highlight">
                                 {title}
                             </h3>
-                            <div className="space-y-0 border-t border-gray-200">
+                            <div className="space-y-0 border-t border-border">
                                 {rows.map((row, i) => (
                                     <div
                                         key={i}
-                                        className="flex justify-between items-start gap-4 py-3 border-b border-gray-200 last:border-b-0"
+                                        className="flex items-start justify-between gap-4 border-b border-border py-3 last:border-b-0"
                                     >
-                                        <span className="text-sm text-gray-900">{row.label}</span>
+                                        <span className="text-sm text-foreground">{row.label}</span>
                                         <div className="text-right">
-                                            <span className={`text-sm ${row.isAmount ? "font-semibold text-gray-900" : "text-gray-900"}`}>
+                                            <span className={`text-sm ${row.isAmount ? "font-semibold text-foreground" : "text-foreground"}`}>
                                                 {row.value}
                                             </span>
                                             {row.note && (
-                                                <p className="text-xs text-gray-400 mt-0.5">{row.note}</p>
+                                                <p className="mt-0.5 text-xs text-muted">{row.note}</p>
                                             )}
                                         </div>
                                     </div>
@@ -46,7 +46,7 @@ export default function ConfirmModal({
                             </div>
                         </>
                     ) : (
-                        <p className="text-[#004A4E] text-base sm:text-lg mb-6 text-center">
+                        <p className="mb-6 text-center text-base text-highlight sm:text-lg">
                             {message}
                         </p>
                     )}
@@ -61,7 +61,7 @@ export default function ConfirmModal({
                     </button>
                     <button
                         type="button"
-                        className="flex-1 rounded-full bg-[#E6F5F2] text-[#3D606E] px-4 py-2.5 text-sm font-medium hover:bg-[#d6ede9] transition-colors"
+                        className="flex-1 rounded-full bg-muted-bg px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-card"
                         onClick={onCancel}
                     >
                         {cancelLabel}

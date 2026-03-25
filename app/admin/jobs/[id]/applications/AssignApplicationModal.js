@@ -77,13 +77,13 @@ export default function AssignApplicationModal({
       className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-xl shadow-xl w-full max-w-md flex flex-col overflow-hidden border border-gray-200">
-        <div className="flex-shrink-0 flex items-center justify-between px-4 py-3 border-b border-gray-200">
-          <h2 className="font-semibold text-gray-900">Assign to admin</h2>
+      <div className="flex w-full max-w-md flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-xl">
+        <div className="flex flex-shrink-0 items-center justify-between border-b border-border px-4 py-3">
+          <h2 className="font-semibold text-highlight">Assign to admin</h2>
           <button
             type="button"
             onClick={onClose}
-            className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600"
+            className="rounded-lg p-1.5 text-muted hover:bg-muted-bg hover:text-foreground"
             aria-label="Close"
           >
             <X className="w-5 h-5" />
@@ -91,27 +91,27 @@ export default function AssignApplicationModal({
         </div>
         <div className="p-4 space-y-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="mb-1 block text-sm font-medium text-foreground">
               Admins (select multiple)
             </label>
             {loading ? (
-              <p className="text-sm text-gray-500">Loading admins...</p>
+              <p className="text-sm text-muted">Loading admins...</p>
             ) : admins.length === 0 ? (
-              <p className="text-sm text-gray-500">No admins found.</p>
+              <p className="text-sm text-muted">No admins found.</p>
             ) : (
-              <div className="max-h-40 overflow-y-auto rounded-lg border border-gray-300 p-2 space-y-1.5">
+              <div className="max-h-40 space-y-1.5 overflow-y-auto rounded-lg border border-border bg-muted-bg p-2">
                 {admins.map((email) => (
                   <label
                     key={email}
-                    className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 rounded px-2 py-1.5"
+                    className="flex cursor-pointer items-center gap-2 rounded px-2 py-1.5 hover:bg-card"
                   >
                     <input
                       type="checkbox"
                       checked={selectedEmails.includes(email)}
                       onChange={() => toggleAdmin(email)}
-                      className="rounded border-gray-300 text-[#004A4E] focus:ring-[#004A4E]"
+                      className="rounded border-border text-highlight focus:ring-highlight"
                     />
-                    <span className="text-sm text-gray-800">{email}</span>
+                    <span className="text-sm text-foreground">{email}</span>
                   </label>
                 ))}
               </div>

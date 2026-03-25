@@ -76,12 +76,12 @@ export default function MyCommunity() {
       <div className="px-4 mt-4 gap-2">
         <button
           onClick={() => router.back()}
-          className="text-black hover:opacity-70 transition-opacity"
+          className="text-foreground hover:opacity-70 transition-opacity"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
         <div className="flex items-center gap-3 justify-center md:justify-start">
-          <h1 className="md:pl-32 text-3xl md:text-4xl font-zen text-[#000A67] mb-6 pb-2 inline-block">
+          <h1 className="md:pl-32 mb-6 inline-block pb-2 text-3xl font-zen text-highlight md:text-4xl">
             Community
           </h1>
         </div>
@@ -94,16 +94,16 @@ export default function MyCommunity() {
             const count = getTabCount(tab);
             return (
               <div key={tab} className="flex items-center">
-                <div className="uppercase font-medium tracking-wide text-gray-900 relative font-akshar text-xl">
+                <div className="uppercase font-medium tracking-wide text-highlight relative font-akshar text-xl">
                   {tab}
                   {count > 0 && (
-                    <span className="absolute -top-2 -right-6 bg-red-600 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
+                    <span className="absolute -top-2 -right-6 bg-ring text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
                       {count}
                     </span>
                   )}
                 </div>
                 {!isLast && (
-                  <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-gray-300 mx-8"></div>
+                  <div className="hidden lg:block lg:w-px lg:h-6 lg:bg-border mx-8"></div>
                 )}
               </div>
             );
@@ -123,7 +123,7 @@ export default function MyCommunity() {
               );
             })
           ) : (
-            <div className="col-span-full text-center text-gray-500 py-8">
+            <div className="col-span-full text-center text-muted py-8">
               No sessions found
             </div>
           )}

@@ -126,16 +126,16 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
   };
 
   return (
-    <div className="bg-white border border-gray-200 rounded-xl shadow-sm p-6 mb-4 hover:shadow-md transition-shadow">
-      <div className="flex items-center justify-between mb-4">
-        <span className="text-sm font-semibold text-[#264653] font-fredoka">
+    <div className="mb-4 rounded-xl border border-border bg-card p-6 text-foreground shadow-sm transition-shadow hover:shadow-md">
+      <div className="mb-4 flex items-center justify-between">
+        <span className="font-fredoka text-sm font-semibold text-highlight">
           Question {index >= 0 ? index + 1 : "New"}
         </span>
         {onDelete && index >= 0 && (
           <button
             type="button"
             onClick={handleDeleteQuestion}
-            className="flex items-center gap-1.5 px-3 py-1.5 text-red-600 hover:bg-red-50 rounded-lg text-sm font-medium font-fredoka transition-colors"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-fredoka text-sm font-medium text-red-600 transition-colors hover:bg-muted-bg"
             title="Delete question"
           >
             <Trash2 className="w-4 h-4" />
@@ -146,7 +146,7 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
 
       {/* Question Type */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+        <label className="mb-2 block font-fredoka text-sm font-medium text-foreground">
           Question Type <span className="text-red-500">*</span>
         </label>
         <div className="flex gap-3">
@@ -155,8 +155,8 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
             onClick={() => handleQuestionTypeChange("single_choice")}
             className={`flex-1 py-2 px-4 rounded-full font-medium text-sm transition-all font-fredoka ${
               localQuestion?.questionType === "single_choice"
-                ? "bg-[#264653] text-white shadow-md"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-highlight text-white shadow-md"
+                : "bg-muted-bg text-foreground hover:bg-background"
             }`}
           >
             Single Choice
@@ -166,8 +166,8 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
             onClick={() => handleQuestionTypeChange("multi_choice")}
             className={`flex-1 py-2 px-4 rounded-full font-medium text-sm transition-all font-fredoka ${
               localQuestion?.questionType === "multi_choice"
-                ? "bg-[#264653] text-white shadow-md"
-                : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                ? "bg-highlight text-white shadow-md"
+                : "bg-muted-bg text-foreground hover:bg-background"
             }`}
           >
             Multiple Choice
@@ -177,28 +177,28 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
 
       {/* Question Text */}
       <div className="mb-4">
-        <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+        <label className="mb-2 block font-fredoka text-sm font-medium text-foreground">
           Question Text <span className="text-red-500">*</span>
         </label>
         <textarea
           rows={3}
           value={localQuestion?.questionText || ""}
           onChange={handleQuestionTextChange}
-          className="w-full px-4 py-2 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent resize-none font-fredoka"
+          className="w-full resize-none rounded-xl border border-border bg-input px-4 py-2 font-fredoka text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
           placeholder="Enter your question"
         />
       </div>
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+        <label className="mb-2 block font-fredoka text-sm font-medium text-foreground">
           Question images (optional)
         </label>
         <input ref={fileInputRef} type="file" multiple className="hidden" accept="image/*" onChange={handleImageChange}/>
-      <button className="flex items-center gap-1.5 px-3 py-2 border border-gray-300 rounded-xl bg-white hover:bg-gray-50 text-sm font-fredoka text-[#264653] disabled:opacity-50" type="button" onClick={()=>fileInputRef.current?.click()} disabled={uploadingImages}><ImagePlus className="w-4 h-4" />
+      <button className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-fredoka text-highlight hover:bg-muted-bg disabled:opacity-50" type="button" onClick={()=>fileInputRef.current?.click()} disabled={uploadingImages}><ImagePlus className="w-4 h-4" />
           {uploadingImages ? "Uploading…" : "Add images"}</button>
       <div className="flex flex-wrap gap-2 mt-2">
         {(localQuestion?.images || []).map((url, i) => (
           <div key={i} className="relative group">
-            <img src={url} alt="" className="h-16 w-16 object-cover rounded-lg border border-gray-200" />
+            <img src={url} alt="" className="h-16 w-16 rounded-lg border border-border object-cover" />
             <button
               type="button"
               onClick={() => removeImage(i)}
@@ -215,13 +215,13 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
       {/* Options */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <label className="block text-sm font-medium text-gray-700 font-fredoka">
+          <label className="block font-fredoka text-sm font-medium text-foreground">
             Options <span className="text-red-500">*</span>
           </label>
           <button
             type="button"
             onClick={handleAddOption}
-            className="flex items-center gap-1 text-sm text-[#264653] hover:text-[#1e383e] font-medium font-fredoka"
+            className="flex items-center gap-1 font-fredoka text-sm font-medium text-highlight hover:opacity-80"
           >
             <Plus className="w-4 h-4" />
             Add Option
@@ -246,7 +246,7 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
                         localQuestion?.correctAnswer.includes(item?.id)
                   }
                   onChange={() => handleCorrectAnswerChange(item?.id)}
-                  className="w-4 h-4 text-[#264653] focus:ring-teal-500 cursor-pointer"
+                  className="h-4 w-4 cursor-pointer text-highlight focus:ring-ring/30"
                   title="Mark as correct answer"
                 />
               )}
@@ -254,7 +254,7 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
                 type="text"
                 value={item?.text || ""}
                 onChange={(e) => handleOptionChange(optIndex, e.target.value)}
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent font-fredoka"
+                className="flex-1 rounded-xl border border-border bg-input px-3 py-2 font-fredoka text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                 placeholder={`Option ${optIndex + 1}`}
               />
               {(localQuestion?.options || []).length > 1 && (
@@ -271,7 +271,7 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
           ))}
         </div>
         {(!localQuestion?.options || localQuestion.options.length === 0) && (
-          <p className="text-sm text-gray-500 mt-2 italic font-fredoka">
+          <p className="mt-2 font-fredoka text-sm italic text-muted">
             No options added. Click "Add Option" to add one.
           </p>
         )}
@@ -279,22 +279,22 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
 
       {/* Max Marks */}
       <div className="mb-2">
-        <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+        <label className="mb-2 block font-fredoka text-sm font-medium text-foreground">
           Max Marks
         </label>
         <input
           type="number"
           value={localQuestion?.maxMarks || 1}
           onChange={handleMaxMarksChange}
-          className="w-full px-3 py-2 border border-gray-300 rounded-xl bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 focus:border-transparent font-fredoka"
+          className="w-full rounded-xl border border-border bg-input px-3 py-2 font-fredoka text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
           min="1"
         />
       </div>
 
       {/* Correct Answer Indicator */}
       {isQuiz && (
-        <div className="mt-3 pt-3 border-t border-gray-200">
-          <p className="text-xs text-gray-500 font-fredoka">
+        <div className="mt-3 border-t border-border pt-3">
+          <p className="font-fredoka text-xs text-muted">
             {localQuestion?.questionType === "single_choice"
               ? "Select one correct answer (radio button)"
               : "Select one or more correct answers (checkboxes)"}

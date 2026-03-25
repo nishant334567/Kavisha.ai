@@ -43,28 +43,28 @@ export default function JobsPage() {
   }, []);
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-6">
+    <div className="mx-auto max-w-6xl bg-background px-4 py-6 text-foreground">
       <div className="flex items-center gap-3 mb-6">
         <button
           type="button"
           onClick={() => router.back()}
-          className="p-2 rounded-lg hover:bg-[#004A4E]/10 text-[#004A4E]"
+          className="rounded-lg p-2 text-highlight hover:bg-muted-bg"
           aria-label="Back"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
         <div>
-          <h1 className="text-2xl font-bold text-gray-900">Jobs</h1>
-          <p className="text-sm text-gray-500 mt-0.5">
+          <h1 className="text-2xl font-bold text-foreground">Jobs</h1>
+          <p className="mt-0.5 text-sm text-muted">
             All jobs listed by {brandName ? `Prof. ${brandName}` : "this brand"}
           </p>
         </div>
       </div>
 
       {loading ? (
-        <div className="text-[#004A4E] py-12 text-center">Loading…</div>
+        <div className="py-12 text-center text-highlight">Loading…</div>
       ) : jobs.length === 0 ? (
-        <p className="text-gray-500 text-sm py-8">No jobs yet.</p>
+        <p className="py-8 text-sm text-muted">No jobs yet.</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {jobs.map((job) => (

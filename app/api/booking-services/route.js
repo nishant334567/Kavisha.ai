@@ -1,6 +1,7 @@
 import { connectDB } from "@/app/lib/db";
 import BookingService from "@/app/models/BookingService";
 import BookingAvailability from "@/app/models/BookingAvailability";
+import { refreshImageUrl } from "@/app/lib/gcs";
 import { client as sanityClient } from "@/app/lib/sanity";
 import { NextResponse } from "next/server";
 
@@ -44,7 +45,14 @@ export async function GET(req) {
       .sort({ createdAt: -1 })
       .lean();
 
-    return NextResponse.json({ services }, { status: 200 });
+    const servicesWithFreshImages = await Promise.all(
+      services.map(async (service) => ({
+        ...service,
+        image: service.image ? await refreshImageUrl(service.image) : "",
+      }))
+    );
+
+    return NextResponse.json({ services: servicesWithFreshImages }, { status: 200 });
   } catch (error) {
     console.error("Error fetching booking services:", error);
     return NextResponse.json(

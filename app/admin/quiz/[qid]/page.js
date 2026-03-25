@@ -143,8 +143,8 @@ export default function QuizViewEdit() {
 
   if (!assessment) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <p className="text-gray-600">Quiz not found</p>
+      <div className="flex min-h-screen items-center justify-center bg-background text-foreground">
+        <p className="text-muted">Quiz not found</p>
       </div>
     );
   }
@@ -152,13 +152,13 @@ export default function QuizViewEdit() {
   const isDraft = (assessment.status || "draft") === "draft";
 
   return (
-    <div className="min-h-screen bg-white pt-20 md:pt-24 pb-8">
+    <div className="min-h-screen bg-background pt-20 pb-8 text-foreground md:pt-24">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6 text-sm font-medium font-fredoka group"
+            className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-fredoka"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back
@@ -166,7 +166,7 @@ export default function QuizViewEdit() {
 
           <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-semibold text-[#264653] font-fredoka">
+              <h1 className="text-3xl font-semibold text-highlight font-fredoka">
                 Quiz Details
               </h1>
               <span className={`px-2 py-1 text-sm font-medium rounded-full font-fredoka ${isDraft ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"}`}>
@@ -186,7 +186,7 @@ export default function QuizViewEdit() {
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="px-4 py-2 bg-gray-600 text-white rounded-full hover:bg-gray-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium font-fredoka flex items-center gap-2"
+                    className="flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 font-fredoka"
                   >
                     <Save className="w-4 h-4" />
                     {saving ? "Saving..." : "Save draft"}
@@ -194,7 +194,7 @@ export default function QuizViewEdit() {
                   <button
                     onClick={handlePublish}
                     disabled={saving || !questions?.length}
-                    className="px-4 py-2 bg-teal-600 text-white rounded-full hover:bg-teal-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors text-sm font-medium font-fredoka flex items-center gap-2"
+                    className="flex items-center gap-2 rounded-full bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 font-fredoka"
                   >
                     <Upload className="w-4 h-4" />
                     {saving ? "Publishing..." : "Publish"}
@@ -203,7 +203,7 @@ export default function QuizViewEdit() {
               ) : (
                 <button
                   onClick={() => router.push(`/admin/quiz/${qid}/attempts`)}
-                  className="px-4 py-2 bg-[#264653] text-white rounded-full hover:bg-[#1e383e] transition-colors text-sm font-medium font-fredoka flex items-center gap-2"
+                  className="flex items-center gap-2 rounded-full bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 font-fredoka"
                 >
                   <Eye className="w-4 h-4" />
                   View attempts
@@ -214,19 +214,19 @@ export default function QuizViewEdit() {
         </div>
 
         {/* Assessment Details Card */}
-        <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 mb-6">
-          <h2 className="text-xl font-semibold text-[#264653] font-fredoka mb-4">
+        <div className="mb-6 rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="mb-4 text-xl font-semibold text-foreground font-fredoka">
             Quiz Information
           </h2>
 
           <div className="space-y-4">
             {/* Type - Read Only */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
                 Type
               </label>
-              <div className="px-3 py-2 bg-gray-50 rounded-xl border border-gray-200">
-                <span className="text-gray-900 capitalize font-fredoka">
+              <div className="rounded-xl border border-border bg-muted-bg px-3 py-2">
+                <span className="capitalize text-foreground font-fredoka">
                   {assessment.type}
                 </span>
               </div>
@@ -234,7 +234,7 @@ export default function QuizViewEdit() {
 
             {/* Title */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
                 Title <span className="text-red-500">*</span>
               </label>
               <input
@@ -244,14 +244,14 @@ export default function QuizViewEdit() {
                   setFormData((prev) => ({ ...prev, title: e.target.value }))
                 }
                 readOnly={!isDraft}
-                className={`w-full px-4 py-2 border border-gray-300 rounded-xl font-fredoka ${isDraft ? "focus:outline-none focus:ring-2 focus:ring-teal-500" : "bg-gray-50 cursor-default"}`}
+                className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                 placeholder="Enter quiz title"
               />
             </div>
 
             {/* Subtitle */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
                 Subtitle
               </label>
               <input
@@ -261,14 +261,14 @@ export default function QuizViewEdit() {
                   setFormData((prev) => ({ ...prev, subtitle: e.target.value }))
                 }
                 readOnly={!isDraft}
-                className={`w-full px-4 py-2 border border-gray-300 rounded-xl font-fredoka ${isDraft ? "focus:outline-none focus:ring-2 focus:ring-teal-500" : "bg-gray-50 cursor-default"}`}
+                className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                 placeholder="Enter subtitle"
               />
             </div>
 
             {/* Objective */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
                 Objective
               </label>
               <textarea
@@ -281,14 +281,14 @@ export default function QuizViewEdit() {
                 }
                 readOnly={!isDraft}
                 rows={3}
-                className={`w-full px-4 py-2 border border-gray-300 rounded-xl font-fredoka ${isDraft ? "focus:outline-none focus:ring-2 focus:ring-teal-500" : "bg-gray-50 cursor-default"}`}
+                className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                 placeholder="Enter objective"
               />
             </div>
 
             {/* Instructions */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
                 Instructions
               </label>
               <textarea
@@ -301,14 +301,14 @@ export default function QuizViewEdit() {
                 }
                 readOnly={!isDraft}
                 rows={3}
-                className={`w-full px-4 py-2 border border-gray-300 rounded-xl font-fredoka ${isDraft ? "focus:outline-none focus:ring-2 focus:ring-teal-500" : "bg-gray-50 cursor-default"}`}
+                className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                 placeholder="Enter instructions"
               />
             </div>
 
             {/* Total Marks */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
                 Total Marks
               </label>
               <input
@@ -321,14 +321,14 @@ export default function QuizViewEdit() {
                   }))
                 }
                 readOnly={!isDraft}
-                className={`w-full px-4 py-2 border border-gray-300 rounded-xl font-fredoka ${isDraft ? "focus:outline-none focus:ring-2 focus:ring-teal-500" : "bg-gray-50 cursor-default"}`}
+                className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                 placeholder="Enter total marks"
               />
             </div>
 
             {/* Duration */}
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
                 Duration (minutes)
               </label>
               <input
@@ -343,7 +343,7 @@ export default function QuizViewEdit() {
                   }))
                 }
                 readOnly={!isDraft}
-                className={`w-full px-4 py-2 border border-gray-300 rounded-xl font-fredoka ${isDraft ? "focus:outline-none focus:ring-2 focus:ring-teal-500" : "bg-gray-50 cursor-default"}`}
+                className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                 placeholder="Enter duration in minutes"
               />
             </div>
@@ -353,7 +353,7 @@ export default function QuizViewEdit() {
               <>
                 {/* Legend */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+                  <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
                     Legend / Response Scale
                   </label>
                   <textarea
@@ -366,17 +366,17 @@ export default function QuizViewEdit() {
                     }
                     readOnly={!isDraft}
                     rows={4}
-                    className={`w-full px-4 py-2 border border-gray-300 rounded-xl font-fredoka ${isDraft ? "focus:outline-none focus:ring-2 focus:ring-teal-500" : "bg-gray-50 cursor-default"}`}
+                    className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                     placeholder="e.g., 1: Completely Disagree, 2: Moderately Disagree..."
                   />
-                  <p className="text-xs text-gray-500 mt-1 font-fredoka">
+                  <p className="mt-1 text-xs text-muted font-fredoka">
                     Describe the response scale or legend for your survey
                   </p>
                 </div>
 
                 {/* Scoring Info */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+                  <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
                     Scoring Instructions
                   </label>
                   <textarea
@@ -389,10 +389,10 @@ export default function QuizViewEdit() {
                     }
                     readOnly={!isDraft}
                     rows={6}
-                    className={`w-full px-4 py-2 border border-gray-300 rounded-xl font-fredoka ${isDraft ? "focus:outline-none focus:ring-2 focus:ring-teal-500" : "bg-gray-50 cursor-default"}`}
+                    className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                     placeholder="e.g., Add up your scores for items 1, 2, 4 and 5..."
                   />
-                  <p className="text-xs text-gray-500 mt-1 font-fredoka">
+                  <p className="mt-1 text-xs text-muted font-fredoka">
                     Provide step-by-step instructions on how to calculate the
                     survey score
                   </p>
@@ -400,7 +400,7 @@ export default function QuizViewEdit() {
 
                 {/* Trends */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2 font-fredoka">
+                  <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
                     Trends / Interpretation Guide
                   </label>
                   <textarea
@@ -413,10 +413,10 @@ export default function QuizViewEdit() {
                     }
                     readOnly={!isDraft}
                     rows={6}
-                    className={`w-full px-4 py-2 border border-gray-300 rounded-xl font-fredoka ${isDraft ? "focus:outline-none focus:ring-2 focus:ring-teal-500" : "bg-gray-50 cursor-default"}`}
+                    className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                     placeholder="e.g., If you scored 35 or below, you are in bottom 1/4th..."
                   />
-                  <p className="text-xs text-gray-500 mt-1 font-fredoka">
+                  <p className="mt-1 text-xs text-muted font-fredoka">
                     Provide interpretation guidelines based on score ranges
                   </p>
                 </div>
@@ -427,7 +427,7 @@ export default function QuizViewEdit() {
 
         {/* Questions: editable for draft (QuestionsForm + QuestionItem), read-only for published */}
         {isDraft ? (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
             <QuestionsForm
               questions={questions}
               onChange={setQuestions}
@@ -437,12 +437,12 @@ export default function QuizViewEdit() {
             />
           </div>
         ) : (
-          <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-[#264653] font-fredoka mb-4">
+          <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+            <h2 className="mb-4 text-xl font-semibold text-foreground font-fredoka">
               Questions ({questions.length})
             </h2>
             {questions.length === 0 ? (
-              <p className="text-gray-500 text-center py-8 font-fredoka">No questions</p>
+              <p className="py-8 text-center text-muted font-fredoka">No questions</p>
             ) : (
               <div className="space-y-4">
                 {questions.map((question, index) => {
@@ -452,21 +452,21 @@ export default function QuizViewEdit() {
                     return Array.isArray(question.correctAnswer) && question.correctAnswer.includes(optionId);
                   };
                   return (
-                    <div key={question.id} className="border border-gray-200 rounded-lg p-4 bg-gray-50">
+                    <div key={question.id} className="rounded-lg border border-border bg-muted-bg p-4">
                       <div className="flex items-center gap-2 mb-3">
                         <span className="px-2 py-1 bg-purple-100 text-purple-700 rounded text-xs font-semibold">Q{index + 1}</span>
-                        <span className="px-2 py-1 bg-gray-200 text-gray-700 rounded text-xs font-medium capitalize">
+                        <span className="rounded bg-card px-2 py-1 text-xs font-medium capitalize text-foreground">
                           {question.questionType.replace("_", " ")}
                         </span>
                         {question.maxMarks && (
                           <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">{question.maxMarks} marks</span>
                         )}
                       </div>
-                      <p className="text-gray-900 font-medium mb-4 font-fredoka">{question.questionText}</p>
+                      <p className="mb-4 font-medium text-foreground font-fredoka">{question.questionText}</p>
                       {question.images && question.images.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-4">
                           {question.images.map((imageUrl, imgIndex) => (
-                            <img key={imgIndex} src={imageUrl} alt={`Q${index + 1} image ${imgIndex + 1}`} className="h-32 w-auto object-contain rounded-lg border border-gray-300 bg-white" />
+                            <img key={imgIndex} src={imageUrl} alt={`Q${index + 1} image ${imgIndex + 1}`} className="h-32 w-auto rounded-lg border border-border bg-card object-contain" />
                           ))}
                         </div>
                       )}
@@ -474,11 +474,11 @@ export default function QuizViewEdit() {
                         {question.options?.map((option) => {
                           const correct = isCorrect(option.id);
                           return (
-                            <div key={option.id} className={`flex items-center gap-2 px-3 py-2 rounded-lg border ${correct ? "bg-green-50 border-green-300" : "bg-white border-gray-200"}`}>
-                              <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${correct ? "border-green-600 bg-green-100" : "border-gray-300"}`}>
+                            <div key={option.id} className={`flex items-center gap-2 rounded-lg border px-3 py-2 ${correct ? "border-green-300 bg-green-50" : "border-border bg-card"}`}>
+                              <div className={`flex h-4 w-4 items-center justify-center rounded-full border-2 ${correct ? "border-green-600 bg-green-100" : "border-border"}`}>
                                 {correct && <CheckCircle2 className="w-3 h-3 text-green-600" />}
                               </div>
-                              <span className={`flex-1 ${correct ? "text-green-900 font-medium" : "text-gray-700"}`}>{option.text}</span>
+                              <span className={`flex-1 ${correct ? "font-medium text-green-900" : "text-foreground"}`}>{option.text}</span>
                               {correct && <span className="text-xs text-green-600 font-semibold">Correct</span>}
                             </div>
                           );

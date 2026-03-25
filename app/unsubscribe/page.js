@@ -51,16 +51,16 @@ export default function UnsubscribePage() {
 
   if (done) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md text-center">
-          <p className="text-[#004A4E] font-medium">You have been unsubscribed.</p>
-          <p className="text-sm text-gray-600 mt-1">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
+        <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 text-center shadow-lg">
+          <p className="font-medium text-highlight">You have been unsubscribed.</p>
+          <p className="mt-1 text-sm text-muted">
             {brandName ? `You will not receive more emails from ${brandName}.` : "You will not receive more emails."}
           </p>
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="mt-4 text-sm text-gray-600 hover:underline"
+            className="mt-4 text-sm text-muted hover:text-foreground hover:underline"
           >
             Back to home
           </button>
@@ -71,13 +71,13 @@ export default function UnsubscribePage() {
 
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md text-center">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
+        <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 text-center shadow-lg">
           <p className="text-red-600">{error}</p>
           <button
             type="button"
             onClick={() => router.push("/")}
-            className="mt-4 text-sm text-gray-600 hover:underline"
+            className="mt-4 text-sm text-muted hover:text-foreground hover:underline"
           >
             Back to home
           </button>
@@ -88,8 +88,8 @@ export default function UnsubscribePage() {
 
   if (brandName === null) {
     return (
-      <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-        <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md text-center text-gray-600">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
+        <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 text-center text-muted shadow-lg">
           Loading…
         </div>
       </div>
@@ -97,21 +97,21 @@ export default function UnsubscribePage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-100 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-lg p-6 w-full max-w-md">
-        <h1 className="text-xl font-semibold text-gray-900 mb-2">Unsubscribe</h1>
-        <p className="text-sm text-gray-600 mb-6">
+    <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
+      <div className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-lg">
+        <h1 className="mb-2 text-xl font-semibold text-foreground">Unsubscribe</h1>
+        <p className="mb-6 text-sm text-muted">
           You will no longer receive emails from <strong>{brandName}</strong>.
         </p>
 
         <div className="mb-6">
-          <label className="block text-sm font-medium text-gray-700 mb-1">Reason (optional)</label>
+          <label className="mb-1 block text-sm font-medium text-foreground">Reason (optional)</label>
           <textarea
             value={reason}
             onChange={(e) => setReason(e.target.value)}
             placeholder="Optional feedback"
             rows={3}
-            className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm resize-none"
+            className="w-full resize-none rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted"
           />
         </div>
 
@@ -120,7 +120,7 @@ export default function UnsubscribePage() {
             type="button"
             onClick={handleCancel}
             disabled={loading}
-            className="flex-1 py-2.5 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 disabled:opacity-50"
+            className="flex-1 rounded-lg border border-border py-2.5 text-sm font-medium text-foreground hover:bg-muted-bg disabled:opacity-50"
           >
             Cancel
           </button>

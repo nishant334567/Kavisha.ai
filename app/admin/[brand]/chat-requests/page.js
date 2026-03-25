@@ -103,11 +103,11 @@ export default function ChatRequests() {
           <div className="flex items-center gap-2 min-w-0">
             <button
               onClick={() => router.back()}
-              className="text-gray-700 hover:opacity-70 transition-opacity shrink-0"
+              className="shrink-0 text-foreground transition-opacity hover:opacity-70"
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
-            <h1 className="text-2xl sm:text-3xl md:text-4xl font-zen text-[#004A4E] pb-1">
+            <h1 className="pb-1 font-zen text-2xl text-highlight sm:text-3xl md:text-4xl">
               All Chat Requests
             </h1>
           </div>
@@ -130,7 +130,7 @@ export default function ChatRequests() {
                       prev.length === allEmails.length ? [] : allEmails
                     );
                   }}
-                  className="px-4 py-2 rounded-lg border border-[#004A4E]/30 bg-white text-[#004A4E] text-sm font-medium hover:bg-[#004A4E]/5 transition-colors"
+                  className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-highlight transition-colors hover:bg-muted-bg"
                 >
                   {emailList.length === displayedUsers.filter((u) => u?.email).length ? "Deselect all" : "Select all"}
                 </button>
@@ -151,7 +151,7 @@ export default function ChatRequests() {
         </div>
         {/* Service tabs */}
         {servicesDropDown.length > 0 && (
-          <div className="flex justify-center items-end border-b border-gray-200 mb-6 gap-0">
+          <div className="mb-6 flex items-end justify-center gap-0 border-b border-border">
             {[{ _key: "", title: "ALL" }, ...servicesDropDown].map((tab) => {
               const count = tabCount(tab._key);
               const isActive = activeTab === tab._key;
@@ -169,15 +169,15 @@ export default function ChatRequests() {
                     type="button"
                     onClick={() => setActiveTab(tab._key)}
                     className={`relative flex items-center gap-2 px-5 pb-3 pt-1 text-sm transition-all whitespace-nowrap ${isActive
-                      ? "font-semibold text-[#004A4E]"
-                      : "font-medium text-gray-400 hover:text-gray-600"
+                      ? "font-semibold text-highlight"
+                      : "font-medium text-muted hover:text-foreground"
                       }`}
                   >
                     {tab.title}
                     <span
                       className={`text-xs font-semibold px-1.5 py-0.5 rounded ${isActive
                         ? "bg-[#004A4E] text-white"
-                        : "bg-gray-100 text-gray-500"
+                        : "bg-muted-bg text-muted"
                         }`}
                     >
                       {count}
@@ -187,20 +187,20 @@ export default function ChatRequests() {
                     )}
                   </button>
                   {/* Hover analytics popover */}
-                  <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 w-56 bg-white border border-gray-200 rounded-xl shadow-lg px-4 py-3 z-50 pointer-events-none opacity-0 group-hover:opacity-100 transition-opacity duration-150">
-                    <p className="text-xs font-semibold text-[#004A4E] mb-2">{tab.title} analytics</p>
+                  <div className="absolute top-full left-1/2 z-50 mt-2 w-56 -translate-x-1/2 rounded-xl border border-border bg-card px-4 py-3 shadow-lg pointer-events-none opacity-0 transition-opacity duration-150 group-hover:opacity-100">
+                    <p className="mb-2 text-xs font-semibold text-highlight">{tab.title} analytics</p>
                     <div className="space-y-1.5">
-                      <div className="flex justify-between text-xs text-gray-600">
+                      <div className="flex justify-between text-xs text-muted">
                         <span>Total people</span>
-                        <span className="font-semibold text-gray-900">{tabPeople}</span>
+                        <span className="font-semibold text-muted">{tabPeople}</span>
                       </div>
-                      <div className="flex justify-between text-xs text-gray-600">
+                      <div className="flex justify-between text-xs text-muted">
                         <span>Total chats</span>
-                        <span className="font-semibold text-gray-900">{tabChats}</span>
+                        <span className="font-semibold text-muted">{tabChats}</span>
                       </div>
-                      <div className="flex justify-between text-xs text-gray-600">
+                      <div className="flex justify-between text-xs text-muted">
                         <span>Total questions</span>
-                        <span className="font-semibold text-gray-900">{tabQuestions}</span>
+                        <span className="font-semibold text-muted">{tabQuestions}</span>
                       </div>
                     </div>
                   </div>
@@ -211,16 +211,16 @@ export default function ChatRequests() {
         )}
 
         {/* Filter section */}
-        <div className="rounded-xl border border-[#004A4E]/20 bg-[rgba(0,74,78,0.03)] p-4 mb-6 shadow-sm">
+        <div className="mb-6 rounded-xl border border-border bg-muted-bg p-4 shadow-sm">
           <div className="flex flex-wrap items-end gap-4">
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Date</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-highlight">Date</label>
               <select
                 value={draftFilters.datePreset}
                 onChange={(e) =>
                   setDraftFilters((prev) => ({ ...prev, datePreset: e.target.value }))
                 }
-                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[140px]"
+                className="min-w-[140px] rounded-lg border border-border bg-input px-3 py-2 text-sm text-muted outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
               >
                 {datePresets.map((p) => (
                   <option key={p.value} value={p.value}>
@@ -232,38 +232,38 @@ export default function ChatRequests() {
             {draftFilters.datePreset === "custom" && (
               <>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-500">From</label>
+                  <label className="text-xs font-semibold text-muted">From</label>
                   <input
                     type="date"
                     value={draftFilters.dateFrom ?? ""}
                     onChange={(e) =>
                       setDraftFilters((prev) => ({ ...prev, dateFrom: e.target.value }))
                     }
-                    className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 outline-none"
+                    className="rounded-lg border border-border bg-input px-3 py-2 text-sm text-muted outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
                   />
                 </div>
-                <span className="text-sm text-gray-400 pb-2">to</span>
+                <span className="pb-2 text-sm text-muted">to</span>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-500">To</label>
+                  <label className="text-xs font-semibold text-muted">To</label>
                   <input
                     type="date"
                     value={draftFilters.dateTo ?? ""}
                     onChange={(e) =>
                       setDraftFilters((prev) => ({ ...prev, dateTo: e.target.value }))
                     }
-                    className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 outline-none"
+                    className="rounded-lg border border-border bg-input px-3 py-2 text-sm text-muted outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
                   />
                 </div>
               </>
             )}
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Total messages</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-highlight">Total messages</label>
               <select
                 value={draftFilters.minMessages ?? "all"}
                 onChange={(e) =>
                   setDraftFilters((prev) => ({ ...prev, minMessages: e.target.value }))
                 }
-                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[140px]"
+                className="min-w-[140px] rounded-lg border border-border bg-input px-3 py-2 text-sm text-muted outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
               >
                 {messageCountOptions.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -273,13 +273,13 @@ export default function ChatRequests() {
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Chat sessions</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-highlight">Chat sessions</label>
               <select
                 value={draftFilters.minSessions ?? "all"}
                 onChange={(e) =>
                   setDraftFilters((prev) => ({ ...prev, minSessions: e.target.value }))
                 }
-                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[140px]"
+                className="min-w-[140px] rounded-lg border border-border bg-input px-3 py-2 text-sm text-muted outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
               >
                 {sessionCountOptions.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -289,13 +289,13 @@ export default function ChatRequests() {
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Total emails sent</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-highlight">Total emails sent</label>
               <select
                 value={draftFilters.minEmailsSent ?? "all"}
                 onChange={(e) =>
                   setDraftFilters((prev) => ({ ...prev, minEmailsSent: e.target.value }))
                 }
-                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[140px]"
+                className="min-w-[140px] rounded-lg border border-border bg-input px-3 py-2 text-sm text-muted outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
               >
                 {emailSentOptions.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -305,13 +305,13 @@ export default function ChatRequests() {
               </select>
             </div>
             <div className="flex flex-col gap-1">
-              <label className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Last email sent</label>
+              <label className="text-xs font-semibold uppercase tracking-wide text-highlight">Last email sent</label>
               <select
                 value={draftFilters.lastEmailPreset ?? "all"}
                 onChange={(e) =>
                   setDraftFilters((prev) => ({ ...prev, lastEmailPreset: e.target.value }))
                 }
-                className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 focus:border-[#004A4E] outline-none min-w-[160px]"
+                className="min-w-[160px] rounded-lg border border-border bg-input px-3 py-2 text-sm text-muted outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
               >
                 {lastEmailOptions.map((o) => (
                   <option key={o.value} value={o.value}>
@@ -323,26 +323,26 @@ export default function ChatRequests() {
             {draftFilters.lastEmailPreset === "custom" && (
               <>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-500">Last email from</label>
+                  <label className="text-xs font-semibold text-muted">Last email from</label>
                   <input
                     type="date"
                     value={draftFilters.lastEmailFrom ?? ""}
                     onChange={(e) =>
                       setDraftFilters((prev) => ({ ...prev, lastEmailFrom: e.target.value }))
                     }
-                    className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 outline-none"
+                    className="rounded-lg border border-border bg-input px-3 py-2 text-sm text-muted outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
                   />
                 </div>
-                <span className="text-sm text-gray-400 pb-2">to</span>
+                <span className="pb-2 text-sm text-muted">to</span>
                 <div className="flex flex-col gap-1">
-                  <label className="text-xs font-semibold text-gray-500">Last email to</label>
+                  <label className="text-xs font-semibold text-muted">Last email to</label>
                   <input
                     type="date"
                     value={draftFilters.lastEmailTo ?? ""}
                     onChange={(e) =>
                       setDraftFilters((prev) => ({ ...prev, lastEmailTo: e.target.value }))
                     }
-                    className="border border-[#004A4E]/30 rounded-lg px-3 py-2 text-sm bg-white focus:ring-2 focus:ring-[#004A4E]/30 outline-none"
+                    className="rounded-lg border border-border bg-input px-3 py-2 text-sm text-muted outline-none focus:border-ring focus:ring-2 focus:ring-ring/30"
                   />
                 </div>
               </>
@@ -388,7 +388,7 @@ export default function ChatRequests() {
               </div>
             ))
           ) : (
-            <div className="col-span-full text-center text-gray-500 py-8">
+            <div className="col-span-full py-8 text-center text-muted">
               No sessions found
             </div>
           )}
@@ -441,10 +441,10 @@ export default function ChatRequests() {
             className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 overflow-hidden"
             onClick={(e) => e.target === e.currentTarget && setSessionViewSessionId(null)}
           >
-            <div className="bg-white rounded-xl shadow-xl w-full max-w-3xl h-[90vh] flex flex-col overflow-hidden">
-              <div className="flex-shrink-0 flex justify-end p-2 border-b border-[#004A4E]/20 bg-[#004A4E]/5">
-                <button type="button" onClick={() => setSessionViewSessionId(null)} className="p-2 rounded-lg hover:bg-[#004A4E]/10" aria-label="Close">
-                  <X className="w-5 h-5 text-[#004A4E]" />
+            <div className="flex h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-xl border border-border bg-card shadow-xl">
+              <div className="flex flex-shrink-0 justify-end border-b border-border bg-muted-bg p-2">
+                <button type="button" onClick={() => setSessionViewSessionId(null)} className="rounded-lg p-2 hover:bg-background/70" aria-label="Close">
+                  <X className="w-5 h-5 text-highlight" />
                 </button>
               </div>
               <div className="flex-1 min-h-0 overflow-hidden flex flex-col">

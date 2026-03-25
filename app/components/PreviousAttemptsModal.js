@@ -47,9 +47,9 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
       default:
         return {
           icon: Clock,
-          bg: "bg-gray-100",
-          text: "text-gray-700",
-          border: "border-gray-200",
+          bg: "bg-muted-bg",
+          text: "text-foreground",
+          border: "border-border",
         };
     }
   };
@@ -62,17 +62,17 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
 
   return (
     <div
-      className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-2 sm:p-4"
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-2 backdrop-blur-sm sm:p-4"
       onClick={handleBackdropClick}
     >
-      <div className="bg-white rounded-lg sm:rounded-xl shadow-xl max-w-2xl w-full max-h-[90vh] sm:max-h-[85vh] overflow-hidden flex flex-col border border-gray-200">
-        <div className="flex justify-between items-center p-4 sm:p-6 border-b border-gray-200 bg-gradient-to-r from-purple-50 to-white">
-          <h3 className="text-lg sm:text-xl font-semibold text-[#264653]">
+      <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-lg border border-border bg-card text-foreground shadow-xl sm:max-h-[85vh] sm:rounded-xl">
+        <div className="flex items-center justify-between border-b border-border bg-muted-bg p-4 sm:p-6">
+          <h3 className="text-lg font-semibold text-highlight sm:text-xl">
             Previous Attempts
           </h3>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors p-1.5 rounded-lg hover:bg-gray-100"
+            className="rounded-lg p-1.5 text-muted transition-colors hover:bg-card hover:text-foreground"
             aria-label="Close modal"
           >
             <X className="w-5 h-5" />
@@ -81,15 +81,15 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
 
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 scrollbar-thin">
           {loading ? (
-            <div className="text-center py-12 text-gray-500">
-              <div className="inline-block animate-spin rounded-full h-8 w-8 border-b-2 border-[#264653]"></div>
+            <div className="py-12 text-center text-muted">
+              <div className="inline-block h-8 w-8 animate-spin rounded-full border-b-2 border-highlight"></div>
               <p className="mt-4">Loading attempts...</p>
             </div>
           ) : attempts.length === 0 ? (
             <div className="text-center py-12">
-              <Clock className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-500 font-medium">No attempts found</p>
-              <p className="text-gray-400 text-sm mt-2">
+              <Clock className="mx-auto mb-4 h-12 w-12 text-muted" />
+              <p className="font-medium text-foreground">No attempts found</p>
+              <p className="mt-2 text-sm text-muted">
                 Start a new quiz to see your attempts here
               </p>
             </div>
@@ -101,7 +101,7 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
                 return (
                   <div
                     key={attempt.id}
-                    className={`bg-white border-2 ${statusConfig.border} rounded-lg sm:rounded-xl p-4 sm:p-5 hover:shadow-md transition-all`}
+                    className={`border-2 ${statusConfig.border} rounded-lg bg-card p-4 transition-all hover:shadow-md sm:rounded-xl sm:p-5`}
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 sm:gap-0 mb-3 sm:mb-4">
                       <div className="flex items-center gap-2 sm:gap-3">
@@ -118,23 +118,23 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
                           >
                             {attempt.status.replace("-", " ")}
                           </span>
-                          <div className="text-xs text-gray-500 mt-1">
+                          <div className="mt-1 text-xs text-muted">
                             {new Date(attempt.startedAt).toLocaleDateString()}
                           </div>
                         </div>
                       </div>
                       {attempt.score !== null && (
                         <div className="text-left sm:text-right">
-                            <div className="text-xl sm:text-2xl font-bold text-[#264653]">
+                            <div className="text-xl font-bold text-highlight sm:text-2xl">
                             {attempt.score}
                             {attempt.totalMarks && (
-                              <span className="text-gray-400 text-base sm:text-lg font-normal">
+                              <span className="text-base font-normal text-muted sm:text-lg">
                                 /{attempt.totalMarks}
                               </span>
                             )}
                           </div>
                           {attempt.correctCount !== null && (
-                            <div className="text-xs text-gray-600">
+                            <div className="text-xs text-muted">
                               {attempt.correctCount} correct
                             </div>
                           )}
@@ -142,7 +142,7 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
                       )}
                     </div>
                     {attempt.completedAt && (
-                      <div className="text-xs text-gray-500 mb-3 sm:mb-4">
+                      <div className="mb-3 text-xs text-muted sm:mb-4">
                         Completed:{" "}
                         <span className="hidden sm:inline">
                           {new Date(attempt.completedAt).toLocaleString()}
@@ -157,7 +157,7 @@ export default function PreviousAttemptsModal({ isOpen, onClose, quizId }) {
                         router.push(`/quiz/${quizId}/${attempt.id}`);
                         onClose();
                       }}
-                      className="w-full px-3 sm:px-4 py-2 sm:py-2.5 bg-[#264653] text-white rounded-full hover:bg-[#1e383e] transition-colors text-sm sm:text-base font-medium flex items-center justify-center gap-2 shadow-sm"
+                      className="flex w-full items-center justify-center gap-2 rounded-full bg-highlight px-3 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:opacity-90 sm:px-4 sm:py-2.5 sm:text-base"
                     >
                       {attempt.status === "in-progress" ? (
                         <>

@@ -24,7 +24,7 @@ export default function ScoreCard({ results }) {
       <div className="text-center">
         <div className="flex items-center justify-center gap-2 mb-2 sm:mb-3">
           <Trophy className={`w-5 h-5 sm:w-6 sm:h-6 ${getScoreColor()}`} />
-          <h2 className="text-base sm:text-lg font-semibold text-gray-700">
+          <h2 className="text-base font-semibold text-foreground sm:text-lg">
             Quiz Results
           </h2>
         </div>
@@ -34,7 +34,7 @@ export default function ScoreCard({ results }) {
         <div className={`text-xl sm:text-2xl font-semibold mb-2 sm:mb-3 ${getScoreColor()}`}>
           {results.percentage}%
         </div>
-        <div className="flex items-center justify-center gap-2 sm:gap-4 text-xs sm:text-sm text-gray-600">
+        <div className="flex items-center justify-center gap-2 text-xs text-muted sm:gap-4 sm:text-sm">
           <div className="flex items-center gap-1">
             <CheckCircle2 className="w-3 h-3 sm:w-4 sm:h-4 text-green-600" />
             <span>

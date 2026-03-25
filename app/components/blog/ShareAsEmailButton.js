@@ -111,7 +111,7 @@ export default function ShareAsEmailButton({
         type="button"
         onClick={openModal}
         disabled={!slug || !brand}
-        className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md disabled:opacity-60"
+        className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-muted-bg disabled:opacity-60"
         aria-label="Share as email"
       >
         <Mail className="h-4 w-4" />
@@ -122,7 +122,7 @@ export default function ShareAsEmailButton({
         type="button"
         onClick={openModal}
         disabled={!slug || !brand}
-        className="inline-flex items-center justify-center gap-1.5 w-9 h-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors disabled:opacity-60"
+        className="inline-flex h-9 w-9 items-center justify-center gap-1.5 rounded-lg border border-border bg-card text-muted transition-colors hover:bg-muted-bg hover:text-foreground disabled:opacity-60"
         aria-label="Share as email"
         title="Email this post to everyone who has chatted with the avatar"
       >
@@ -172,16 +172,16 @@ function ShareEmailModal({
         role="dialog"
         aria-modal="true"
         aria-labelledby="share-email-title"
-        className="relative w-full max-w-md rounded-xl border border-gray-200 bg-white shadow-xl max-h-[90vh] flex flex-col"
+        className="relative flex max-h-[90vh] w-full max-w-md flex-col rounded-xl border border-border bg-card shadow-xl"
       >
-        <div className="flex items-center justify-between border-b border-gray-200 px-4 py-3">
-          <h2 id="share-email-title" className="text-lg font-semibold text-gray-900">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <h2 id="share-email-title" className="text-lg font-semibold text-foreground">
             Share as email
           </h2>
           <button
             type="button"
             onClick={onClose}
-            className="rounded-lg p-1.5 text-gray-500 hover:bg-gray-100 hover:text-gray-700"
+            className="rounded-lg p-1.5 text-muted hover:bg-muted-bg hover:text-foreground"
             aria-label="Close"
           >
             <X className="h-5 w-5" />
@@ -190,7 +190,7 @@ function ShareEmailModal({
 
         <div className="flex-1 overflow-y-auto px-4 py-4 space-y-4">
           {loading && (
-            <div className="flex items-center justify-center gap-2 py-8 text-gray-500">
+            <div className="flex items-center justify-center gap-2 py-8 text-muted">
               <Loader2 className="h-5 w-5 animate-spin" />
               <span>Loading recipients…</span>
             </div>
@@ -209,11 +209,11 @@ function ShareEmailModal({
 
           {!loading && preview && !result?.ok && (
             <>
-              <p className="text-sm text-gray-600">
+              <p className="text-sm text-muted">
                 This will send &quot;{preview.title}&quot; to{" "}
                 <strong>{count}</strong> recipient{count !== 1 ? "s" : ""}
                 {preview.skippedUnsubscribed > 0 && (
-                  <span className="text-gray-500">
+                  <span className="text-muted">
                     {" "}({preview.skippedUnsubscribed} unsubscribed excluded)
                   </span>
                 )}
@@ -227,11 +227,11 @@ function ShareEmailModal({
               ) : (
                 <>
                   {showRecipients && (
-                    <div className="rounded-lg border border-gray-200 bg-gray-50 max-h-40 overflow-y-auto">
-                      <p className="text-xs font-medium text-gray-500 px-3 py-2 border-b border-gray-200">
+                    <div className="max-h-40 overflow-y-auto rounded-lg border border-border bg-muted-bg">
+                      <p className="border-b border-border px-3 py-2 text-xs font-medium text-muted">
                         Recipients
                       </p>
-                      <ul className="px-3 py-2 text-sm text-gray-700 divide-y divide-gray-200">
+                      <ul className="divide-y divide-border px-3 py-2 text-sm text-foreground">
                         {recipients.map((r) => (
                           <li key={r.email} className="py-1.5 truncate">
                             {r.name && r.name !== r.email ? `${r.name} <${r.email}>` : r.email}
@@ -241,7 +241,7 @@ function ShareEmailModal({
                     </div>
                   )}
                   {recipients.length > 50 && (
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-muted">
                       Recipients: {recipients.slice(0, 3).map((r) => r.email).join(", ")} … and{" "}
                       {recipients.length - 3} more
                     </p>
@@ -253,12 +253,12 @@ function ShareEmailModal({
         </div>
 
         {!loading && preview && !result?.ok && (
-          <div className="flex flex-wrap items-center gap-2 border-t border-gray-200 px-4 py-3">
+          <div className="flex flex-wrap items-center gap-2 border-t border-border px-4 py-3">
             <button
               type="button"
               onClick={onPreview}
               disabled={!preview.previewHtml}
-              className="inline-flex items-center gap-2 rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted-bg disabled:opacity-50"
             >
               <FileText className="h-4 w-4" />
               Preview
@@ -284,7 +284,7 @@ function ShareEmailModal({
             <button
               type="button"
               onClick={onClose}
-              className="ml-auto rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="ml-auto rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted-bg"
             >
               Cancel
             </button>
@@ -292,11 +292,11 @@ function ShareEmailModal({
         )}
 
         {(loading || result?.ok) && (
-          <div className="border-t border-gray-200 px-4 py-3">
+          <div className="border-t border-border px-4 py-3">
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+              className="w-full rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted-bg"
             >
               Close
             </button>

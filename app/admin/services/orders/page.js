@@ -6,10 +6,10 @@ import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { CalendarDays, Link2, User } from "lucide-react";
 
 const CARD_HEADER_COLORS = [
-  "bg-[#c5e8e8]",
-  "bg-[#f5f0e6]",
-  "bg-[#e8e0f0]",
-  "bg-[#e2e6ec]",
+  "bg-muted-bg",
+  "bg-background",
+  "bg-muted-bg",
+  "bg-background",
 ];
 
 function formatSessionDate(dateStr) {
@@ -76,45 +76,45 @@ function AdminBookingCard({ booking, index }) {
   const displayDuration = durationUnit === "Hours" ? `${duration} hr` : `${duration} min`;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       <div className={`${headerColor} pt-5 pb-8 px-4 relative min-h-[100px]`}>
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <h2 className="text-xl font-bold text-gray-900 truncate">{title}</h2>
+            <h2 className="truncate text-xl font-bold text-foreground">{title}</h2>
             {subtitle ? (
-              <p className="text-sm text-gray-700 mt-0.5 truncate">{subtitle}</p>
+              <p className="mt-0.5 truncate text-sm text-muted">{subtitle}</p>
             ) : null}
           </div>
-          <div className="shrink-0 w-12 h-12 rounded-xl bg-white/80 border border-white shadow-sm flex items-center justify-center -mb-6">
-            <User className="w-6 h-6 text-gray-500" />
+          <div className="-mb-6 flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-border bg-card/80 shadow-sm">
+            <User className="w-6 h-6 text-muted" />
           </div>
         </div>
       </div>
       <div className="px-4 pt-4 pb-3">
-        <div className="space-y-2 border-b border-gray-100 pb-3">
+        <div className="space-y-2 border-b border-border pb-3">
           <div className="text-sm">
-            <p className="font-medium text-gray-900">Booker</p>
-            <p className="text-gray-700">{name}</p>
-            <p className="text-gray-500 text-xs">{email}</p>
-            {phone ? <p className="text-gray-500 text-xs">{phone}</p> : null}
+            <p className="font-medium text-foreground">Booker</p>
+            <p className="text-foreground">{name}</p>
+            <p className="text-xs text-muted">{email}</p>
+            {phone ? <p className="text-xs text-muted">{phone}</p> : null}
           </div>
           <div className="grid grid-cols-3 gap-2 items-center">
             <div
               className={
                 booking.paymentStatus === "completed" && booking.status !== "cancelled"
-                  ? "bg-green-50 rounded-lg px-3 py-2 -mx-1"
+                  ? "-mx-1 rounded-lg bg-green-500/10 px-3 py-2"
                   : ""
               }
             >
-              <p className="text-sm font-medium text-gray-900">Rs. {Math.round(booking.totalAmount || 0)}/-</p>
+              <p className="text-sm font-medium text-foreground">Rs. {Math.round(booking.totalAmount || 0)}/-</p>
               <PaymentStatusPill status={booking.status} paymentStatus={booking.paymentStatus} />
             </div>
-            <div className="text-sm text-gray-700">Duration: {displayDuration}</div>
-            <div className="text-sm text-gray-700">Mode: {mode}</div>
+            <div className="text-sm text-muted">Duration: {displayDuration}</div>
+            <div className="text-sm text-muted">Mode: {mode}</div>
           </div>
         </div>
         <div className="pt-3 space-y-2">
-          <div className="flex justify-between items-center text-sm text-gray-700">
+          <div className="flex items-center justify-between text-sm text-muted">
             <span>Session: {formatSessionDate(booking.date)}</span>
             <span>Time: {formatTime(booking.startTime)}</span>
           </div>
@@ -125,7 +125,7 @@ function AdminBookingCard({ booking, index }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Join Google Meet"
-                className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 inline-flex items-center justify-center"
+                className="inline-flex items-center justify-center rounded-md p-1.5 text-muted hover:bg-muted-bg hover:text-foreground"
               >
                 <Link2 className="w-4 h-4" />
               </a>
@@ -171,17 +171,17 @@ export default function ServiceOrdersPage() {
 
   let content;
   if (!brand) {
-    content = <p className="text-gray-500">Select a brand to view bookings.</p>;
+    content = <p className="text-muted">Select a brand to view bookings.</p>;
   } else if (loading) {
-    content = <p className="text-gray-500">Loading bookings…</p>;
+    content = <p className="text-muted">Loading bookings…</p>;
   } else if (error) {
     content = <p className="text-red-600">{error}</p>;
   } else if (bookings.length === 0) {
     content = (
-      <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
-        <CalendarDays className="w-10 h-10 mx-auto text-gray-400 mb-3" />
-        <p className="text-gray-700 font-medium">No booking orders yet</p>
-        <p className="text-sm text-gray-500 mt-1">
+      <div className="rounded-xl border border-border bg-card p-8 text-center">
+        <CalendarDays className="mx-auto mb-3 h-10 w-10 text-muted" />
+        <p className="font-medium text-foreground">No booking orders yet</p>
+        <p className="mt-1 text-sm text-muted">
           Booking entries will appear here after users start booking.
         </p>
       </div>
@@ -198,7 +198,7 @@ export default function ServiceOrdersPage() {
 
   return (
     <div>
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+      <h1 className="mb-6 text-2xl font-bold text-foreground">
         Booking orders
       </h1>
       {content}

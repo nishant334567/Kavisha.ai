@@ -25,6 +25,7 @@ module.exports = {
         card: "var(--card)",
         input: "var(--input)",
         ring: "var(--ring)",
+        highlight: "var(--highlight)",
       },
       fontFamily: {
         zen: ["var(--font-zen-dots)"],

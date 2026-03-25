@@ -33,8 +33,8 @@ export default function Dropdown({
   };
 
   return (
-    <div className="bg-white rounded-lg shadow-md border border-gray-200 p-4 min-w-0 max-w-full">
-      <p className="text-gray-500 text-sm mb-3">Assign to menu</p>
+    <div className="min-w-0 max-w-full rounded-lg border border-border bg-card p-4 text-foreground shadow-md">
+      <p className="mb-3 text-sm text-muted">Assign to menu</p>
       <div className="space-y-2 mb-4 min-w-0">
         {options.map((item, index) => {
           const value = typeof item === "string" ? item : item.value;
@@ -52,20 +52,20 @@ export default function Dropdown({
           return (
             <div
               key={index}
-              className={`flex items-center justify-between py-2 min-w-0 ${
-                !isUnassigned ? "cursor-pointer hover:bg-gray-50" : ""
+              className={`flex min-w-0 items-center justify-between rounded-md py-2 ${
+                !isUnassigned ? "cursor-pointer hover:bg-muted-bg" : ""
               }`}
               onClick={() => !isUnassigned && handleSelect(value)}
             >
-              <span className="text-sm text-gray-900 break-all min-w-0 flex-1 pr-2">
+              <span className="min-w-0 flex-1 break-all pr-2 text-sm text-foreground">
                 {label}
               </span>
               {!isUnassigned && (
                 <div
                   className={`w-4 h-4 rounded-full border-2 flex items-center justify-center transition-all ${
                     isSelected
-                      ? "border-purple-600 bg-purple-600"
-                      : "border-gray-300 bg-white"
+                      ? "border-highlight bg-highlight"
+                      : "border-border bg-card"
                   }`}
                 >
                   {isSelected && (
@@ -77,10 +77,10 @@ export default function Dropdown({
           );
         })}
       </div>
-      <div className="border-t border-gray-200 pt-4">
+      <div className="border-t border-border pt-4">
         <button
           onClick={handleProceed}
-          className="w-full py-2 px-4 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors text-sm font-medium"
+          className="w-full rounded-lg bg-muted-bg px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background"
         >
           Proceed
         </button>

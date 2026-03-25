@@ -6,7 +6,7 @@ import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { ArrowLeft, Plus, Trash2, Upload, X } from "lucide-react";
 
 const INPUT_CLASS =
-  "w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E] text-sm";
+  "w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30";
 
 const EMPTY_SOCIAL = {
   youtube: { enabled: false, url: "" },
@@ -169,7 +169,7 @@ export default function AdminLinksPage() {
 
   if (loading) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8 text-gray-500">
+      <div className="mx-auto max-w-2xl px-4 py-8 text-muted">
         Loading…
       </div>
     );
@@ -177,34 +177,34 @@ export default function AdminLinksPage() {
 
   if (!brand) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-8 text-gray-500">
+      <div className="mx-auto max-w-2xl px-4 py-8 text-muted">
         Brand is required. Go back and select a brand.
       </div>
     );
   }
 
   return (
-    <div className="max-w-2xl mx-auto px-4 py-6">
-      <div className="flex items-center gap-3 mb-6">
+    <div className="mx-auto max-w-2xl bg-background px-4 py-6 text-foreground">
+      <div className="mb-6 flex items-center gap-3">
         <button
           type="button"
           onClick={() => router.back()}
-          className="p-2 rounded-lg hover:bg-[#2D545E]/10 text-[#2D545E]"
+          className="rounded-lg p-2 text-highlight hover:bg-muted-bg"
           aria-label="Back"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-semibold text-gray-900">Link tree</h1>
+        <h1 className="text-xl font-semibold text-highlight">Link tree</h1>
       </div>
 
       <form onSubmit={handleSave} className="space-y-6">
         <div>
-          <div className="flex items-center justify-between mb-2">
-            <label className="block text-sm font-medium text-gray-700">Links</label>
+          <div className="mb-2 flex items-center justify-between">
+            <label className="block text-sm font-medium text-foreground">Links</label>
             <button
               type="button"
               onClick={addLink}
-              className="flex items-center gap-1.5 text-sm text-[#2D545E] hover:underline"
+              className="flex items-center gap-1.5 text-sm text-highlight hover:underline"
             >
               <Plus className="w-4 h-4" />
               Add link
@@ -214,9 +214,9 @@ export default function AdminLinksPage() {
             {links.map((link, index) => (
               <div
                 key={index}
-                className="flex gap-2 items-start rounded-lg border border-gray-200 p-3 bg-gray-50/50"
+                className="flex items-start gap-2 rounded-lg border border-border bg-card p-3"
               >
-                <div className="flex-1 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-2">
                   <input
                     type="text"
                     value={link.label}
@@ -232,7 +232,7 @@ export default function AdminLinksPage() {
                     className={INPUT_CLASS}
                   />
                   <div className={`flex items-center gap-2 sm:col-span-2`}>
-                    <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gray-200 overflow-hidden flex items-center justify-center text-gray-600">
+                    <div className="flex h-10 w-10 flex-shrink-0 items-center justify-center overflow-hidden rounded-lg bg-muted-bg text-muted">
                       {(link.displayUrl || link.image) ? (
                         <img
                           src={link.displayUrl || link.image}
@@ -260,7 +260,7 @@ export default function AdminLinksPage() {
                         type="button"
                         onClick={() => fileInputRefs.current[index]?.click()}
                         disabled={uploadingIndex === index}
-                        className="inline-flex items-center gap-1.5 px-2 py-1.5 rounded border border-gray-300 text-gray-700 text-sm hover:bg-gray-50 disabled:opacity-50"
+                        className="inline-flex items-center gap-1.5 rounded border border-border bg-card px-2 py-1.5 text-sm text-foreground hover:bg-muted-bg disabled:opacity-50"
                       >
                         <Upload className="w-4 h-4" />
                         {uploadingIndex === index ? "Uploading…" : "Upload image"}
@@ -269,7 +269,7 @@ export default function AdminLinksPage() {
                         <button
                           type="button"
                           onClick={() => updateLinkImageAndDisplay(index, "", undefined)}
-                          className="p-1.5 text-gray-400 hover:text-red-600 rounded"
+                          className="rounded p-1.5 text-muted hover:bg-muted-bg hover:text-red-600"
                           aria-label="Remove image"
                         >
                           <X className="w-4 h-4" />
@@ -281,7 +281,7 @@ export default function AdminLinksPage() {
                 <button
                   type="button"
                   onClick={() => removeLink(index)}
-                  className="p-2 text-gray-400 hover:text-red-600 rounded"
+                  className="rounded p-2 text-muted hover:bg-muted-bg hover:text-red-600"
                   aria-label="Remove link"
                 >
                   <Trash2 className="w-4 h-4" />
@@ -292,19 +292,19 @@ export default function AdminLinksPage() {
         </div>
 
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-foreground">
             Social links
           </label>
-          <p className="text-xs text-gray-500 mb-3">
+          <p className="mb-3 text-xs text-muted">
             Shown as icons at the bottom of the public link page when enabled.
           </p>
           <div className="space-y-3">
             {SOCIAL_FIELDS.map(({ key, label }) => (
               <div
                 key={key}
-                className="rounded-lg border border-gray-200 p-3 bg-gray-50/50 space-y-2"
+                className="space-y-2 rounded-lg border border-border bg-card p-3"
               >
-                <label className="flex items-center gap-2 text-sm font-medium text-gray-800">
+                <label className="flex items-center gap-2 text-sm font-medium text-foreground">
                   <input
                     type="checkbox"
                     checked={social[key].enabled}
@@ -314,7 +314,7 @@ export default function AdminLinksPage() {
                         [key]: { ...prev[key], enabled: e.target.checked },
                       }))
                     }
-                    className="rounded border-gray-300 text-[#2D545E] focus:ring-[#2D545E]"
+                    className="rounded border-border text-highlight focus:ring-highlight"
                   />
                   {label}
                 </label>
@@ -329,7 +329,7 @@ export default function AdminLinksPage() {
                   }
                   placeholder="https://…"
                   disabled={!social[key].enabled}
-                  className={`${INPUT_CLASS} ${!social[key].enabled ? "opacity-50 cursor-not-allowed" : ""}`}
+                  className={`${INPUT_CLASS} ${!social[key].enabled ? "cursor-not-allowed opacity-50" : ""}`}
                 />
               </div>
             ))}
@@ -340,7 +340,7 @@ export default function AdminLinksPage() {
           <button
             type="submit"
             disabled={saving}
-            className="px-4 py-2 rounded-lg bg-[#2D545E] text-white text-sm font-medium hover:opacity-90 disabled:opacity-50"
+            className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
             {saving ? "Saving…" : "Save"}
           </button>
@@ -348,7 +348,7 @@ export default function AdminLinksPage() {
             href={`/links${brand ? `?subdomain=${encodeURIComponent(brand)}` : ""}`}
             target="_blank"
             rel="noopener noreferrer"
-            className="px-4 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50"
+            className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted-bg"
           >
             View public page
           </a>

@@ -25,8 +25,8 @@ export default function EmailConfirmRecipients({
 
   return (
     <div className="flex flex-col min-h-0 flex-1">
-      <div className="flex-shrink-0 px-6 py-4 border-b border-gray-200 bg-gray-50">
-        <p className="text-sm font-medium text-gray-700">
+      <div className="flex-shrink-0 border-b border-border bg-muted-bg px-6 py-4">
+        <p className="text-sm font-medium text-foreground">
           This email will be sent to {count} user{count !== 1 ? "s" : ""}
         </p>
       </div>
@@ -38,14 +38,14 @@ export default function EmailConfirmRecipients({
             id="select-all-recipients"
             checked={allSelected}
             onChange={onSelectAll}
-            className="rounded border-gray-300 text-[#004A4E] focus:ring-[#004A4E]"
+            className="rounded border-border text-highlight focus:ring-highlight"
           />
-          <label htmlFor="select-all-recipients" className="text-sm font-medium text-gray-700 cursor-pointer">
+          <label htmlFor="select-all-recipients" className="cursor-pointer text-sm font-medium text-foreground">
             {allSelected ? "Deselect all" : "Select all"}
           </label>
         </div>
 
-        <ul className="divide-y divide-gray-200">
+        <ul className="divide-y divide-border">
           {recipients.map((r) => {
             const checked = selectedEmails.includes(r.email);
             return (
@@ -54,14 +54,14 @@ export default function EmailConfirmRecipients({
                   type="checkbox"
                   checked={checked}
                   onChange={() => onToggle(r.email)}
-                  className="rounded border-gray-300 text-[#004A4E] focus:ring-[#004A4E] shrink-0"
+                  className="rounded border-gray-300 text-highlight focus:ring-[#004A4E] shrink-0"
                 />
                 <div className="flex-1 min-w-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                   <div className="min-w-0">
-                    <span className="font-semibold text-gray-900 block truncate">{r.name || r.email}</span>
-                    <span className="text-sm text-gray-500 truncate block">{r.email}</span>
+                    <span className="block truncate font-semibold text-foreground">{r.name || r.email}</span>
+                    <span className="block truncate text-sm text-muted">{r.email}</span>
                   </div>
-                  <span className="text-sm text-gray-500 shrink-0">{formatLastEmail(r.lastEmail)}</span>
+                  <span className="shrink-0 text-sm text-muted">{formatLastEmail(r.lastEmail)}</span>
                 </div>
               </li>
             );
@@ -69,12 +69,12 @@ export default function EmailConfirmRecipients({
         </ul>
       </div>
 
-      <div className="flex-shrink-0 flex justify-end gap-2 px-6 py-4 border-t border-gray-200">
+      <div className="flex flex-shrink-0 justify-end gap-2 border-t border-border px-6 py-4">
         {onPreview && (
           <button
             type="button"
             onClick={onPreview}
-            className="px-4 py-2 rounded-lg bg-blue-100 text-blue-800 text-sm font-medium hover:bg-blue-200"
+            className="rounded-lg bg-muted-bg px-4 py-2 text-sm font-medium text-highlight hover:bg-card"
           >
             Preview
           </button>

@@ -10,9 +10,6 @@ import {
   openInChrome,
 } from "../lib/in-app-browser";
 
-const LIGHT_CHAT_GRADIENT =
-  "linear-gradient(to right, #DBF8F8 0%, #DBF3F8 50%, #DBEEF8 100%)";
-
 export default function AvatarHomepage() {
   const brand = useBrandContext();
   const router = useRouter();
@@ -128,8 +125,7 @@ export default function AvatarHomepage() {
                   router.push(item.path);
                 }}
                 disabled={loadingPath !== null}
-                className="font-baloo rounded-full px-4 py-2 text-base font-medium text-[#1f2937] shadow-sm transition-opacity hover:opacity-90 dark:text-[#0f172a]"
-                style={{ background: LIGHT_CHAT_GRADIENT }}
+                className="font-baloo rounded-full bg-muted-bg px-4 py-2 text-base font-medium text-highlight shadow-sm transition-colors hover:bg-card hover:opacity-90"
               >
                 {loadingPath === item.path ? "Opening..." : item.label}
               </button>
@@ -142,8 +138,7 @@ export default function AvatarHomepage() {
             <button
               onClick={handleSignIn}
               disabled={signingIn}
-              className="font-baloo flex items-center gap-2 rounded-full px-6 py-3 text-base font-medium text-[#1f2937] shadow-sm transition-opacity hover:opacity-90 active:opacity-95 disabled:opacity-50 dark:text-[#0f172a]"
-              style={{ background: LIGHT_CHAT_GRADIENT }}
+              className="font-baloo flex items-center gap-2 rounded-full bg-muted-bg px-6 py-3 text-base font-medium text-highlight shadow-sm transition-colors hover:bg-card hover:opacity-90 active:opacity-95 disabled:opacity-50"
             >
               {signingIn ? (
                 <span>Signing in...</span>

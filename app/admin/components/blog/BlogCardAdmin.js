@@ -5,8 +5,6 @@ import { FileText, Pencil, Eye, Trash2, Calendar } from "lucide-react";
 import ShareButtons from "@/app/components/blog/ShareButtons";
 import ShareAsEmailButton from "@/app/components/blog/ShareAsEmailButton";
 
-const TEAL = "#2D545E";
-
 export default function BlogCardAdmin({
   post,
   brand,
@@ -48,9 +46,9 @@ export default function BlogCardAdmin({
   };
 
   return (
-    <article className="flex flex-col rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden hover:shadow-md transition-shadow">
+    <article className="flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
       <div className="flex flex-1 min-w-0 gap-4 p-4 sm:p-5">
-        <div className="w-24 h-24 sm:w-28 sm:h-28 shrink-0 rounded-lg overflow-hidden bg-gray-100 border border-gray-200">
+        <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-border bg-muted-bg sm:h-28 sm:w-28">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -59,7 +57,7 @@ export default function BlogCardAdmin({
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-gray-400">
+            <div className="flex h-full w-full items-center justify-center text-muted">
               <FileText className="w-8 h-8" />
             </div>
           )}
@@ -67,21 +65,21 @@ export default function BlogCardAdmin({
 
         <div className="flex-1 min-w-0">
           <div className="flex flex-wrap items-center gap-2 mb-1">
-            <h2 className="font-bold text-lg text-gray-900 truncate">{title}</h2>
+            <h2 className="truncate text-lg font-bold text-foreground">{title}</h2>
             <span
-              className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                 status === "published"
                   ? "bg-green-100 text-green-800"
                   : status === "archived"
-                    ? "bg-gray-100 text-gray-600"
+                    ? "bg-muted-bg text-muted"
                     : "bg-amber-100 text-amber-800"
               }`}
             >
               {status}
             </span>
           </div>
-          <p className="text-sm text-gray-600 line-clamp-2 mt-1">{excerpt}</p>
-          <div className="flex items-center gap-3 mt-2 text-xs text-gray-500">
+          <p className="mt-1 line-clamp-2 text-sm text-muted">{excerpt}</p>
+          <div className="mt-2 flex items-center gap-3 text-xs text-muted">
             {publishedAt && (
               <span className="inline-flex items-center gap-1">
                 <Calendar className="w-3.5 h-3.5" />
@@ -95,15 +93,14 @@ export default function BlogCardAdmin({
         <div className="shrink-0 flex flex-col gap-2 min-w-[120px]">
           <Link
             href={viewHref}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-gray-300 bg-white text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted-bg"
           >
             <Eye className="w-4 h-4" />
             View
           </Link>
           <Link
             href={editHref}
-            className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border text-sm font-medium transition-colors hover:bg-[#2D545E]/10"
-            style={{ borderColor: TEAL, color: TEAL, backgroundColor: `${TEAL}0D` }}
+            className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-highlight transition-colors hover:bg-muted-bg"
           >
             <Pencil className="w-4 h-4" />
             Edit
@@ -122,7 +119,7 @@ export default function BlogCardAdmin({
         </div>
       </div>
       {shareUrl && (
-        <div className="px-4 pb-4 sm:px-5 sm:pb-5 pt-0 border-t border-gray-100 flex flex-wrap items-center gap-4">
+        <div className="flex flex-wrap items-center gap-4 border-t border-border px-4 pb-4 pt-0 sm:px-5 sm:pb-5">
           <ShareButtons
             url={shareUrl}
             title={title}

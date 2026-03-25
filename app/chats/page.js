@@ -216,7 +216,7 @@ export default function HomePage() {
                         <button
                             type="button"
                             onClick={() => setIsSidebarCollapsed((prev) => !prev)}
-                            className="inline-flex items-center gap-1.5 text-[#00888E] hover:underline font-medium text-sm"
+                            className="inline-flex items-center gap-1.5 text-sm font-medium text-highlight hover:underline"
                         >
                             {isSidebarCollapsed ? (
                                 <>

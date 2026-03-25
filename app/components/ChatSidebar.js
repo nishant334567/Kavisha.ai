@@ -5,7 +5,7 @@ import { signOut } from "../lib/firebase/logout";
 import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { X, PanelLeftClose, GripVertical, Trash2 } from "lucide-react";
+import { PanelLeftClose, MoreVertical, Trash2 } from "lucide-react";
 
 export default function ChatSidebar({
   allChats,
@@ -145,7 +145,7 @@ export default function ChatSidebar({
         {!isCollapsed && (
           <>
             <div
-              className="sm:hidden fixed inset-0 z-30 bg-black bg-opacity-50"
+              className="fixed inset-0 z-30 bg-black/50 sm:hidden"
               onClick={() => toggleLeftSideBar()}
             ></div>
 
@@ -153,7 +153,7 @@ export default function ChatSidebar({
               <div className="flex-1 flex flex-col min-h-0 p-4">
               <div className="flex justify-between">
                 <p className="font-semibold text-muted">Your Chats</p>
-                <button className="p-1" onClick={() => toggleLeftSideBar()} title="Close sidebar" aria-label="Close sidebar">
+                <button className="rounded-md p-1 text-muted transition-colors hover:bg-muted-bg hover:text-foreground" onClick={() => toggleLeftSideBar()} title="Close sidebar" aria-label="Close sidebar">
                   <PanelLeftClose className="w-5 h-5" />
                 </button>
               </div>
@@ -164,7 +164,7 @@ export default function ChatSidebar({
                     <>
                       <div className="relative">
                         <button
-                        className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors"
+                        className="flex w-full justify-center gap-2 rounded-md bg-highlight p-2 text-xs font-medium text-white transition-colors hover:opacity-90"
                           onClick={() => setShowCommunityNewDropdown((v) => !v)}
                         >
                           New
@@ -216,7 +216,7 @@ export default function ChatSidebar({
                       </div>
                       <button
                         type="button"
-                        className="flex gap-2 justify-center text-xs bg-muted-bg text-foreground w-full p-2 rounded-md font-medium hover:bg-muted-bg/80 transition-colors mt-2"
+                        className="mt-2 flex w-full justify-center gap-2 rounded-md bg-muted-bg p-2 text-xs font-medium text-foreground transition-colors hover:bg-card"
                         onClick={() => {
                           if (pathname === "/community") {
                             setIscollapsed(true);
@@ -233,7 +233,7 @@ export default function ChatSidebar({
                     <>
                       <div className="relative">
                         <button
-                          className="flex gap-2 justify-center text-xs bg-[#3D5E6B] text-[#FFEED8] w-full p-2 rounded-md font-medium transition-colors"
+                          className="flex w-full justify-center gap-2 rounded-md bg-highlight p-2 text-xs font-medium text-white transition-colors hover:opacity-90"
                           onClick={() =>
                             chatServices.length > 0 && onSelectService
                               ? setShowNewChatDropdown((v) => !v)
@@ -290,7 +290,7 @@ export default function ChatSidebar({
                       <div className="flex flex-col items-center gap-3">
                         <div className="relative">
                           <div className="w-6 h-6 border-2 border-border rounded-full"></div>
-                          <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-t-[#59646F] rounded-full animate-spin"></div>
+                          <div className="absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent border-t-highlight"></div>
                         </div>
                         <div className="text-muted text-xs font-medium">
                           Loading chats...
@@ -346,13 +346,13 @@ export default function ChatSidebar({
                           </span>
                         </button>
                         <button
-                          className="flex-shrink-0 p-2 hover:bg-red-50 rounded transition-colors"
+                          className="flex-shrink-0 rounded p-2 transition-colors hover:bg-muted-bg"
                           onClick={(e) => deleteSession(id, e)}
                           disabled={deletingChatId === id}
                           title="Delete chat"
                         >
                           {deletingChatId === id ? (
-                            <div className="w-4 h-4 border-2 border-red-300 border-t-red-600 rounded-full animate-spin"></div>
+                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-300/60 border-t-red-600"></div>
                           ) : (
                             <Trash2 className="w-4 h-4 text-muted hover:text-red-600" />
                           )}
@@ -402,12 +402,12 @@ export default function ChatSidebar({
         {isCollapsed && (
           <button
             onClick={() => toggleLeftSideBar()}
-            className="fixed left-0 top-16 z-40 w-6 h-12 flex items-center justify-center rounded-r opacity-90 hover:opacity-100 bg-[#00888E] hover:bg-[#006d72] text-white transition-all border-0 shadow-sm hover:shadow-md focus:outline-none focus:ring-0"
+            className="fixed left-0 top-16 z-[60] flex h-10 w-6 items-center justify-center rounded-r-md border border-l-0 border-border bg-background/95 text-muted shadow-sm transition-all hover:w-7 hover:bg-muted-bg hover:text-foreground md:top-14"
             style={{ touchAction: "manipulation" }}
             title="Open sidebar"
             aria-label="Open sidebar"
           >
-            <GripVertical className="w-4 h-4 shrink-0" strokeWidth={2} />
+            <MoreVertical className="h-4 w-4" />
           </button>
         )}
       </div>

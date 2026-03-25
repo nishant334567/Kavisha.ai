@@ -88,12 +88,12 @@ export default function QuizInfo() {
   const { quiz, questionCount } = quizData;
 
   return (
-    <div className="min-h-screen bg-white pt-20 md:pt-24 pb-8">
+    <div className="min-h-screen bg-background pt-20 pb-8 text-foreground md:pt-24">
       <div className="max-w-4xl mx-auto px-4 sm:px-6">
         {/* Back Button */}
         <button
           onClick={() => router.push("/quiz")}
-          className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6 text-sm font-medium group"
+          className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to Quizzes
@@ -112,31 +112,31 @@ export default function QuizInfo() {
               {quiz.type === "quiz" ? "Quiz" : "Survey"}
             </span>
           </div>
-          <h1 className="text-3xl sm:text-4xl font-semibold text-[#264653] mb-3">
+          <h1 className="mb-3 text-3xl font-semibold text-highlight sm:text-4xl">
             {quiz.title}
           </h1>
           {quiz.subtitle && (
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-muted">
               {quiz.subtitle}
             </p>
           )}
         </div>
 
         {/* Quiz Information Card */}
-        <div className="bg-white rounded-xl border border-gray-200 p-6 sm:p-8 mb-6">
-          <h2 className="text-xl font-semibold text-[#264653] mb-6">
+        <div className="mb-6 rounded-xl border border-border bg-card p-6 sm:p-8">
+          <h2 className="mb-6 text-xl font-semibold text-foreground">
             Quiz Information
           </h2>
 
           <div className="space-y-4">
             {/* Number of Questions */}
             <div className="flex items-start gap-4">
-              <div className="p-2 bg-blue-50 rounded-lg">
-                <FileText className="w-5 h-5 text-[#264653]" />
+                <div className="rounded-lg bg-muted-bg p-2">
+                  <FileText className="w-5 h-5 text-highlight" />
               </div>
               <div className="flex-1">
-                <p className="text-sm text-gray-600">Questions</p>
-                <p className="text-lg font-semibold text-[#264653]">
+                  <p className="text-sm text-muted">Questions</p>
+                  <p className="text-lg font-semibold text-foreground">
                   {questionCount}{" "}
                   {questionCount === 1 ? "question" : "questions"}
                 </p>
@@ -146,12 +146,12 @@ export default function QuizInfo() {
             {/* Duration (only for quizzes) */}
             {quiz.type === "quiz" && quiz.durationInMinutes && (
               <div className="flex items-start gap-4">
-                <div className="p-2 bg-orange-50 rounded-lg">
-                  <Clock className="w-5 h-5 text-[#264653]" />
+                <div className="rounded-lg bg-muted-bg p-2">
+                  <Clock className="w-5 h-5 text-highlight" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-600">Duration</p>
-                  <p className="text-lg font-semibold text-[#264653]">
+                  <p className="text-sm text-muted">Duration</p>
+                  <p className="text-lg font-semibold text-foreground">
                     {quiz.durationInMinutes}{" "}
                     {quiz.durationInMinutes === 1 ? "minute" : "minutes"}
                   </p>
@@ -162,14 +162,14 @@ export default function QuizInfo() {
             {/* Total Marks (only for quizzes) */}
             {quiz.type === "quiz" && quiz.totalMarks && (
               <div className="flex items-start gap-4">
-                <div className="p-2 bg-green-50 rounded-lg">
-                  <Award className="w-5 h-5 text-[#264653]" />
+                <div className="rounded-lg bg-muted-bg p-2">
+                  <Award className="w-5 h-5 text-highlight" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-600">
+                  <p className="text-sm text-muted">
                     Total Marks
                   </p>
-                  <p className="text-lg font-semibold text-[#264653]">
+                  <p className="text-lg font-semibold text-foreground">
                     {quiz.totalMarks} {quiz.totalMarks === 1 ? "mark" : "marks"}
                   </p>
                 </div>
@@ -179,14 +179,14 @@ export default function QuizInfo() {
             {/* Objective */}
             {quiz.objective && (
               <div className="flex items-start gap-4">
-                <div className="p-2 bg-purple-50 rounded-lg">
-                  <BookOpen className="w-5 h-5 text-[#264653]" />
+                <div className="rounded-lg bg-muted-bg p-2">
+                  <BookOpen className="w-5 h-5 text-highlight" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="mb-2 text-sm text-muted">
                     Objective
                   </p>
-                  <p className="text-base text-gray-700 whitespace-pre-line">
+                  <p className="whitespace-pre-line text-base text-foreground">
                     {quiz.objective}
                   </p>
                 </div>
@@ -196,14 +196,14 @@ export default function QuizInfo() {
             {/* Instructions */}
             {quiz.instructions && (
               <div className="flex items-start gap-4">
-                <div className="p-2 bg-teal-50 rounded-lg">
-                  <FileText className="w-5 h-5 text-[#264653]" />
+                <div className="rounded-lg bg-muted-bg p-2">
+                  <FileText className="w-5 h-5 text-highlight" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="mb-2 text-sm text-muted">
                     Instructions
                   </p>
-                  <p className="text-base text-gray-700 whitespace-pre-line">
+                  <p className="whitespace-pre-line text-base text-foreground">
                     {quiz.instructions}
                   </p>
                 </div>
@@ -213,14 +213,14 @@ export default function QuizInfo() {
             {/* Survey Legend */}
             {quiz.type === "survey" && quiz.legend && (
               <div className="flex items-start gap-4">
-                <div className="p-2 bg-blue-50 rounded-lg">
-                  <FileText className="w-5 h-5 text-[#264653]" />
+                <div className="rounded-lg bg-muted-bg p-2">
+                  <FileText className="w-5 h-5 text-highlight" />
                 </div>
                 <div className="flex-1">
-                  <p className="text-sm text-gray-600 mb-2">
+                  <p className="mb-2 text-sm text-muted">
                     Response Scale
                   </p>
-                  <p className="text-base text-gray-700 whitespace-pre-line">
+                  <p className="whitespace-pre-line text-base text-foreground">
                     {quiz.legend}
                   </p>
                 </div>
@@ -234,7 +234,7 @@ export default function QuizInfo() {
           <button
             onClick={handleStartQuiz}
             disabled={starting}
-            className="w-full sm:w-auto px-8 py-3 bg-[#264653] text-white rounded-full hover:bg-[#1e383e] disabled:bg-gray-400 disabled:cursor-not-allowed text-base font-medium shadow-sm transition-all flex items-center justify-center gap-2"
+            className="flex w-full items-center justify-center gap-2 rounded-full bg-highlight px-8 py-3 text-base font-medium text-white shadow-sm transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted disabled:text-muted sm:w-auto"
           >
             {starting ? (
               <>

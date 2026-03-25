@@ -32,7 +32,7 @@ export default function SelectChatType({
   if (services.length === 0 && !loading) {
     return (
       <div className="font-baloo tracking-[0.08em] flex flex-col items-center justify-center px-4 py-12 min-h-full">
-        <p className="text-gray-500 text-center">No chat services available.</p>
+        <p className="text-muted text-center">No chat services available.</p>
       </div>
     );
   }
@@ -40,18 +40,17 @@ export default function SelectChatType({
   return (
     <div className="font-baloo tracking-[0.08em] flex flex-1 flex-col items-start justify-center px-4 py-8 w-full max-w-2xl mx-auto min-h-0">
       <div className="text-center md:text-left mb-8 w-full">
-        <h1 className="text-2xl md:text-3xl font-regular text-gray-900">
+        <h1 className="text-2xl md:text-3xl font-regular text-foreground">
           Hi{" "}
           <span className="text-[#00888E]">
             {displayName.charAt(0).toUpperCase() + displayName.slice(1)}!
-            
           </span>
         </h1>
-        <p className="mt-2 text-gray-600">What&apos;s on your mind?</p>
+        <p className="mt-2 text-muted">What&apos;s on your mind?</p>
       </div>
 
       {loading ? (
-        <p className="text-gray-500">Loading services…</p>
+        <p className="text-muted">Loading services…</p>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 w-full">
           {services.map((item, index) => {

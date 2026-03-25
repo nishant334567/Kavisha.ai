@@ -87,13 +87,13 @@ export default function MakeAvatarLandingPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white pt-16">
+    <div className="min-h-screen bg-background pt-16 text-foreground">
       <main className="pb-12 px-4">
         {/* Back arrow */}
         <button
           type="button"
           onClick={() => router.push("/")}
-          className="flex items-center gap-2 text-gray-900 hover:opacity-80 mt-4 mb-2"
+          className="mb-2 mt-4 flex items-center gap-2 text-foreground hover:opacity-80"
         >
           <ArrowLeft className="w-5 h-5" />
           <span className="text-sm">Back</span>
@@ -106,15 +106,15 @@ export default function MakeAvatarLandingPage() {
 
         {/* Title */}
         <h1 className="text-center text-3xl md:text-4xl font-bold mb-2">
-          <span className="text-[#2d4752]">Make my </span>
+          <span className="text-foreground">Make my </span>
           <span className="text-[#00B5BD]">Avataar</span>
         </h1>
-        <p className="text-center text-gray-600 text-base md:text-lg max-w-xl mx-auto mb-10">
+        <p className="mx-auto mb-10 max-w-xl text-center text-base text-muted md:text-lg">
           Create your Avataar and give your fans/customers the pleasure of personal conversations with you. 24x7x365.
         </p>
 
         {isBlocked && (
-          <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg max-w-md mx-auto text-center">
+          <div className="mx-auto mb-6 max-w-md rounded-lg border border-amber-300/60 bg-amber-500/10 p-4 text-center">
             <p className="text-sm text-amber-800 mb-2">Please open this page in Chrome to sign in and continue.</p>
             <button
               type="button"
@@ -177,37 +177,37 @@ export default function MakeAvatarLandingPage() {
           </div>
 
           {/* White glove card - cream */}
-          <div className="rounded-2xl bg-[#F7F0DD] text-[#264653] p-6 md:p-8 flex flex-col border border-[#E8E0C8]">
+          <div className="flex flex-col rounded-2xl border border-border bg-card p-6 text-foreground md:p-8">
             <h2 className="text-2xl font-bold mb-1">White glove service</h2>
             <p className="text-sm mb-4">Your Digital Avataar that we help you build</p>
             <p className="text-lg font-bold mb-4">Up to 10,000 chats in free credits*</p>
             <p className="text-sm mb-3">Includes everything in Free, plus:</p>
             <ul className="space-y-2 text-sm mb-6 flex-1">
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#264653] mt-1.5 shrink-0" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-highlight" />
                 We help you customize your Avataar&apos;s personality
               </li>
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#264653] mt-1.5 shrink-0" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-highlight" />
                 We help you create you knowledge base
               </li>
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#264653] mt-1.5 shrink-0" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-highlight" />
                 We calibrate your Avataar&apos;s response with perfect training and testing
               </li>
               <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-[#264653] mt-1.5 shrink-0" />
+                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-highlight" />
                 Custom built features as per brand requests
               </li>
             </ul>
             <button
               type="button"
               onClick={() => router.push("/help")}
-              className="w-full py-3 rounded-lg bg-[#3D5E6B] text-white font-medium hover:bg-[#2d4752] transition-colors"
+              className="w-full rounded-lg bg-highlight py-3 font-medium text-white transition-colors hover:opacity-90"
             >
               Contact us
             </button>
-            <p className="text-xs text-gray-600 mt-3 text-center">*Rs. 3/chat beyond 10,000 chats</p>
+            <p className="mt-3 text-center text-xs text-muted">*Rs. 3/chat beyond 10,000 chats</p>
           </div>
         </div>
       </main>

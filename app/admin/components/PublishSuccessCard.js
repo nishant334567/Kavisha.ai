@@ -38,21 +38,21 @@ export function ServiceSuccessCard({ serviceId, serviceTitle, brand, onBackToLis
   const calendarHref = `/admin/services/calender${qs}`;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm max-w-xl">
-      <div className="flex items-start gap-3 mb-4">
-        <CheckCircle2 className="h-8 w-8 text-green-600 shrink-0 mt-0.5" />
+    <div className="max-w-xl rounded-xl border border-border bg-card p-6 text-foreground shadow-sm">
+      <div className="mb-4 flex items-start gap-3">
+        <CheckCircle2 className="mt-0.5 h-8 w-8 shrink-0 text-green-600" />
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">Booking saved</h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <h2 className="text-xl font-semibold text-highlight">Booking saved</h2>
+          <p className="mt-1 text-sm text-muted">
             {serviceTitle || "Your service"} is ready.
           </p>
         </div>
       </div>
 
       {openHoursSet === null ? (
-        <p className="text-sm text-gray-500 mb-4">Checking open hours…</p>
+        <p className="mb-4 text-sm text-muted">Checking open hours…</p>
       ) : openHoursSet ? (
-        <div className="flex items-center gap-2 text-green-700 bg-green-50 rounded-lg px-3 py-2 mb-4">
+        <div className="mb-4 flex items-center gap-2 rounded-lg bg-green-500/10 px-3 py-2 text-green-700 dark:text-green-300">
           <CheckCircle2 className="h-5 w-5 shrink-0" />
           <span className="text-sm font-medium">Your service is live</span>
         </div>
@@ -71,8 +71,8 @@ export function ServiceSuccessCard({ serviceId, serviceTitle, brand, onBackToLis
         </div>
       )}
 
-      <div className="border-t border-gray-100 pt-4">
-        <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+      <div className="border-t border-border pt-4">
+        <p className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
           <Share2 className="h-4 w-4" />
           Share your service
         </p>
@@ -83,7 +83,7 @@ export function ServiceSuccessCard({ serviceId, serviceTitle, brand, onBackToLis
         <button
           type="button"
           onClick={onBackToList}
-          className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted-bg"
         >
           Back to list
         </button>
@@ -106,22 +106,22 @@ export function BlogSuccessCard({ slug, title, brand, isPublished, onBackToList 
   const shareUrl = buildPublicUrl(`/blogs/${slug}`, brand);
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white p-6 shadow-sm max-w-xl">
+    <div className="max-w-xl rounded-xl border border-border bg-card p-6 text-foreground shadow-sm">
       <div className="flex items-start gap-3 mb-4">
         <CheckCircle2 className="h-8 w-8 text-green-600 shrink-0 mt-0.5" />
         <div>
-          <h2 className="text-xl font-semibold text-gray-900">
+          <h2 className="text-xl font-semibold text-highlight">
             {isPublished ? "Post published" : "Draft saved"}
           </h2>
-          <p className="text-sm text-gray-600 mt-1">
+          <p className="mt-1 text-sm text-muted">
             {title || "Your post"} {isPublished ? "is live." : "has been saved."}
           </p>
         </div>
       </div>
 
       {isPublished && (
-        <div className="border-t border-gray-100 pt-4">
-          <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+        <div className="border-t border-border pt-4">
+          <p className="mb-2 flex items-center gap-2 text-sm font-medium text-foreground">
             <Share2 className="h-4 w-4" />
             Share your post
           </p>
@@ -138,14 +138,14 @@ export function BlogSuccessCard({ slug, title, brand, isPublished, onBackToList 
         <button
           type="button"
           onClick={onBackToList}
-          className="rounded-lg border border-gray-300 bg-white px-4 py-2 text-sm font-medium text-gray-700 hover:bg-gray-50"
+          className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted-bg"
         >
           Back to list
         </button>
         <button
           type="button"
           onClick={() => router.push(`/admin/blogs/${encodeURIComponent(slug)}/edit${qs}`)}
-          className="rounded-lg bg-[#2D545E] px-4 py-2 text-sm font-medium text-white hover:bg-[#24454E]"
+          className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90"
         >
           Edit post
         </button>

@@ -13,9 +13,9 @@ export default function AdminServicesLayout({ children }) {
 
   if (!brandContext?.enableBooking) {
     return (
-      <div className="min-h-screen bg-white flex items-center justify-center p-4">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4 text-foreground">
         <div className="text-center max-w-md">
-          <p className="text-gray-600 mb-4">
+          <p className="mb-4 text-muted">
             Booking is disabled. Enable it from My Services → Feature Settings (Booking toggle).
           </p>
           <button
@@ -31,7 +31,7 @@ export default function AdminServicesLayout({ children }) {
   }
 
   return (
-    <div className="min-h-screen bg-white flex justify-center">
+    <div className="flex min-h-screen justify-center bg-background text-foreground">
       <div className="w-full max-w-6xl flex min-h-screen">
         {sidebarOpen ? (
           <>
@@ -44,24 +44,15 @@ export default function AdminServicesLayout({ children }) {
               <ServicesSidebar onClose={() => setSidebarOpen(false)} />
             </div>
           </>
-        ) : (
-          <button
-            type="button"
-            onClick={() => setSidebarOpen(true)}
-            className="fixed left-0 top-16 z-40 md:hidden p-2 rounded-r-lg bg-white border border-l-0 border-gray-200 shadow-sm hover:bg-gray-50"
-            aria-label="Open panel"
-          >
-            <PanelLeft className="w-5 h-5 text-gray-600" />
-          </button>
-        )}
+        ) : null}
         {!sidebarOpen && (
           <button
             type="button"
             onClick={() => setSidebarOpen(true)}
-            className="fixed left-0 top-4 z-40 hidden md:block p-2 rounded-r-lg bg-white border border-l-0 border-gray-200 shadow-sm hover:bg-gray-50"
+            className="fixed left-0 top-16 z-[60] rounded-r-lg border border-l-0 border-border bg-card p-2 shadow-sm hover:bg-muted-bg"
             aria-label="Open panel"
           >
-            <PanelLeft className="w-5 h-5 text-gray-600" />
+            <PanelLeft className="w-5 h-5 text-muted" />
           </button>
         )}
         <main className="flex-1 min-w-0 overflow-auto px-6 py-8">{children}</main>

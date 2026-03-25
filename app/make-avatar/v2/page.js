@@ -211,21 +211,21 @@ export default function MakeAvatar() {
   const StepIndicator = () => (
     <div className="flex items-center justify-center gap-2 mb-8">
       <span
-        className={`text-sm md:text-base font-medium ${currentStep === stages.BASIC_INFO ? "text-[#00838F]" : "text-gray-500"
+        className={`text-sm md:text-base font-medium ${currentStep === stages.BASIC_INFO ? "text-highlight" : "text-muted"
           }`}
       >
         Basic info
       </span>
-      <div className="w-16 md:w-24 h-[1px] bg-gray-300"></div>
+      <div className="h-[1px] w-16 bg-border md:w-24"></div>
       <span
-        className={`text-sm md:text-base font-medium ${currentStep === stages.CUSTOMIZE ? "text-[#00838F]" : "text-gray-500"
+        className={`text-sm md:text-base font-medium ${currentStep === stages.CUSTOMIZE ? "text-highlight" : "text-muted"
           }`}
       >
         Customize
       </span>
-      <div className="w-16 md:w-24 h-[1px] bg-gray-300"></div>
+      <div className="h-[1px] w-16 bg-border md:w-24"></div>
       <span
-        className={`text-sm md:text-base font-medium ${currentStep === stages.REVIEW ? "text-[#00838F]" : "text-gray-500"
+        className={`text-sm md:text-base font-medium ${currentStep === stages.REVIEW ? "text-highlight" : "text-muted"
           }`}
       >
         Review
@@ -235,7 +235,7 @@ export default function MakeAvatar() {
 
   const ProfileHeader = () => (
     <div className="flex items-center gap-3 mb-4">
-      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#E0F7FA] to-[#B2EBF2] overflow-hidden flex items-center justify-center">
+      <div className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full bg-muted-bg">
         {coverImagePreview ? (
           <img
             src={coverImagePreview}
@@ -243,10 +243,10 @@ export default function MakeAvatar() {
             className="w-full h-full object-cover"
           />
         ) : (
-          <User className="w-5 h-5 text-[#00838F]" />
+          <User className="w-5 h-5 text-highlight" />
         )}
       </div>
-      <span className="font-medium text-gray-800">
+      <span className="font-medium text-foreground">
         {aboutUser.name || avatarData.name || "Your Name"}
       </span>
     </div>
@@ -254,7 +254,7 @@ export default function MakeAvatar() {
 
   const CoverPhotoSection = ({ showEditButton = false }) => (
     <div
-      className={`relative w-full h-48 md:h-56 rounded-xl overflow-hidden bg-gray-100 mb-6 ${showEditButton ? "cursor-pointer group" : ""}`}
+      className={`relative mb-6 h-48 w-full overflow-hidden rounded-xl bg-muted-bg md:h-56 ${showEditButton ? "group cursor-pointer" : ""}`}
       onClick={() => showEditButton && fileInputRef.current?.click()}
     >
       {coverImagePreview ? (
@@ -269,12 +269,12 @@ export default function MakeAvatar() {
           )}
         </>
       ) : (
-        <div className="w-full h-full flex flex-col items-center justify-center text-gray-400 bg-gradient-to-br from-gray-100 to-gray-200">
-          <div className="w-16 h-16 rounded-full bg-gray-300 flex items-center justify-center mb-3">
-            <Camera className="w-8 h-8 text-gray-500" />
+        <div className="flex h-full w-full flex-col items-center justify-center bg-card text-muted">
+          <div className="mb-3 flex h-16 w-16 items-center justify-center rounded-full bg-border">
+            <Camera className="w-8 h-8 text-muted" />
           </div>
-          <p className="text-sm text-gray-500">Click to upload your photo</p>
-          <p className="text-xs text-gray-400 mt-1">Recommended: 800x400px</p>
+          <p className="text-sm text-muted">Click to upload your photo</p>
+          <p className="mt-1 text-xs text-muted">Recommended: 800x400px</p>
         </div>
       )}
       {showEditButton && coverImagePreview && (
@@ -283,7 +283,7 @@ export default function MakeAvatar() {
             e.stopPropagation();
             fileInputRef.current?.click();
           }}
-          className="absolute bottom-3 right-3 px-3 py-1.5 bg-gray-800/70 text-white text-sm rounded-md hover:bg-gray-800/90 transition-colors"
+          className="absolute bottom-3 right-3 rounded-md bg-card/80 px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-card"
         >
           Edit cover photo
         </button>
@@ -346,27 +346,27 @@ export default function MakeAvatar() {
 
   if (hasCreatedAvatar) {
     return (
-      <div className="min-h-screen bg-white flex flex-col">
-        <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-          <div className="w-10 h-10 rounded-full bg-[#E0F7FA] flex items-center justify-center">
-            <User className="w-5 h-5 text-[#00838F]" />
+      <div className="flex min-h-screen flex-col bg-background text-foreground">
+        <div className="flex items-center justify-between border-b border-border px-4 py-3">
+          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted-bg">
+            <User className="w-5 h-5 text-highlight" />
           </div>
         </div>
         <div className="flex-1 px-4 py-6 md:py-10 flex flex-col items-center justify-center text-center">
           <button
             type="button"
             onClick={() => router.push("/make-avatar")}
-            className="mb-6 p-2 -ml-2 self-start hover:bg-gray-100 rounded-full transition-colors"
+            className="-ml-2 mb-6 self-start rounded-full p-2 transition-colors hover:bg-muted-bg"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-5 h-5 text-muted" />
           </button>
-          <p className="text-sm text-amber-700 max-w-sm">
+          <p className="max-w-sm text-sm text-amber-700">
             Sorry — one avatar per email. You&apos;ve already created yours with this account.
           </p>
           <button
             type="button"
             onClick={() => router.push("/make-avatar")}
-            className="mt-6 px-6 py-2.5 bg-[#3D5A5E] text-white rounded-full font-medium hover:bg-[#2d4448] transition-colors"
+            className="mt-6 rounded-full bg-highlight px-6 py-2.5 font-medium text-white transition-colors hover:opacity-90"
           >
             Back to Make Avataar
           </button>
@@ -381,14 +381,14 @@ export default function MakeAvatar() {
     .replace(/\.kavisha\.ai$/i, "");
 
   return (
-    <div className="min-h-screen bg-white flex flex-col">
+    <div className="flex min-h-screen flex-col bg-background text-foreground">
       {/* Header */}
-      <div className="flex items-center justify-between px-4 py-3 border-b border-gray-100">
-        <div className="w-10 h-10 rounded-full bg-[#E0F7FA] flex items-center justify-center">
-          <User className="w-5 h-5 text-[#00838F]" />
+      <div className="flex items-center justify-between border-b border-border px-4 py-3">
+        <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted-bg">
+          <User className="w-5 h-5 text-highlight" />
         </div>
-        <div className="w-10 h-10 rounded-full flex items-center justify-center hover:bg-gray-100 cursor-pointer">
-          <Settings className="w-5 h-5 text-gray-600" />
+        <div className="flex h-10 w-10 cursor-pointer items-center justify-center rounded-full hover:bg-muted-bg">
+          <Settings className="w-5 h-5 text-muted" />
         </div>
       </div>
 
@@ -406,18 +406,18 @@ export default function MakeAvatar() {
                 setCurrentStep(stages.CUSTOMIZE);
               }
             }}
-            className="mb-6 p-2 -ml-2 hover:bg-gray-100 rounded-full transition-colors"
+            className="-ml-2 mb-6 rounded-full p-2 transition-colors hover:bg-muted-bg"
           >
-            <ArrowLeft className="w-5 h-5 text-gray-600" />
+            <ArrowLeft className="w-5 h-5 text-muted" />
           </button>
 
           {/* Title */}
           <div className="text-center mb-6">
-            <h1 className="text-2xl md:text-3xl text-gray-800">
+            <h1 className="text-2xl text-foreground md:text-3xl">
               Create your{" "}
-              <span className="text-[#00838F]">Digital Avataar</span>
+              <span className="text-highlight">Digital Avataar</span>
             </h1>
-            <p className="text-gray-500 text-sm mt-2">
+            <p className="mt-2 text-sm text-muted">
               Kavisha enables you to address fans and customers 24/7, with love
             </p>
           </div>
@@ -428,16 +428,16 @@ export default function MakeAvatar() {
           {/* Step 1: Basic Info */}
           {currentStep === stages.BASIC_INFO && (
             <div>
-              <h2 className="text-xl md:text-2xl text-center text-gray-800 mb-6">
+              <h2 className="mb-6 text-center text-xl text-foreground md:text-2xl">
                 Tell us about yourself
               </h2>
 
               <ProfileHeader />
               <CoverPhotoSection showEditButton={true} />
 
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
+              <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
                 <div className="mb-5">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-foreground">
                     Your name
                   </label>
                   <input
@@ -447,12 +447,12 @@ export default function MakeAvatar() {
                       handleAboutUserChange("name", e.target.value)
                     }
                     placeholder="Enter you full name"
-                    className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                    className="w-full border-b border-border bg-transparent px-4 py-3 text-foreground placeholder:text-muted outline-none transition-colors focus:border-highlight"
                   />
                 </div>
 
                 <div className="mb-5">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-foreground">
                     Tell us about yourself
                   </label>
                   <textarea
@@ -462,9 +462,9 @@ export default function MakeAvatar() {
                     }
                     rows={4}
                     placeholder="I am business analyst at JPMC..."
-                    className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent resize-none"
+                    className="w-full resize-none border-b border-border bg-transparent px-4 py-3 text-foreground placeholder:text-muted outline-none transition-colors focus:border-highlight"
                   />
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-muted">
                     Share your background, expertise, interests, or anything
                     that defines you
                   </p>
@@ -476,7 +476,7 @@ export default function MakeAvatar() {
                     disabled={
                       loading || !aboutUser.name.trim() || !aboutUser.bio.trim()
                     }
-                    className="px-8 py-2.5 bg-[#3D5A5E] text-white rounded-full font-medium hover:bg-[#2d4448] focus:outline-none disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="rounded-full bg-highlight px-8 py-2.5 font-medium text-white transition-all hover:opacity-90 focus:outline-none disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {loading ? "Processing..." : "Continue"}
                   </button>
@@ -488,17 +488,17 @@ export default function MakeAvatar() {
           {/* Step 2: Customize */}
           {currentStep === stages.CUSTOMIZE && (
             <div>
-              <h2 className="text-xl md:text-2xl text-center text-gray-800 mb-6">
+              <h2 className="mb-6 text-center text-xl text-foreground md:text-2xl">
                 Customize your Avataar
               </h2>
 
               <ProfileHeader />
               <CoverPhotoSection showEditButton={true} />
 
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-5">
+              <div className="space-y-5 rounded-xl border border-border bg-card p-6 shadow-sm">
                 {/* 1. Name */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-foreground">
                     Name of Avataar
                   </label>
                   <input
@@ -507,13 +507,13 @@ export default function MakeAvatar() {
                     onChange={(e) =>
                       handleAvatarDataChange("name", e.target.value)
                     }
-                    className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                    className="w-full border-b border-border bg-transparent px-4 py-3 text-foreground outline-none transition-colors focus:border-highlight"
                   />
                 </div>
 
                 {/* 2. Title */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-foreground">
                     Title
                   </label>
                   {suggestedTitles.length > 0 ? (
@@ -526,7 +526,7 @@ export default function MakeAvatar() {
                             e.target.value === "__other__" ? "" : e.target.value
                           )
                         }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                        className="w-full rounded-lg border border-border bg-input px-4 py-3 text-foreground outline-none transition-colors focus:border-highlight"
                       >
                         {suggestedTitles.map((t) => (
                           <option key={t} value={t}>{t}</option>
@@ -541,7 +541,7 @@ export default function MakeAvatar() {
                             handleAvatarDataChange("bio_title", e.target.value)
                           }
                           placeholder="Or enter your own title"
-                          className="w-full mt-2 px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                          className="mt-2 w-full border-b border-border bg-transparent px-4 py-3 text-foreground placeholder:text-muted outline-none transition-colors focus:border-highlight"
                         />
                       )}
                     </>
@@ -553,14 +553,14 @@ export default function MakeAvatar() {
                         handleAvatarDataChange("bio_title", e.target.value)
                       }
                       placeholder="Enter a title for avataar"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                      className="w-full border-b border-border bg-transparent px-4 py-3 text-foreground placeholder:text-muted outline-none transition-colors focus:border-highlight"
                     />
                   )}
                 </div>
 
                 {/* 3. Subtitle */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-foreground">
                     Subtitle
                   </label>
                   {suggestedSubtitles.length > 0 ? (
@@ -573,7 +573,7 @@ export default function MakeAvatar() {
                             e.target.value === "__other__" ? "" : e.target.value
                           )
                         }
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                        className="w-full rounded-lg border border-border bg-input px-4 py-3 text-foreground outline-none transition-colors focus:border-highlight"
                       >
                         {suggestedSubtitles.map((s, i) => (
                           <option key={`sub-${i}`} value={s}>{s.length > 60 ? s.slice(0, 60) + "…" : s}</option>
@@ -588,7 +588,7 @@ export default function MakeAvatar() {
                             handleAvatarDataChange("bio_subtitle", e.target.value)
                           }
                           placeholder="Or enter your own subtitle"
-                          className="w-full mt-2 px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent resize-none"
+                          className="mt-2 w-full resize-none border-b border-border bg-transparent px-4 py-3 text-foreground placeholder:text-muted outline-none transition-colors focus:border-highlight"
                         />
                       )}
                     </>
@@ -600,14 +600,14 @@ export default function MakeAvatar() {
                         handleAvatarDataChange("bio_subtitle", e.target.value)
                       }
                       placeholder="Enter a subtitle for avataar"
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                      className="w-full border-b border-border bg-transparent px-4 py-3 text-foreground placeholder:text-muted outline-none transition-colors focus:border-highlight"
                     />
                   )}
                 </div>
 
                 {/* 4. Domain (Subdomain) */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-foreground">
                     Subdomain<span className="text-red-500">*</span>
                   </label>
                   {suggestedSubdomains.length > 0 ? (
@@ -625,7 +625,7 @@ export default function MakeAvatar() {
                             v === "__other__" ? "" : v
                           );
                         }}
-                        className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                        className="w-full border-b border-border bg-transparent px-4 py-3 text-foreground outline-none transition-colors focus:border-highlight"
                       >
                         {suggestedSubdomains.map((s) => (
                           <option key={s} value={s}>
@@ -642,7 +642,7 @@ export default function MakeAvatar() {
                             handleAvatarDataChange("subdomain", e.target.value)
                           }
                           placeholder={`e.g., myname or myname${domainSuffix}`}
-                          className="mt-2 w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                          className="mt-2 w-full border-b border-border bg-transparent px-4 py-3 text-foreground placeholder:text-muted outline-none transition-colors focus:border-highlight"
                         />
                       )}
                     </>
@@ -654,10 +654,10 @@ export default function MakeAvatar() {
                         handleAvatarDataChange("subdomain", e.target.value)
                       }
                       placeholder={`e.g., myname or myname${domainSuffix}`}
-                      className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                      className="w-full border-b border-border bg-transparent px-4 py-3 text-foreground placeholder:text-muted outline-none transition-colors focus:border-highlight"
                     />
                   )}
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-muted">
                     {avatarData.subdomain?.trim()
                       ? `It will become ${avatarData.subdomain.trim().toLowerCase().replace(/\.kavisha\.ai$/i, "").replace(/\.staging\.kavisha\.ai$/i, "")}${domainSuffix}`
                       : `Enter a name (e.g. "myname") — it will become myname${domainSuffix}`}
@@ -667,20 +667,20 @@ export default function MakeAvatar() {
                 {/* 5. About */}
                 <div>
                   <div className="flex items-center gap-2 mb-2">
-                    <label className="block text-sm font-medium text-gray-700">
+                    <label className="block text-sm font-medium text-foreground">
                       About you<span className="text-red-500">*</span>
                     </label>
                     <button
                       type="button"
                       onClick={() => setInfoSection((s) => (s === "about" ? null : "about"))}
-                      className="p-0.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-[#00838F] transition-colors"
+                      className="rounded-full p-0.5 text-muted transition-colors hover:bg-muted-bg hover:text-highlight"
                       aria-label="About this section"
                     >
                       <Info className="w-4 h-4" />
                     </button>
                   </div>
                   {infoSection === "about" && (
-                    <p className="text-xs text-gray-600 bg-gray-50 px-3 py-2 rounded-lg border border-gray-200 mb-2">
+                    <p className="mb-2 rounded-lg border border-border bg-muted-bg px-3 py-2 text-xs text-muted">
                       {PERSONALITY_INFO.about}
                     </p>
                   )}
@@ -691,15 +691,15 @@ export default function MakeAvatar() {
                       handleAvatarDataChange("about", e.target.value)
                     }
                     placeholder="E.g. I am a professor at IIM Ahmedabad with 10 years of teaching experience. I like to play football and I am also a singer."
-                    className="w-full px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent resize-none"
+                    className="w-full resize-none border-b border-border bg-transparent px-4 py-3 text-foreground placeholder:text-muted outline-none transition-colors focus:border-highlight"
                   />
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-muted">
                     Your background, expertise, interests and how you’d like your Avataar to sound
                   </p>
                 </div>
 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-foreground">
                     Your Avataar's Behaviour & Rules
                   </label>
                   <select
@@ -720,7 +720,7 @@ export default function MakeAvatar() {
                         }
                       }
                     }}
-                    className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent mb-3"
+                    className="mb-3 w-full rounded-lg border border-border bg-input px-4 py-3 text-foreground outline-none transition-colors focus:border-highlight"
                   >
                     {BEHAVIOUR_TEMPLATES.map((t) => (
                       <option key={t.id} value={t.id}>
@@ -732,18 +732,18 @@ export default function MakeAvatar() {
                   <div className="space-y-3">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="block text-xs text-gray-500">Behaviour</span>
+                        <span className="block text-xs text-muted">Behaviour</span>
                         <button
                           type="button"
                           onClick={() => setInfoSection((s) => (s === "behaviour" ? null : "behaviour"))}
-                          className="p-0.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-[#00838F] transition-colors"
+                          className="rounded-full p-0.5 text-muted transition-colors hover:bg-muted-bg hover:text-highlight"
                           aria-label="About behaviour"
                         >
                           <Info className="w-4 h-4" />
                         </button>
                       </div>
                       {infoSection === "behaviour" && (
-                        <p className="text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-200 mb-2">
+                        <p className="mb-2 rounded border border-border bg-muted-bg px-2 py-1.5 text-xs text-muted">
                           {PERSONALITY_INFO.behaviour}
                         </p>
                       )}
@@ -752,23 +752,23 @@ export default function MakeAvatar() {
                         value={avatarData.behaviour}
                         onChange={(e) => handleAvatarDataChange("behaviour", e.target.value)}
                         placeholder="How your avatar should behave (e.g. tone, style)"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent resize-none"
+                        className="w-full resize-none rounded-lg border border-border bg-input px-4 py-3 text-foreground outline-none transition-colors focus:border-highlight"
                       />
                     </div>
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="block text-xs text-gray-500">Rules</span>
+                        <span className="block text-xs text-muted">Rules</span>
                         <button
                           type="button"
                           onClick={() => setInfoSection((s) => (s === "rules" ? null : "rules"))}
-                          className="p-0.5 rounded-full hover:bg-gray-200 text-gray-500 hover:text-[#00838F] transition-colors"
+                          className="rounded-full p-0.5 text-muted transition-colors hover:bg-muted-bg hover:text-highlight"
                           aria-label="About rules"
                         >
                           <Info className="w-4 h-4" />
                         </button>
                       </div>
                       {infoSection === "rules" && (
-                        <p className="text-xs text-gray-600 bg-gray-50 px-2 py-1.5 rounded border border-gray-200 mb-2">
+                        <p className="mb-2 rounded border border-border bg-muted-bg px-2 py-1.5 text-xs text-muted">
                           {PERSONALITY_INFO.rules}
                         </p>
                       )}
@@ -777,18 +777,18 @@ export default function MakeAvatar() {
                         value={avatarData.rules}
                         onChange={(e) => handleAvatarDataChange("rules", e.target.value)}
                         placeholder="Rules the bot must follow (e.g. don’t use slang, stay on topic)"
-                        className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:border-[#00838F] outline-none transition-colors bg-transparent resize-none"
+                        className="w-full resize-none rounded-lg border border-border bg-input px-4 py-3 text-foreground outline-none transition-colors focus:border-highlight"
                       />
                     </div>
                   </div>
-                  <p className="mt-2 text-xs text-gray-500">
+                  <p className="mt-2 text-xs text-muted">
                     Select a personality type or Custom to write your own. You can edit the text above anytime.
                   </p>
                 </div>
 
                 {/* Admin Email */}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="mb-2 block text-sm font-medium text-foreground">
                     Admin Email<span className="text-red-500">*</span>
                   </label>
                   <div className="flex items-center gap-3">
@@ -799,9 +799,9 @@ export default function MakeAvatar() {
                         handleAvatarDataChange("admin_email", e.target.value)
                       }
                       placeholder="nishantmittal2410@gmail.com"
-                      className="flex-1 px-4 py-3 border-b border-gray-300 focus:border-[#00838F] outline-none transition-colors bg-transparent"
+                      className="flex-1 border-b border-border bg-transparent px-4 py-3 text-foreground placeholder:text-muted outline-none transition-colors focus:border-highlight"
                     />
-                    <button className="text-[#00838F] text-sm font-medium hover:underline whitespace-nowrap">
+                    <button className="whitespace-nowrap text-sm font-medium text-highlight hover:underline">
                       Add Email
                     </button>
                   </div>
@@ -810,7 +810,7 @@ export default function MakeAvatar() {
                 <div className="flex justify-center gap-4 pt-4">
                   <button
                     onClick={() => setCurrentStep(stages.BASIC_INFO)}
-                    className="px-8 py-2.5 border-2 border-[#3D5A5E] text-[#3D5A5E] rounded-full font-medium hover:bg-gray-50 transition-all"
+                    className="rounded-full border-2 border-highlight px-8 py-2.5 font-medium text-highlight transition-all hover:bg-muted-bg"
                   >
                     Back
                   </button>
@@ -820,7 +820,7 @@ export default function MakeAvatar() {
                         setCurrentStep(stages.REVIEW);
                       }
                     }}
-                    className="px-6 py-2.5 bg-[#3D5A5E] text-white rounded-full font-medium hover:bg-[#2d4448] transition-all"
+                    className="rounded-full bg-highlight px-6 py-2.5 font-medium text-white transition-all hover:opacity-90"
                   >
                     Continue and review
                   </button>
@@ -832,75 +832,75 @@ export default function MakeAvatar() {
           {/* Step 3: Review */}
           {currentStep === stages.REVIEW && (
             <div>
-              <h2 className="text-xl md:text-2xl text-center text-gray-800 mb-6">
+              <h2 className="mb-6 text-center text-xl text-foreground md:text-2xl">
                 Review your Avataar
               </h2>
 
               <ProfileHeader />
               <CoverPhotoSection showEditButton={false} />
 
-              <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm space-y-5">
+              <div className="space-y-5 rounded-xl border border-border bg-card p-6 shadow-sm">
                 {/* 1. Name */}
-                <div className="border-b border-gray-200 pb-4">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                <div className="border-b border-border pb-4">
+                  <label className="mb-1 block text-sm font-medium text-muted">
                     Name of Avataar
                   </label>
-                  <p className="text-gray-900">{avatarData.name || "-"}</p>
+                  <p className="text-foreground">{avatarData.name || "-"}</p>
                 </div>
 
                 {/* 2. Title */}
-                <div className="border-b border-gray-200 pb-4">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                <div className="border-b border-border pb-4">
+                  <label className="mb-1 block text-sm font-medium text-muted">
                     Title
                   </label>
-                  <p className="text-gray-900">{avatarData.bio_title || "-"}</p>
+                  <p className="text-foreground">{avatarData.bio_title || "-"}</p>
                 </div>
 
                 {/* 3. Subtitle */}
-                <div className="border-b border-gray-200 pb-4">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                <div className="border-b border-border pb-4">
+                  <label className="mb-1 block text-sm font-medium text-muted">
                     Subtitle
                   </label>
-                  <p className="text-gray-900">
+                  <p className="text-foreground">
                     {avatarData.bio_subtitle || "-"}
                   </p>
                 </div>
 
                 {/* 4. Domain (Subdomain) */}
-                <div className="border-b border-gray-200 pb-4">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                <div className="border-b border-border pb-4">
+                  <label className="mb-1 block text-sm font-medium text-muted">
                     Subdomain
                   </label>
-                  <p className="text-gray-900 font-mono">
+                  <p className="font-mono text-foreground">
                     {subdomainNorm ? `${subdomainNorm}${domainSuffix}` : "-"}
                   </p>
                 </div>
 
                 {/* 5. About */}
-                <div className="border-b border-gray-200 pb-4">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                <div className="border-b border-border pb-4">
+                  <label className="mb-1 block text-sm font-medium text-muted">
                     About you
                   </label>
-                  <p className="text-gray-900 whitespace-pre-wrap">
+                  <p className="whitespace-pre-wrap text-foreground">
                     {avatarData.about || "-"}
                   </p>
                 </div>
 
                 {/* 6. Behaviour & Rules */}
                 {(avatarData.behaviour || avatarData.rules) ? (
-                  <div className="border-b border-gray-200 pb-4">
-                    <label className="block text-sm font-medium text-gray-500 mb-1">
+                  <div className="border-b border-border pb-4">
+                    <label className="mb-1 block text-sm font-medium text-muted">
                       Your Avataar's Behaviour & Rules
                     </label>
                     {avatarData.behaviour ? (
-                      <p className="text-gray-900 text-sm mb-2">
-                        <span className="text-gray-500">Behaviour: </span>
+                      <p className="mb-2 text-sm text-foreground">
+                        <span className="text-muted">Behaviour: </span>
                         {avatarData.behaviour}
                       </p>
                     ) : null}
                     {avatarData.rules ? (
-                      <p className="text-gray-900 text-sm">
-                        <span className="text-gray-500">Rules: </span>
+                      <p className="text-sm text-foreground">
+                        <span className="text-muted">Rules: </span>
                         {avatarData.rules}
                       </p>
                     ) : null}
@@ -909,10 +909,10 @@ export default function MakeAvatar() {
 
                 {/* 7. Admin Email */}
                 <div className="pb-4">
-                  <label className="block text-sm font-medium text-gray-500 mb-1">
+                  <label className="mb-1 block text-sm font-medium text-muted">
                     Admin Email
                   </label>
-                  <p className="text-gray-900">
+                  <p className="text-foreground">
                     {avatarData.admin_email || "-"}
                   </p>
                 </div>
@@ -920,14 +920,14 @@ export default function MakeAvatar() {
                 <div className="flex justify-center gap-4 pt-4">
                   <button
                     onClick={() => setCurrentStep(stages.CUSTOMIZE)}
-                    className="px-8 py-2.5 border-2 border-[#3D5A5E] text-[#3D5A5E] rounded-full font-medium hover:bg-gray-50 transition-all"
+                    className="rounded-full border-2 border-highlight px-8 py-2.5 font-medium text-highlight transition-all hover:bg-muted-bg"
                   >
                     Back to edit
                   </button>
                   <button
                     onClick={createAvatar}
                     disabled={submitting}
-                    className="px-6 py-2.5 bg-[#3D5A5E] text-white rounded-full font-medium hover:bg-[#2d4448] disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                    className="rounded-full bg-highlight px-6 py-2.5 font-medium text-white transition-all hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                   >
                     {submitting ? "Creating..." : "Submit and create avataar"}
                   </button>
@@ -939,10 +939,10 @@ export default function MakeAvatar() {
       </div>
 
       {/* Footer */}
-      <div className="py-6 text-center border-t border-gray-100">
-        <p className="text-sm text-gray-500">
+      <div className="border-t border-border py-6 text-center">
+        <p className="text-sm text-muted">
           Powered by{" "}
-          <span className="font-semibold text-gray-700">KAVISHA</span>
+          <span className="font-semibold text-foreground">KAVISHA</span>
         </p>
       </div>
     </div>

@@ -22,7 +22,7 @@ export default function QuestionCard({
 
   return (
     <div
-      className={`mb-4 sm:mb-6 p-4 sm:p-6 border border-gray-200 rounded-lg sm:rounded-xl transition-all ${questionResult
+      className={`mb-4 rounded-lg border border-border bg-card p-4 text-foreground transition-all sm:mb-6 sm:rounded-xl sm:p-6 ${questionResult
           ? questionResult.isCorrect
             ? "border-green-400 bg-green-50/50"
             : "border-red-400 bg-red-50/50"
@@ -46,7 +46,7 @@ export default function QuestionCard({
               </span>
             )}
           </div>
-          <p className="text-sm sm:text-base font-medium text-gray-700 leading-relaxed">
+          <p className="text-sm font-medium leading-relaxed text-foreground sm:text-base">
             {question?.questionText}
           </p>
           {/* Question Images */}
@@ -57,7 +57,7 @@ export default function QuestionCard({
                   key={imgIndex}
                   src={imageUrl}
                   alt={`Question ${index + 1} image ${imgIndex + 1}`}
-                  className="max-h-48 w-auto object-contain rounded-lg border border-gray-300 bg-white"
+                  className="max-h-48 w-auto rounded-lg border border-border bg-card object-contain"
                 />
               ))}
             </div>
@@ -88,11 +88,11 @@ export default function QuestionCard({
               checked={isOptionSelected(option.id)}
               onChange={() => handleChange(option.id)}
               disabled={isCompleted}
-              className={`w-4 h-4 text-[#264653] border-gray-300 focus:ring-2 focus:ring-teal-500 focus:ring-offset-1 ${isCompleted ? "opacity-60 cursor-not-allowed" : "cursor-pointer"
+              className={`h-4 w-4 border-border text-highlight focus:ring-2 focus:ring-ring/30 focus:ring-offset-1 ${isCompleted ? "cursor-not-allowed opacity-60" : "cursor-pointer"
                 }`}
             />
             <span
-              className={`text-sm ${isCompleted ? "text-gray-600" : "text-gray-700"
+              className={`text-sm ${isCompleted ? "text-muted" : "text-foreground"
                 }`}
             >
               {option?.text}
@@ -102,19 +102,19 @@ export default function QuestionCard({
       </div>
 
       {questionResult && (
-        <div className="mt-4 sm:mt-5 pt-3 sm:pt-4 border-t border-gray-300 space-y-1.5 sm:space-y-2 text-xs sm:text-sm">
+        <div className="mt-4 space-y-1.5 border-t border-border pt-3 text-xs sm:mt-5 sm:space-y-2 sm:pt-4 sm:text-sm">
           <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-2">
-            <span className="font-semibold text-gray-700 sm:min-w-[100px]">
+            <span className="font-semibold text-foreground sm:min-w-[100px]">
               Your Answer:
             </span>
-            <span className="text-gray-600 break-words">
+            <span className="break-words text-muted">
               {questionResult.userAnswer.length > 0
                 ? questionResult.userAnswer.map(getOptionText).join(", ")
                 : "Not answered"}
             </span>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-2">
-            <span className="font-semibold text-gray-700 sm:min-w-[100px]">
+            <span className="font-semibold text-foreground sm:min-w-[100px]">
               Correct Answer:
             </span>
             <span className="text-green-700 font-medium break-words">
@@ -122,10 +122,10 @@ export default function QuestionCard({
             </span>
           </div>
           <div className="flex flex-col sm:flex-row sm:items-start gap-1 sm:gap-2">
-            <span className="font-semibold text-gray-700 sm:min-w-[100px]">
+            <span className="font-semibold text-foreground sm:min-w-[100px]">
               Marks:
             </span>
-            <span className="text-gray-600">
+            <span className="text-muted">
               {questionResult.marksObtained} / {questionResult.maxMarks}
             </span>
           </div>

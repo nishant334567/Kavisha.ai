@@ -150,7 +150,7 @@ export default function CheckoutPage() {
     if (!user) {
         return (
             <div className="px-6 py-12 max-w-2xl mx-auto text-center">
-                <p className="text-gray-600 mb-4">Sign in to checkout.</p>
+                <p className="mb-4 text-muted">Sign in to checkout.</p>
                 <button
                     onClick={() => router.push("/")}
                     className="px-4 py-2 rounded-lg bg-[#2b6a5b] text-white hover:bg-[#235a4d] transition-colors"
@@ -164,8 +164,8 @@ export default function CheckoutPage() {
     if (items.length === 0) {
         return (
             <div className="px-6 py-12 max-w-2xl mx-auto text-center">
-                <h1 className="text-xl font-bold text-gray-800 mb-2">Your cart is empty</h1>
-                <p className="text-gray-600 mb-4">Add products to checkout.</p>
+                <h1 className="mb-2 text-xl font-bold text-foreground">Your cart is empty</h1>
+                <p className="mb-4 text-muted">Add products to checkout.</p>
                 <button
                     onClick={() => router.push("/products")}
                     className="px-4 py-2 rounded-lg bg-[#2b6a5b] text-white hover:bg-[#235a4d] transition-colors"
@@ -181,21 +181,21 @@ export default function CheckoutPage() {
             <button
                 type="button"
                 onClick={() => router.push("/cart")}
-                className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6 text-sm"
+                className="mb-6 flex items-center gap-2 text-sm text-muted transition-colors hover:text-foreground"
             >
                 <ArrowLeft className="w-4 h-4" />
                 Back to cart
             </button>
 
-            <h1 className="text-xl font-bold text-gray-800 mb-6">Checkout</h1>
+            <h1 className="mb-6 text-xl font-bold text-foreground">Checkout</h1>
 
             <div className="grid gap-6 md:grid-cols-[1fr,320px]">
                 <div className="space-y-4">
-                    <div className="rounded-xl border border-gray-200 bg-white p-4 md:p-5">
-                        <h2 className="font-semibold text-gray-800 mb-4">Delivery details</h2>
+                    <div className="rounded-xl border border-border bg-card p-4 md:p-5">
+                        <h2 className="mb-4 font-semibold text-foreground">Delivery details</h2>
                         <div className="grid gap-3">
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="mb-1 block text-sm font-medium text-foreground">
                                     Phone number
                                 </label>
                                 <input
@@ -209,11 +209,11 @@ export default function CheckoutPage() {
                                         if (checkoutError) setCheckoutError("");
                                     }}
                                     placeholder="10-digit mobile number"
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2b6a5b]/20 focus:border-[#2b6a5b]"
+                                    className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
                                 />
                             </div>
                             <div>
-                                <label className="block text-sm font-medium text-gray-700 mb-1">
+                                <label className="mb-1 block text-sm font-medium text-foreground">
                                     Delivery address
                                 </label>
                                 <textarea
@@ -224,7 +224,7 @@ export default function CheckoutPage() {
                                         if (checkoutError) setCheckoutError("");
                                     }}
                                     placeholder="House/Flat, street, area, city, state, pincode"
-                                    className="w-full rounded-lg border border-gray-300 px-3 py-2 text-sm text-gray-800 focus:outline-none focus:ring-2 focus:ring-[#2b6a5b]/20 focus:border-[#2b6a5b] resize-y"
+                                    className="w-full resize-y rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/20"
                                 />
                             </div>
                             {checkoutError && (
@@ -233,8 +233,8 @@ export default function CheckoutPage() {
                         </div>
                     </div>
 
-                    <h2 className="font-semibold text-gray-800">Order summary</h2>
-                    <div className="rounded-xl border border-gray-200 bg-white divide-y divide-gray-200">
+                    <h2 className="font-semibold text-foreground">Order summary</h2>
+                    <div className="divide-y divide-border rounded-xl border border-border bg-card">
                         {items.map((item) => {
                             const product = productMap[item.productId?.toString?.() || item.productId];
                             const imageUrl = product?.images?.[0];
@@ -246,7 +246,7 @@ export default function CheckoutPage() {
                                     key={item.productId?.toString?.() || item.productId}
                                     className="flex gap-4 p-4"
                                 >
-                                    <div className="w-16 h-16 shrink-0 rounded-lg bg-gray-100 overflow-hidden">
+                                    <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-muted-bg">
                                         {imageUrl ? (
                                             <img
                                                 src={imageUrl}
@@ -255,19 +255,19 @@ export default function CheckoutPage() {
                                                 referrerPolicy="no-referrer"
                                             />
                                         ) : (
-                                            <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                                            <div className="flex h-full w-full items-center justify-center text-xs text-muted">
                                                 No image
                                             </div>
                                         )}
                                     </div>
                                     <div className="flex-1 min-w-0">
-                                        <p className="font-medium text-gray-800 truncate">{name}</p>
-                                        <p className="text-sm text-gray-500">
+                                        <p className="truncate font-medium text-foreground">{name}</p>
+                                        <p className="text-sm text-muted">
                                             Qty: {item.quantity} × Rs. {Math.round(item.priceSnapshot || 0)}/-
                                         </p>
                                     </div>
                                     <div className="shrink-0 text-right">
-                                        <p className="font-semibold text-gray-800">
+                                        <p className="font-semibold text-foreground">
                                             Rs. {Math.round(lineTotal)}/-
                                         </p>
                                     </div>
@@ -277,16 +277,16 @@ export default function CheckoutPage() {
                     </div>
                 </div>
 
-                <div className="h-fit rounded-xl border border-gray-200 bg-white p-6">
-                    <h2 className="font-semibold text-gray-800 mb-4">Payment</h2>
+                <div className="h-fit rounded-xl border border-border bg-card p-6">
+                    <h2 className="mb-4 font-semibold text-foreground">Payment</h2>
                     <div className="space-y-3 mb-6">
                         <div className="flex justify-between text-sm">
-                            <span className="text-gray-600">Subtotal</span>
+                            <span className="text-muted">Subtotal</span>
                             <span className="font-medium">Rs. {Math.round(total)}/-</span>
                         </div>
-                        <div className="flex justify-between text-sm pt-2 border-t border-gray-200">
-                            <span className="text-gray-600">Total</span>
-                            <span className="font-bold text-gray-900">Rs. {Math.round(total)}/-</span>
+                        <div className="flex justify-between border-t border-border pt-2 text-sm">
+                            <span className="text-muted">Total</span>
+                            <span className="font-bold text-foreground">Rs. {Math.round(total)}/-</span>
                         </div>
                     </div>
                     <button
@@ -298,7 +298,7 @@ export default function CheckoutPage() {
                         {paying ? "Processing..." : "Proceed to payment"}
                     </button>
                     {!isDeliveryReady && (
-                        <p className="mt-2 text-xs text-gray-500">
+                        <p className="mt-2 text-xs text-muted">
                             Add valid phone number and delivery address to continue.
                         </p>
                     )}

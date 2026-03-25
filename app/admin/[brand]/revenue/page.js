@@ -15,40 +15,40 @@ function formatCurrency(value) {
 
 function RevenueSection({ title, rows, emptyMessage, metricLabel }) {
   return (
-    <div className="rounded-2xl border border-gray-200 bg-white shadow-sm">
-      <div className="border-b border-gray-200 px-6 py-4">
-        <h2 className="text-lg font-semibold text-[#000A67]">{title}</h2>
+    <div className="rounded-2xl border border-border bg-card shadow-sm">
+      <div className="border-b border-border px-6 py-4">
+        <h2 className="text-lg font-semibold text-highlight">{title}</h2>
       </div>
       {rows.length === 0 ? (
-        <div className="px-6 py-8 text-sm text-gray-500">{emptyMessage}</div>
+        <div className="px-6 py-8 text-sm text-muted">{emptyMessage}</div>
       ) : (
         <div className="overflow-x-auto">
-          <table className="min-w-full divide-y divide-gray-200 text-sm">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-border text-sm">
+            <thead className="bg-muted-bg">
               <tr>
-                <th className="px-6 py-3 text-left font-medium text-gray-600">
+                <th className="px-6 py-3 text-left font-medium text-muted">
                   Name
                 </th>
-                <th className="px-6 py-3 text-left font-medium text-gray-600">
+                <th className="px-6 py-3 text-left font-medium text-muted">
                   {metricLabel}
                 </th>
-                <th className="px-6 py-3 text-right font-medium text-gray-600">
+                <th className="px-6 py-3 text-right font-medium text-muted">
                   Revenue
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-100">
+            <tbody className="divide-y divide-border">
               {rows.map((row) => (
                 <tr key={row.id || row.name}>
-                  <td className="px-6 py-4 text-gray-900">{row.name}</td>
-                  <td className="px-6 py-4 text-gray-600">
+                  <td className="px-6 py-4 text-foreground">{row.name}</td>
+                  <td className="px-6 py-4 text-muted">
                     {row.quantity ??
                       row.orders ??
                       row.bookings ??
                       row.payments ??
                       0}
                   </td>
-                  <td className="px-6 py-4 text-right font-medium text-gray-900">
+                  <td className="px-6 py-4 text-right font-medium text-foreground">
                     {formatCurrency(row.revenue)}
                   </td>
                 </tr>
@@ -111,17 +111,17 @@ export default function RevenuePage() {
       <div className="flex items-center gap-3 mb-6">
         <button
           onClick={() => router.back()}
-          className="text-black hover:opacity-70 transition-opacity"
+          className="text-foreground transition-opacity hover:opacity-70"
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="uppercase text-2xl font-bold text-blue-900 font-zen">
+        <h1 className="font-zen text-2xl font-bold uppercase text-highlight">
           Revenue
         </h1>
       </div>
 
       {loading ? (
-        <div className="rounded-2xl border border-gray-200 bg-white px-6 py-10 text-sm text-gray-500 shadow-sm">
+        <div className="rounded-2xl border border-border bg-card px-6 py-10 text-sm text-muted shadow-sm">
           Loading revenue...
         </div>
       ) : error ? (
@@ -134,15 +134,15 @@ export default function RevenuePage() {
             {cards.map((card) => (
               <div
                 key={card.label}
-                className="rounded-2xl border border-gray-200 bg-white px-5 py-4 shadow-sm"
+                className="rounded-2xl border border-border bg-card px-5 py-4 shadow-sm"
               >
-                <div className="mb-3 flex items-center gap-2 text-[#004A4E]">
+                <div className="mb-3 flex items-center gap-2 text-highlight">
                   <IndianRupee className="h-4 w-4" />
-                  <p className="text-sm font-medium text-gray-600">
+                  <p className="text-sm font-medium text-muted">
                     {card.label}
                   </p>
                 </div>
-                <p className="text-2xl font-semibold text-[#000A67]">
+                <p className="text-2xl font-semibold text-highlight">
                   {formatCurrency(card.value)}
                 </p>
               </div>

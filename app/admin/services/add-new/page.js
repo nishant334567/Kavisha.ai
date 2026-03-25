@@ -21,14 +21,14 @@ import { ServiceSuccessCard } from "@/app/admin/components/PublishSuccessCard";
 import { BlogEditor } from "@/app/admin/components/blog";
 
 const INPUT_CLASS =
-  "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-[18px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E]";
-const LABEL_CLASS = "text-[22px] font-medium text-gray-800 tracking-wide";
+  "w-full rounded-xl border border-border bg-input px-4 py-3 text-[18px] text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30";
+const LABEL_CLASS = "text-[22px] font-medium text-foreground tracking-wide";
 
 function Field({ label, icon: Icon, children }) {
   return (
     <div className="grid grid-cols-1 gap-3 md:grid-cols-[160px_1fr] md:items-start">
       <p className={`${LABEL_CLASS} inline-flex items-center gap-2`}>
-        {Icon ? <Icon className="h-5 w-5 text-gray-500" /> : null}
+        {Icon ? <Icon className="h-5 w-5 text-muted" /> : null}
         <span>{label}</span>
       </p>
       <div>{children}</div>
@@ -149,7 +149,7 @@ export default function AddBookingPage() {
 
   if (showSuccess && createdService) {
     return (
-      <div className="-mx-6 -my-8 px-6 py-8 md:px-10 bg-[#F3F3F3] min-h-[calc(100vh-4rem)]">
+      <div className="-mx-6 -my-8 min-h-[calc(100vh-4rem)] bg-background px-6 py-8 md:px-10">
         <ServiceSuccessCard
           serviceId={createdService._id}
           serviceTitle={createdService.title}
@@ -161,8 +161,8 @@ export default function AddBookingPage() {
   }
 
   return (
-    <div className="-mx-6 -my-8 px-6 py-8 md:px-10 bg-[#F3F3F3] min-h-[calc(100vh-4rem)]">
-      <h1 className="mb-10 text-5xl font-semibold tracking-wide text-[#111111]">
+    <div className="-mx-6 -my-8 min-h-[calc(100vh-4rem)] bg-background px-6 py-8 text-foreground md:px-10">
+      <h1 className="mb-10 text-5xl font-semibold tracking-wide text-foreground">
         Create a booking
       </h1>
 
@@ -171,7 +171,7 @@ export default function AddBookingPage() {
               <button
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
-                className="group flex h-[240px] w-full items-center justify-center rounded-sm border border-gray-300 bg-[#D8D8D8] text-center"
+                className="group flex h-[240px] w-full items-center justify-center rounded-sm border border-border bg-muted-bg text-center"
               >
                 {imagePreview ? (
                   <img
@@ -180,7 +180,7 @@ export default function AddBookingPage() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex flex-col items-center gap-3 text-gray-600">
+                  <div className="flex flex-col items-center gap-3 text-muted">
                     <ImagePlus className="h-8 w-8" />
                     <span className="text-[30px] tracking-wide">Add image</span>
                   </div>
@@ -189,7 +189,7 @@ export default function AddBookingPage() {
 
               <div className="space-y-4">
                 <div className="relative">
-                  <TextCursorInput className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <TextCursorInput className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
                   <input
                     type="text"
                     value={form.title}
@@ -199,7 +199,7 @@ export default function AddBookingPage() {
                   />
                 </div>
                 <div className="relative">
-                  <TextCursorInput className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <TextCursorInput className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
                   <input
                     type="text"
                     value={form.subtitle}
@@ -233,30 +233,30 @@ export default function AddBookingPage() {
             </Field>
 
             <section className="space-y-6">
-              <h2 className="text-[30px] font-medium tracking-wide text-gray-800">
+              <h2 className="text-[30px] font-medium tracking-wide text-foreground">
                 Session details
               </h2>
 
               <Field label="Duration" icon={Clock3}>
-                <div className="grid max-w-xl grid-cols-[1fr_170px] rounded-xl border border-gray-300 bg-white">
+                <div className="grid max-w-xl grid-cols-[1fr_170px] rounded-xl border border-border bg-input">
                   <input
                     type="number"
                     min={1}
                     value={form.duration}
                     onChange={updateField("duration")}
                     placeholder="Duration..."
-                    className="rounded-l-xl border-r border-gray-300 bg-transparent px-4 py-3 text-[18px] text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                    className="rounded-l-xl border-r border-border bg-transparent px-4 py-3 text-[18px] text-foreground placeholder:text-muted focus:outline-none"
                   />
                   <div className="relative">
                     <select
                       value={form.durationUnit}
                       onChange={updateField("durationUnit")}
-                      className="h-full w-full appearance-none rounded-r-xl bg-transparent px-4 py-3 pr-10 text-[18px] text-gray-900 focus:outline-none"
+                      className="h-full w-full appearance-none rounded-r-xl bg-transparent px-4 py-3 pr-10 text-[18px] text-foreground focus:outline-none"
                     >
                       <option>Minutes</option>
                       <option>Hours</option>
                     </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
                   </div>
                 </div>
               </Field>
@@ -268,14 +268,14 @@ export default function AddBookingPage() {
                   value={form.bufferTime}
                   onChange={updateField("bufferTime")}
                   placeholder="Add time gap between each booking"
-                  className="max-w-xl rounded-xl border border-gray-300 bg-white px-4 py-3 text-[18px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E]"
+                  className="max-w-xl rounded-xl border border-border bg-input px-4 py-3 text-[18px] text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                 />
               </Field>
 
               <Field label="Calendar" icon={CalendarDays}>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-3 text-[28px] font-medium text-[#1D2A33] hover:opacity-85"
+                  className="inline-flex items-center gap-3 text-[28px] font-medium text-highlight hover:opacity-85"
                 >
                   Select date(s) in calendar
                   <ArrowRight className="h-8 w-8" />
@@ -287,13 +287,13 @@ export default function AddBookingPage() {
                   <select
                     value={form.mode}
                     onChange={updateField("mode")}
-                    className="w-full appearance-none rounded-xl border border-gray-300 bg-white px-4 py-3 pr-10 text-[18px] text-gray-900 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E]"
+                    className="w-full appearance-none rounded-xl border border-border bg-input px-4 py-3 pr-10 text-[18px] text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                   >
                     <option>Online (Google meet)</option>
                     <option>Online (Zoom)</option>
                     <option>Offline (In person)</option>
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
                 </div>
               </Field>
 
@@ -303,20 +303,20 @@ export default function AddBookingPage() {
                   value={form.cancellationPolicy}
                   onChange={updateField("cancellationPolicy")}
                   placeholder="Add disclaimer for user regarding refund/cancellation."
-                  className="max-w-3xl w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-[18px] text-gray-900 placeholder:text-gray-400 resize-none focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E]"
+                  className="max-w-3xl w-full resize-none rounded-xl border border-border bg-input px-4 py-3 text-[18px] text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                 />
               </Field>
 
               <Field label="Price" icon={CircleDollarSign}>
                 <div className="relative max-w-xs">
-                  <CircleDollarSign className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <CircleDollarSign className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
                   <input
                     type="number"
                     min={0}
                     value={form.price}
                     onChange={updateField("price")}
                     placeholder="Add price (in Rs.)"
-                    className="w-full rounded-xl border border-gray-300 bg-white py-3 pl-11 pr-4 text-[18px] text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E]"
+                    className="w-full rounded-xl border border-border bg-input py-3 pl-11 pr-4 text-[18px] text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                   />
                 </div>
               </Field>
@@ -326,7 +326,7 @@ export default function AddBookingPage() {
               <button
                 type="submit"
                 disabled={saving || uploading}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#2D545E] px-10 py-2 text-[30px] font-medium text-white hover:bg-[#24454E] disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-xl bg-highlight px-10 py-2 text-[30px] font-medium text-white hover:opacity-90 disabled:opacity-60"
               >
                 <Save className="h-7 w-7" />
                 {saving ? "Saving..." : "Save booking"}
