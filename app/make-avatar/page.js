@@ -127,7 +127,7 @@ export default function MakeAvatarLandingPage() {
         )}
 
         {popupBlockedHint && !isBlocked && (
-          <p className="text-center text-amber-600 text-sm mb-4">Popup was blocked. Try again — it&apos;ll work.</p>
+          <p className="text-center text-amber-600 text-sm mb-4">Tap again to enable pop-up! Cheers! :)</p>
         )}
 
         {/* Cards */}

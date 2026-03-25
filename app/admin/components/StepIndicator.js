@@ -8,7 +8,7 @@ export default function StepIndicator({ steps, currentStep }) {
           <div key={step.number} className="flex items-center flex-1">
             <div className="flex flex-col items-center flex-1">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all font-fredoka ${
+                className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all font-baloo ${
                   currentStep >= step.number
                     ? "bg-[#264653] text-white"
                     : "bg-muted-bg text-muted"
@@ -17,7 +17,7 @@ export default function StepIndicator({ steps, currentStep }) {
                 {step.number}
               </div>
               <p
-                className={`mt-2 text-xs font-medium font-fredoka ${
+                className={`mt-2 text-xs font-medium font-baloo ${
                   currentStep >= step.number
                     ? "text-highlight"
                     : "text-muted"

@@ -140,7 +140,7 @@ export default function QuestionsForm({
   return (
     <div className="rounded-xl border border-border bg-card p-8 text-foreground shadow-lg">
       <div className="flex items-center justify-between mb-6">
-        <h2 className="text-2xl font-semibold text-highlight font-fredoka">Add Questions</h2>
+        <h2 className="text-2xl font-semibold text-highlight font-baloo">Add Questions</h2>
         <button
           type="button"
           onClick={() => {
@@ -160,7 +160,7 @@ export default function QuestionsForm({
               });
             }
           }}
-          className="flex items-center gap-2 px-4 py-2 bg-[#264653] text-white rounded-full font-medium hover:bg-[#1e383e] transition-colors font-fredoka"
+          className="flex items-center gap-2 px-4 py-2 bg-[#264653] text-white rounded-full font-medium hover:bg-[#1e383e] transition-colors font-baloo"
         >
           <Plus className="w-5 h-5" />
           {addQues ? "Cancel" : "Add Question"}
@@ -170,11 +170,11 @@ export default function QuestionsForm({
       {/* Questions List */}
       {questions.length === 0 ? (
         <div className="mb-6 rounded-lg border-2 border-dashed border-border py-12 text-center">
-          <p className="mb-4 text-muted font-fredoka">No questions added yet.</p>
+          <p className="mb-4 text-muted font-baloo">No questions added yet.</p>
           <button
             type="button"
             onClick={() => setAddQues(true)}
-            className="font-medium text-highlight hover:opacity-80 font-fredoka"
+            className="font-medium text-highlight hover:opacity-80 font-baloo"
           >
             Click here to add your first question
           </button>
@@ -198,7 +198,7 @@ export default function QuestionsForm({
       {/* Add Question Form */}
       {addQues && (
         <div className="mb-6 rounded-xl border-2 border-border border-dashed bg-muted-bg p-6">
-          <h3 className="mb-4 text-lg font-semibold text-highlight font-fredoka">
+          <h3 className="mb-4 text-lg font-semibold text-highlight font-baloo">
             New Question
           </h3>
           <QuestionItem
@@ -214,7 +214,7 @@ export default function QuestionsForm({
             <button
               type="button"
               onClick={addQuestion}
-              className="flex-1 px-4 py-2 bg-[#264653] text-white rounded-full font-medium hover:bg-[#1e383e] transition-colors font-fredoka"
+              className="flex-1 px-4 py-2 bg-[#264653] text-white rounded-full font-medium hover:bg-[#1e383e] transition-colors font-baloo"
             >
               Save Question
             </button>
@@ -234,7 +234,7 @@ export default function QuestionsForm({
                   required: true,
                 });
               }}
-              className="rounded-full border border-border px-4 py-2 font-medium text-foreground transition-colors hover:bg-background font-fredoka"
+              className="rounded-full border border-border px-4 py-2 font-medium text-foreground transition-colors hover:bg-background font-baloo"
             >
               Cancel
             </button>
@@ -245,7 +245,7 @@ export default function QuestionsForm({
       {/* Summary */}
       {questions.length > 0 && (
         <div className="mb-6 rounded-lg bg-muted-bg p-4">
-          <div className="flex items-center gap-2 text-sm text-foreground font-fredoka">
+          <div className="flex items-center gap-2 text-sm text-foreground font-baloo">
             <CheckCircle2 className="w-4 h-4 text-green-600" />
             <span>
               <strong>{questions.length}</strong> question
@@ -263,7 +263,7 @@ export default function QuestionsForm({
               <button
                 type="button"
                 onClick={onCancel}
-                className="rounded-full border border-red-300 px-6 py-3 font-medium text-red-700 transition-colors hover:bg-muted-bg font-fredoka"
+                className="rounded-full border border-red-300 px-6 py-3 font-medium text-red-700 transition-colors hover:bg-muted-bg font-baloo"
               >
                 Cancel
               </button>
@@ -272,7 +272,7 @@ export default function QuestionsForm({
               <button
                 type="button"
                 onClick={onBack}
-                className="rounded-full border border-border px-6 py-3 font-medium text-foreground transition-colors hover:bg-muted-bg font-fredoka"
+                className="rounded-full border border-border px-6 py-3 font-medium text-foreground transition-colors hover:bg-muted-bg font-baloo"
               >
                 Back
               </button>
@@ -282,7 +282,7 @@ export default function QuestionsForm({
             <button
               type="button"
               onClick={onSaveDraft}
-              className="rounded-full border border-amber-500 px-6 py-3 font-medium text-amber-700 transition-colors hover:bg-muted-bg font-fredoka"
+              className="rounded-full border border-amber-500 px-6 py-3 font-medium text-amber-700 transition-colors hover:bg-muted-bg font-baloo"
             >
               Save as draft
             </button>
@@ -290,7 +290,7 @@ export default function QuestionsForm({
           <button
             type="button"
             onClick={handleSubmit}
-            className="rounded-full bg-highlight px-6 py-3 font-medium text-white transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring/30 font-fredoka"
+            className="rounded-full bg-highlight px-6 py-3 font-medium text-white transition-colors hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring/30 font-baloo"
           >
             Publish
           </button>

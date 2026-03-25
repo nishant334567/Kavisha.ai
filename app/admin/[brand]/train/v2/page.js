@@ -440,7 +440,7 @@ export default function Train() {
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="font-zen text-2xl font-bold uppercase text-highlight">
+          <h1 className="font-baloo text-2xl font-bold uppercase text-highlight">
             Train your Avataar
           </h1>
         </div>
@@ -552,7 +552,7 @@ export default function Train() {
         </div>
         <div className="flex justify-between items-center my-4 flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="font-akshar font-semibold uppercase text-highlight">
+            <p className="font-baloo font-semibold uppercase text-highlight">
               Knowledge base
             </p>
             {documents.length > 0 && (

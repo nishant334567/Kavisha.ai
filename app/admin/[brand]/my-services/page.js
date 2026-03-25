@@ -192,7 +192,7 @@ export default function MyServices() {
   return (
     <>
       <div className="min-h-[calc(100vh-56px)] overflow-y-auto bg-background py-8 text-foreground">
-        <div className="max-w-6xl mx-auto px-4 md:px-6 font-akshar">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 font-baloo">
           <div className="flex items-center gap-3 mb-6">
             <button
               onClick={() => router.back()}
@@ -202,7 +202,7 @@ export default function MyServices() {
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="font-zen text-3xl md:text-4xl font-black text-highlight tracking-tight">
+              <h1 className="font-baloo text-3xl md:text-4xl font-black text-highlight tracking-tight">
                 My Services
               </h1>
               <p className="mt-1 text-sm text-muted">
@@ -214,7 +214,7 @@ export default function MyServices() {
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
             <section className="rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6 lg:col-span-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-zen text-xl font-bold text-highlight">
+                <h2 className="font-baloo text-xl font-bold text-highlight">
                   Chat Services
                 </h2>
                 <span className="text-xs uppercase tracking-wider text-muted">
@@ -278,7 +278,7 @@ export default function MyServices() {
             <section className="rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6 lg:col-span-7">
               <div className="flex items-start justify-between gap-4 mb-5">
                 <div>
-                  <h2 className="font-zen text-xl font-bold text-highlight">
+                  <h2 className="font-baloo text-xl font-bold text-highlight">
                     Featured Services
                   </h2>
                   <p className="mt-1 text-sm text-muted">

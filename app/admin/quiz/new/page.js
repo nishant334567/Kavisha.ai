@@ -119,7 +119,7 @@ export default function AddQuiz() {
         {/* Back/Cancel Button */}
         <button
           onClick={handleCancel}
-          className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-fredoka"
+          className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-baloo"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Cancel

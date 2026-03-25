@@ -85,7 +85,7 @@ export default function AdminHome() {
     ...(brand?.enableBooking
       ? [
           {
-            label: "Booking Services",
+            label: "Bookings",
             path: `/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
           },
         ]
@@ -132,11 +132,11 @@ export default function AdminHome() {
     <div className="relative flex h-[calc(100vh-56px)] flex-col bg-background text-foreground">
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="flex items-center justify-center text-center">
-          <p className="px-4 font-zen text-5xl text-highlight md:text-6xl">
+          <p className="px-4 font-baloo text-5xl text-highlight md:text-6xl">
             Welcome, {brand?.brandName?.split(" ")?.[0]} !
           </p>
         </div>
-        <div className="mt-8 flex flex-col items-center justify-center gap-4 font-akshar">
+        <div className="mt-8 flex flex-col items-center justify-center gap-4 font-baloo">
           <div className="flex flex-wrap items-center justify-center gap-y-3">
             {primaryButtons.map((button, index) => (
               <div key={button.label} className="flex items-center">
@@ -155,9 +155,7 @@ export default function AdminHome() {
           </div>
           {featureButtons.length > 0 && (
             <>
-              <div className="text-xs uppercase tracking-[0.3em] text-muted">
-                Featured Services
-              </div>
+ 
               <div className="flex flex-wrap items-center justify-center gap-y-3">
                 {featureButtons.map((button, index) => (
                   <div key={button.label} className="flex items-center">
@@ -183,7 +181,7 @@ export default function AdminHome() {
 
       {/* Footer */}
       <div className=" h-12 flex items-center justify-center px-6">
-        <div className="text-sm font-akshar text-muted">
+        <div className="text-sm font-baloo text-muted">
           Powered by KAVISHA
         </div>
       </div>
@@ -201,7 +199,7 @@ export default function AdminHome() {
             className="w-6 h-6 rounded-full"
           />
         </div>
-        <p className="pl-2 pr-12 font-akshar">Messaging</p>
+        <p className="pl-2 pr-12 font-baloo">Messaging</p>
         <ChevronDown />
       </div>
 

@@ -126,7 +126,7 @@ export default function ApplicantCard({
 
     return (
         <>
-            <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-4 font-fredoka shadow-md sm:flex-row">
+            <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-4 font-baloo shadow-md sm:flex-row">
                 <div className="flex-1 min-w-0 sm:min-w-[60%]">
                     <div className="flex gap-4 mb-4">
                         <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted-bg text-lg font-semibold text-muted">

@@ -81,7 +81,7 @@ export default function MyCommunity() {
           <ArrowLeft className="w-6 h-6" />
         </button>
         <div className="flex items-center gap-3 justify-center md:justify-start">
-          <h1 className="md:pl-32 mb-6 inline-block pb-2 text-3xl font-zen text-highlight md:text-4xl">
+          <h1 className="md:pl-32 mb-6 inline-block pb-2 text-3xl font-baloo text-highlight md:text-4xl">
             Community
           </h1>
         </div>
@@ -94,7 +94,7 @@ export default function MyCommunity() {
             const count = getTabCount(tab);
             return (
               <div key={tab} className="flex items-center">
-                <div className="uppercase font-medium tracking-wide text-highlight relative font-akshar text-xl">
+                <div className="uppercase font-medium tracking-wide text-highlight relative font-baloo text-xl">
                   {tab}
                   {count > 0 && (
                     <span className="absolute -top-2 -right-6 bg-ring text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">

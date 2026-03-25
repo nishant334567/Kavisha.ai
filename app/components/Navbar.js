@@ -133,6 +133,49 @@ export default function Navbar() {
     { name: "Help", path: "/help" },
   ];
 
+  const communityEnabled =
+    !!brand?.enableFriendConnect || !!brand?.enableProfessionalConnect;
+  const blogPath =
+    "/blogs" +
+    (brand?.subdomain ? `?subdomain=${encodeURIComponent(brand.subdomain)}` : "");
+  const enabledFeatureNavItems = [
+    ...(communityEnabled
+      ? [{ label: "COMMUNITY", mobileLabel: "Community", path: "/community", icon: Users }]
+      : []),
+    ...(brand?.subdomain
+      ? [
+          {
+            label: "LINKS",
+            mobileLabel: "Links",
+            path: `/links?brand=${encodeURIComponent(brand.subdomain)}`,
+            icon: Link2,
+          },
+        ]
+      : []),
+    ...(brand?.enableQuiz
+      ? [
+          {
+            label: (brand?.quizName || "QUIZ / SURVEY").toUpperCase(),
+            mobileLabel: brand?.quizName || "Quiz / Survey",
+            path: "/quiz",
+            icon: LayoutGrid,
+          },
+        ]
+      : []),
+    ...(brand?.enableBooking
+      ? [{ label: "BOOKINGS", mobileLabel: "Bookings", path: "/services", icon: Sparkles }]
+      : []),
+    ...(brand?.enableProducts
+      ? [{ label: "STORE", mobileLabel: "Store", path: "/products", icon: ShoppingBag }]
+      : []),
+    ...(brand?.enableJobs
+      ? [{ label: "JOBS", mobileLabel: "Jobs", path: "/jobs", icon: Briefcase }]
+      : []),
+    ...(brand?.enableBlogs
+      ? [{ label: "BLOG", mobileLabel: "Blog", path: blogPath, icon: BookOpen }]
+      : []),
+  ];
+
   const menuIconClass = "w-5 h-5 shrink-0 text-muted";
   const menuRowBtnClass =
     "w-full flex items-center gap-3 rounded-lg px-3 py-3.5 text-left text-foreground transition-colors hover:bg-muted-bg";
@@ -192,78 +235,25 @@ export default function Navbar() {
               </button>
             )}
             {user && (
-              <>
-                <button
-                  onClick={() => handleNavigate("/chats")}
-                  disabled={isNavigating}
-                  className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
-                >
-                  {getNavLabel("/chats", "CHATS")}
-                </button>
-                <button
-                  onClick={() => handleNavigate("/community")}
-                  disabled={isNavigating}
-                  className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
-                >
-                  {getNavLabel("/community", "COMMUNITY")}
-                </button>
-              </>
-            )}
-            {brand?.subdomain && (
               <button
+                onClick={() => handleNavigate("/chats")}
+                disabled={isNavigating}
+                className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
+              >
+                {getNavLabel("/chats", "CHATS")}
+              </button>
+            )}
+            {enabledFeatureNavItems.map((item) => (
+              <button
+                key={item.path}
                 type="button"
-                onClick={() =>
-                  handleNavigate(`/links?brand=${encodeURIComponent(brand.subdomain)}`)
-                }
+                onClick={() => handleNavigate(item.path)}
                 disabled={isNavigating}
                 className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
               >
-                {getNavLabel(
-                  `/links?brand=${encodeURIComponent(brand.subdomain)}`,
-                  "LINKS",
-                )}
+                {getNavLabel(item.path, item.label)}
               </button>
-            )}
-            {brand?.enableProducts && (
-              <button
-                onClick={() => handleNavigate("/products")}
-                disabled={isNavigating}
-                className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
-              >
-                {getNavLabel("/products", "STORE")}
-              </button>
-            )}
-            {brand?.enableJobs && (
-              <button
-                onClick={() => handleNavigate("/jobs")}
-                disabled={isNavigating}
-                className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
-              >
-                {getNavLabel("/jobs", "JOBS")}
-              </button>
-            )}
-            {brand?.enableBlogs && (
-              <button
-                onClick={() =>
-                  handleNavigate(
-                    "/blogs" +
-                      (brand?.subdomain
-                        ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
-                        : ""),
-                  )
-                }
-                disabled={isNavigating}
-                className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
-              >
-                {getNavLabel(
-                  "/blogs" +
-                    (brand?.subdomain
-                      ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
-                      : ""),
-                  "BLOG",
-                )}
-              </button>
-            )}
+            ))}
             {loading ? (
               <div className=" text-sm text-muted">Loading...</div>
             ) : !user ? (
@@ -286,7 +276,7 @@ export default function Navbar() {
                 )}
                 {popupBlockedHint && !isBlocked && (
                   <p className="mt-1 max-w-[200px] text-right text-xs text-amber-600 dark:text-amber-300">
-                    Popup was blocked. Try again — it&apos;ll work.
+                    Tap again to enable pop-up! Cheers! :)
                   </p>
                 )}
               </div>
@@ -391,19 +381,6 @@ export default function Navbar() {
                 type="button"
                 className={menuRowBtnClass}
                 onClick={() => {
-                  handleNavigate("/featured", { closeMenu: true });
-                }}
-                disabled={isNavigating}
-              >
-                <LayoutGrid className={menuIconClass} strokeWidth={2} />
-                {getNavLabel("/featured", "Services")}
-              </button>
-            </li>
-            <li>
-              <button
-                type="button"
-                className={menuRowBtnClass}
-                onClick={() => {
                   handleNavigate("/help", { closeMenu: true });
                 }}
                 disabled={isNavigating}
@@ -469,113 +446,38 @@ export default function Navbar() {
               </li>
             )}
             {user && (
-              <>
-                <li>
+              <li>
+                <button
+                  type="button"
+                  className={menuRowBtnClass}
+                  onClick={() => {
+                    handleNavigate("/chats", { closeMenu: true });
+                  }}
+                  disabled={isNavigating}
+                >
+                  <MessagesSquare className={menuIconClass} strokeWidth={2} />
+                  {getNavLabel("/chats", "Chats")}
+                </button>
+              </li>
+            )}
+            {enabledFeatureNavItems.map((item) => {
+              const Icon = item.icon;
+              return (
+                <li key={item.path}>
                   <button
                     type="button"
                     className={menuRowBtnClass}
                     onClick={() => {
-                      handleNavigate("/chats", { closeMenu: true });
+                      handleNavigate(item.path, { closeMenu: true });
                     }}
                     disabled={isNavigating}
                   >
-                    <MessagesSquare className={menuIconClass} strokeWidth={2} />
-                    {getNavLabel("/chats", "Chats")}
+                    <Icon className={menuIconClass} strokeWidth={2} />
+                    {getNavLabel(item.path, item.mobileLabel)}
                   </button>
                 </li>
-                <li>
-                  <button
-                    type="button"
-                    className={menuRowBtnClass}
-                    onClick={() => {
-                      handleNavigate("/community", { closeMenu: true });
-                    }}
-                    disabled={isNavigating}
-                  >
-                    <Users className={menuIconClass} strokeWidth={2} />
-                    {getNavLabel("/community", "Community")}
-                  </button>
-                </li>
-              </>
-            )}
-            {brand?.subdomain && (
-              <li>
-                <button
-                  type="button"
-                  className={menuRowBtnClass}
-                  onClick={() => {
-                  handleNavigate(
-                    `/links?brand=${encodeURIComponent(brand.subdomain)}`,
-                    { closeMenu: true },
-                  );
-                  }}
-                disabled={isNavigating}
-                >
-                  <Link2 className={menuIconClass} strokeWidth={2} />
-                {getNavLabel(
-                  `/links?brand=${encodeURIComponent(brand.subdomain)}`,
-                  "Links",
-                )}
-                </button>
-              </li>
-            )}
-            {brand?.enableProducts && (
-              <li>
-                <button
-                  type="button"
-                  className={menuRowBtnClass}
-                  onClick={() => {
-                    handleNavigate("/products", { closeMenu: true });
-                  }}
-                  disabled={isNavigating}
-                >
-                  <ShoppingBag className={menuIconClass} strokeWidth={2} />
-                  {getNavLabel("/products", "Store")}
-                </button>
-              </li>
-            )}
-            {brand?.enableJobs && (
-              <li>
-                <button
-                  type="button"
-                  className={menuRowBtnClass}
-                  onClick={() => {
-                    handleNavigate("/jobs", { closeMenu: true });
-                  }}
-                  disabled={isNavigating}
-                >
-                  <Briefcase className={menuIconClass} strokeWidth={2} />
-                  {getNavLabel("/jobs", "Jobs")}
-                </button>
-              </li>
-            )}
-            {brand?.enableBlogs && (
-              <li>
-                <button
-                  type="button"
-                  className={menuRowBtnClass}
-                  onClick={() => {
-                    handleNavigate(
-                      "/blogs" +
-                        (brand?.subdomain
-                          ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
-                          : ""),
-                      { closeMenu: true },
-                    );
-                  }}
-                  disabled={isNavigating}
-                >
-                  <BookOpen className={menuIconClass} strokeWidth={2} />
-                  {getNavLabel(
-                    "/blogs" +
-                      (brand?.subdomain
-                        ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
-                        : ""),
-                    "Blog",
-                  )}
-                </button>
-              </li>
-            )}
+              );
+            })}
             <li className="mt-2 border-t border-border pt-2">
               {loading ? (
                 <button
@@ -613,7 +515,7 @@ export default function Navbar() {
                   )}
                   {popupBlockedHint && !isBlocked && (
                     <p className="text-xs text-amber-600 mt-2 px-3">
-                      Popup was blocked. Try again — it&apos;ll work.
+                      Tap again to enable pop-up! Cheers! :)
                     </p>
                   )}
                 </div>

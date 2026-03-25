@@ -115,7 +115,7 @@ export default function RevenuePage() {
         >
           <ArrowLeft className="w-6 h-6" />
         </button>
-        <h1 className="font-zen text-2xl font-bold uppercase text-highlight">
+        <h1 className="font-baloo text-2xl font-bold uppercase text-highlight">
           Revenue
         </h1>
       </div>
