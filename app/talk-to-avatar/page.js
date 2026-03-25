@@ -62,13 +62,13 @@ export default function TalkToAvatarPage() {
   }
 
   return (
-    <div className="min-h-screen from-[#F9F9F9] to-[#EDF4F7] pt-8">
+    <div className="min-h-screen bg-background pt-8 text-foreground">
       <div className="container mx-auto p-4">
         {/* Header */}
         <div className="mb-8 md:mb-12 mt-4">
           <button
             onClick={() => router.push("/")}
-            className="flex items-center gap-2 text-[#3D5E6B] hover:text-[#2d4752] transition-colors mb-6"
+            className="mb-6 flex items-center gap-2 text-highlight transition-colors hover:opacity-80"
           >
             <ArrowLeft className="w-5 h-5" />
             <span>Back</span>
@@ -78,10 +78,10 @@ export default function TalkToAvatarPage() {
             <div className="flex flex-col items-center justify-center">
               <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
             </div>
-            <h1 className="text-6xl text-[#3D5E6B] my-4">
+            <h1 className="my-4 text-6xl text-highlight">
               Talk to <span className="text-[#00B5BD]">Avataars</span>
             </h1>
-            <p className="text-lg text-gray-700 max-w-3xl mx-auto leading-relaxed">
+            <p className="mx-auto max-w-3xl text-lg leading-relaxed text-muted">
               Talk to leaders in the world of business, finance, art and academia. Interact, learn and grow. Also, connect with other fans while you’re at it.
             </p>
           </div>
@@ -104,12 +104,12 @@ export default function TalkToAvatarPage() {
           </div>
         ) : avatars.length === 0 ? (
           <div className="text-center py-20">
-            <p className="text-gray-600 text-lg">No avatars available at the moment.</p>
+            <p className="text-lg text-muted">No avatars available at the moment.</p>
           </div>
         ) : (
           <>
             <div className="mb-6">
-              <h2 className="text-2xl md:text-3xl text-[#264653]">
+              <h2 className="text-2xl text-highlight md:text-3xl">
                 All Avataars
               </h2>
             </div>
@@ -137,8 +137,8 @@ export default function TalkToAvatarPage() {
 
         {/* Footer */}
         <div className="mt-16 md:mt-20 text-center">
-          <p className="text-gray-600">
-            Powered by <span className="font-semibold text-[#3D5E6B]">KAVISHA</span>
+          <p className="text-muted">
+            Powered by <span className="font-semibold text-highlight">KAVISHA</span>
           </p>
         </div>
       </div>

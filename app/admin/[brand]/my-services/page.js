@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Edit2, Check, X } from "lucide-react";
+import { ArrowLeft, Edit2, Check, X, ArrowUpRight } from "lucide-react";
 import ServiceModal from "@/app/admin/components/ServiceModal";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 
@@ -26,6 +26,7 @@ export default function MyServices() {
     enableFriendConnect: brandContext?.enableFriendConnect || false,
   });
   const [updating, setUpdating] = useState(false);
+  const brandSubdomain = brandContext?.subdomain || "";
 
   const services = brandContext?.services || [];
   const availedServices = services.map((item) => item.name) || [];
@@ -170,55 +171,73 @@ export default function MyServices() {
     }
   };
 
+  const goToFeature = (path) => {
+    if (!path) return;
+    router.push(path);
+  };
+
+  const GoToButton = ({ path, label, show }) =>
+    show ? (
+      <button
+        type="button"
+        onClick={() => goToFeature(path)}
+        className="inline-flex h-8 w-8 items-center justify-center rounded-full text-highlight transition-colors hover:bg-muted-bg hover:text-foreground"
+        aria-label={`Go to ${label}`}
+        title={`Go to ${label}`}
+      >
+        <ArrowUpRight className="h-4 w-4" />
+      </button>
+    ) : null;
+
   return (
     <>
-      <div className="bg-[#F5F7FA] min-h-[calc(100vh-56px)] overflow-y-auto py-8">
+      <div className="min-h-[calc(100vh-56px)] overflow-y-auto bg-background py-8 text-foreground">
         <div className="max-w-6xl mx-auto px-4 md:px-6 font-akshar">
           <div className="flex items-center gap-3 mb-6">
             <button
               onClick={() => router.back()}
-              className="p-2 rounded-lg border border-gray-200 bg-white text-gray-700 hover:bg-gray-50 transition-colors"
+              className="rounded-lg border border-border bg-card p-2 text-foreground transition-colors hover:bg-muted-bg"
               aria-label="Go back"
             >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <div>
-              <h1 className="font-zen text-3xl md:text-4xl font-black text-[#000A67] tracking-tight">
+              <h1 className="font-zen text-3xl md:text-4xl font-black text-highlight tracking-tight">
                 My Services
               </h1>
-              <p className="text-sm text-gray-500 mt-1">
+              <p className="mt-1 text-sm text-muted">
                 Manage chatbot services and feature visibility for users.
               </p>
             </div>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <section className="lg:col-span-5 bg-white border border-gray-200 rounded-2xl shadow-sm p-5 md:p-6">
+            <section className="rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6 lg:col-span-5">
               <div className="flex items-center justify-between mb-4">
-                <h2 className="font-zen text-xl font-bold text-[#000A67]">
-                  Configured Services
+                <h2 className="font-zen text-xl font-bold text-highlight">
+                  Chat Services
                 </h2>
-                <span className="text-xs uppercase tracking-wider text-gray-400">
+                <span className="text-xs uppercase tracking-wider text-muted">
                   {services.length} active
                 </span>
               </div>
 
               <div className="space-y-2">
                 {services.length === 0 && (
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted">
                     No services configured yet.
                   </p>
                 )}
                 {services.map((service, index) => (
                   <button
                     key={service._key || index}
-                    className="w-full text-left px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 hover:bg-[#EEF3F6] hover:border-[#2D545E]/30 transition-colors"
+                    className="w-full rounded-xl border border-border bg-muted-bg px-4 py-3 text-left transition-colors hover:border-[#2D545E]/30 hover:bg-muted-bg/80"
                     onClick={() => handleEdit(service)}
                   >
-                    <p className="text-sm uppercase tracking-wide text-[#2D545E] font-medium">
+                    <p className="text-sm uppercase tracking-wide text-highlight font-medium">
                       {service?.title || service?.name || "Untitled Service"}
                     </p>
-                    <p className="text-xs text-gray-400 mt-0.5">
+                    <p className="mt-0.5 text-xs text-muted">
                       {service?.name || "service"}
                     </p>
                   </button>
@@ -229,12 +248,12 @@ export default function MyServices() {
                 <div className="mt-4 relative" ref={dropdownRef}>
                   <button
                     onClick={() => setshowAddserviceoptions((prev) => !prev)}
-                    className="w-full px-4 py-3 rounded-xl border border-dashed border-[#2D545E]/50 text-[#2D545E] font-medium hover:bg-[#EEF3F6] transition-colors"
+                    className="w-full px-4 py-3 rounded-xl border border-dashed border-[#2D545E]/50 text-highlight font-medium hover:bg-[#EEF3F6] transition-colors"
                   >
                     + Add Service
                   </button>
                   {showAddserviceoptions && (
-                    <div className="absolute top-full left-0 right-0 mt-2 bg-white border border-gray-200 rounded-xl shadow-lg z-50 overflow-hidden">
+                    <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
                       {availableServices
                         .filter(
                           (item) =>
@@ -245,7 +264,7 @@ export default function MyServices() {
                           <button
                             key={index}
                             onClick={() => addService(item)}
-                            className="w-full text-left px-4 py-2.5 hover:bg-gray-50 text-sm"
+                            className="w-full px-4 py-2.5 text-left text-sm text-foreground hover:bg-muted-bg"
                           >
                             {item.serviceTitle}
                           </button>
@@ -256,13 +275,13 @@ export default function MyServices() {
               )}
             </section>
 
-            <section className="lg:col-span-7 bg-white border border-gray-200 rounded-2xl shadow-sm p-5 md:p-6">
+            <section className="rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6 lg:col-span-7">
               <div className="flex items-start justify-between gap-4 mb-5">
                 <div>
-                  <h2 className="font-zen text-xl font-bold text-[#000A67]">
-                    Feature Settings
+                  <h2 className="font-zen text-xl font-bold text-highlight">
+                    Featured Services
                   </h2>
-                  <p className="text-sm text-gray-500 mt-1">
+                  <p className="mt-1 text-sm text-muted">
                     Control what appears on user home and chat selection.
                   </p>
                 </div>
@@ -280,39 +299,39 @@ export default function MyServices() {
                 featureData.enableBooking ||
                 featureData.enableBlogs ||
                 featureData.enableCommunityOnboarding) && (
-                <div className="mb-5 p-3 rounded-xl bg-[#F8FBFC] border border-[#2D545E]/15">
-                  <p className="text-xs uppercase tracking-widest text-gray-400 mb-2">
+                <div className="mb-5 rounded-xl border border-border bg-muted-bg p-3">
+                  <p className="mb-2 text-xs uppercase tracking-widest text-muted">
                     Visible on user side
                   </p>
                   <div className="flex flex-wrap gap-2">
                     {featureData.enableCommunityOnboarding && (
-                      <span className="px-3 py-1 rounded-full text-xs bg-white border border-gray-200 text-gray-700">
+                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
                         {featureData.communityName || "Community"}
                       </span>
                     )}
                     {featureData.enableQuiz && (
-                      <span className="px-3 py-1 rounded-full text-xs bg-white border border-gray-200 text-gray-700">
+                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
                         {featureData.quizName || "Take a Quiz/Survey"}
                       </span>
                     )}
                     {featureData.enableJobs && (
-                      <span className="px-3 py-1 rounded-full text-xs bg-white border border-gray-200 text-gray-700">
+                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
                         Jobs
                       </span>
                     )}
                     {featureData.enableProducts && (
-                      <span className="px-3 py-1 rounded-full text-xs bg-white border border-gray-200 text-gray-700">
+                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
                         Products
                       </span>
                     )}
                     {featureData.enableBooking && (
-                      <span className="px-3 py-1 rounded-full text-xs bg-white border border-gray-200 text-gray-700">
+                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
                         Bookings
                       </span>
                     )}
                     {featureData.enableBlogs && (
-                      <span className="px-3 py-1 rounded-full text-xs bg-white border border-gray-200 text-gray-700">
-                        Blogs
+                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                        Blog
                       </span>
                     )}
                   </div>
@@ -322,12 +341,17 @@ export default function MyServices() {
               <div
                 className={`space-y-4 ${updating ? "pointer-events-none opacity-70" : ""}`}
               >
-                <div className="p-4 rounded-xl border border-gray-200 bg-gray-50">
+                <div className="rounded-xl border border-border bg-muted-bg p-4">
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <div className="flex items-center gap-3">
-                      <span className="text-gray-700 uppercase text-sm tracking-wider font-medium">
+                      <span className="text-sm font-medium uppercase tracking-wider text-foreground">
                         Community
                       </span>
+                      <GoToButton
+                        path={`/admin/${brandSubdomain}/my-community`}
+                        label="Community"
+                        show={true}
+                      />
                       <label
                         className="relative inline-flex items-center cursor-not-allowed opacity-70"
                         title="Community feature is always enabled"
@@ -339,9 +363,9 @@ export default function MyServices() {
                           disabled
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-blue-600 rounded-full after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all after:translate-x-full"></div>
+                        <div className="h-6 w-11 rounded-full bg-ring after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:translate-x-full after:rounded-full after:border after:border-border after:bg-card after:transition-all after:content-['']"></div>
                       </label>
-                      <span className="text-xs text-gray-400">(Always on)</span>
+                      <span className="text-xs text-muted">(Always on)</span>
                     </div>
 
                     {featureData.enableCommunityOnboarding && (
@@ -357,7 +381,7 @@ export default function MyServices() {
                                   communityName: e.target.value,
                                 }))
                               }
-                              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg uppercase max-w-[240px]"
+                              className="max-w-[240px] rounded-lg border border-border bg-input px-3 py-1.5 text-sm uppercase text-foreground"
                               placeholder="Eg. Connect with other fans"
                               disabled={updating}
                             />
@@ -390,13 +414,13 @@ export default function MyServices() {
                           </>
                         ) : (
                           <>
-                            <span className="text-gray-600 uppercase text-xs tracking-wider font-normal">
+                            <span className="text-xs font-normal uppercase tracking-wider text-muted">
                               {featureData.communityName ||
                                 "Connect with others"}
                             </span>
                             <button
                               onClick={() => setEditingFeature("communityName")}
-                              className="text-gray-400 hover:text-gray-600"
+                              className="text-muted hover:text-foreground"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
@@ -406,16 +430,16 @@ export default function MyServices() {
                     )}
                   </div>
 
-                  <div className="mt-4 flex flex-col gap-3 px-3 py-3 bg-white rounded-lg border border-gray-200">
-                    <p className="text-xs text-gray-400 uppercase tracking-wider font-medium">
+                  <div className="mt-4 flex flex-col gap-3 rounded-lg border border-border bg-card px-3 py-3">
+                    <p className="text-xs font-medium uppercase tracking-wider text-muted">
                       Community connection types
                     </p>
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-700 font-medium">
+                        <span className="text-sm font-medium text-foreground">
                           Professional Connect
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-muted">
                           Shows "Hire People" &amp; "Find Jobs" buttons
                         </span>
                       </div>
@@ -432,15 +456,15 @@ export default function MyServices() {
                           disabled={updating}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                        <div className="h-6 w-11 rounded-full bg-border peer peer-checked:bg-ring after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-border after:bg-card after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
                       </label>
                     </div>
                     <div className="flex items-center justify-between">
                       <div className="flex flex-col">
-                        <span className="text-sm text-gray-700 font-medium">
+                        <span className="text-sm font-medium text-foreground">
                           Friend Connect
                         </span>
-                        <span className="text-xs text-gray-400">
+                        <span className="text-xs text-muted">
                           Shows "Find Friends" button
                         </span>
                       </div>
@@ -457,7 +481,7 @@ export default function MyServices() {
                           disabled={updating}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                        <div className="h-6 w-11 rounded-full bg-border peer peer-checked:bg-ring after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-border after:bg-card after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
                       </label>
                     </div>
                     {!featureData.enableProfessionalConnect &&
@@ -470,12 +494,17 @@ export default function MyServices() {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-200">
+                <div className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <span className="text-gray-700 uppercase text-sm tracking-wider font-medium">
+                      <span className="text-sm font-medium uppercase tracking-wider text-foreground">
                         Quiz/Survey
                       </span>
+                      <GoToButton
+                        path="/admin/quiz"
+                        label="Quiz/Survey"
+                        show={featureData.enableQuiz}
+                      />
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -486,7 +515,7 @@ export default function MyServices() {
                           disabled={updating}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                        <div className="h-6 w-11 rounded-full bg-border peer peer-checked:bg-ring after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-border after:bg-card after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
                       </label>
                     </div>
                     {featureData.enableQuiz && (
@@ -502,7 +531,7 @@ export default function MyServices() {
                                   quizName: e.target.value,
                                 }))
                               }
-                              className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg uppercase max-w-[240px]"
+                              className="max-w-[240px] rounded-lg border border-border bg-input px-3 py-1.5 text-sm uppercase text-foreground"
                               placeholder="Quiz/Survey Name"
                               disabled={updating}
                             />
@@ -534,12 +563,12 @@ export default function MyServices() {
                           </>
                         ) : (
                           <>
-                            <span className="text-gray-600 uppercase text-xs tracking-wider font-normal">
+                            <span className="text-xs font-normal uppercase tracking-wider text-muted">
                               {featureData.quizName || "Take a Quiz/Survey"}
                             </span>
                             <button
                               onClick={() => setEditingFeature("quizName")}
-                              className="text-gray-400 hover:text-gray-600"
+                              className="text-muted hover:text-foreground"
                             >
                               <Edit2 className="w-4 h-4" />
                             </button>
@@ -550,12 +579,17 @@ export default function MyServices() {
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-200">
+                <div className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-gray-700 uppercase text-sm tracking-wider font-medium">
+                      <span className="text-sm font-medium uppercase tracking-wider text-foreground">
                         Jobs
                       </span>
+                      <GoToButton
+                        path={`/admin/jobs?subdomain=${encodeURIComponent(brandSubdomain)}`}
+                        label="Jobs"
+                        show={featureData.enableJobs}
+                      />
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -566,21 +600,26 @@ export default function MyServices() {
                           disabled={updating}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                        <div className="h-6 w-11 rounded-full bg-border peer peer-checked:bg-ring after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-border after:bg-card after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
                       </label>
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-muted">
                       Job listings &amp; applications
                     </span>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-200">
+                <div className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
-                      <span className="text-gray-700 uppercase text-sm tracking-wider font-medium">
+                      <span className="text-sm font-medium uppercase tracking-wider text-foreground">
                         Products
                       </span>
+                      <GoToButton
+                        path={`/admin/products?subdomain=${encodeURIComponent(brandSubdomain)}`}
+                        label="Products"
+                        show={featureData.enableProducts}
+                      />
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -594,21 +633,26 @@ export default function MyServices() {
                           disabled={updating}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                        <div className="h-6 w-11 rounded-full bg-border peer peer-checked:bg-ring after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-border after:bg-card after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
                       </label>
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-muted">
                       Store, cart &amp; order history
                     </span>
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-200">
+                <div className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <span className="text-gray-700 uppercase text-sm tracking-wider font-medium">
+                      <span className="text-sm font-medium uppercase tracking-wider text-foreground">
                         Bookings
                       </span>
+                      <GoToButton
+                        path={`/admin/services?subdomain=${encodeURIComponent(brandSubdomain)}`}
+                        label="Bookings"
+                        show={featureData.enableBooking}
+                      />
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -622,29 +666,26 @@ export default function MyServices() {
                           disabled={updating}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                        <div className="h-6 w-11 rounded-full bg-border peer peer-checked:bg-ring after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-border after:bg-card after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
                       </label>
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-muted">
                       Bookable services &amp; booking history
                     </span>
                   </div>
-                  {featureData.enableBooking && (
-                    <a
-                      href={`/admin/services?subdomain=${encodeURIComponent(brandContext?.subdomain || "")}`}
-                      className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[#2D545E] hover:text-[#1e3d44]"
-                    >
-                      Manage booking services →
-                    </a>
-                  )}
                 </div>
 
-                <div className="p-4 rounded-xl border border-gray-200">
+                <div className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
-                      <span className="text-gray-700 uppercase text-sm tracking-wider font-medium">
-                        Blogs
+                      <span className="text-sm font-medium uppercase tracking-wider text-foreground">
+                        Blog
                       </span>
+                      <GoToButton
+                        path={`/admin/blogs?subdomain=${encodeURIComponent(brandSubdomain)}`}
+                        label="Blog"
+                        show={featureData.enableBlogs}
+                      />
                       <label className="relative inline-flex items-center cursor-pointer">
                         <input
                           type="checkbox"
@@ -658,21 +699,13 @@ export default function MyServices() {
                           disabled={updating}
                           className="sr-only peer"
                         />
-                        <div className="w-11 h-6 bg-gray-200 rounded-full peer peer-checked:bg-blue-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border after:border-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:after:translate-x-full"></div>
+                        <div className="h-6 w-11 rounded-full bg-border peer peer-checked:bg-ring after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-border after:bg-card after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
                       </label>
                     </div>
-                    <span className="text-xs text-gray-400">
+                    <span className="text-xs text-muted">
                       Blog posts for users
                     </span>
                   </div>
-                  {featureData.enableBlogs && (
-                    <a
-                      href={`/admin/blogs?subdomain=${encodeURIComponent(brandContext?.subdomain || "")}`}
-                      className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-[#2D545E] hover:text-[#1e3d44]"
-                    >
-                      Manage blog posts →
-                    </a>
-                  )}
                 </div>
               </div>
             </section>

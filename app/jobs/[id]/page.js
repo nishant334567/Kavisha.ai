@@ -45,8 +45,8 @@ export default function JobDetailPage() {
     })();
   }, [params?.id]);
 
-  if (loading) return <div className="max-w-2xl mx-auto px-4 py-6 text-[#004A4E]">Loading…</div>;
-  if (!job) return <div className="max-w-2xl mx-auto px-4 py-6 text-gray-500">Job not found.</div>;
+  if (loading) return <div className="max-w-2xl mx-auto px-4 py-6 text-muted">Loading…</div>;
+  if (!job) return <div className="max-w-2xl mx-auto px-4 py-6 text-muted">Job not found.</div>;
 
   const hasQuestions = Array.isArray(job.questions) && job.questions.length > 0;
 
@@ -61,10 +61,10 @@ export default function JobDetailPage() {
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <span className="text-sm text-gray-500">Job details</span>
+        <span className="text-sm text-muted">Job details</span>
       </div>
 
-      <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         <div className="p-6 space-y-6">
           <h1 className="text-2xl font-bold text-[#004A4E] leading-tight">
             {job.title}
@@ -72,8 +72,8 @@ export default function JobDetailPage() {
 
           {job.description ? (
             <div>
-              <h2 className="text-sm font-semibold text-gray-700 mb-2">Description</h2>
-              <p className="text-sm text-gray-600 leading-relaxed whitespace-pre-wrap">
+              <h2 className="mb-2 text-sm font-semibold text-foreground">Description</h2>
+              <p className="text-sm leading-relaxed whitespace-pre-wrap text-muted">
                 {job.description}
               </p>
             </div>
@@ -81,10 +81,10 @@ export default function JobDetailPage() {
 
           {hasQuestions && (
             <div>
-              <h2 className="text-sm font-semibold text-gray-700 mb-2">
+              <h2 className="mb-2 text-sm font-semibold text-foreground">
                 Questions ({job.questions.length})
               </h2>
-              <ul className="list-decimal list-inside text-sm text-gray-600 space-y-2">
+              <ul className="list-decimal list-inside space-y-2 text-sm text-muted">
                 {job.questions.map((q, i) => (
                   <li key={i} className="leading-relaxed">
                     {q}
@@ -96,7 +96,7 @@ export default function JobDetailPage() {
 
           {job.jdLink && (
             <div>
-              <h2 className="text-sm font-semibold text-gray-700 mb-2">Job description document</h2>
+              <h2 className="mb-2 text-sm font-semibold text-foreground">Job description document</h2>
               <a
                 href={job.jdLink}
                 target="_blank"
@@ -109,7 +109,7 @@ export default function JobDetailPage() {
           )}
         </div>
 
-        <div className="px-6 py-4 bg-gray-50 border-t border-gray-200 flex flex-wrap gap-3">
+        <div className="flex flex-wrap gap-3 border-t border-border bg-muted-bg px-6 py-4">
           {job.jdLink && (
             <a
               href={job.jdLink}

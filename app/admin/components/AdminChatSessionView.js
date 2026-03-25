@@ -65,51 +65,51 @@ export default function AdminChatSessionView({ sessionId }) {
   if (!sessionId) return null;
   if (loading)
     return (
-      <div className="flex flex-col items-center justify-center py-16 text-[#42476D]">
-        <div className="w-8 h-8 border-2 border-[#7981C2] border-t-transparent rounded-full animate-spin" />
+      <div className="flex flex-col items-center justify-center py-16 text-muted">
+        <div className="h-8 w-8 animate-spin rounded-full border-2 border-ring border-t-transparent" />
         <p className="mt-3 text-sm font-medium">Loading...</p>
       </div>
     );
   if (error) return <div className="py-16 text-center text-sm text-red-600">{error}</div>;
-  if (!session) return <div className="py-16 text-center text-sm text-gray-500">Session not found</div>;
+  if (!session) return <div className="py-16 text-center text-sm text-muted">Session not found</div>;
 
   return (
-    <div className="flex flex-col h-full min-h-0 bg-white overflow-hidden">
-      <header className="flex-shrink-0 bg-[#EEF0FE] border-b border-[#BFC4E5] px-4 py-3">
+    <div className="flex h-full min-h-0 flex-col overflow-hidden bg-card">
+      <header className="flex-shrink-0 border-b border-border bg-muted-bg px-4 py-3">
         <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm">
           <div className="min-w-0">
-            <h2 className="font-semibold text-[#42476D] truncate">{session.title || "Chat"}</h2>
+            <h2 className="truncate font-semibold text-highlight">{session.title || "Chat"}</h2>
             {session.user && (
-              <p className="flex items-center gap-1.5 text-xs text-[#898989] mt-0.5">
+              <p className="mt-0.5 flex items-center gap-1.5 text-xs text-muted">
                 <User className="w-3.5 h-3.5 shrink-0" aria-hidden />
                 <span className="truncate">{session.user.name || session.user.email || "—"}</span>
               </p>
             )}
           </div>
-          <div className="flex flex-wrap items-center gap-3 text-xs text-[#42476D]">
+          <div className="flex flex-wrap items-center gap-3 text-xs text-muted">
             <span className="flex items-center gap-1.5">
-              <MessageCircle className="w-3.5 h-3.5 text-[#7981C2]" aria-hidden />
+              <MessageCircle className="h-3.5 w-3.5 text-ring" aria-hidden />
               {session.messageCount ?? 0} messages
             </span>
             <span className="flex items-center gap-1.5" title={session.updatedAt && formatToIST(session.updatedAt)}>
-              <Clock className="w-3.5 h-3.5 text-[#7981C2]" aria-hidden />
+              <Clock className="h-3.5 w-3.5 text-ring" aria-hidden />
               {session.updatedAt ? formatToIST(session.updatedAt) : "—"}
             </span>
             {(Array.isArray(session.assignedTo) ? session.assignedTo.length : session.assignedTo) && (
-              <span className="px-1.5 py-0.5 rounded bg-white border border-[#BFC4E5]">{Array.isArray(session.assignedTo) ? session.assignedTo.join(", ") : session.assignedTo}</span>
+              <span className="rounded border border-border bg-card px-1.5 py-0.5">{Array.isArray(session.assignedTo) ? session.assignedTo.join(", ") : session.assignedTo}</span>
             )}
-            {session.status && <span className="capitalize text-[#898989]">{session.status}</span>}
+            {session.status && <span className="capitalize text-muted">{session.status}</span>}
           </div>
         </div>
         {session.chatSummary && (
-          <p className="mt-2 text-xs text-[#42476D] line-clamp-2 leading-relaxed">{session.chatSummary}</p>
+          <p className="mt-2 line-clamp-2 text-xs leading-relaxed text-muted">{session.chatSummary}</p>
         )}
       </header>
 
-      <div className="flex-1 overflow-y-auto p-4 bg-[#EEF0FE]/30 min-h-0">
+      <div className="min-h-0 flex-1 overflow-y-auto bg-background p-4">
         {logs.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-500 text-sm">
-            <FileText className="w-10 h-10 text-gray-300 mb-2" aria-hidden />
+          <div className="flex flex-col items-center justify-center py-12 text-sm text-muted">
+            <FileText className="mb-2 h-10 w-10 text-muted" aria-hidden />
             No messages
           </div>
         ) : (
@@ -122,8 +122,8 @@ export default function AdminChatSessionView({ sessionId }) {
                 <div
                   className={`max-w-[85%] rounded-2xl px-4 py-3 ${
                     log.role === "user"
-                      ? "bg-white border border-[#BFC4E5]"
-                      : "bg-[#EEF0FE] border border-[#BFC4E5]"
+                      ? "border border-border bg-card"
+                      : "border border-border bg-muted-bg"
                   }`}
                 >
                   <div className="text-sm whitespace-pre-wrap break-words leading-relaxed">
@@ -132,7 +132,7 @@ export default function AdminChatSessionView({ sessionId }) {
                   {log.role === "assistant" && (
                     <>
                       {Array.isArray(log.sourceUrls) && log.sourceUrls.length > 0 && (
-                        <div className="mt-2 pt-2 border-t border-[#BFC4E5]/50">
+                        <div className="mt-2 border-t border-border/50 pt-2">
                           <div className="flex flex-wrap gap-1.5">
                             {log.sourceUrls.map((url) => (
                               <a
@@ -140,7 +140,7 @@ export default function AdminChatSessionView({ sessionId }) {
                                 href={url}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="text-xs px-2 py-1 rounded bg-white border border-[#BFC4E5] text-[#7981C2] hover:bg-[#EEF0FE] truncate max-w-[200px]"
+                                className="max-w-[200px] truncate rounded border border-border bg-card px-2 py-1 text-xs text-ring hover:bg-muted-bg"
                                 title={url}
                               >
                                 {url}
@@ -150,14 +150,14 @@ export default function AdminChatSessionView({ sessionId }) {
                         </div>
                       )}
                       {Array.isArray(log.sourceChunkIds) && log.sourceChunkIds.length > 0 && (
-                        <div className="mt-2 pt-2 border-t border-[#BFC4E5]/50">
+                        <div className="mt-2 border-t border-border/50 pt-2">
                           <div className="flex flex-wrap gap-1.5">
                             {log.sourceChunkIds.map((id) => (
                               <button
                                 key={id}
                                 type="button"
                                 onClick={() => openChunk(id)}
-                                className="text-xs px-2 py-1 rounded bg-white border border-[#BFC4E5] text-[#7981C2] hover:bg-[#EEF0FE] truncate max-w-[180px]"
+                                className="max-w-[180px] truncate rounded border border-border bg-card px-2 py-1 text-xs text-ring hover:bg-muted-bg"
                                 title={id}
                               >
                                 {id}
@@ -168,7 +168,7 @@ export default function AdminChatSessionView({ sessionId }) {
                       )}
                     </>
                   )}
-                  <p className="text-[10px] text-[#898989] mt-1.5">{time(log.createdAt)}</p>
+                  <p className="mt-1.5 text-[10px] text-muted">{time(log.createdAt)}</p>
                 </div>
               </div>
             ))}

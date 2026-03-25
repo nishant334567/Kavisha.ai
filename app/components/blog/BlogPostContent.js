@@ -64,8 +64,8 @@ export default function BlogPostContent({ post, brand, brandName, brandImageUrl 
   return (
     <article className="mx-auto max-w-3xl">
       <div className="flex flex-wrap items-start justify-between gap-4">
-        <div className="flex flex-wrap items-center gap-2 text-sm text-gray-600">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-gray-200 text-sm font-medium text-gray-600">
+        <div className="flex flex-wrap items-center gap-2 text-sm text-muted">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted-bg text-sm font-medium text-muted">
             {avatarUrl ? (
               <img
                 src={avatarUrl}
@@ -77,16 +77,16 @@ export default function BlogPostContent({ post, brand, brandName, brandImageUrl 
               authorInitial
             )}
           </div>
-          <span className="font-medium text-gray-900">{authorName}</span>
+          <span className="font-medium text-foreground">{authorName}</span>
           {publishDate && (
             <>
-              <span className="text-gray-400" aria-hidden>
+              <span className="text-muted" aria-hidden>
                 ·
               </span>
               <span>{publishDate}</span>
             </>
           )}
-          <span className="text-gray-400" aria-hidden>
+          <span className="text-muted" aria-hidden>
             ·
           </span>
           <span>{readTime} min read</span>
@@ -95,7 +95,7 @@ export default function BlogPostContent({ post, brand, brandName, brandImageUrl 
           <button
             type="button"
             onClick={() => setMenuOpen((o) => !o)}
-            className="rounded-lg p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-700 transition-colors"
+            className="rounded-lg p-2 text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
             title="More options"
             aria-label="More options"
             aria-expanded={menuOpen}
@@ -109,11 +109,11 @@ export default function BlogPostContent({ post, brand, brandName, brandImageUrl 
                 aria-hidden
                 onClick={() => setMenuOpen(false)}
               />
-              <div className="absolute right-0 top-full z-20 mt-1 min-w-[140px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg">
+              <div className="absolute right-0 top-full z-20 mt-1 min-w-[140px] rounded-lg border border-border bg-card py-1 shadow-lg">
                 <button
                   type="button"
                   onClick={handleCopyLink}
-                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50"
+                  className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-foreground hover:bg-muted-bg"
                 >
                   <Link2 className="h-4 w-4" />
                   {copied ? "Copied!" : "Copy link"}
@@ -124,24 +124,24 @@ export default function BlogPostContent({ post, brand, brandName, brandImageUrl 
         </div>
       </div>
 
-      <h1 className="mt-4 text-3xl font-bold text-gray-900 md:text-4xl">
+      <h1 className="mt-4 text-3xl font-bold text-foreground md:text-4xl">
         {title}
       </h1>
 
       {updatedLabel && (
-        <p className="mt-2 text-sm text-gray-500">{updatedLabel}</p>
+        <p className="mt-2 text-sm text-muted">{updatedLabel}</p>
       )}
 
       {excerpt && (
-        <p className="mt-3 text-lg leading-relaxed text-gray-600">{excerpt}</p>
+        <p className="mt-3 text-lg leading-relaxed text-muted">{excerpt}</p>
       )}
 
       <div
-        className="prose prose-gray mt-6 max-w-none"
+        className="prose mt-6 max-w-none text-foreground prose-headings:text-foreground prose-p:text-foreground prose-strong:text-foreground prose-li:text-foreground prose-a:text-ring prose-blockquote:border-border prose-blockquote:text-muted"
         dangerouslySetInnerHTML={{ __html: content }}
       />
 
-      <div className="mt-8 pt-6 border-t border-gray-200 flex flex-wrap items-center gap-4">
+      <div className="mt-8 pt-6 border-t border-border flex flex-wrap items-center gap-4">
         <ShareButtons
           url={typeof window !== "undefined" ? window.location.href : ""}
           title={title}

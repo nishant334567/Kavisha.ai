@@ -45,26 +45,26 @@ export default function TextTrainingModal({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60 backdrop-blur-sm">
-      <div className="bg-white rounded-2xl shadow-2xl max-w-3xl w-full mx-4 max-h-[90vh] flex flex-col overflow-hidden">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
+      <div className="mx-4 flex max-h-[90vh] w-full max-w-3xl flex-col overflow-hidden rounded-2xl border border-border bg-card text-foreground shadow-2xl">
         {/* Header */}
-        <div className="flex items-center justify-between px-8 py-6 border-b border-gray-100 bg-gradient-to-r from-gray-50 to-white">
-          <h2 className="text-2xl font-bold text-gray-900 tracking-tight">
+        <div className="flex items-center justify-between border-b border-border bg-muted-bg px-8 py-6">
+          <h2 className="text-2xl font-bold tracking-tight text-highlight">
             {isEditMode ? "Edit Document" : "Text Based Training"}
           </h2>
           <button
             onClick={onClose}
             disabled={isSaving}
-            className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-full transition-all duration-200"
+            className="rounded-full p-2 text-muted transition-all duration-200 hover:bg-card hover:text-foreground"
           >
             <X className="w-5 h-5" />
           </button>
         </div>
 
         {/* Form Content */}
-        <div className="flex-1 overflow-y-auto px-8 py-6 space-y-6 bg-gray-50">
+        <div className="flex-1 space-y-6 overflow-y-auto bg-background px-8 py-6">
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3 tracking-wide">
+            <label className="mb-3 block text-sm font-semibold tracking-wide text-foreground">
               Document Title
             </label>
             <input
@@ -73,19 +73,19 @@ export default function TextTrainingModal({
               onChange={(e) => setTitle(e.target.value)}
               disabled={isSaving}
               placeholder="Enter document title"
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-xl border border-border bg-input px-4 py-3 text-foreground transition-all duration-200 placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
           {onFolderChange && (
             <div>
-              <label className="block text-sm font-semibold text-gray-700 mb-3 tracking-wide">
+              <label className="mb-3 block text-sm font-semibold tracking-wide text-foreground">
                 Folder
               </label>
               <select
                 value={folderId}
                 onChange={(e) => onFolderChange(e.target.value)}
                 disabled={isSaving}
-                className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-xl border border-border bg-input px-4 py-3 text-foreground transition-all duration-200 focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
               >
                 <option value="">Unfiled</option>
                 {folders.map((f) => (
@@ -97,8 +97,8 @@ export default function TextTrainingModal({
             </div>
           )}
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3 tracking-wide">
-              Source URL <span className="text-gray-400 font-normal">(optional)</span>
+            <label className="mb-3 block text-sm font-semibold tracking-wide text-foreground">
+              Source URL <span className="font-normal text-muted">(optional)</span>
             </label>
             <input
               type="url"
@@ -106,11 +106,11 @@ export default function TextTrainingModal({
               onChange={(e) => setSourceUrl(e.target.value)}
               disabled={isSaving}
               placeholder="https://example.com/article"
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent transition-all duration-200 placeholder:text-gray-400 text-gray-900 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full rounded-xl border border-border bg-input px-4 py-3 text-foreground transition-all duration-200 placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
           <div>
-            <label className="block text-sm font-semibold text-gray-700 mb-3 tracking-wide">
+            <label className="mb-3 block text-sm font-semibold tracking-wide text-foreground">
               Content
             </label>
             <textarea
@@ -119,24 +119,24 @@ export default function TextTrainingModal({
               disabled={isSaving}
               placeholder="Enter your content here..."
               rows={14}
-              className="w-full px-4 py-3 bg-white border border-gray-200 rounded-xl shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-800 focus:border-transparent resize-none transition-all duration-200 placeholder:text-gray-400 text-gray-900 leading-relaxed disabled:opacity-50 disabled:cursor-not-allowed"
+              className="w-full resize-none rounded-xl border border-border bg-input px-4 py-3 leading-relaxed text-foreground transition-all duration-200 placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-3 px-8 py-5 border-t border-gray-100 bg-white">
+        <div className="flex justify-end gap-3 border-t border-border bg-card px-8 py-5">
           <button
             onClick={onClose}
             disabled={isSaving}
-            className="px-6 py-2.5 text-gray-700 bg-white border border-gray-300 rounded-xl hover:bg-gray-50 hover:border-gray-400 transition-all duration-200 font-medium shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
+            className="rounded-xl border border-border bg-card px-6 py-2.5 font-medium text-foreground shadow-sm transition-all duration-200 hover:bg-muted-bg disabled:cursor-not-allowed disabled:opacity-50"
           >
             Cancel
           </button>
           <button
             onClick={handleSave}
             disabled={!title || !content || isSaving}
-            className="px-6 py-2.5 bg-gray-900 text-white rounded-xl hover:bg-gray-800 transition-all duration-200 font-medium shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-lg"
+            className="rounded-xl bg-highlight px-6 py-2.5 font-medium text-white shadow-lg transition-all duration-200 hover:opacity-90 hover:shadow-xl disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:shadow-lg"
           >
             {isSaving ? "Training..." : isEditMode ? "Update" : "Save"}
           </button>

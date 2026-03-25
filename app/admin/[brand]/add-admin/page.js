@@ -75,37 +75,37 @@ export default function AddAdminPage() {
   if (!brand) return null;
 
   return (
-    <div className="min-h-screen bg-gray-50 pt-16 px-4 pb-8">
-      <div className="max-w-lg mx-auto">
+    <div className="min-h-screen bg-background px-4 pb-8 pt-16 text-foreground">
+      <div className="mx-auto max-w-lg">
         <button
           onClick={() => router.push(`/admin/${sub}/v2`)}
-          className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-6"
+          className="mb-6 flex items-center gap-2 text-muted hover:text-foreground"
         >
           <ArrowLeft className="w-4 h-4" /> Back
         </button>
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">Add Admin</h1>
+        <h1 className="mb-6 text-2xl font-bold text-foreground">Add Admin</h1>
 
-        <form onSubmit={handleSubmit} className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm mb-6">
+        <form onSubmit={handleSubmit} className="mb-6 rounded-xl border border-border bg-card p-6 shadow-sm">
           <div className="space-y-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Name</label>
+              <label className="mb-1 block text-sm font-medium text-foreground">Name</label>
               <input
                 type="text"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Admin name"
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+                className="w-full rounded-lg border border-border bg-input px-3 py-2 text-foreground placeholder:text-muted focus:border-ring focus:ring-2 focus:ring-ring/30 focus:outline-none"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">Email *</label>
+              <label className="mb-1 block text-sm font-medium text-foreground">Email *</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="admin@example.com"
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-gray-800 focus:border-transparent"
+                className="w-full rounded-lg border border-border bg-input px-3 py-2 text-foreground placeholder:text-muted focus:border-ring focus:ring-2 focus:ring-ring/30 focus:outline-none"
               />
             </div>
           </div>
@@ -113,28 +113,28 @@ export default function AddAdminPage() {
           <button
             type="submit"
             disabled={loading || !email?.trim()}
-            className="mt-4 w-full py-2.5 bg-gray-900 text-white rounded-lg font-medium hover:bg-gray-800 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="mt-4 w-full rounded-lg bg-highlight py-2.5 font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
           >
             {loading ? "Adding…" : "Add Admin"}
           </button>
         </form>
 
-        <div className="bg-white rounded-xl border border-gray-200 p-6 shadow-sm">
-          <h2 className="text-lg font-semibold text-gray-900 mb-3">Admins</h2>
+        <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
+          <h2 className="mb-3 text-lg font-semibold text-foreground">Admins</h2>
           {loadingList ? (
-            <p className="text-gray-500 text-sm">Loading…</p>
+            <p className="text-sm text-muted">Loading…</p>
           ) : admins.length === 0 ? (
-            <p className="text-gray-500 text-sm">No admins yet.</p>
+            <p className="text-sm text-muted">No admins yet.</p>
           ) : (
             <ul className="space-y-1.5">
               {admins.map((adminEmail) => (
                 <li key={adminEmail} className="flex items-center justify-between gap-2 group">
-                  <span className="text-gray-700 font-mono text-sm truncate">{adminEmail}</span>
+                  <span className="truncate font-mono text-sm text-foreground">{adminEmail}</span>
                   <button
                     type="button"
                     onClick={() => handleDelete(adminEmail)}
                     disabled={deleting === adminEmail}
-                    className="p-1.5 text-gray-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors disabled:opacity-50"
+                    className="rounded-lg p-1.5 text-muted transition-colors hover:bg-muted-bg hover:text-red-600 disabled:opacity-50"
                     title="Remove admin"
                   >
                     {deleting === adminEmail ? (

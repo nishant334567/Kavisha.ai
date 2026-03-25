@@ -68,18 +68,18 @@ export default function ProductsListPage() {
   if (loading) {
     return (
       <div className="px-8 py-8">
-        <h1 className="text-xl font-bold text-gray-900 mb-6">Store</h1>
-        <p className="text-sm text-gray-500">Loading…</p>
+        <h1 className="mb-6 text-xl font-bold text-foreground">Store</h1>
+        <p className="text-sm text-muted">Loading…</p>
       </div>
     );
   }
 
   return (
     <div className="px-8 py-8">
-      <h1 className="text-xl font-bold text-[#2D545E] mb-6">Store</h1>
+      <h1 className="mb-6 text-xl font-bold text-highlight">Store</h1>
 
       {products.length === 0 ? (
-        <p className="text-sm text-gray-500">No store items yet.</p>
+        <p className="text-sm text-muted">No store items yet.</p>
       ) : (
         <div className="space-y-4">
           {products.map((product) => {

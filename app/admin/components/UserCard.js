@@ -113,10 +113,10 @@ export default function UserCard({
           {/* Name and Contact Button Row */}
           <div className="flex items-start justify-between">
             <div>
-              <p className="font-baloo text-[#004A4E] mb-1 text-2xl font-bold">
+              <p className="mb-1 font-baloo text-2xl font-bold text-highlight">
                 {user.name}
               </p>
-              <p className="text-xs text-[#898989] break-words">
+              <p className="break-words text-xs text-muted">
                 {user?.email}
               </p>
             </div>
@@ -129,13 +129,13 @@ export default function UserCard({
           </div>
 
           {/* Total Messages and Cost */}
-          <div className="flex items-center gap-3 text-xs text-[#004A4E]">
+          <div className="flex items-center gap-3 text-xs text-highlight">
             <span className="flex items-center gap-1">
-              <MessagesSquare className="w-4 h-4 text-[#004A4E] shrink-0" aria-hidden />
+              <MessagesSquare className="h-4 w-4 shrink-0 text-highlight" aria-hidden />
               <span>{user.sessions?.reduce((sum, s) => sum + (s.messageCount || 0), 0) || 0}</span>
             </span>
             <span className="flex items-center gap-1">
-              <IndianRupee className="w-4 h-4 text-[#004A4E] shrink-0" aria-hidden />
+              <IndianRupee className="h-4 w-4 shrink-0 text-highlight" aria-hidden />
               <span>{((user.sessions?.reduce((sum, s) => sum + (s.totalCost || 0), 0) || 0)).toFixed(2)}</span>
             </span>
           </div>
@@ -144,7 +144,7 @@ export default function UserCard({
           {user.sessions?.length > 0 && (
             <div className="flex flex-col items-center gap-2">
               <div className="flex items-center justify-center">
-                <ArrowUpDown className="w-4 h-4 text-[#004A4E]" aria-label="Sort" />
+                <ArrowUpDown className="h-4 w-4 text-highlight" aria-label="Sort" />
               </div>
               <div>
                 <select
@@ -154,7 +154,7 @@ export default function UserCard({
                     setSortingType(type);
                     setSortingOrder(order);
                   }}
-                  className="text-xs border border-[#004A4E] rounded-lg bg-[#E8F4F4] px-2 py-1.5 text-gray-900"
+                  className="rounded-lg border border-border bg-input px-2 py-1.5 text-xs text-muted"
                 >
                   <option value="messages-desc">Most messages first</option>
                   <option value="messages-asc">Fewest messages first</option>
@@ -169,7 +169,7 @@ export default function UserCard({
           {selectedChatSession && (
             <div className="relative" ref={sessionDropdownRef}>
               <button
-                className="w-full bg-[#E8F4F4] border border-[#004A4E] rounded-2xl py-1 px-2 text-sm text-gray-900 flex items-center justify-between"
+                className="flex w-full items-center justify-between rounded-2xl border border-border bg-muted-bg px-2 py-1 text-sm text-muted"
                 onClick={() => setShowSessionDropdown((prev) => !prev)}
               >
                 <span>
@@ -179,15 +179,15 @@ export default function UserCard({
                 <ChevronDown />
               </button>
               {showSessionDropdown && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-white border border-gray-300 rounded-lg shadow-lg z-50 max-h-48 overflow-y-auto p-1 flex flex-col gap-1">
+                <div className="absolute top-full left-0 right-0 z-50 mt-1 flex max-h-48 flex-col gap-1 overflow-y-auto rounded-lg border border-border bg-card p-1 shadow-lg">
                   {sortedSessions.map((item, index) => {
                     const isSelected = selectedChatSession?._id === item._id;
                     return (
                       <button
                         key={item._id ?? index}
                         className={`w-full text-left px-3 py-1.5 rounded-md border text-sm transition cursor-pointer ${isSelected
-                          ? "bg-[#E8F4F4] border-[#004A4E] text-gray-900 font-semibold shadow-sm"
-                          : "bg-white border-gray-200 text-gray-700 hover:bg-gray-50 hover:border-gray-300"
+                          ? "border-[#004A4E] bg-muted-bg text-highlight font-semibold shadow-sm"
+                          : "border-border bg-card text-muted hover:bg-muted-bg"
                           }`}
                         onClick={() => {
                           setSelectedChatSession(item);
@@ -195,14 +195,14 @@ export default function UserCard({
                         }}
                       >
                         <div className="flex flex-col gap-0.5">
-                          <span className={`truncate text-gray-900 ${isSelected ? "font-bold" : "font-medium"}`}>{item?.title || `Chat ${index + 1}`}</span>
-                          <div className="flex items-center gap-2 text-[10px] text-gray-500">
+                          <span className={`truncate ${isSelected ? "font-bold text-highlight" : "font-medium text-muted"}`}>{item?.title || `Chat ${index + 1}`}</span>
+                          <div className="flex items-center gap-2 text-[10px] text-muted">
                             <span className="flex items-center gap-1">
-                              <MessageCircle className="w-3 h-3 text-gray-400 shrink-0" aria-hidden />
+                              <MessageCircle className="h-3 w-3 shrink-0 text-muted" aria-hidden />
                               <span>{item?.messageCount ?? 0}</span>
                             </span>
                             <span className="flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-gray-400 shrink-0" aria-hidden />
+                              <Clock className="h-3 w-3 shrink-0 text-muted" aria-hidden />
                               <span>{formatToIST(item?.updatedAt)}</span>
                             </span>
                           </div>
@@ -218,8 +218,8 @@ export default function UserCard({
           {/* Chat Summary */}
           {selectedChatSession && (
             <div>
-              <p className="font-bold text-[#004A4E] mb-2">Chat summary</p>
-              <p className="text-sm text-gray-700 leading-relaxed mb-2">
+              <p className="mb-2 font-bold text-highlight">Chat summary</p>
+              <p className="mb-2 text-sm leading-relaxed text-muted">
                 {selectedChatSession.chatSummary || "Summary Not Available"}
               </p>
               <div className="flex justify-end">
@@ -235,15 +235,15 @@ export default function UserCard({
         </div>
 
         {/* Desktop Layout: 40% left (user + chats), 60% right (session summary); reduced height; gaps between sections */}
-        <div className="h-[180px] hidden md:flex md:flex-col p-3 rounded-lg shadow-lg bg-white overflow-hidden border border-[#004A4E]/50">
+        <div className="hidden h-[180px] overflow-hidden rounded-lg border border-border bg-card p-3 shadow-lg md:flex md:flex-col">
           <div className="flex flex-1 min-h-0 gap-4">
             {/* Left 40%: user info + chat tile strip with gap between */}
             <div className="w-[40%] min-w-0 flex-shrink-0 flex gap-4 overflow-hidden">
               <div className="flex-1 min-w-0 overflow-hidden flex flex-col">
-                <p className="font-baloo text-[#004A4E] mb-0.5 text-lg">
+                <p className="mb-0.5 font-baloo text-lg text-highlight">
                   {user.name}
                 </p>
-                <p className="text-xs text-[#898989] mb-1.5 break-words">
+                <p className="mb-1.5 break-words text-xs text-muted">
                   {user?.email}
                 </p>
                 <button
@@ -252,7 +252,7 @@ export default function UserCard({
                 >
                   Contact
                 </button>
-                <div className="space-y-0.5 font-medium text-xs">
+                <div className="space-y-0.5 text-xs font-medium text-muted">
                   <p className="font-baloo">
                     Total Messages:{" "}
                     {user.sessions?.reduce(
@@ -274,22 +274,22 @@ export default function UserCard({
               {user.sessions?.length > 0 && (
                 <div className="flex-1 min-w-0 flex flex-col overflow-hidden relative" ref={sortDropdownRef}>
                   <div className="flex-shrink-0 flex items-center justify-between gap-1 mb-1 relative">
-                    <span className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide">Chats</span>
+                    <span className="text-xs font-semibold uppercase tracking-wide text-highlight">Chats</span>
                     <button
                       type="button"
                       onClick={() => setShowSortDropdown((prev) => !prev)}
-                      className="p-1 rounded-md text-[#004A4E] hover:bg-[#E8F4F4] border border-transparent hover:border-[#004A4E] transition-colors"
+                      className="rounded-md border border-transparent p-1 text-highlight transition-colors hover:border-[#004A4E] hover:bg-muted-bg"
                       aria-label="Sort chats"
                       title="Sort"
                     >
                       <ArrowUpDown className="w-4 h-4" aria-hidden />
                     </button>
                     {showSortDropdown && (
-                      <div className="absolute right-0 top-full mt-0.5 py-1 bg-white border border-[#004A4E] rounded-lg shadow-lg z-50 min-w-[160px] flex flex-col gap-0.5">
-                        <button type="button" onClick={() => { setSortingType("messages"); setSortingOrder("desc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#E8F4F4] rounded-md">Most messages first</button>
-                        <button type="button" onClick={() => { setSortingType("messages"); setSortingOrder("asc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#E8F4F4] rounded-md">Fewest messages first</button>
-                        <button type="button" onClick={() => { setSortingType("lastUpdated"); setSortingOrder("desc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#E8F4F4] rounded-md">Newest first</button>
-                        <button type="button" onClick={() => { setSortingType("lastUpdated"); setSortingOrder("asc"); setShowSortDropdown(false); }} className="text-left px-3 py-1.5 text-xs hover:bg-[#E8F4F4] rounded-md">Oldest first</button>
+                      <div className="absolute right-0 top-full z-50 mt-0.5 flex min-w-[160px] flex-col gap-0.5 rounded-lg border border-border bg-card py-1 shadow-lg">
+                        <button type="button" onClick={() => { setSortingType("messages"); setSortingOrder("desc"); setShowSortDropdown(false); }} className="rounded-md px-3 py-1.5 text-left text-xs text-muted hover:bg-muted-bg hover:text-foreground">Most messages first</button>
+                        <button type="button" onClick={() => { setSortingType("messages"); setSortingOrder("asc"); setShowSortDropdown(false); }} className="rounded-md px-3 py-1.5 text-left text-xs text-muted hover:bg-muted-bg hover:text-foreground">Fewest messages first</button>
+                        <button type="button" onClick={() => { setSortingType("lastUpdated"); setSortingOrder("desc"); setShowSortDropdown(false); }} className="rounded-md px-3 py-1.5 text-left text-xs text-muted hover:bg-muted-bg hover:text-foreground">Newest first</button>
+                        <button type="button" onClick={() => { setSortingType("lastUpdated"); setSortingOrder("asc"); setShowSortDropdown(false); }} className="rounded-md px-3 py-1.5 text-left text-xs text-muted hover:bg-muted-bg hover:text-foreground">Oldest first</button>
                       </div>
                     )}
                   </div>
@@ -302,14 +302,14 @@ export default function UserCard({
                             key={item._id || index}
                             type="button"
                             className={`flex-shrink-0 text-left px-2 py-1.5  border-b-2 transition cursor-pointer flex flex-col gap-0.5 w-full ${isSelected
-                              ? "font-bold shadow-sm text-black"
-                              : "font-normal text-gray-400"
+                              ? "font-bold shadow-sm text-highlight"
+                              : "font-normal text-muted"
                               }`}
                             onClick={() => {
                               setSelectedChatSession(item);
                             }}
                           >
-                            <span className={`text-xs truncate text-gray-900 ${isSelected ? "font-bold" : "font-medium"}`}>{item?.title || `Chat ${index + 1}`}</span>
+                            <span className={`truncate text-xs ${isSelected ? "font-bold text-highlight" : "font-medium text-muted"}`}>{item?.title || `Chat ${index + 1}`}</span>
                           </button>
                         );
                       })}
@@ -322,39 +322,39 @@ export default function UserCard({
             <div className="w-[60%] min-w-0 flex-shrink-0 flex flex-col overflow-hidden pl-1">
               <div className="flex flex-1 min-h-0 gap-2">
                 <div className="flex-1 min-h-0 flex flex-col overflow-hidden px-2">
-                  <h3 className="text-xs font-semibold text-[#004A4E] uppercase tracking-wide mb-1.5 flex-shrink-0">
+                  <h3 className="mb-1.5 flex-shrink-0 text-xs font-semibold uppercase tracking-wide text-highlight">
                     Session summary
                   </h3>
                   <div className="flex-1 min-h-0 overflow-y-auto pr-0.5">
                     {selectedChatSession ? (
                       <>
-                        <p className="text-xs text-gray-700 leading-relaxed whitespace-pre-wrap">
+                        <p className="whitespace-pre-wrap text-xs leading-relaxed text-muted">
                           {selectedChatSession?.chatSummary || "No summary available for this session."}
                         </p>
                       </>
                     ) : (
-                      <p className="text-xs text-gray-500 italic">
+                      <p className="text-xs italic text-muted">
                         Select a chat from the list to view its summary.
                       </p>
                     )}
                   </div>
                   {/* Icon row — sticks to bottom of section */}
                   {selectedChatSession && (
-                    <div className="flex-shrink-0 flex flex-wrap items-center gap-3 mt-2 pt-2 text-[10px] text-gray-500">
+                    <div className="mt-2 flex flex-shrink-0 flex-wrap items-center gap-3 pt-2 text-[10px] text-muted">
                       <span className="flex items-center gap-1.5">
-                        <MessageCircle className="w-3.5 h-3.5 text-gray-400 shrink-0" aria-hidden />
+                        <MessageCircle className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
                         <span>{selectedChatSession?.messageCount ?? 0}</span>
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <Clock className="w-3.5 h-3.5 text-gray-400 shrink-0" aria-hidden />
+                        <Clock className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
                         <span>{formatToIST(selectedChatSession?.updatedAt)}</span>
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <MessageCircleMore className="w-3.5 h-3.5 text-gray-400 shrink-0" aria-hidden />
+                        <MessageCircleMore className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
                         <span>{selectedChatSession?.comment ? "1 Comment" : "0 Comments"}</span>
                       </span>
                       <span className="flex items-center gap-1.5">
-                        <ArrowRight className="w-3.5 h-3.5 text-gray-400 shrink-0" aria-hidden />
+                        <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
                         <span>Assigned to: {Array.isArray(selectedChatSession?.assignedTo) ? selectedChatSession.assignedTo.join(", ") || "—" : (selectedChatSession?.assignedTo || "—")}</span>
                       </span>
                     </div>

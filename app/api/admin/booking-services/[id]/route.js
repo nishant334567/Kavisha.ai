@@ -1,5 +1,6 @@
 import { connectDB } from "@/app/lib/db";
 import BookingService from "@/app/models/BookingService";
+import { refreshImageUrl } from "@/app/lib/gcs";
 import { NextResponse } from "next/server";
 
 export async function GET(req, { params }) {
@@ -15,7 +16,9 @@ export async function GET(req, { params }) {
       );
     }
 
-    return NextResponse.json({ service }, { status: 200 });
+    const image = service.image ? await refreshImageUrl(service.image) : "";
+
+    return NextResponse.json({ service: { ...service, image } }, { status: 200 });
   } catch (error) {
     console.error("Error fetching booking service:", error);
     return NextResponse.json(

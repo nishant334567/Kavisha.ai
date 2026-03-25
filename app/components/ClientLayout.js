@@ -17,9 +17,6 @@ import GlobalMessages from "./GlobalMessages";
 import MobileBottomNav from "./MobileBottomNav";
 import { CartContextProvider } from "../context/cart/CartContextProvider";
 
-const LIGHT_CHAT_GRADIENT =
-  "linear-gradient(to right, #DBF8F8 0%, #DBF3F8 50%, #DBEEF8 100%)";
-
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
   const isMaintenancePage = pathname === "/maintenance";
@@ -100,8 +97,7 @@ export default function ClientLayout({ children }) {
               <Link
                 key={item.path}
                 href={item.path}
-                className="font-baloo rounded-full px-3 py-2 text-sm font-medium text-[#1f2937] shadow-sm transition-opacity hover:opacity-90 dark:text-[#0f172a]"
-                style={{ background: LIGHT_CHAT_GRADIENT }}
+                className="font-baloo rounded-full bg-muted-bg px-3 py-2 text-sm font-medium text-highlight shadow-sm transition-colors hover:bg-card hover:opacity-90"
               >
                 {item.label}
               </Link>

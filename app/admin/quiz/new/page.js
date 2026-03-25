@@ -114,12 +114,12 @@ export default function AddQuiz() {
     }
   };
   return (
-    <div className="min-h-screen bg-white pt-20 md:pt-24 pb-8">
+    <div className="min-h-screen bg-background pt-20 pb-8 text-foreground md:pt-24">
       <div className="max-w-3xl mx-auto px-6">
         {/* Back/Cancel Button */}
         <button
           onClick={handleCancel}
-          className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6 text-sm font-medium font-fredoka group"
+          className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-fredoka"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Cancel

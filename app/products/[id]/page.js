@@ -86,16 +86,16 @@ export default function ProductDetailPage() {
 
     if (loadingProduct) {
         return (
-            <div className="px-6 py-8 max-w-5xl mx-auto">
-                <p className="text-gray-500">Loading...</p>
+            <div className="mx-auto max-w-5xl bg-background px-6 py-8 text-foreground">
+                <p className="text-muted">Loading...</p>
             </div>
         );
     }
 
     if (!product) {
         return (
-            <div className="px-6 py-8 max-w-5xl mx-auto">
-                <p className="text-gray-500">Product not found.</p>
+            <div className="mx-auto max-w-5xl bg-background px-6 py-8 text-foreground">
+                <p className="text-muted">Product not found.</p>
                 <Link
                     href={productsHref}
                     className="mt-4 inline-block text-sm font-medium"
@@ -108,12 +108,12 @@ export default function ProductDetailPage() {
     }
 
     return (
-        <div className="px-6 py-8 max-w-5xl mx-auto">
+        <div className="mx-auto max-w-5xl bg-background px-6 py-8 text-foreground">
             {/* Top section: two-column layout */}
             <div className="flex flex-col md:flex-row gap-8 mb-12">
                 {/* Left: Product image with carousel */}
                 <div className="flex-1 min-w-0">
-                    <div className="relative rounded-2xl overflow-hidden bg-gray-100 border border-gray-200 aspect-square max-h-[400px]">
+                    <div className="relative aspect-square max-h-[400px] overflow-hidden rounded-2xl border border-border bg-muted-bg">
                         {currentImage ? (
                             <img
                                 src={currentImage}
@@ -122,7 +122,7 @@ export default function ProductDetailPage() {
                                 referrerPolicy="no-referrer"
                             />
                         ) : (
-                            <div className="w-full h-full flex items-center justify-center text-gray-400">
+                            <div className="flex h-full w-full items-center justify-center text-muted">
                                 No image
                             </div>
                         )}
@@ -131,7 +131,7 @@ export default function ProductDetailPage() {
                                 <button
                                     type="button"
                                     onClick={prevImage}
-                                    className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-600 hover:bg-white transition-colors"
+                                    className="absolute left-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-card/90 text-muted shadow-md transition-colors hover:bg-card hover:text-foreground"
                                     aria-label="Previous image"
                                 >
                                     <ChevronLeft className="w-5 h-5" />
@@ -139,7 +139,7 @@ export default function ProductDetailPage() {
                                 <button
                                     type="button"
                                     onClick={nextImage}
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/90 shadow-md flex items-center justify-center text-gray-600 hover:bg-white transition-colors"
+                                    className="absolute right-2 top-1/2 flex h-10 w-10 -translate-y-1/2 items-center justify-center rounded-full bg-card/90 text-muted shadow-md transition-colors hover:bg-card hover:text-foreground"
                                     aria-label="Next image"
                                 >
                                     <ChevronRight className="w-5 h-5" />
@@ -156,8 +156,8 @@ export default function ProductDetailPage() {
                                     onClick={() => setImageIndex(i)}
                                     className={`w-2 h-2 rounded-full transition-colors ${
                                         i === imageIndex
-                                            ? "bg-gray-700"
-                                            : "bg-gray-300 hover:bg-gray-400"
+                                            ? "bg-foreground"
+                                            : "bg-border hover:bg-muted"
                                     }`}
                                     aria-label={`View image ${i + 1}`}
                                 />
@@ -174,7 +174,7 @@ export default function ProductDetailPage() {
                     >
                         {product.name || "Untitled"}
                     </h1>
-                    <p className="text-gray-500 text-sm leading-relaxed mb-4">
+                    <p className="mb-4 text-sm leading-relaxed text-muted">
                         {description}
                     </p>
                     <div className="mb-6">
@@ -185,7 +185,7 @@ export default function ProductDetailPage() {
                             Rs. {Math.round(currentPrice)}/-
                         </span>
                         {discount > 0 && (
-                            <span className="ml-2 text-gray-400 line-through text-sm">
+                            <span className="ml-2 text-sm text-muted line-through">
                                 Rs. {Math.round(originalPrice)}/-
                             </span>
                         )}
@@ -193,7 +193,7 @@ export default function ProductDetailPage() {
 
                     {/* Quantity controls */}
                     {!isAuthenticated ? (
-                        <div className="w-full max-w-xs flex items-center justify-center gap-2 px-6 py-3 rounded-xl border-2 border-gray-200 text-gray-500 text-sm">
+                        <div className="flex w-full max-w-xs items-center justify-center gap-2 rounded-xl border-2 border-border px-6 py-3 text-sm text-muted">
                             Sign in to add to cart
                         </div>
                     ) : quantityInCart > 0 ? (
@@ -205,7 +205,7 @@ export default function ProductDetailPage() {
                                 type="button"
                                 onClick={handleDecrease}
                                 disabled={loading}
-                                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                                className="rounded-lg p-2 transition-colors hover:bg-muted-bg disabled:opacity-50"
                                 style={{ color: TEAL }}
                                 aria-label="Decrease quantity"
                             >
@@ -221,7 +221,7 @@ export default function ProductDetailPage() {
                                 type="button"
                                 onClick={handleIncrease}
                                 disabled={loading}
-                                className="p-2 rounded-lg hover:bg-gray-100 disabled:opacity-50 transition-colors"
+                                className="rounded-lg p-2 transition-colors hover:bg-muted-bg disabled:opacity-50"
                                 style={{ color: TEAL }}
                                 aria-label="Increase quantity"
                             >
@@ -243,7 +243,7 @@ export default function ProductDetailPage() {
             </div>
 
             {/* Below: All other related info */}
-            <div className="border-t border-gray-200 pt-8 space-y-6">
+            <div className="space-y-6 border-t border-border pt-8">
                 {product.tagline && product.tagline !== description && (
                     <section>
                         <h2
@@ -252,7 +252,7 @@ export default function ProductDetailPage() {
                         >
                             Tagline
                         </h2>
-                        <p className="text-gray-600 text-sm">{product.tagline}</p>
+                        <p className="text-sm text-muted">{product.tagline}</p>
                     </section>
                 )}
                 {product.specifications && (
@@ -263,7 +263,7 @@ export default function ProductDetailPage() {
                         >
                             Specifications
                         </h2>
-                        <div className="text-gray-600 text-sm whitespace-pre-wrap">
+                        <div className="whitespace-pre-wrap text-sm text-muted">
                             {product.specifications}
                         </div>
                     </section>
@@ -295,7 +295,7 @@ export default function ProductDetailPage() {
                         >
                             Terms and conditions
                         </h2>
-                        <div className="text-gray-600 text-sm whitespace-pre-wrap">
+                        <div className="whitespace-pre-wrap text-sm text-muted">
                             {product.termsAndConditions}
                         </div>
                     </section>

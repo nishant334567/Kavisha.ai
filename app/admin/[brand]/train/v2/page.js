@@ -432,24 +432,24 @@ export default function Train() {
 
   return (
     <>
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="mx-auto max-w-7xl bg-background px-4 py-8 text-foreground">
         <div className="flex items-center gap-3 mb-6">
           <button
             onClick={() => router.back()}
-            className="text-black hover:opacity-70 transition-opacity"
+            className="text-foreground transition-opacity hover:opacity-70"
           >
             <ArrowLeft className="w-6 h-6" />
           </button>
-          <h1 className="uppercase text-2xl font-bold text-blue-900 font-zen">
+          <h1 className="font-zen text-2xl font-bold uppercase text-highlight">
             Train your Avataar
           </h1>
         </div>
 
         {isTraining && (
-          <div className="mb-6 flex items-start gap-3 rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+          <div className="mb-6 flex items-start gap-3 rounded-xl border border-border bg-muted-bg px-4 py-3 text-sm text-muted">
             <Loader2 className="mt-0.5 h-4 w-4 animate-spin shrink-0" />
             <div>
-              <p className="font-semibold">Training in progress</p>
+              <p className="font-semibold text-highlight">Training in progress</p>
               <p>
                 {activeTraining?.title || "Document"} is being trained. New
                 training is disabled until this completes.
@@ -460,18 +460,18 @@ export default function Train() {
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
           {/* PDF Document Card */}
-          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow flex flex-col h-full">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <div className="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-md transition-shadow hover:shadow-lg">
+            <h3 className="mb-2 text-lg font-semibold text-foreground">
               PDF document
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="mb-4 text-sm text-muted">
               Upload and extract text from PDFs
             </p>
             <select
               value={uploadFolderId}
               onChange={(e) => setUploadFolderId(e.target.value)}
               disabled={isTraining}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mb-2 w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50"
             >
               <option value="">Unfiled</option>
               {folders.map((f) => (
@@ -486,7 +486,7 @@ export default function Train() {
               onChange={(e) => setUploadSourceUrl(e.target.value)}
               placeholder="Source URL (optional)"
               disabled={isTraining}
-              className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm mb-2 placeholder:text-gray-400 disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mb-2 w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted disabled:cursor-not-allowed disabled:opacity-50"
             />
             <input
               type="file"
@@ -496,55 +496,55 @@ export default function Train() {
               className="hidden"
             />
             <div className="mb-4 flex-1">
-              <p className="text-xs text-gray-500">
+              <p className="text-xs text-muted">
                 {selectedFileName || "No file chosen"}
               </p>
             </div>
             <button
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading || isTraining}
-              className="w-full px-4 py-2 bg-[#EBF3FF] text-[#242473] rounded-lg hover:bg-white transition-colors text-sm font-medium disabled:opacity-50 disabled:cursor-not-allowed mt-auto"
+              className="mt-auto w-full rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-highlight transition-colors hover:bg-muted-bg disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isTraining ? "Training..." : uploading ? "Uploading..." : "Choose file"}
             </button>
           </div>
 
           {/* YouTube Video Card */}
-          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow flex flex-col h-full">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <div className="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-md transition-shadow hover:shadow-lg">
+            <h3 className="mb-2 text-lg font-semibold text-foreground">
               Youtube video
             </h3>
-            <p className="text-sm text-gray-600 mb-4">
+            <p className="mb-4 text-sm text-muted">
               Transcribe and train from videos
             </p>
             <div className="mb-4 flex-1">
               <input
                 type="url"
                 placeholder="https://www.youtube.com/watch?v=..."
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-red-500 text-sm disabled:opacity-50 disabled:cursor-not-allowed"
+                className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
                 disabled
               />
             </div>
             <button
               disabled
-              className="w-full px-4 py-2 bg-[#C0614E] text-white rounded-lg transition-colors text-sm font-medium opacity-50 cursor-not-allowed mt-auto"
+              className="mt-auto w-full cursor-not-allowed rounded-lg bg-muted-bg px-4 py-2 text-sm font-medium text-muted opacity-50 transition-colors"
             >
               Upload and transcribe
             </button>
           </div>
 
           {/* Direct Text Card */}
-          <div className="bg-white rounded-xl shadow-md p-6 border border-gray-200 hover:shadow-lg transition-shadow flex flex-col h-full">
-            <h3 className="text-lg font-semibold text-gray-900 mb-2">
+          <div className="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-md transition-shadow hover:shadow-lg">
+            <h3 className="mb-2 text-lg font-semibold text-foreground">
               Direct text
             </h3>
-            <p className="text-sm text-gray-600 mb-4 flex-1">
+            <p className="mb-4 flex-1 text-sm text-muted">
               Type or paste directly
             </p>
             <button
               onClick={() => setIsModalOpen(true)}
               disabled={isTraining}
-              className="w-full px-4 py-2 bg-[#DBFFD5] rounded-lg hover:bg-green-600 hover:text-white transition-colors text-sm font-medium mt-auto disabled:opacity-50 disabled:cursor-not-allowed"
+              className="mt-auto w-full rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-highlight transition-colors hover:bg-muted-bg disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isTraining ? "Training..." : "Add text"}
             </button>
@@ -552,7 +552,7 @@ export default function Train() {
         </div>
         <div className="flex justify-between items-center my-4 flex-wrap gap-2">
           <div className="flex items-center gap-2 flex-wrap">
-            <p className="text-[#4D5495] font-akshar font-semibold uppercase">
+            <p className="font-akshar font-semibold uppercase text-highlight">
               Knowledge base
             </p>
             {documents.length > 0 && (
@@ -561,7 +561,7 @@ export default function Train() {
                   setSelectionMode((prev) => !prev);
                   if (selectionMode) setSelectedDocs(new Set());
                 }}
-                className="px-3 py-1 text-sm rounded-lg border border-gray-300 bg-white hover:bg-gray-50 text-gray-700"
+                className="rounded-lg border border-border bg-card px-3 py-1 text-sm text-foreground hover:bg-muted-bg"
               >
                 {selectionMode ? "Cancel" : "Select"}
               </button>
@@ -571,7 +571,7 @@ export default function Train() {
                 <select
                   value={moveTargetFolderId}
                   onChange={(e) => setMoveTargetFolderId(e.target.value)}
-                  className="px-3 py-1.5 text-sm border border-gray-300 rounded-lg bg-white"
+                  className="rounded-lg border border-border bg-input px-3 py-1.5 text-sm text-foreground"
                 >
                   <option value="">Unfiled</option>
                   {folders.map((f) => (
@@ -583,19 +583,19 @@ export default function Train() {
                 <button
                   onClick={handleMoveToFolder}
                   disabled={moving}
-                  className="flex items-center gap-1.5 px-3 py-1.5 text-sm rounded-lg bg-[#242473] text-white hover:bg-[#1a1a5c] disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="flex items-center gap-1.5 rounded-lg bg-highlight px-3 py-1.5 text-sm text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                 >
                   <FolderInput className="w-3.5 h-3.5" />
                   Move to folder
                 </button>
-                <span className="text-sm text-gray-500">
+                <span className="text-sm text-muted">
                   {selectedDocs.size} selected
                 </span>
               </>
             )}
           </div>
           {totalCount > 0 && (
-            <span className="text-sm text-gray-600">
+            <span className="text-sm text-muted">
               Showing {documents.length} of {totalCount} documents (Page{" "}
               {currentPage} of {totalPages})
             </span>
@@ -603,10 +603,10 @@ export default function Train() {
         </div>
         <div className="flex gap-6 mt-4">
           {/* Left: folders */}
-          <div className="w-48 shrink-0 border-r border-gray-200 pr-4">
+          <div className="w-48 shrink-0 border-r border-border pr-4">
             <button
               onClick={handleAddFolder}
-              className="flex items-center gap-2 w-full px-2 py-1.5 rounded hover:bg-gray-100 text-gray-700 text-sm mb-2"
+              className="mb-2 flex w-full items-center gap-2 rounded px-2 py-1.5 text-sm text-foreground hover:bg-muted-bg"
               title="Add folder"
             >
               <FolderPlus className="w-4 h-4" />
@@ -617,21 +617,21 @@ export default function Train() {
                 setSelectedFolderId(null);
                 setCurrentPage(1);
               }}
-              className={`block w-full text-left px-2 py-1.5 rounded text-sm ${selectedFolderId === null ? "bg-[#EBF3FF] text-[#242473] font-medium" : "text-gray-700 hover:bg-gray-100"}`}
+              className={`block w-full rounded px-2 py-1.5 text-left text-sm ${selectedFolderId === null ? "bg-muted-bg font-medium text-highlight" : "text-foreground hover:bg-muted-bg"}`}
             >
               All
             </button>
             {folders.map((f) => (
               <div
                 key={f._id}
-                className={`flex items-center gap-1 rounded ${selectedFolderId === f._id ? "bg-[#EBF3FF]" : ""}`}
+                className={`flex items-center gap-1 rounded ${selectedFolderId === f._id ? "bg-muted-bg" : ""}`}
               >
                 <button
                   onClick={() => {
                     setSelectedFolderId(f._id);
                     setCurrentPage(1);
                   }}
-                  className={`flex-1 text-left px-2 py-1.5 rounded text-sm truncate ${selectedFolderId === f._id ? "text-[#242473] font-medium" : "text-gray-700 hover:bg-gray-100"}`}
+                  className={`flex-1 truncate rounded px-2 py-1.5 text-left text-sm ${selectedFolderId === f._id ? "font-medium text-highlight" : "text-foreground hover:bg-muted-bg"}`}
                 >
                   {f.name}
                 </button>
@@ -640,7 +640,7 @@ export default function Train() {
                     e.stopPropagation();
                     handleDeleteFolder(f._id);
                   }}
-                  className="shrink-0 p-1 rounded text-gray-400 hover:bg-red-50 hover:text-red-600 transition-colors"
+                  className="shrink-0 rounded p-1 text-muted transition-colors hover:bg-muted-bg hover:text-red-600"
                   title="Delete folder"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
@@ -651,9 +651,9 @@ export default function Train() {
           {/* Right: documents */}
           <div className="flex-1 min-w-0">
             {loading ? (
-              <div className="text-center py-8">Loading...</div>
+              <div className="py-8 text-center text-muted">Loading...</div>
             ) : documents.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="py-8 text-center text-muted">
                 {selectedFolderId
                   ? "No documents in this folder"
                   : "No documents uploaded yet"}
@@ -687,7 +687,7 @@ export default function Train() {
                         setCurrentPage((prev) => Math.max(1, prev - 1))
                       }
                       disabled={currentPage === 1}
-                      className="px-6 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      className="rounded-lg border border-border bg-card px-6 py-2 text-sm font-medium text-foreground hover:bg-muted-bg disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Previous
                     </button>
@@ -697,7 +697,7 @@ export default function Train() {
                           Math.min(totalPages, prev + 1))
                       }
                       disabled={currentPage === totalPages}
-                      className="px-6 py-2 bg-white border border-gray-300 rounded-lg hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                      className="rounded-lg border border-border bg-card px-6 py-2 text-sm font-medium text-foreground hover:bg-muted-bg disabled:cursor-not-allowed disabled:opacity-50"
                     >
                       Next
                     </button>
@@ -708,7 +708,7 @@ export default function Train() {
           </div>
         </div>
 
-        <div className="text-center mt-12 text-sm text-blue-900">
+        <div className="mt-12 text-center text-sm text-muted">
           Powered by KAVISHA
         </div>
       </div>
@@ -752,43 +752,43 @@ export default function Train() {
 
       {trainingResult && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4">
-          <div className="w-full max-w-md rounded-2xl bg-white p-6 shadow-2xl">
+          <div className="w-full max-w-md rounded-2xl border border-border bg-card p-6 text-foreground shadow-2xl">
             <div className="mb-4 flex items-start justify-between gap-4">
               <div className="flex items-center gap-3">
                 <CheckCircle2 className="h-8 w-8 text-green-600" />
                 <div>
-                  <h2 className="text-lg font-semibold text-gray-900">
+                  <h2 className="text-lg font-semibold text-highlight">
                     Training Completed
                   </h2>
-                  <p className="text-sm text-gray-500">
+                  <p className="text-sm text-muted">
                     {trainingResult.message}
                   </p>
                 </div>
               </div>
               <button
                 onClick={() => setTrainingResult(null)}
-                className="rounded-full p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+                className="rounded-full p-1 text-muted hover:bg-muted-bg hover:text-foreground"
               >
                 <X className="h-4 w-4" />
               </button>
             </div>
 
-            <div className="space-y-3 rounded-xl border border-gray-200 bg-gray-50 p-4 text-sm">
+            <div className="space-y-3 rounded-xl border border-border bg-muted-bg p-4 text-sm">
               <div>
-                <p className="text-gray-500">Document</p>
-                <p className="font-medium text-gray-900 break-words">
+                <p className="text-muted">Document</p>
+                <p className="break-words font-medium text-foreground">
                   {trainingResult.title}
                 </p>
               </div>
               <div>
-                <p className="text-gray-500">Doc ID</p>
-                <p className="font-mono text-xs text-gray-900 break-all">
+                <p className="text-muted">Doc ID</p>
+                <p className="break-all font-mono text-xs text-foreground">
                   {trainingResult.docid}
                 </p>
               </div>
               <div>
-                <p className="text-gray-500">Chunks trained</p>
-                <p className="font-medium text-gray-900">
+                <p className="text-muted">Chunks trained</p>
+                <p className="font-medium text-foreground">
                   {trainingResult.chunkCount}
                 </p>
               </div>
@@ -797,7 +797,7 @@ export default function Train() {
             <div className="mt-5 flex justify-end">
               <button
                 onClick={() => setTrainingResult(null)}
-                className="rounded-xl bg-[#242473] px-4 py-2 text-sm font-medium text-white hover:bg-[#1d1d62]"
+                className="rounded-xl bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90"
               >
                 Close
               </button>

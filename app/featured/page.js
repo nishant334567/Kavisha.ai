@@ -15,26 +15,26 @@ function FeaturedCard({ href, title, description, icon: Icon }) {
   return (
     <Link
       href={href}
-      className="group font-baloo tracking-[0.06em] flex flex-col w-full h-full min-h-0 rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden hover:shadow-md hover:border-[#00888E]/40 transition-all"
+      className="group flex h-full min-h-0 w-full flex-col overflow-hidden rounded-xl border border-border bg-card font-baloo tracking-[0.06em] shadow-sm transition-all hover:border-highlight/40 hover:shadow-md"
     >
       {/* Colored strip: icon + title (stacked for 2-col grid cells) */}
-      <div className="px-3 py-3 sm:px-4 sm:py-3 flex flex-col gap-2 min-h-0 bg-gradient-to-r from-[#DBF8F8] via-[#DBF3F8] to-[#DBEEF8]">
+      <div className="flex min-h-0 flex-col gap-2 bg-muted-bg px-3 py-3 sm:px-4 sm:py-3">
         <Icon
-          className="h-5 w-5 shrink-0 text-gray-900/80 group-hover:text-[#00888E] transition-colors"
+          className="h-5 w-5 shrink-0 text-foreground/80 transition-colors group-hover:text-highlight"
           strokeWidth={2}
           aria-hidden
         />
-        <h2 className="text-sm sm:text-base font-medium text-gray-900 leading-snug group-hover:text-[#00888E] transition-colors">
+        <h2 className="text-sm font-medium leading-snug text-foreground transition-colors group-hover:text-highlight sm:text-base">
           {title}
         </h2>
       </div>
       {/* Plain white body: description + CTA */}
-      <div className="px-3 py-2.5 sm:px-4 sm:py-3 bg-white border-t border-gray-100 flex flex-col flex-1 min-h-0">
-        <p className="text-xs sm:text-sm text-gray-600 leading-snug line-clamp-3 flex-1">
+      <div className="flex min-h-0 flex-1 flex-col border-t border-border bg-card px-3 py-2.5 sm:px-4 sm:py-3">
+        <p className="flex-1 line-clamp-3 text-xs leading-snug text-muted sm:text-sm">
           {description}
         </p>
         <div className="flex justify-end mt-2 sm:mt-3">
-          <span className="text-xs sm:text-sm font-medium text-[#00888E] group-hover:underline">
+          <span className="text-xs font-medium text-highlight group-hover:underline sm:text-sm">
             Open →
           </span>
         </div>
@@ -100,22 +100,22 @@ export default function FeaturedPage() {
   return (
     <main className="min-h-[calc(100vh-64px)] px-4 py-8 md:px-6 max-w-2xl mx-auto w-full">
       <div className="mb-8">
-        <div className="inline-flex items-center gap-2 text-[#00888E] text-sm font-medium mb-2">
+        <div className="mb-2 inline-flex items-center gap-2 text-sm font-medium text-highlight">
           <Sparkles className="w-4 h-4" />
           Featured
         </div>
-        <h1 className="text-2xl md:text-3xl font-bold text-gray-900 font-baloo tracking-wide">
+        <h1 className="font-baloo text-2xl font-bold tracking-wide text-foreground md:text-3xl">
           Explore {brand?.brandName || "this avatar"}
         </h1>
-        <p className="text-gray-600 mt-2 text-sm md:text-base max-w-xl">
+        <p className="mt-2 max-w-xl text-sm text-muted md:text-base">
           Find all the featured services enabled by this avatar.
         </p>
       </div>
 
       {visible.length === 0 ? (
-        <div className="rounded-xl border border-dashed border-gray-300 bg-gray-50/80 p-10 text-center">
-          <p className="text-gray-700 font-medium">Nothing featured yet</p>
-          <p className="text-sm text-gray-500 mt-2 max-w-md mx-auto">
+        <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
+          <p className="font-medium text-foreground">Nothing featured yet</p>
+          <p className="mx-auto mt-2 max-w-md text-sm text-muted">
             When this avatar enables quiz, products, bookable services, blog, or jobs
             in Sanity, they will show up here.
           </p>

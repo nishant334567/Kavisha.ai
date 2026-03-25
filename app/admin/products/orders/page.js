@@ -83,37 +83,37 @@ export default function AdminOrdersPage() {
     if (loading) {
         return (
             <div className="px-8 py-8">
-                <h1 className="text-xl font-bold text-gray-900 mb-6">Orders</h1>
-                <p className="text-sm text-gray-500">Loading…</p>
+                <h1 className="mb-6 text-xl font-bold text-foreground">Orders</h1>
+                <p className="text-sm text-muted">Loading…</p>
             </div>
         );
     }
 
     return (
         <div className="px-8 py-8">
-            <h1 className="text-xl font-bold text-[#2D545E] mb-6">Orders</h1>
+            <h1 className="mb-6 text-xl font-bold text-highlight">Orders</h1>
 
             {orderGroups.length === 0 ? (
-                <p className="text-sm text-gray-500">No orders yet.</p>
+                <p className="text-sm text-muted">No orders yet.</p>
             ) : (
                 <div className="space-y-6">
                     {orderGroups.map((group) => (
                         <div
                             key={group.orderId}
-                            className="rounded-xl border border-gray-200 bg-white overflow-hidden h-[320px] flex flex-col md:flex-row"
+                            className="flex h-[320px] flex-col overflow-hidden rounded-xl border border-border bg-card md:flex-row"
                         >
                             {/* Left: Items with image, title, description - scrollable */}
-                            <div className="flex-1 min-w-0 flex flex-col border-b md:border-b-0 md:border-r border-gray-200 overflow-hidden">
-                                <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide px-4 pt-4 shrink-0">
+                            <div className="flex min-w-0 flex-1 flex-col overflow-hidden border-b border-border md:border-b-0 md:border-r">
+                                <h3 className="shrink-0 px-4 pt-4 text-sm font-semibold uppercase tracking-wide text-muted">
                                     Items
                                 </h3>
                                 <ul className="flex-1 overflow-y-auto px-4 py-2 space-y-3 min-h-0">
                                     {group.items.map((item) => (
                                         <li
                                             key={item._id}
-                                            className="flex gap-3 py-2 border-b border-gray-100 last:border-b-0"
+                                            className="flex gap-3 border-b border-border py-2 last:border-b-0"
                                         >
-                                            <div className="w-12 h-12 shrink-0 rounded-lg bg-gray-100 overflow-hidden">
+                                            <div className="h-12 w-12 shrink-0 overflow-hidden rounded-lg bg-muted-bg">
                                                 {item.productSnapshot?.images?.[0] ? (
                                                     <img
                                                         src={item.productSnapshot.images[0]}
@@ -122,41 +122,41 @@ export default function AdminOrdersPage() {
                                                         referrerPolicy="no-referrer"
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                                                    <div className="flex h-full w-full items-center justify-center text-xs text-muted">
                                                         —
                                                     </div>
                                                 )}
                                             </div>
                                             <div className="flex-1 min-w-0">
-                                                <p className="font-medium text-gray-900 text-sm">
+                                                <p className="text-sm font-medium text-foreground">
                                                     {item.productSnapshot?.name || "Product"} ×{" "}
                                                     {item.quantity}
                                                 </p>
-                                                <p className="text-xs text-gray-500 line-clamp-2 mt-0.5">
+                                                <p className="mt-0.5 line-clamp-2 text-xs text-muted">
                                                     {item.productSnapshot?.description ||
                                                         "No description"}
                                                 </p>
-                                                <p className="text-xs font-medium text-gray-700 mt-1">
+                                                <p className="mt-1 text-xs font-medium text-foreground">
                                                     Rs. {Math.round(item.totalAmount || 0)}/-
                                                 </p>
                                             </div>
                                         </li>
                                     ))}
                                 </ul>
-                                <div className="px-4 py-3 border-t border-gray-200 bg-white shrink-0 font-semibold text-gray-900 flex justify-between">
+                                <div className="flex shrink-0 justify-between border-t border-border bg-card px-4 py-3 font-semibold text-foreground">
                                     <span>Total</span>
                                     <span>Rs. {Math.round(group.total)}/-</span>
                                 </div>
                             </div>
 
                             {/* Right: Customer, Order, Payment - static */}
-                            <div className="w-full md:w-80 shrink-0 p-4 bg-gray-50 space-y-4">
+                            <div className="w-full shrink-0 space-y-4 bg-muted-bg p-4 md:w-80">
                                     <div>
-                                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
                                             Customer
                                         </h3>
                                         <div className="flex items-center gap-2 mb-2">
-                                            <div className="w-8 h-8 rounded-full bg-gray-200 overflow-hidden shrink-0">
+                                            <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-border">
                                                 {group.customer?.image ? (
                                                     <img
                                                         src={group.customer.image}
@@ -164,39 +164,39 @@ export default function AdminOrdersPage() {
                                                         className="w-full h-full object-cover"
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full flex items-center justify-center text-gray-500 text-xs font-medium">
+                                                    <div className="flex h-full w-full items-center justify-center text-xs font-medium text-muted">
                                                         {(group.customer?.name || "?")[0]}
                                                     </div>
                                                 )}
                                             </div>
-                                            <span className="font-medium text-gray-900 text-sm">
+                                            <span className="text-sm font-medium text-foreground">
                                                 {group.customer?.name || "—"}
                                             </span>
                                         </div>
-                                        <p className="text-xs text-gray-600">
+                                        <p className="text-xs text-muted">
                                             {group.customer?.email || "—"}
                                         </p>
-                                        <p className="text-xs text-gray-600">
+                                        <p className="text-xs text-muted">
                                             <span className="font-medium">Phone:</span>{" "}
                                             {group.shippingPhone || "—"}
                                         </p>
-                                        <p className="text-xs text-gray-600 break-words" title={group.shippingAddress}>
+                                        <p className="break-words text-xs text-muted" title={group.shippingAddress}>
                                             <span className="font-medium">Address:</span>{" "}
                                             {group.shippingAddress || "—"}
                                         </p>
                                     </div>
 
                                     <div>
-                                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
                                             Order
                                         </h3>
-                                        <p className="text-xs text-gray-700">
+                                        <p className="text-xs text-foreground">
                                             ID: {group.orderId.slice(-8)}
                                         </p>
-                                        <p className="text-xs text-gray-700">
+                                        <p className="text-xs text-foreground">
                                             {formatDate(group.date)}
                                         </p>
-                                        <p className="text-xs">
+                                        <p className="text-xs text-foreground">
                                             Status:{" "}
                                             <span className="capitalize font-medium">
                                                 {group.items[0]?.orderStatus || "—"}
@@ -205,13 +205,13 @@ export default function AdminOrdersPage() {
                                     </div>
 
                                     <div>
-                                        <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wide mb-2">
+                                        <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-muted">
                                             Payment
                                         </h3>
-                                        <p className="text-xs text-gray-700">
+                                        <p className="text-xs text-foreground">
                                             {group.items[0]?.paymentMethod || "UPI/Card"}
                                         </p>
-                                        <p className="text-xs">
+                                        <p className="text-xs text-foreground">
                                             Status:{" "}
                                             <span
                                                 className={
@@ -223,7 +223,7 @@ export default function AdminOrdersPage() {
                                                 {group.items[0]?.paymentStatus || "—"}
                                             </span>
                                         </p>
-                                        <p className="text-xs text-gray-700">
+                                        <p className="text-xs text-foreground">
                                             Delivery:{" "}
                                             {group.items[0]?.deliveryDate
                                                 ? formatDate(group.items[0].deliveryDate)
@@ -232,7 +232,7 @@ export default function AdminOrdersPage() {
                                         <button
                                             type="button"
                                             onClick={() => handleViewPayments(group)}
-                                            className="mt-2 flex items-center gap-1.5 text-xs text-[#2D545E] hover:text-[#1e3d45] font-medium"
+                                            className="mt-2 flex items-center gap-1.5 text-xs font-medium text-highlight hover:opacity-80"
                                         >
                                             <CreditCard className="w-3.5 h-3.5" />
                                             View payment details
@@ -250,16 +250,16 @@ export default function AdminOrdersPage() {
                     onClick={() => setPaymentModal(null)}
                 >
                     <div
-                        className="bg-white rounded-xl shadow-xl max-w-md w-full p-6"
+                        className="w-full max-w-md rounded-xl border border-border bg-card p-6 shadow-xl"
                         onClick={(e) => e.stopPropagation()}
                     >
-                        <h3 className="font-bold text-gray-900 mb-4">Payment details</h3>
+                        <h3 className="mb-4 font-bold text-foreground">Payment details</h3>
                         {paymentModal.loading ? (
-                            <p className="text-gray-500">Loading…</p>
+                            <p className="text-muted">Loading…</p>
                         ) : paymentModal.error ? (
                             <p className="text-red-600">{paymentModal.error}</p>
                         ) : (
-                            <div className="space-y-2 text-sm">
+                            <div className="space-y-2 text-sm text-foreground">
                                 <p>
                                     <strong>Razorpay Order ID:</strong>{" "}
                                     {paymentModal.payment?.razorpayOrderId || "—"}

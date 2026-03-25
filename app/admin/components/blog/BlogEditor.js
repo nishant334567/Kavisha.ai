@@ -85,8 +85,8 @@ export default function BlogEditor({
       title={btnTitle}
       className={`p-2 rounded transition-colors ${
         active
-          ? "bg-gray-200 text-gray-900"
-          : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+          ? "bg-muted-bg text-foreground"
+          : "text-muted hover:bg-muted-bg hover:text-foreground"
       }`}
     >
       {children}
@@ -94,8 +94,8 @@ export default function BlogEditor({
   );
 
   return (
-    <div className="rounded-xl border border-gray-300 bg-white overflow-hidden">
-      <div className="flex flex-wrap items-center gap-1 border-b border-gray-200 bg-gray-50 px-3 py-2">
+    <div className="overflow-hidden rounded-xl border border-border bg-card">
+      <div className="flex flex-wrap items-center gap-1 border-b border-border bg-muted-bg px-3 py-2">
         <ToolbarButton
           onClick={() => editor.chain().focus().toggleBold().run()}
           active={editor.isActive("bold")}
@@ -154,13 +154,13 @@ export default function BlogEditor({
         <label
           className={`inline-flex items-center gap-1.5 p-2 rounded cursor-pointer transition-colors ${
             imageUploading
-              ? "text-[#2D545E]"
-              : "text-gray-500 hover:text-gray-800 hover:bg-gray-100"
+              ? "text-highlight"
+              : "text-muted hover:text-foreground hover:bg-card"
           }`}
         >
           {imageUploading ? (
             <span
-              className="inline-block w-4 h-4 border-2 border-gray-200 border-t-[#2D545E] rounded-full animate-spin"
+              className="inline-block h-4 w-4 animate-spin rounded-full border-2 border-border border-t-highlight"
               aria-hidden
             />
           ) : (

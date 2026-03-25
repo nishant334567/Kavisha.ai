@@ -14,10 +14,10 @@ import Link from "next/link";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 
 const CARD_HEADER_COLORS = [
-  "bg-[#c5e8e8]", // greenish-blue
-  "bg-[#f5f0e6]", // beige / pale yellow
-  "bg-[#e8e0f0]", // lavender
-  "bg-[#e2e6ec]", // bluish-gray
+  "bg-muted-bg",
+  "bg-background",
+  "bg-muted-bg",
+  "bg-background",
 ];
 
 function formatSessionDate(dateStr) {
@@ -80,7 +80,7 @@ function BookingCard({ booking, index }) {
     durationUnit === "Hours" ? `${duration} hr` : `${duration} min`;
 
   return (
-    <div className="rounded-xl border border-gray-200 bg-white shadow-sm overflow-hidden">
+    <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
       {/* Top section: colored header with title, subtitle, action icon, provider thumbnail */}
       <div
         className={`${headerColor} pt-5 pb-8 px-4 relative min-h-[100px]`}
@@ -88,40 +88,40 @@ function BookingCard({ booking, index }) {
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
             <div className="flex items-center gap-1">
-              <h2 className="text-xl font-bold text-gray-900 truncate">
+              <h2 className="truncate text-xl font-bold text-foreground">
                 {title}
               </h2>
               <button
                 type="button"
                 aria-label="Share or view"
-                className="shrink-0 p-0.5 text-gray-600 hover:text-gray-900"
+                className="shrink-0 p-0.5 text-muted hover:text-foreground"
               >
                 <ChevronRight className="w-5 h-5" />
               </button>
             </div>
             {subtitle ? (
-              <p className="text-sm text-gray-700 mt-0.5 truncate">
+              <p className="mt-0.5 truncate text-sm text-muted">
                 {subtitle}
               </p>
             ) : null}
           </div>
-          <div className="shrink-0 w-12 h-12 rounded-xl bg-white/80 border border-white shadow-sm overflow-hidden flex items-center justify-center -mb-6">
-            <User className="w-6 h-6 text-gray-500" />
+          <div className="-mb-6 flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl border border-border bg-card/80 shadow-sm">
+            <User className="h-6 w-6 text-muted" />
           </div>
         </div>
       </div>
 
       {/* Middle section: Payment (with green tint when paid), Duration, Mode */}
       <div className="px-4 pt-4 pb-3">
-        <div className="grid grid-cols-3 gap-2 items-center border-b border-gray-100 pb-3">
+        <div className="grid grid-cols-3 items-center gap-2 border-b border-border pb-3">
           <div
             className={
               booking.paymentStatus === "completed" && booking.status !== "cancelled"
-                ? "bg-green-50 rounded-lg px-3 py-2 -mx-1"
+                ? "-mx-1 rounded-lg bg-green-500/10 px-3 py-2"
                 : ""
             }
           >
-            <p className="text-sm font-medium text-gray-900">
+            <p className="text-sm font-medium text-foreground">
               Rs. {Math.round(booking.totalAmount || 0)}/-
             </p>
             <PaymentStatusPill
@@ -129,15 +129,15 @@ function BookingCard({ booking, index }) {
               paymentStatus={booking.paymentStatus}
             />
           </div>
-          <div className="text-sm text-gray-700">
+          <div className="text-sm text-muted">
             Duration: {displayDuration}
           </div>
-          <div className="text-sm text-gray-700">Mode: {mode}</div>
+          <div className="text-sm text-muted">Mode: {mode}</div>
         </div>
 
         {/* Bottom section: Session date, Time, Icons */}
         <div className="pt-3 space-y-2">
-          <div className="flex justify-between items-center text-sm text-gray-700">
+          <div className="flex items-center justify-between text-sm text-muted">
             <span>Session: {formatSessionDate(booking.date)}</span>
             <span>Time: {formatTime(booking.startTime)}</span>
           </div>
@@ -148,7 +148,7 @@ function BookingCard({ booking, index }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Join Google Meet"
-                className="p-1.5 rounded-md text-gray-400 hover:bg-gray-100 hover:text-gray-600 inline-flex items-center justify-center"
+                className="inline-flex items-center justify-center rounded-md p-1.5 text-muted hover:bg-muted-bg hover:text-foreground"
               >
                 <Link2 className="w-4 h-4" />
               </a>
@@ -185,15 +185,15 @@ export default function ServiceOrdersPage() {
   if (!user) {
     return (
       <main className="px-6 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        <h1 className="mb-6 text-2xl font-bold text-foreground">
           Booking history
         </h1>
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
-          <CalendarDays className="w-10 h-10 mx-auto text-gray-400 mb-3" />
-          <p className="text-gray-700 font-medium">
+        <div className="rounded-xl border border-border bg-muted-bg p-8 text-center">
+          <CalendarDays className="mx-auto mb-3 h-10 w-10 text-muted" />
+          <p className="font-medium text-foreground">
             Sign in to view your bookings
           </p>
-          <p className="text-sm text-gray-500 mt-1 mb-4">
+          <p className="mb-4 mt-1 text-sm text-muted">
             Your service bookings will appear here.
           </p>
           <button
@@ -211,11 +211,11 @@ export default function ServiceOrdersPage() {
   if (loading) {
     return (
       <main className="px-6 py-8">
-        <h1 className="text-2xl font-bold text-gray-900 mb-6">
+        <h1 className="mb-6 text-2xl font-bold text-foreground">
           Booking history
         </h1>
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
-          <p className="text-gray-500">Loading bookings…</p>
+        <div className="rounded-xl border border-border bg-muted-bg p-8 text-center">
+          <p className="text-muted">Loading bookings…</p>
         </div>
       </main>
     );
@@ -223,15 +223,15 @@ export default function ServiceOrdersPage() {
 
   return (
     <main className="px-6 py-8">
-      <h1 className="text-2xl font-bold text-gray-900 mb-6">
+      <h1 className="mb-6 text-2xl font-bold text-foreground">
         Booking history
       </h1>
 
       {bookings.length === 0 ? (
-        <div className="rounded-xl border border-gray-200 bg-gray-50 p-8 text-center">
-          <CalendarDays className="w-10 h-10 mx-auto text-gray-400 mb-3" />
-          <p className="text-gray-700 font-medium">No bookings yet</p>
-          <p className="text-sm text-gray-500 mt-1 mb-4">
+        <div className="rounded-xl border border-border bg-muted-bg p-8 text-center">
+          <CalendarDays className="mx-auto mb-3 h-10 w-10 text-muted" />
+          <p className="font-medium text-foreground">No bookings yet</p>
+          <p className="mb-4 mt-1 text-sm text-muted">
             Your service bookings will appear here.
           </p>
           <Link

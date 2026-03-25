@@ -20,16 +20,16 @@ export default function DocumentCard({
   const card = (
     <div
       onClick={() => onView(doc.docid)}
-      className="bg-blue-50 rounded-lg border border-blue-200 overflow-visible shadow-sm cursor-pointer hover:shadow-md transition-shadow"
+      className="cursor-pointer overflow-visible rounded-lg border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
     >
       <div className="px-4 py-3 flex items-center justify-between gap-2 relative">
-        <h3 className="font-semibold text-blue-900 text-sm min-w-0 truncate">
+        <h3 className="min-w-0 truncate text-sm font-semibold text-highlight">
           {doc?.title?.toUpperCase()}
         </h3>
         {folderName && folderName !== "Unfiled" && (
           <span
             onClick={(e) => e.stopPropagation()}
-            className="shrink-0 inline-flex items-center px-2 py-0.5 text-[10px] font-medium rounded-md border border-blue-200 bg-white text-blue-800 cursor-default"
+            className="inline-flex shrink-0 cursor-default items-center rounded-md border border-border bg-muted-bg px-2 py-0.5 text-[10px] font-medium text-muted"
           >
             {folderName}
           </span>
@@ -39,18 +39,18 @@ export default function DocumentCard({
             e.stopPropagation();
             setOpenMenuId(openMenuId === doc._id ? null : doc._id);
           }}
-          className="text-[#004A4E] hover:text-blue-800"
+          className="text-highlight hover:opacity-80"
         >
           <MoreVertical className="w-4 h-4" />
         </button>
         {openMenuId === doc._id && (
-          <div className="absolute right-0 top-10 z-50 bg-white rounded-lg shadow-lg border border-gray-200 py-1 min-w-[120px]">
+          <div className="absolute right-0 top-10 z-50 min-w-[120px] rounded-lg border border-border bg-card py-1 shadow-lg">
             <button
               onClick={(e) => {
                 e.stopPropagation();
                 onView(doc.docid);
               }}
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50"
+              className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted-bg"
             >
               View
             </button>
@@ -60,7 +60,7 @@ export default function DocumentCard({
                 onEdit(doc);
               }}
               disabled={trainingLocked}
-              className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 disabled:text-gray-400 disabled:bg-transparent disabled:cursor-not-allowed"
+              className="w-full px-4 py-2 text-left text-sm text-foreground hover:bg-muted-bg disabled:cursor-not-allowed disabled:bg-transparent disabled:text-muted"
             >
               {trainingLocked ? "Edit disabled" : "Edit"}
             </button>
@@ -76,13 +76,13 @@ export default function DocumentCard({
           </div>
         )}
       </div>
-      <div className="p-4 min-h-[200px] bg-white mx-2 mb-2 rounded">
+      <div className="mx-2 mb-2 min-h-[200px] rounded bg-muted-bg p-4">
         {loadingDocumentId === doc.docid ? (
           <div className="flex items-center justify-center h-full">
-            <div className="text-sm text-gray-500">Loading...</div>
+            <div className="text-sm text-muted">Loading...</div>
           </div>
         ) : (
-          <p className="text-sm text-gray-600 line-clamp-6">
+          <p className="line-clamp-6 text-sm text-muted">
             {doc.text?.substring(0, 200) || ""}
           </p>
         )}
@@ -95,12 +95,12 @@ export default function DocumentCard({
               checked={!!isSelected}
               onClick={(e) => e.stopPropagation()}
               onChange={(e) => onToggleSelect()}
-              className="shrink-0 rounded border-gray-300 text-[#242473] focus:ring-[#242473]"
+              className="shrink-0 rounded border-border text-highlight focus:ring-highlight"
             />
           )}
-          <span className="text-xs text-blue-900">You added</span>
+          <span className="text-xs text-muted">You added</span>
         </div>
-        <span className="text-xs text-blue-900">
+        <span className="text-xs text-muted">
           {formatDate(doc.createdAt)}
         </span>
       </div>

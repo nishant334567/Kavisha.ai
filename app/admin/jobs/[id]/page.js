@@ -31,8 +31,8 @@ export default function JobDetailPage() {
     })();
   }, [brand, params?.id]);
 
-  if (loading) return <div className="p-6 text-[#004A4E]">Loading…</div>;
-  if (!job) return <div className="p-6 text-gray-500">Job not found.</div>;
+  if (loading) return <div className="p-6 text-highlight">Loading…</div>;
+  if (!job) return <div className="p-6 text-muted">Job not found.</div>;
 
   return (
     <div className="max-w-2xl mx-auto px-4 py-6">
@@ -40,19 +40,19 @@ export default function JobDetailPage() {
         <button
           type="button"
           onClick={() => router.back()}
-          className="p-2 rounded-lg hover:bg-[#004A4E]/10 text-[#004A4E]"
+          className="rounded-lg p-2 text-highlight hover:bg-[#004A4E]/10"
           aria-label="Back"
         >
           <ArrowLeft className="w-5 h-5" />
         </button>
-        <h1 className="text-xl font-semibold text-[#004A4E]">Job detail</h1>
+        <h1 className="text-xl font-semibold text-highlight">Job detail</h1>
       </div>
 
-      <div className="p-4 rounded-xl border border-[#004A4E]/20 bg-white space-y-4 mb-6">
+      <div className="mb-6 space-y-4 rounded-xl border border-border bg-card p-4">
         <div>
-          <h2 className="text-lg font-medium text-[#004A4E]">{job.title}</h2>
+          <h2 className="text-lg font-medium text-highlight">{job.title}</h2>
           {job.description ? (
-            <p className="text-sm text-gray-600 mt-1 whitespace-pre-wrap">{job.description}</p>
+            <p className="mt-1 whitespace-pre-wrap text-sm text-muted">{job.description}</p>
           ) : null}
         </div>
 
@@ -60,15 +60,15 @@ export default function JobDetailPage() {
           href={job.jdLink}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center gap-2 text-sm text-[#004A4E] font-medium hover:underline"
+          className="flex items-center gap-2 text-sm font-medium text-highlight hover:underline"
         >
           <FileText className="w-4 h-4" /> View JD <ExternalLink className="w-3.5 h-3.5" />
         </a>
 
         {job.questions?.length > 0 ? (
           <div>
-            <h3 className="text-sm font-medium text-[#004A4E] mb-2">Questions ({job.questions.length})</h3>
-            <ul className="list-disc list-inside text-sm text-gray-600 space-y-1">
+            <h3 className="mb-2 text-sm font-medium text-highlight">Questions ({job.questions.length})</h3>
+            <ul className="list-inside list-disc space-y-1 text-sm text-muted">
               {job.questions.map((q, i) => (
                 <li key={i}>{q}</li>
               ))}
@@ -86,12 +86,12 @@ export default function JobDetailPage() {
               : `/admin/jobs/${params.id}/applications`
           )
         }
-        className="w-full flex items-center justify-between gap-2 p-4 rounded-xl border border-[#004A4E]/20 bg-white hover:bg-[#004A4E]/5 transition-colors text-left"
+        className="flex w-full items-center justify-between gap-2 rounded-xl border border-border bg-card p-4 text-left transition-colors hover:bg-muted-bg"
       >
-        <span className="flex items-center gap-2 text-[#004A4E] font-medium">
+        <span className="flex items-center gap-2 text-highlight font-medium">
           <Users className="w-5 h-5" /> View applicants
         </span>
-        <ArrowRight className="w-5 h-5 text-gray-400" />
+        <ArrowRight className="h-5 w-5 text-muted" />
       </button>
     </div>
   );

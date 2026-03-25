@@ -33,7 +33,7 @@ export default function CartPage() {
   if (!user) {
     content = (
       <div className="px-6 py-12 max-w-2xl mx-auto text-center">
-        <p className="text-gray-600 mb-4">Sign in to view your cart.</p>
+        <p className="mb-4 text-muted">Sign in to view your cart.</p>
         <button
           onClick={() => router.push("/")}
           className="px-4 py-2 rounded-lg bg-[#2b6a5b] text-white hover:bg-[#235a4d] transition-colors"
@@ -45,8 +45,8 @@ export default function CartPage() {
   } else if (items.length === 0) {
     content = (
       <div className="px-6 py-12 max-w-2xl mx-auto text-center">
-        <h1 className="text-xl font-bold text-gray-800 mb-2">Your cart is empty</h1>
-        <p className="text-gray-600 mb-4">Add products from the store.</p>
+        <h1 className="mb-2 text-xl font-bold text-foreground">Your cart is empty</h1>
+        <p className="mb-4 text-muted">Add products from the store.</p>
         <button
           onClick={() => router.push("/products")}
           className="px-4 py-2 rounded-lg bg-[#2b6a5b] text-white hover:bg-[#235a4d] transition-colors"
@@ -65,7 +65,7 @@ export default function CartPage() {
   if (!content) {
     content = (
       <div className="px-6 py-8 max-w-2xl mx-auto">
-        <h1 className="text-xl font-bold text-gray-800 mb-6">Cart</h1>
+        <h1 className="mb-6 text-xl font-bold text-foreground">Cart</h1>
         <div className="space-y-4">
           {items.map((item) => {
             const product = productMap[item.productId?.toString?.() || item.productId];
@@ -75,9 +75,9 @@ export default function CartPage() {
             return (
               <div
                 key={item.productId?.toString?.() || item.productId}
-                className="flex gap-4 p-4 rounded-xl border border-gray-200 bg-white"
+                className="flex gap-4 rounded-xl border border-border bg-card p-4"
               >
-                <div className="w-20 h-20 shrink-0 rounded-lg bg-gray-100 overflow-hidden">
+                <div className="h-20 w-20 shrink-0 overflow-hidden rounded-lg bg-muted-bg">
                   {imageUrl ? (
                     <img
                       src={imageUrl}
@@ -86,14 +86,14 @@ export default function CartPage() {
                       referrerPolicy="no-referrer"
                     />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center text-gray-400 text-xs">
+                    <div className="flex h-full w-full items-center justify-center text-xs text-muted">
                       No image
                     </div>
                   )}
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="font-medium text-gray-800 truncate">{name}</p>
-                  <p className="text-sm text-gray-600">
+                  <p className="truncate font-medium text-foreground">{name}</p>
+                  <p className="text-sm text-muted">
                     Rs. {Math.round(item.priceSnapshot || 0)}/- × {item.quantity}
                   </p>
                   <div className="flex items-center gap-2 mt-2">
@@ -103,7 +103,7 @@ export default function CartPage() {
                         updateQuantity(item.productId, Math.max(1, (item.quantity || 1) - 1))
                       }
                       disabled={loading}
-                      className="p-1 rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+                      className="rounded border border-border p-1 hover:bg-muted-bg disabled:opacity-50"
                     >
                       <Minus className="w-4 h-4" />
                     </button>
@@ -116,7 +116,7 @@ export default function CartPage() {
                         updateQuantity(item.productId, (item.quantity || 1) + 1)
                       }
                       disabled={loading}
-                      className="p-1 rounded border border-gray-300 hover:bg-gray-100 disabled:opacity-50"
+                      className="rounded border border-border p-1 hover:bg-muted-bg disabled:opacity-50"
                     >
                       <Plus className="w-4 h-4" />
                     </button>
@@ -132,7 +132,7 @@ export default function CartPage() {
                   </div>
                 </div>
                 <div className="shrink-0 text-right">
-                  <p className="font-semibold text-gray-800">
+                  <p className="font-semibold text-foreground">
                     Rs. {Math.round((item.priceSnapshot || 0) * (item.quantity || 0))}/-
                   </p>
                 </div>
@@ -140,10 +140,10 @@ export default function CartPage() {
             );
           })}
         </div>
-        <div className="mt-6 pt-4 border-t border-gray-200">
+        <div className="mt-6 border-t border-border pt-4">
           <div className="flex justify-between items-center">
-            <span className="font-bold text-gray-800">Total</span>
-            <span className="font-bold text-lg text-gray-800">
+            <span className="font-bold text-foreground">Total</span>
+            <span className="text-lg font-bold text-foreground">
               Rs. {Math.round(total)}/-
             </span>
           </div>
@@ -161,7 +161,7 @@ export default function CartPage() {
   }
 
   return (
-    <div className="min-h-screen bg-white flex justify-center">
+    <div className="flex min-h-screen justify-center bg-background text-foreground">
       <div className="w-full max-w-6xl flex min-h-screen relative">
         <div className="hidden md:block">
           <UserProductsSidebar />
@@ -182,10 +182,10 @@ export default function CartPage() {
           <button
             type="button"
             onClick={() => setMobileSidebarOpen(true)}
-            className="fixed left-0 top-16 z-40 md:hidden p-2 rounded-r-lg bg-white border border-l-0 border-gray-200 shadow-sm hover:bg-gray-50"
+            className="fixed left-0 top-16 z-40 rounded-r-lg border border-border border-l-0 bg-card p-2 shadow-sm hover:bg-muted-bg md:hidden"
             aria-label="Open panel"
           >
-            <PanelLeft className="w-5 h-5 text-gray-600" />
+            <PanelLeft className="h-5 w-5 text-muted" />
           </button>
         )}
         <main className="flex-1 min-w-0 overflow-auto">{content}</main>

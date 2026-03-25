@@ -43,21 +43,7 @@ export default function AdminNavbar() {
 
   const navOptions = [
     { name: "Home", path: `/admin/${brand?.subdomain}/v2` },
-    {
-      name: "Chat Requests",
-      path: `/admin/${brand?.subdomain}/chat-requests`,
-    },
-    {
-      name: "Community",
-      path: `/admin/${brand?.subdomain}/my-community`,
-    },
     { name: "My Services", path: `/admin/${brand?.subdomain}/my-services` },
-    ...(brand?.enableBooking ? [{ name: "Booking Services", path: `/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
-    ...(brand?.enableQuiz ? [{ name: "Quizzes/Survey", path: `/admin/quiz` }] : []),
-    ...(brand?.enableProducts ? [{ name: "Store", path: `/admin/products?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
-    ...(brand?.enableJobs ? [{ name: "My Jobs", path: `/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
-    ...(brand?.enableBlogs ? [{ name: "Blogs", path: `/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}` }] : []),
-    { name: "Links", path: `/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}` },
     { name: "Train My Avataar", path: `/admin/${brand?.subdomain}/train/v2` },
     { name: "Revenue", path: `/admin/${brand?.subdomain}/revenue` },
     { name: "My Profile", path: `/admin/${brand?.subdomain}/edit-profile` },
@@ -74,7 +60,7 @@ export default function AdminNavbar() {
     loadingPath === path ? "Opening..." : label;
   return (
     <>
-      <nav className="fixed top-0 left-0 right-0 w-full h-14 bg-white border-b border-gray-200 z-50 text-gray-700">
+      <nav className="fixed top-0 left-0 right-0 z-50 h-14 w-full border-b border-border bg-card text-muted">
         <div className="hidden px-4 h-full md:flex items-center justify-between font-akshar text-sm">
           <div className="hidden md:flex items-center gap-3">
             <div className="flex justify-between items-center">
@@ -86,120 +72,54 @@ export default function AdminNavbar() {
             </div>
             <button
               onClick={() => handleNavigate(`/admin/${brand?.subdomain}/v2`)}
-              className="uppercase tracking-wide hover:opacity-80 transition-opacity text-gray-700"
+              className="text-foreground uppercase tracking-wide transition-opacity hover:opacity-80"
             >
               {getNavLabel(`/admin/${brand?.subdomain}/v2`, "Home")}
             </button>
           </div>
           <button onClick={() => setShowNavoption(true)} className="md:hidden">
-            <Menu className="w-5 h-5 text-gray-700" />
+            <Menu className="h-5 w-5 text-foreground" />
           </button>
           <ul className="items-center gap-6 hidden md:flex">
             <li
-              className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/chat-requests") ? "font-semibold text-gray-900" : ""
-                }`}
-              onClick={() => handleNavigate(`/admin/${brand?.subdomain}/chat-requests`)}
-            >
-              {getNavLabel(`/admin/${brand?.subdomain}/chat-requests`, "CHAT REQUESTS")}
-            </li>
-            <li
-              className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/my-community") ? "font-semibold text-gray-900" : ""
-                }`}
-              onClick={() => handleNavigate(`/admin/${brand?.subdomain}/my-community`)}
-            >
-              {getNavLabel(`/admin/${brand?.subdomain}/my-community`, "COMMUNITY")}
-            </li>
-            <li
-              className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/my-services") ? "font-semibold text-gray-900" : ""
+              className={`cursor-pointer uppercase tracking-wide text-muted hover:text-foreground transition-colors ${pathname?.includes("/my-services") ? "font-semibold text-foreground" : ""
                 }`}
               onClick={() => handleNavigate(`/admin/${brand?.subdomain}/my-services`)}
             >
               {getNavLabel(`/admin/${brand?.subdomain}/my-services`, "MY SERVICES")}
             </li>
-            {brand?.enableBooking && (
-              <li
-                className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/admin/services") ? "font-semibold text-gray-900" : ""
-                  }`}
-                onClick={() => handleNavigate(`/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
-              >
-                {getNavLabel(`/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}`, "BOOKING SERVICES")}
-              </li>
-            )}
-            {brand?.enableQuiz && (
-              <li
-                className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname === "/admin/quiz" || pathname?.startsWith("/admin/quiz/") ? "font-semibold text-gray-900" : ""
-                  }`}
-                onClick={() => handleNavigate(`/admin/quiz`)}
-              >
-                {getNavLabel(`/admin/quiz`, "QUIZZES/SURVEY")}
-              </li>
-            )}
-            {brand?.enableProducts && (
-              <li
-                className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/admin/products") ? "font-semibold text-gray-900" : ""
-                  }`}
-                onClick={() => handleNavigate(`/admin/products?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
-              >
-                {getNavLabel(`/admin/products?subdomain=${encodeURIComponent(brand?.subdomain || "")}`, "STORE")}
-              </li>
-            )}
-            {brand?.enableJobs && (
-              <li
-                className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/jobs") ? "font-semibold text-gray-900" : ""
-                  }`}
-                onClick={() => handleNavigate(`/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
-              >
-                {getNavLabel(`/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`, "MY JOBS")}
-              </li>
-            )}
-            {brand?.enableBlogs && (
-              <li
-                className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/blogs") ? "font-semibold text-gray-900" : ""
-                  }`}
-                onClick={() => handleNavigate(`/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
-              >
-                {getNavLabel(`/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`, "BLOGS")}
-              </li>
-            )}
             <li
-              className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/admin/links") ? "font-semibold text-gray-900" : ""
-                }`}
-              onClick={() => handleNavigate(`/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}`)}
-            >
-              {getNavLabel(`/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}`, "LINKS")}
-            </li>
-            <li
-              className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/train") ? "font-semibold text-gray-900" : ""
+              className={`cursor-pointer uppercase tracking-wide text-muted hover:text-foreground transition-colors ${pathname?.includes("/train") ? "font-semibold text-foreground" : ""
                 }`}
               onClick={() => handleNavigate(`/admin/${brand?.subdomain}/train/v2`)}
             >
               {getNavLabel(`/admin/${brand?.subdomain}/train/v2`, "TRAIN MY AVATAAR")}
             </li>
             <li
-              className={`cursor-pointer uppercase tracking-wide text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/revenue") ? "font-semibold text-gray-900" : ""
+              className={`cursor-pointer uppercase tracking-wide text-muted hover:text-foreground transition-colors ${pathname?.includes("/revenue") ? "font-semibold text-foreground" : ""
                 }`}
               onClick={() => handleNavigate(`/admin/${brand?.subdomain}/revenue`)}
             >
               {getNavLabel(`/admin/${brand?.subdomain}/revenue`, "REVENUE")}
             </li>
             <li
-              className={`cursor-pointer uppercase tracking-wide flex items-center gap-2 text-gray-700 hover:text-gray-900 transition-colors ${pathname?.includes("/edit-profile") ? "font-semibold text-gray-900" : ""
+              className={`cursor-pointer uppercase tracking-wide flex items-center gap-2 text-muted hover:text-foreground transition-colors ${pathname?.includes("/edit-profile") ? "font-semibold text-foreground" : ""
                 }`}
               onClick={() => handleNavigate(`/admin/${brand?.subdomain}/edit-profile`)}
             >
               {getNavLabel(`/admin/${brand?.subdomain}/edit-profile`, "MY PROFILE")}
             </li>
             <li className="relative" ref={settingDropdownRef}>
-              <button onClick={() => setShowsettingDropdown((prev) => !prev)} className="text-gray-600 hover:text-gray-900 transition-colors">
+              <button onClick={() => setShowsettingDropdown((prev) => !prev)} className="text-muted transition-colors hover:text-foreground">
                 <Settings className="w-4 h-4 stroke-2" />
               </button>
               {showSettingDropdown && (
-                <div className="absolute top-full right-0 mt-4 bg-white rounded-lg shadow-lg border border-gray-200 min-w-[180px] z-50">
+                <div className="absolute top-full right-0 z-50 mt-4 min-w-[180px] rounded-lg border border-border bg-card shadow-lg">
                   {settingOptions.map((item, index) => {
                     return (
                       <button
                         key={index}
-                        className="w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 first:rounded-t-lg last:rounded-b-lg transition-colors"
+                        className="w-full px-4 py-2 text-left text-sm text-foreground transition-colors first:rounded-t-lg last:rounded-b-lg hover:bg-muted-bg"
                         onClick={() => {
                           if (item?.name === "Sign Out") {
                             signOut();
@@ -217,10 +137,10 @@ export default function AdminNavbar() {
             </li>
           </ul>
         </div>
-        <div className="flex justify-between md:hidden px-3 py-4 border-b border-gray-200 bg-white">
+        <div className="flex justify-between border-b border-border bg-card px-3 py-4 md:hidden">
           <div
             onClick={() => setShowNavoption((prev) => !prev)}
-            className="text-gray-700"
+            className="text-foreground"
           >
             <Menu className="w-5 h-5" />
           </div>
@@ -234,14 +154,14 @@ export default function AdminNavbar() {
           </div> */}
         </div>
         {showNavoption && (
-          <div className="md:hidden z-50 w-full bg-white border-t border-gray-200 shadow-lg">
-            <div className="px-4 py-3 flex items-center justify-between border-b border-gray-200">
-              <h3 className="font-akshar text-lg font-semibold text-gray-900">
+          <div className="z-50 w-full border-t border-border bg-card shadow-lg md:hidden">
+            <div className="flex items-center justify-between border-b border-border px-4 py-3">
+              <h3 className="font-akshar text-lg font-semibold text-foreground">
                 Menu
               </h3>
               <button
                 onClick={() => setShowNavoption(false)}
-                className="text-gray-600 hover:text-gray-900 transition-colors"
+                className="text-muted transition-colors hover:text-foreground"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -254,9 +174,9 @@ export default function AdminNavbar() {
                     setShowNavoption(false);
                     handleNavigate(item.path, { closeMenu: true });
                   }}
-                  className={`w-full text-left px-4 py-3 font-akshar text-sm uppercase tracking-wide transition-colors border-b border-gray-100 ${pathname === item.path
-                    ? "bg-gray-50 text-gray-900 font-semibold"
-                    : "text-gray-700 hover:bg-gray-50"
+                  className={`w-full border-b border-border px-4 py-3 text-left font-akshar text-sm uppercase tracking-wide transition-colors ${pathname === item.path
+                    ? "bg-muted-bg text-foreground font-semibold"
+                    : "text-muted hover:bg-muted-bg hover:text-foreground"
                     }`}
                 >
                   {getNavLabel(item.path, item.name)}
@@ -266,7 +186,7 @@ export default function AdminNavbar() {
                 return (
                   <button
                     key={index}
-                    className="w-full text-left px-4 py-3 font-akshar text-sm uppercase tracking-wide transition-colors border-b border-gray-100 "
+                    className="w-full border-b border-border px-4 py-3 text-left font-akshar text-sm uppercase tracking-wide text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
                     onClick={() => {
                       setShowsettingDropdown(false);
                       if (item?.name === "Sign Out") {

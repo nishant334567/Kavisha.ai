@@ -176,11 +176,11 @@ export default function EmailModal({ onClose, toEmails = [], brand, logoUrl }) {
   };
 
   return (
-    <div className="fixed inset-0 bg-white z-50 flex flex-col">
+    <div className="fixed inset-0 z-50 flex flex-col bg-background text-foreground">
       {step === "compose" && (
         <>
-          <header className="flex-shrink-0 flex items-center justify-between px-6 py-4 border-b border-gray-200">
-            <div className="flex items-center gap-2 text-sm text-gray-600">
+          <header className="flex flex-shrink-0 items-center justify-between border-b border-border bg-card px-6 py-4">
+            <div className="flex items-center gap-2 text-sm text-muted">
               <span className="w-2 h-2 rounded-full bg-emerald-500" aria-hidden />
               <span>Saved</span>
             </div>
@@ -196,7 +196,7 @@ export default function EmailModal({ onClose, toEmails = [], brand, logoUrl }) {
               <button
                 type="button"
                 onClick={handlePreview}
-                className="px-4 py-2 rounded-lg bg-blue-100 text-blue-800 text-sm font-medium hover:bg-blue-200"
+                className="rounded-lg bg-muted-bg px-4 py-2 text-sm font-medium text-highlight hover:bg-card"
               >
                 Preview
               </button>
@@ -223,7 +223,7 @@ export default function EmailModal({ onClose, toEmails = [], brand, logoUrl }) {
 
       {step === "confirm" && (
         <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/50">
-          <div className="bg-white rounded-lg shadow-xl w-full max-w-lg max-h-[85vh] min-h-0 flex flex-col overflow-hidden">
+          <div className="flex min-h-0 max-h-[85vh] w-full max-w-lg flex-col overflow-hidden rounded-lg border border-border bg-card shadow-xl">
             <EmailConfirmRecipients
               recipients={recipients}
               selectedEmails={selectedEmails}

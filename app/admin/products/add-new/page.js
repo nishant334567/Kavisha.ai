@@ -7,8 +7,8 @@ import { Plus, X, Loader2 } from "lucide-react";
 
 const MAX_IMAGES = 5;
 const INPUT_CLASS =
-  "w-full px-3 py-2.5 border border-gray-300 rounded-lg text-gray-900 placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/30 focus:border-[#2D545E]";
-const LABEL_CLASS = "block text-sm font-medium text-gray-800 mb-1.5";
+  "w-full rounded-lg border border-border bg-input px-3 py-2.5 text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30";
+const LABEL_CLASS = "mb-1.5 block text-sm font-medium text-foreground";
 
 function FormField({ id, label, required, children }) {
   return (
@@ -209,7 +209,7 @@ export default function AddProductPage() {
 
   return (
     <div className="px-8 py-8 max-w-2xl">
-      <h1 className="text-xl font-bold text-gray-900 mb-8">Add a product</h1>
+      <h1 className="mb-8 text-xl font-bold text-foreground">Add a product</h1>
 
       <form className="space-y-6" onSubmit={handleSubmit}>
         <FormField id="product-name" label="Product name" required>
@@ -271,7 +271,7 @@ export default function AddProductPage() {
                 name="productType"
                 checked={form.productType === "physical"}
                 onChange={() => setForm((p) => ({ ...p, productType: "physical" }))}
-                className="rounded border-gray-300"
+                className="rounded border-border bg-input text-ring"
               />
               <span>Physical</span>
             </label>
@@ -281,7 +281,7 @@ export default function AddProductPage() {
                 name="productType"
                 checked={form.productType === "digital"}
                 onChange={() => setForm((p) => ({ ...p, productType: "digital" }))}
-                className="rounded border-gray-300"
+                className="rounded border-border bg-input text-ring"
               />
               <span>Digital (customer gets download links by email after payment)</span>
             </label>
@@ -293,7 +293,7 @@ export default function AddProductPage() {
             <label className={LABEL_CLASS}>Digital files (PDF, MP4, WAV, ZIP — max 100MB each)</label>
             <ul className="space-y-2 mb-2">
               {form.digitalFiles.map((f, i) => (
-                <li key={i} className="flex items-center justify-between py-2 px-3 bg-gray-50 rounded-lg text-sm">
+                <li key={i} className="flex items-center justify-between rounded-lg bg-muted-bg px-3 py-2 text-sm text-foreground">
                   <span className="truncate">{f.filename}</span>
                   <button
                     type="button"
@@ -310,7 +310,7 @@ export default function AddProductPage() {
               type="button"
               onClick={() => digitalFileInputRef.current?.click()}
               disabled={uploadingDigital}
-              className="inline-flex items-center gap-2 px-3 py-2 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 hover:bg-gray-50 disabled:opacity-50"
+              className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-muted-bg disabled:opacity-50"
             >
               {uploadingDigital ? <Loader2 className="w-4 h-4 animate-spin" /> : <Plus className="w-4 h-4" />}
               Add file
@@ -333,7 +333,7 @@ export default function AddProductPage() {
             {form.images.map((url, i) => (
               <div
                 key={url}
-                className="relative w-20 h-20 rounded-lg overflow-hidden border border-gray-200"
+                className="relative h-20 w-20 overflow-hidden rounded-lg border border-border"
               >
                 <img
                   src={url}
@@ -362,7 +362,7 @@ export default function AddProductPage() {
                 type="button"
                 onClick={() => fileInputRef.current?.click()}
                 disabled={uploading}
-                className="w-20 h-20 flex items-center justify-center border-2 border-dashed border-gray-300 rounded-lg text-gray-400 hover:border-[#2D545E] hover:text-[#2D545E] transition-colors disabled:opacity-50"
+                className="flex h-20 w-20 items-center justify-center rounded-lg border-2 border-dashed border-border text-muted transition-colors hover:border-[#2D545E] hover:text-[#2D545E] disabled:opacity-50"
               >
                 {uploading ? (
                   <Loader2 className="w-6 h-6 animate-spin" />
@@ -410,7 +410,7 @@ export default function AddProductPage() {
 
         <div>
           <label className={LABEL_CLASS}>Price after discount</label>
-          <p className="text-gray-900 font-medium">
+          <p className="font-medium text-foreground">
             Rs. {priceAfterDiscount.toFixed(2)}
           </p>
         </div>

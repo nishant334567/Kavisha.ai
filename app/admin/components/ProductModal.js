@@ -153,12 +153,12 @@ export default function ProductModal({ isOpen, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center md:bg-black md:bg-opacity-50">
-      <div className="bg-white shadow-xl w-full h-full md:rounded-2xl md:max-w-2xl md:mx-4 md:max-h-[90vh] md:h-auto overflow-y-auto">
+      <div className="h-full w-full overflow-y-auto bg-card text-foreground shadow-xl md:mx-4 md:h-auto md:max-h-[90vh] md:max-w-2xl md:rounded-2xl">
         {/* Header */}
         <div className="relative px-6 pt-3 pb-4">
           <button
             onClick={onClose}
-            className="absolute top-4 right-4 text-gray-400 hover:text-gray-600 transition-colors"
+            className="absolute right-4 top-4 text-muted transition-colors hover:text-foreground"
           >
             <X className="w-5 h-5" />
           </button>
@@ -166,7 +166,7 @@ export default function ProductModal({ isOpen, onClose }) {
 
         {/* Title */}
         <div className="text-center pb-6">
-          <h2 className="text-xl font-semibold text-[#4D5495]">
+          <h2 className="text-xl font-semibold text-highlight">
             Add a Product
           </h2>
         </div>
@@ -175,7 +175,7 @@ export default function ProductModal({ isOpen, onClose }) {
           {/* Form Fields - Inline Layout */}
           <div className="space-y-4">
             <div className="flex items-center">
-              <label className="w-28 text-sm text-gray-600 flex-shrink-0">
+              <label className="w-28 flex-shrink-0 text-sm text-muted">
                 Product name:
               </label>
               <input
@@ -184,11 +184,11 @@ export default function ProductModal({ isOpen, onClose }) {
                 onChange={(e) =>
                   setFormData({ ...formData, name: e.target.value })
                 }
-                className="flex-1 px-3 py-2 border-b border-gray-300 focus:outline-none focus:border-[#4D5495]"
+                className="flex-1 border-b border-border bg-transparent px-3 py-2 text-foreground focus:border-ring focus:outline-none"
               />
             </div>
             <div className="flex items-center">
-              <label className="w-28 text-sm text-gray-600 flex-shrink-0">
+              <label className="w-28 flex-shrink-0 text-sm text-muted">
                 URL:
               </label>
               <input
@@ -197,11 +197,11 @@ export default function ProductModal({ isOpen, onClose }) {
                 onChange={(e) =>
                   setFormData({ ...formData, url: e.target.value })
                 }
-                className="flex-1 px-3 py-2 border-b border-gray-300 focus:outline-none focus:border-[#4D5495]"
+                className="flex-1 border-b border-border bg-transparent px-3 py-2 text-foreground focus:border-ring focus:outline-none"
               />
             </div>
             <div className="flex items-start">
-              <label className="w-28 text-sm text-gray-600 flex-shrink-0 pt-2">
+              <label className="w-28 flex-shrink-0 pt-2 text-sm text-muted">
                 Description:
               </label>
               <textarea
@@ -210,7 +210,7 @@ export default function ProductModal({ isOpen, onClose }) {
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                className="flex-1 px-3 py-2 border-b border-gray-300 focus:outline-none focus:border-[#4D5495] resize-none"
+                className="flex-1 resize-none border-b border-border bg-transparent px-3 py-2 text-foreground focus:border-ring focus:outline-none"
               />
             </div>
           </div>
@@ -220,7 +220,7 @@ export default function ProductModal({ isOpen, onClose }) {
             <button
               onClick={editingProduct ? handleUpdateProduct : handleAddProduct}
               disabled={loading}
-              className="px-8 py-1 border shadow-md text-gray-700 rounded hover:bg-gray-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              className="rounded border border-border px-8 py-1 text-foreground shadow-md transition-colors hover:bg-muted-bg disabled:cursor-not-allowed disabled:opacity-50"
             >
               {editingProduct ? "Update" : "Add"}
             </button>
@@ -229,19 +229,19 @@ export default function ProductModal({ isOpen, onClose }) {
           {/* My Products Section */}
           <div className="pt-4">
             <div className="flex items-center gap-3 mb-4">
-              <h3 className="text-lg font-semibold text-[#4D5495] whitespace-nowrap">
+              <h3 className="text-lg font-semibold text-highlight whitespace-nowrap">
                 My Products
               </h3>
-              <div className="flex-1 h-px bg-gray-300"></div>
+              <div className="h-px flex-1 bg-border"></div>
             </div>
 
             {/* Products List */}
             {loading && products.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="py-8 text-center text-muted">
                 Loading products...
               </div>
             ) : sortedProducts.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="py-8 text-center text-muted">
                 No products yet. Add your first product above.
               </div>
             ) : (
@@ -256,9 +256,9 @@ export default function ProductModal({ isOpen, onClose }) {
                       name="product"
                       checked={selectedProduct === product._id}
                       onChange={() => setSelectedProduct(product._id)}
-                      className="w-5 h-5 text-[#4D5495] border-2 border-gray-300"
+                      className="h-5 w-5 border-2 border-border text-ring"
                     />
-                    <span className="flex-1 text-gray-800">{product.name}</span>
+                    <span className="flex-1 text-foreground">{product.name}</span>
                     <button
                       onClick={() => handleModify(product)}
                       className="px-4 py-1.5 bg-[#4D5495] text-white text-sm rounded-xl hover:bg-[#4D5495] transition-colors"

@@ -62,7 +62,7 @@ export default function ShareButtons({ url, title, text, variant = "row" }) {
   }, [fullUrl]);
 
   const buttonClass =
-    "inline-flex items-center justify-center w-9 h-9 rounded-lg border border-gray-200 bg-white text-gray-600 hover:bg-gray-50 hover:text-gray-900 transition-colors";
+    "inline-flex items-center justify-center w-9 h-9 rounded-lg border border-border bg-card text-muted transition-colors hover:bg-muted-bg hover:text-foreground";
 
   if (variant === "dropdown") {
     return (
@@ -70,7 +70,7 @@ export default function ShareButtons({ url, title, text, variant = "row" }) {
         <button
           type="button"
           onClick={() => openShare("whatsapp", fullUrl, shareTitle, shareText)}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-muted-bg"
           aria-label="Share on WhatsApp"
         >
           <WhatsAppIcon className={iconClass} />
@@ -79,7 +79,7 @@ export default function ShareButtons({ url, title, text, variant = "row" }) {
         <button
           type="button"
           onClick={() => openShare("twitter", fullUrl, shareTitle, shareText)}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-muted-bg"
           aria-label="Share on X"
         >
           <Twitter className={iconClass} />
@@ -88,7 +88,7 @@ export default function ShareButtons({ url, title, text, variant = "row" }) {
         <button
           type="button"
           onClick={() => openShare("facebook", fullUrl, shareTitle, shareText)}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-muted-bg"
           aria-label="Share on Facebook"
         >
           <Facebook className={iconClass} />
@@ -97,7 +97,7 @@ export default function ShareButtons({ url, title, text, variant = "row" }) {
         <button
           type="button"
           onClick={() => openShare("linkedin", fullUrl, shareTitle, shareText)}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-muted-bg"
           aria-label="Share on LinkedIn"
         >
           <Linkedin className={iconClass} />
@@ -106,7 +106,7 @@ export default function ShareButtons({ url, title, text, variant = "row" }) {
         <button
           type="button"
           onClick={handleCopy}
-          className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm text-gray-700 hover:bg-gray-50 rounded-md"
+          className="flex w-full items-center gap-2 rounded-md px-3 py-2 text-left text-sm text-foreground hover:bg-muted-bg"
           aria-label="Copy link"
         >
           <Link2 className={iconClass} />
@@ -118,7 +118,7 @@ export default function ShareButtons({ url, title, text, variant = "row" }) {
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <span className="text-sm font-medium text-gray-500 mr-1 flex items-center gap-1">
+      <span className="mr-1 flex items-center gap-1 text-sm font-medium text-muted">
         <Share2 className="h-4 w-4" />
         Share:
       </span>
@@ -168,7 +168,7 @@ export default function ShareButtons({ url, title, text, variant = "row" }) {
         <Link2 className={iconClass} />
       </button>
       {copied && (
-        <span className="text-xs text-gray-500 ml-1">Copied!</span>
+        <span className="ml-1 text-xs text-muted">Copied!</span>
       )}
     </div>
   );

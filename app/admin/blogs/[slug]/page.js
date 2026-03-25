@@ -6,8 +6,6 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowLeft, Pencil, Trash2, Calendar } from "lucide-react";
 
-const TEAL = "#2D545E";
-
 export default function AdminBlogViewPage() {
   const router = useRouter();
   const params = useParams();
@@ -72,7 +70,7 @@ export default function AdminBlogViewPage() {
 
   if (loading) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8 text-[#2D545E]">
+      <div className="max-w-4xl mx-auto px-4 py-8 text-highlight">
         Loading…
       </div>
     );
@@ -80,12 +78,12 @@ export default function AdminBlogViewPage() {
 
   if (!post) {
     return (
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <p className="text-gray-600 mb-4">Post not found.</p>
+      <div className="mx-auto max-w-4xl bg-background px-4 py-8 text-foreground">
+        <p className="mb-4 text-muted">Post not found.</p>
         <button
           type="button"
           onClick={() => router.push(`/admin/blogs${qs}`)}
-          className="inline-flex items-center gap-2 text-[#2D545E] hover:underline"
+          className="inline-flex items-center gap-2 text-highlight hover:underline"
         >
           <ArrowLeft className="w-4 h-4" />
           Back to blogs
@@ -103,12 +101,12 @@ export default function AdminBlogViewPage() {
     : null;
 
   return (
-    <div className="max-w-4xl mx-auto px-4 py-6">
+    <div className="mx-auto max-w-4xl bg-background px-4 py-6 text-foreground">
       <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
         <button
           type="button"
           onClick={() => router.push(`/admin/blogs${qs}`)}
-          className="p-2 rounded-lg hover:bg-gray-100 text-gray-600"
+          className="rounded-lg p-2 text-muted hover:bg-muted-bg hover:text-foreground"
           aria-label="Back"
         >
           <ArrowLeft className="w-5 h-5" />
@@ -116,8 +114,7 @@ export default function AdminBlogViewPage() {
         <div className="flex items-center gap-2">
           <Link
             href={`/admin/blogs/${post.slug}/edit${qs}`}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border text-sm font-medium hover:bg-[#2D545E]/10 transition-colors"
-            style={{ borderColor: TEAL, color: TEAL, backgroundColor: `${TEAL}0D` }}
+            className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-highlight transition-colors hover:bg-muted-bg"
           >
             <Pencil className="w-4 h-4" />
             Edit
@@ -134,9 +131,9 @@ export default function AdminBlogViewPage() {
         </div>
       </div>
 
-      <article className="bg-white rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+      <article className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         {post.featuredImage && (
-          <div className="aspect-video w-full bg-gray-100">
+          <div className="aspect-video w-full bg-muted-bg">
             <img
               src={post.featuredImage}
               alt=""
@@ -148,32 +145,32 @@ export default function AdminBlogViewPage() {
         <div className="p-6 sm:p-8">
           <div className="flex flex-wrap items-center gap-2 mb-2">
             <span
-              className={`inline-flex px-2 py-0.5 rounded-full text-xs font-medium ${
+              className={`inline-flex rounded-full px-2 py-0.5 text-xs font-medium ${
                 status === "published"
                   ? "bg-green-100 text-green-800"
                   : status === "archived"
-                    ? "bg-gray-100 text-gray-600"
+                    ? "bg-muted-bg text-muted"
                     : "bg-amber-100 text-amber-800"
               }`}
             >
               {status}
             </span>
             {publishedAt && (
-              <span className="inline-flex items-center gap-1 text-sm text-gray-500">
+              <span className="inline-flex items-center gap-1 text-sm text-muted">
                 <Calendar className="w-3.5 h-3.5" />
                 {publishedAt}
               </span>
             )}
             {updatedAt && (
-              <span className="text-sm text-gray-500">Updated {updatedAt}</span>
+              <span className="text-sm text-muted">Updated {updatedAt}</span>
             )}
           </div>
-          <h1 className="text-3xl font-bold text-gray-900 mt-2">{post.title}</h1>
+          <h1 className="mt-2 text-3xl font-bold text-foreground">{post.title}</h1>
           {post.excerpt && (
-            <p className="text-lg text-gray-600 mt-2">{post.excerpt}</p>
+            <p className="mt-2 text-lg text-muted">{post.excerpt}</p>
           )}
           <div
-            className="prose prose-gray max-w-none mt-6"
+            className="prose prose-sm mt-6 max-w-none prose-headings:text-foreground prose-p:text-muted prose-strong:text-foreground prose-li:text-muted prose-a:text-highlight"
             dangerouslySetInnerHTML={{ __html: post.content || "" }}
           />
         </div>

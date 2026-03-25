@@ -17,7 +17,7 @@ import { ServiceSuccessCard } from "@/app/admin/components/PublishSuccessCard";
 import { BlogEditor } from "@/app/admin/components/blog";
 
 const INPUT_CLASS =
-  "w-full rounded-xl border border-gray-300 bg-white px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none focus:ring-2 focus:ring-[#2D545E]/25 focus:border-[#2D545E]";
+  "w-full rounded-xl border border-border bg-input px-4 py-3 text-base text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30";
 
 export default function EditServicePage() {
   const params = useParams();
@@ -181,12 +181,12 @@ export default function EditServicePage() {
   };
 
   if (loading) {
-    return <p className="text-sm text-gray-500">Loading service...</p>;
+    return <p className="text-sm text-muted">Loading service...</p>;
   }
 
   if (showSuccess) {
     return (
-      <div className="-mx-6 -my-8 px-6 py-8 md:px-10 bg-[#F3F3F3] min-h-[calc(100vh-4rem)]">
+      <div className="-mx-6 -my-8 min-h-[calc(100vh-4rem)] bg-background px-6 py-8 md:px-10">
         <ServiceSuccessCard
           serviceId={serviceId}
           serviceTitle={form.title}
@@ -198,8 +198,8 @@ export default function EditServicePage() {
   }
 
   return (
-    <div className="-mx-6 -my-8 px-6 py-8 md:px-10 bg-[#F3F3F3] min-h-[calc(100vh-4rem)]">
-      <h1 className="mb-8 text-3xl font-semibold tracking-wide text-[#111111]">
+    <div className="-mx-6 -my-8 min-h-[calc(100vh-4rem)] bg-background px-6 py-8 text-foreground md:px-10">
+      <h1 className="mb-8 text-3xl font-semibold tracking-wide text-foreground">
         Edit booking service
       </h1>
 
@@ -215,7 +215,7 @@ export default function EditServicePage() {
               <button
                 type="button"
                 onClick={() => imageInputRef.current?.click()}
-                className="group flex h-[220px] w-full items-center justify-center rounded-sm border border-gray-300 bg-[#D8D8D8] text-center"
+                className="group flex h-[220px] w-full items-center justify-center rounded-sm border border-border bg-muted-bg text-center"
               >
                 {imagePreview ? (
                   <img
@@ -224,7 +224,7 @@ export default function EditServicePage() {
                     className="h-full w-full object-cover"
                   />
                 ) : (
-                  <div className="flex flex-col items-center gap-3 text-gray-600">
+                  <div className="flex flex-col items-center gap-3 text-muted">
                     <ImagePlus className="h-7 w-7" />
                     <span className="text-lg tracking-wide">Add image</span>
                   </div>
@@ -233,7 +233,7 @@ export default function EditServicePage() {
 
               <div className="space-y-4">
                 <div className="relative">
-                  <TextCursorInput className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <TextCursorInput className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
                   <input
                     type="text"
                     value={form.title}
@@ -243,7 +243,7 @@ export default function EditServicePage() {
                   />
                 </div>
                 <div className="relative">
-                  <TextCursorInput className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <TextCursorInput className="pointer-events-none absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
                   <input
                     type="text"
                     value={form.subtitle}
@@ -264,7 +264,7 @@ export default function EditServicePage() {
             />
 
             <label className="block space-y-2">
-              <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
                 <FileText className="h-4 w-4" />
                 Description
               </span>
@@ -280,35 +280,35 @@ export default function EditServicePage() {
 
             <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
               <label className="space-y-2">
-                <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
                   <Clock3 className="h-4 w-4" />
                   Duration
                 </span>
-                <div className="grid grid-cols-[1fr_160px] rounded-xl border border-gray-300 bg-white">
+                <div className="grid grid-cols-[1fr_160px] rounded-xl border border-border bg-input">
                   <input
                     type="number"
                     min={1}
                     value={form.duration}
                     onChange={updateField("duration")}
                     placeholder="Duration"
-                    className="rounded-l-xl border-r border-gray-300 bg-transparent px-4 py-3 text-base text-gray-900 placeholder:text-gray-400 focus:outline-none"
+                    className="rounded-l-xl border-r border-border bg-transparent px-4 py-3 text-base text-foreground placeholder:text-muted focus:outline-none"
                   />
                   <div className="relative">
                     <select
                       value={form.durationUnit}
                       onChange={updateField("durationUnit")}
-                      className="h-full w-full appearance-none rounded-r-xl bg-transparent px-4 py-3 pr-10 text-base text-gray-900 focus:outline-none"
+                      className="h-full w-full appearance-none rounded-r-xl bg-transparent px-4 py-3 pr-10 text-base text-foreground focus:outline-none"
                     >
                       <option>Minutes</option>
                       <option>Hours</option>
                     </select>
-                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
+                    <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
                   </div>
                 </div>
               </label>
 
               <label className="space-y-2">
-                <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
                   <Clock3 className="h-4 w-4" />
                   Buffer time
                 </span>
@@ -323,7 +323,7 @@ export default function EditServicePage() {
               </label>
 
               <label className="space-y-2">
-                <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
                   <Monitor className="h-4 w-4" />
                   Mode
                 </span>
@@ -337,12 +337,12 @@ export default function EditServicePage() {
                     <option>Online (Zoom)</option>
                     <option>Offline (In person)</option>
                   </select>
-                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-500" />
+                  <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted" />
                 </div>
               </label>
 
               <label className="space-y-2">
-                <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+                <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
                   <Clock3 className="h-4 w-4" />
                   Price (Rs.)
                 </span>
@@ -358,7 +358,7 @@ export default function EditServicePage() {
             </div>
 
             <label className="block space-y-2">
-              <span className="inline-flex items-center gap-2 text-sm font-medium text-gray-700">
+              <span className="inline-flex items-center gap-2 text-sm font-medium text-foreground">
                 <FileText className="h-4 w-4" />
                 Cancellation policy (optional)
               </span>
@@ -375,7 +375,7 @@ export default function EditServicePage() {
               <button
                 type="submit"
                 disabled={saving || uploading}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#2D545E] px-6 py-2.5 text-base font-medium text-white hover:bg-[#24454E] disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-xl bg-highlight px-6 py-2.5 text-base font-medium text-white hover:opacity-90 disabled:opacity-60"
               >
                 <Save className="h-4 w-4" />
                 {saving ? "Saving..." : "Save changes"}

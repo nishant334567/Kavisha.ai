@@ -260,7 +260,7 @@ export default function Navbar() {
                     (brand?.subdomain
                       ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
                       : ""),
-                  "BLOGS",
+                  "BLOG",
                 )}
               </button>
             )}
@@ -571,7 +571,7 @@ export default function Navbar() {
                       (brand?.subdomain
                         ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
                         : ""),
-                    "Blogs",
+                    "Blog",
                   )}
                 </button>
               </li>

@@ -72,17 +72,17 @@ export default function Applications() {
                 <div className="flex items-start gap-3">
                     <Link
                         href={backHref}
-                        className="flex items-center justify-center w-9 h-9 rounded-full border border-gray-200 text-gray-600 hover:bg-gray-50 shrink-0"
+                        className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full border border-border text-muted hover:bg-muted-bg hover:text-foreground"
                         aria-label="Back"
                     >
                         <ArrowLeft className="w-5 h-5" />
                     </Link>
                     <div>
-                        <h1 className="text-xl sm:text-2xl font-semibold text-[#004A4E]">
+                        <h1 className="text-xl sm:text-2xl font-semibold text-highlight">
                             Job applications
                         </h1>
                         {job?.title && (
-                            <p className="text-sm text-gray-500 mt-0.5">
+                            <p className="mt-0.5 text-sm text-muted">
                                 Profile: {job.title}
                             </p>
                         )}
@@ -96,23 +96,23 @@ export default function Applications() {
                     onClick={() => setStarredOnly((prev) => !prev)}
                     className={`inline-flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium border transition-colors ${
                         starredOnly
-                            ? "bg-amber-50 border-amber-200 text-amber-800"
-                            : "bg-white border-gray-200 text-gray-600 hover:bg-gray-50"
+                            ? "border-amber-300/60 bg-amber-500/10 text-amber-800 dark:text-amber-200"
+                            : "border-border bg-card text-muted hover:bg-muted-bg"
                     }`}
                 >
-                    <Star className={`w-4 h-4 shrink-0 ${starredOnly ? "fill-amber-400 text-amber-500" : "text-gray-400"}`} />
+                    <Star className={`h-4 w-4 shrink-0 ${starredOnly ? "fill-amber-400 text-amber-500" : "text-muted"}`} />
                     Starred only
                 </button>
                 {statusCategories.length > 0 && (
                 <div className="flex items-center gap-2">
-                    <label htmlFor="status-filter" className="text-sm font-medium text-gray-700 shrink-0">
+                    <label htmlFor="status-filter" className="shrink-0 text-sm font-medium text-foreground">
                         Filter by status
                     </label>
                     <select
                         id="status-filter"
                         value={statusFilter}
                         onChange={(e) => setStatusFilter(e.target.value)}
-                        className="border border-gray-300 rounded-lg px-3 py-2 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-[#004A4E]/30 min-w-[160px]"
+                        className="min-w-[160px] rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
                     >
                         <option value="">All</option>
                         {statusCategories.map((cat) => (
@@ -123,7 +123,7 @@ export default function Applications() {
                 </div>
                 )}
                 {(statusFilter || starredOnly) && (
-                    <span className="text-sm text-gray-500">
+                    <span className="text-sm text-muted">
                         {filteredApplications.length} of {applications.length} shown
                     </span>
                 )}

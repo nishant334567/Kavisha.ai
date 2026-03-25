@@ -82,20 +82,20 @@ export default function DocumentUploadCard({
       />
       <div
         key={documentData._id}
-        className="rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-shadow hover:shadow-md"
+        className="rounded-xl border border-border bg-card p-5 text-foreground shadow-sm transition-shadow hover:shadow-md"
       >
         <div className="mb-3 flex items-start justify-between gap-3">
           <div className="flex-1">
             {documentData.title && (
               <div className="mb-1">
-                <span className="inline-flex items-center rounded-full bg-green-50 px-3 py-1 text-xs font-semibold text-green-700">
+                <span className="inline-flex items-center rounded-full bg-green-500/10 px-3 py-1 text-xs font-semibold text-green-700 dark:text-green-300">
                   📄 {documentData.title}
                 </span>
               </div>
             )}
 
-            <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] text-gray-500">
-              <span className="font-mono text-[#004A4E]">
+            <div className="mb-1 flex flex-wrap items-center gap-2 text-[11px] text-muted">
+              <span className="font-mono text-highlight">
                 ID: {documentData.docid}
               </span>
               <span>
@@ -129,7 +129,7 @@ export default function DocumentUploadCard({
           <div className="flex items-start gap-2">
             <button
               onClick={toggleShowAllChunks}
-              className="rounded-full border border-blue-100 px-3 py-1 text-xs font-medium text-[#004A4E] hover:bg-blue-50"
+              className="rounded-full border border-border px-3 py-1 text-xs font-medium text-highlight hover:bg-muted-bg"
             >
               Show all chunks
             </button>
@@ -139,7 +139,7 @@ export default function DocumentUploadCard({
                 {/* <select
               value={chunkSize || documentData?.chunkSize || 200}
               onChange={(e) => setChunksize(parseInt(e.target.value))}
-              className="px-3 py-1.5 text-xs border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-white"
+              className="rounded-md border border-border bg-input px-3 py-1.5 text-xs text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
             >
               {[150, 200, 250, 300, 350, 400, 450, 500, 550, 600].map(
                 (size) => (
@@ -153,7 +153,7 @@ export default function DocumentUploadCard({
                   <button
                     onClick={handleSaveDoc}
                     disabled={saving}
-                    className="px-4 py-1.5 text-xs font-medium text-white bg-[#004A4E] rounded-md hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors flex items-center gap-1.5"
+                    className="flex items-center gap-1.5 rounded-md bg-highlight px-4 py-1.5 text-xs font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
                     title="Save changes"
                   >
                     {saving ? (
@@ -175,7 +175,7 @@ export default function DocumentUploadCard({
                       //   setChunksize(documentData?.chunkSize);
                     }}
                     disabled={saving}
-                    className="px-4 py-1.5 text-xs font-medium text-gray-700 bg-gray-100 rounded-md hover:bg-gray-200 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
+                    className="rounded-md bg-muted-bg px-4 py-1.5 text-xs font-medium text-foreground transition-colors hover:bg-background disabled:cursor-not-allowed disabled:opacity-50"
                     title="Cancel editing"
                   >
                     Cancel
@@ -186,14 +186,14 @@ export default function DocumentUploadCard({
               <div className="flex gap-1.5">
                 <button
                   onClick={() => onDelete && onDelete(doc)}
-                  className="group rounded-md p-1.5 transition-colors hover:bg-red-50"
+                  className="group rounded-md p-1.5 transition-colors hover:bg-muted-bg"
                   title="Delete document"
                 >
                   <Trash2 className="h-4 w-4 opacity-70 group-hover:opacity-100 text-red-600" />
                 </button>
                 <button
                   onClick={() => handleEditDoc(documentData._id)}
-                  className="rounded-md bg-blue-50 px-3 py-1.5 text-xs font-medium text-[#004A4E] transition-colors hover:bg-blue-100"
+                  className="rounded-md bg-muted-bg px-3 py-1.5 text-xs font-medium text-highlight transition-colors hover:bg-background"
                   title="Edit document"
                 >
                   Edit
@@ -204,16 +204,16 @@ export default function DocumentUploadCard({
         </div>
 
         {/* Content */}
-        <div className="mt-3 max-h-[260px] overflow-y-auto border-t border-gray-100 pt-3">
+        <div className="mt-3 max-h-[260px] overflow-y-auto border-t border-border pt-3">
           {isEditing ? (
             <textarea
-              className="w-full"
+              className="w-full rounded-lg border border-border bg-input px-3 py-2 text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
               value={editedDoctext}
               rows={4}
               onChange={(e) => setEditedDoctext(e.target.value)}
             />
           ) : (
-            <p className="text-sm leading-relaxed text-gray-700 whitespace-pre-line">
+            <p className="whitespace-pre-line text-sm leading-relaxed text-foreground">
               {documentData?.text?.length > 400 &&
               !expandedDocs[documentData.docid]
                 ? `${documentData.text.slice(0, 400)}...`
@@ -224,7 +224,7 @@ export default function DocumentUploadCard({
         {documentData?.text?.length > 400 && (
           <button
             onClick={() => toggleReadMore(documentData.docid)}
-            className="mt-2 text-xs text-[#004A4E] hover:underline"
+            className="mt-2 text-xs text-highlight hover:underline"
           >
             {expandedDocs[documentData.docid] ? "Show less" : "Show more"}
           </button>

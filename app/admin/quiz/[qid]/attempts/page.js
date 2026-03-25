@@ -71,23 +71,23 @@ export default function QuizAttemptsPage() {
   };
 
   return (
-    <div className="min-h-screen bg-white pt-20 md:pt-24 pb-8">
+    <div className="min-h-screen bg-background pt-20 pb-8 text-foreground md:pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Header */}
         <div className="mb-6">
           <button
             onClick={() => router.push("/admin/quiz")}
-            className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6 text-sm font-medium font-fredoka group"
+            className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-fredoka"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back to quizzes
           </button>
 
           <div className="mb-6">
-            <h1 className="text-3xl font-semibold text-[#264653] font-fredoka mb-2">
+            <h1 className="mb-2 text-3xl font-semibold text-highlight font-fredoka">
               Quiz attempts
             </h1>
-            <p className="text-sm text-[#264653] font-fredoka">
+            <p className="text-sm text-muted font-fredoka">
               {quiz?.title || "Loading..."}
             </p>
           </div>
@@ -95,12 +95,12 @@ export default function QuizAttemptsPage() {
 
         {/* Attempts by User */}
         {attemptsByUser.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
-            <Users className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg font-medium mb-2 font-fredoka">
+          <div className="rounded-xl border border-border bg-card py-16 text-center shadow-sm">
+            <Users className="mx-auto mb-4 h-12 w-12 text-muted" />
+            <p className="mb-2 text-lg font-medium text-foreground font-fredoka">
               No attempts yet
             </p>
-            <p className="text-gray-400 text-sm font-fredoka">
+            <p className="text-sm text-muted font-fredoka">
               Users haven't attempted this quiz yet
             </p>
           </div>
@@ -109,24 +109,24 @@ export default function QuizAttemptsPage() {
             {attemptsByUser.map((userGroup) => (
               <div
                 key={userGroup.user.id}
-                className="bg-white rounded-xl shadow-sm border border-gray-200 p-6"
+                className="rounded-xl border border-border bg-card p-6 shadow-sm"
               >
                 {/* User Header */}
-                <div className="flex items-center gap-3 mb-4 pb-4 border-b border-gray-200">
-                  <div className="w-10 h-10 rounded-full bg-gray-200 flex items-center justify-center">
-                    <span className="text-gray-600 font-semibold text-sm font-fredoka">
+                <div className="mb-4 flex items-center gap-3 border-b border-border pb-4">
+                  <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted-bg">
+                    <span className="text-sm font-semibold text-muted font-fredoka">
                       {userGroup.user.name?.charAt(0)?.toUpperCase() || "U"}
                     </span>
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-[#264653] font-fredoka">
+                    <h3 className="font-semibold text-foreground font-fredoka">
                       {userGroup.user.name || "Unknown User"}
                     </h3>
-                    <p className="text-sm text-gray-600 font-fredoka">
+                    <p className="text-sm text-muted font-fredoka">
                       {userGroup.user.email}
                     </p>
                   </div>
-                  <div className="text-sm text-gray-600 font-fredoka">
+                  <div className="text-sm text-muted font-fredoka">
                     {userGroup.attempts.length}{" "}
                     {userGroup.attempts.length === 1 ? "Attempt" : "Attempts"}
                   </div>
@@ -146,23 +146,23 @@ export default function QuizAttemptsPage() {
                             ? () => router.push(`/admin/quiz/${qid}/attempts/${attempt.id}`)
                             : undefined
                         }
-                        className={`border rounded-lg p-4 flex items-start justify-between gap-4 ${
+                        className={`flex items-start justify-between gap-4 rounded-lg border p-4 ${
                           isCompleted
-                            ? "border-green-300 bg-green-50 cursor-pointer hover:bg-green-100/80 transition-colors"
+                            ? "cursor-pointer border-green-500/40 bg-card transition-colors hover:bg-muted-bg"
                             : isInProgress
-                              ? "border-yellow-300 bg-yellow-50 cursor-default"
-                              : "border-gray-200 bg-gray-50 cursor-default"
+                              ? "cursor-default border-amber-500/40 bg-card"
+                              : "cursor-default border-border bg-card"
                         }`}
                       >
                         {/* Col 1: Quiz Title */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-gray-900 font-fredoka">
+                          <p className="text-sm font-medium text-foreground font-fredoka">
                             {quiz?.title || "Quiz title"}
                           </p>
                         </div>
 
                         {/* Col 2: Started, Completed, Time taken (below) */}
-                        <div className="flex-1 min-w-0 text-sm text-gray-600 font-fredoka space-y-0.5">
+                        <div className="min-w-0 flex-1 space-y-0.5 text-sm text-muted font-fredoka">
                           <div>Started: {formatDateTime(attempt.startedAt)}</div>
                           {attempt.completedAt && (
                             <div>Completed: {formatDateTime(attempt.completedAt)}</div>
@@ -177,12 +177,12 @@ export default function QuizAttemptsPage() {
                         {/* Col 3: Status */}
                         <div className="flex-shrink-0">
                           <span
-                            className={`px-3 py-1 text-xs font-semibold rounded-full whitespace-nowrap font-fredoka ${
+                            className={`rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap font-fredoka ${
                               isCompleted
                                 ? "bg-green-100 text-green-700"
                                 : isInProgress
                                   ? "bg-yellow-100 text-yellow-700"
-                                  : "bg-gray-100 text-gray-700"
+                                  : "bg-muted-bg text-foreground"
                             }`}
                           >
                             {isCompleted

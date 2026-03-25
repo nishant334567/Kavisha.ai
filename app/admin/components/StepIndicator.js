@@ -11,7 +11,7 @@ export default function StepIndicator({ steps, currentStep }) {
                 className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold transition-all font-fredoka ${
                   currentStep >= step.number
                     ? "bg-[#264653] text-white"
-                    : "bg-gray-200 text-gray-600"
+                    : "bg-muted-bg text-muted"
                 }`}
               >
                 {step.number}
@@ -19,8 +19,8 @@ export default function StepIndicator({ steps, currentStep }) {
               <p
                 className={`mt-2 text-xs font-medium font-fredoka ${
                   currentStep >= step.number
-                    ? "text-[#264653]"
-                    : "text-gray-500"
+                    ? "text-highlight"
+                    : "text-muted"
                 }`}
               >
                 {step.title}
@@ -31,7 +31,7 @@ export default function StepIndicator({ steps, currentStep }) {
                 className={`h-0.5 flex-1 mx-2 ${
                   currentStep > step.number
                     ? "bg-[#264653]"
-                    : "bg-gray-200"
+                    : "bg-border"
                 }`}
               />
             )}

@@ -47,7 +47,7 @@ export default function Products() {
             ) : (
                 <ul className="grid list-none grid-cols-1 gap-4 p-0 sm:grid-cols-2 sm:gap-5 lg:grid-cols-3">
                     {products.map((product) => (
-                        <li key={product._id} className="min-w-0">
+                        <li key={product._id} className="min-w-0 h-full">
                             <ProductCardUser product={product} />
                         </li>
                     ))}

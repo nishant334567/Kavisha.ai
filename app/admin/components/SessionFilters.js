@@ -9,18 +9,18 @@ export default function SessionFilters({ filters, onFilterChange }) {
   };
 
   return (
-    <div className="bg-gray-50 rounded-lg p-4 mb-4">
-      <h3 className="font-medium text-gray-800 mb-3">Filters</h3>
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+    <div className="mb-4 rounded-lg border border-border bg-card p-4 text-foreground">
+      <h3 className="mb-3 font-medium text-foreground">Filters</h3>
+      <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
         {/* Log Count Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-foreground">
             Log Count
           </label>
           <select
             value={filters.logCount}
             onChange={(e) => handleFilterChange("logCount", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
           >
             <option value="all">All</option>
             <option value="0">No logs</option>
@@ -33,13 +33,13 @@ export default function SessionFilters({ filters, onFilterChange }) {
 
         {/* Role Type Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-foreground">
             Role Type
           </label>
           <select
             value={filters.roleType}
             onChange={(e) => handleFilterChange("roleType", e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
           >
             <option value="all">All Roles</option>
             <option value="job_seeker">Job Seeker</option>
@@ -51,7 +51,7 @@ export default function SessionFilters({ filters, onFilterChange }) {
 
         {/* Completion Status Filter */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="mb-1 block text-sm font-medium text-foreground">
             Status
           </label>
           <select
@@ -59,7 +59,7 @@ export default function SessionFilters({ filters, onFilterChange }) {
             onChange={(e) =>
               handleFilterChange("completionStatus", e.target.value)
             }
-            className="w-full px-3 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full rounded-md border border-border bg-input px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30"
           >
             <option value="all">All Status</option>
             <option value="completed">Completed</option>
@@ -77,7 +77,7 @@ export default function SessionFilters({ filters, onFilterChange }) {
                 completionStatus: "all",
               })
             }
-            className="w-full px-3 py-2 bg-gray-200 text-gray-700 rounded-md text-sm hover:bg-gray-300 transition-colors"
+            className="w-full rounded-md bg-muted-bg px-3 py-2 text-sm text-foreground transition-colors hover:bg-background"
           >
             Clear Filters
           </button>

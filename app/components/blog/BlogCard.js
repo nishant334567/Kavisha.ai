@@ -44,10 +44,10 @@ export default function BlogCard({ post, brand }) {
   const imageUrl = post.featuredImage || null;
 
   return (
-    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm transition-shadow hover:shadow-md">
+    <div className="group relative flex flex-col overflow-hidden rounded-xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
       <Link href={href} className="flex flex-col flex-1 min-h-0">
         {imageUrl ? (
-          <div className="aspect-video w-full overflow-hidden bg-gray-100">
+          <div className="aspect-video w-full overflow-hidden bg-muted-bg">
             <img
               src={imageUrl}
               alt=""
@@ -56,17 +56,17 @@ export default function BlogCard({ post, brand }) {
             />
           </div>
         ) : (
-          <div className="aspect-video w-full bg-gray-100" />
+          <div className="aspect-video w-full bg-muted-bg" />
         )}
         <div className="flex flex-1 flex-col p-4">
-          <h2 className="font-semibold text-gray-900 line-clamp-2 group-hover:text-[#2D545E]">
+          <h2 className="font-semibold text-foreground line-clamp-2 group-hover:text-[#2D545E]">
             {title}
           </h2>
           {excerpt ? (
-            <p className="mt-2 line-clamp-2 text-sm text-gray-600">{excerpt}</p>
+            <p className="mt-2 line-clamp-2 text-sm text-muted">{excerpt}</p>
           ) : null}
           {date ? (
-            <p className="mt-auto flex items-center gap-1.5 pt-3 text-xs text-gray-500">
+            <p className="mt-auto flex items-center gap-1.5 pt-3 text-xs text-muted">
               <Calendar className="h-3.5 w-3.5" />
               {date}
             </p>
@@ -81,14 +81,14 @@ export default function BlogCard({ post, brand }) {
             e.stopPropagation();
             setShareOpen((o) => !o);
           }}
-          className="flex h-8 w-8 items-center justify-center rounded-lg bg-white/90 text-gray-600 shadow-sm border border-gray-200 hover:bg-white hover:text-gray-900 transition-colors"
+          className="flex h-8 w-8 items-center justify-center rounded-lg border border-border bg-card/90 text-muted shadow-sm transition-colors hover:bg-card hover:text-foreground"
           aria-label="Share"
           aria-expanded={shareOpen}
         >
           <Share2 className="h-4 w-4" />
         </button>
         {shareOpen && (
-          <div className="absolute right-0 top-full mt-1 min-w-[160px] rounded-lg border border-gray-200 bg-white py-1 shadow-lg z-20">
+          <div className="absolute right-0 top-full mt-1 min-w-[160px] rounded-lg border border-border bg-card py-1 shadow-lg z-20">
             <ShareButtons
               url={fullUrl}
               title={title}

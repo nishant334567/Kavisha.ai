@@ -154,14 +154,14 @@ export default function ServiceModalForBuy({ isOpen, onClose }) {
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+      <div className="mx-4 max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-lg border border-border bg-card text-foreground shadow-xl">
         {/* Header */}
-        <div className="sticky top-0 bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between rounded-t-lg">
-          <h2 className="text-xl font-semibold text-gray-900">Add a Service</h2>
+        <div className="sticky top-0 flex items-center justify-between rounded-t-lg border-b border-border bg-card px-6 py-4">
+          <h2 className="text-xl font-semibold text-highlight">Add a Service</h2>
           <button
             onClick={onClose}
-            className="text-gray-400 hover:text-gray-600 transition-colors"
+            className="text-muted transition-colors hover:text-foreground"
           >
             <X className="w-5 h-5" />
           </button>
@@ -170,12 +170,12 @@ export default function ServiceModalForBuy({ isOpen, onClose }) {
         <div className="p-6 space-y-8">
           {/* Add a Service Section */}
           <div>
-            <h3 className="text-lg font-semibold text-gray-900 mb-4">
+            <h3 className="mb-4 text-lg font-semibold text-foreground">
               Add a Service
             </h3>
             <div className="space-y-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-foreground">
                   Service name:
                 </label>
                 <input
@@ -184,12 +184,12 @@ export default function ServiceModalForBuy({ isOpen, onClose }) {
                   onChange={(e) =>
                     setFormData({ ...formData, name: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full rounded border border-border bg-input px-3 py-2 text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                   placeholder="Enter service name"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="mb-1 block text-sm font-medium text-foreground">
                   Description:
                 </label>
                 <textarea
@@ -198,7 +198,7 @@ export default function ServiceModalForBuy({ isOpen, onClose }) {
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  className="w-full px-3 py-2 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none"
+                  className="w-full resize-none rounded border border-border bg-input px-3 py-2 text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                   placeholder="Enter service description"
                 />
               </div>
@@ -219,20 +219,20 @@ export default function ServiceModalForBuy({ isOpen, onClose }) {
           {/* My Services Section */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <h3 className="text-lg font-semibold text-[#004A4E]">
+              <h3 className="text-lg font-semibold text-highlight">
                 My Services
               </h3>
-              <div className="flex-1 h-px bg-gray-300"></div>
+              <div className="h-px flex-1 bg-border"></div>
             </div>
 
             <div className="flex items-center gap-2 mb-4">
-              <label className="text-sm font-medium text-gray-700">
+              <label className="text-sm font-medium text-foreground">
                 Sort by:
               </label>
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="px-3 py-1 border border-gray-300 rounded focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="rounded border border-border bg-input px-3 py-1 text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
               >
                 <option value="name">Name</option>
                 <option value="date">Date</option>
@@ -240,11 +240,11 @@ export default function ServiceModalForBuy({ isOpen, onClose }) {
             </div>
 
             {loading && services.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="py-8 text-center text-muted">
                 Loading services...
               </div>
             ) : sortedServices.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
+              <div className="py-8 text-center text-muted">
                 No services yet. Add your first service above.
               </div>
             ) : (
@@ -252,16 +252,16 @@ export default function ServiceModalForBuy({ isOpen, onClose }) {
                 {sortedServices.map((service) => (
                   <div
                     key={service._id}
-                    className="flex items-center gap-3 p-3 border border-gray-200 rounded hover:bg-gray-50"
+                    className="flex items-center gap-3 rounded border border-border p-3 hover:bg-muted-bg"
                   >
                     <input
                       type="radio"
                       name="service"
                       checked={selectedService === service._id}
                       onChange={() => setSelectedService(service._id)}
-                      className="w-4 h-4 text-[#004A4E]"
+                      className="w-4 h-4 text-highlight"
                     />
-                    <span className="flex-1 text-gray-900">{service.name}</span>
+                    <span className="flex-1 text-foreground">{service.name}</span>
                     <button
                       onClick={() => handleModify(service)}
                       className="px-3 py-1 bg-[#004A4E] text-white text-sm rounded hover:bg-blue-700 transition-colors"

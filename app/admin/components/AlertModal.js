@@ -2,17 +2,17 @@ import { X } from "lucide-react";
 
 export default function AlertModal({ message, onClose }) {
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
-      <div className="bg-white rounded-xl shadow-xl max-w-md w-full p-6 relative flex flex-col items-center text-center">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4">
+      <div className="relative flex w-full max-w-md flex-col items-center rounded-xl border border-border bg-card p-6 text-center text-foreground shadow-xl">
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-3 right-3 p-1 rounded-full hover:bg-gray-100 text-gray-500 hover:text-gray-700 transition-colors"
+          className="absolute right-3 top-3 rounded-full p-1 text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
           aria-label="Close"
         >
           <X className="w-5 h-5" />
         </button>
-        <p className="text-gray-800 text-base font-medium pr-8">{message}</p>
+        <p className="pr-8 text-base font-medium text-foreground">{message}</p>
       </div>
     </div>
   );

@@ -103,12 +103,12 @@ export default function AdminQuizList() {
   }
 
   return (
-    <div className="min-h-screen bg-white pt-20 md:pt-24 pb-8">
+    <div className="min-h-screen bg-background pt-20 pb-8 text-foreground md:pt-24">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
         {/* Back Button */}
         <button
           onClick={() => router.back()}
-          className="flex items-center gap-2 text-gray-600 hover:text-teal-600 transition-colors mb-6 text-sm font-medium font-fredoka group"
+          className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-fredoka"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back
@@ -117,11 +117,11 @@ export default function AdminQuizList() {
         {/* Header Section */}
         <div className="mb-6">
           <div className="flex items-center gap-3 mb-2">
-            <h1 className="text-3xl font-semibold text-teal-800 font-fredoka">
+            <h1 className="text-3xl font-semibold text-highlight font-fredoka">
               My quizzes and surveys
             </h1>
           </div>
-          <p className="text-sm text-gray-600 font-fredoka">
+          <p className="text-sm text-muted font-fredoka">
             Manage your quizzes and surveys
           </p>
         </div>
@@ -131,7 +131,7 @@ export default function AdminQuizList() {
           {/* Add New Button */}
           <button
             onClick={() => router.push("/admin/quiz/new")}
-            className="px-4 py-2.5 bg-[#F2FFFF] text-[#00585C] rounded-full text-sm font-medium font-fredoka whitespace-nowrap"
+            className="whitespace-nowrap rounded-full bg-muted-bg px-4 py-2.5 text-sm font-medium text-highlight font-fredoka"
           >
             + Add new
           </button>
@@ -139,12 +139,12 @@ export default function AdminQuizList() {
 
         {/* Quiz Cards Grid */}
         {quizzes.length === 0 ? (
-          <div className="text-center py-16 bg-white rounded-xl shadow-sm border border-gray-200">
-            <BookOpen className="w-12 h-12 text-gray-400 mx-auto mb-4" />
-            <p className="text-gray-500 text-lg font-medium mb-2 font-fredoka">
+          <div className="rounded-xl border border-border bg-card py-16 text-center shadow-sm">
+            <BookOpen className="mx-auto mb-4 h-12 w-12 text-muted" />
+            <p className="mb-2 text-lg font-medium text-foreground font-fredoka">
               No quizzes created yet
             </p>
-            <p className="text-gray-400 text-sm mb-6 font-fredoka">
+            <p className="mb-6 text-sm text-muted font-fredoka">
               Create your first quiz or survey to get started
             </p>
             <button
@@ -166,13 +166,13 @@ export default function AdminQuizList() {
                     ? router.push(`/admin/quiz/${quiz.id}`)
                     : router.push(`/admin/quiz/${quiz.id}/attempts`)
                 }
-                className="bg-white rounded-lg border border-gray-200 p-6 hover:shadow-md transition-all cursor-pointer flex flex-col h-full"
+                className="flex h-full cursor-pointer flex-col rounded-lg border border-border bg-card p-6 transition-all hover:shadow-md"
               >
                 {/* Content Area - takes available space */}
                 <div className="flex-1">
                   {/* Title, Status, Type */}
                   <div className="flex items-start justify-between gap-2 mb-3">
-                    <h3 className="font-fredoka text-lg font-semibold text-[#264653] flex-1 pr-2 min-w-0">
+                    <h3 className="min-w-0 flex-1 pr-2 text-lg font-semibold text-foreground font-fredoka">
                       {quiz.title || "Quiz title"}
                     </h3>
                     <div className="flex items-center gap-1.5 shrink-0 flex-wrap justify-end">
@@ -197,23 +197,23 @@ export default function AdminQuizList() {
 
                   {/* Subtitle */}
                   {quiz.subtitle && (
-                    <p className="text-sm text-gray-600 mb-4 line-clamp-2 font-fredoka">
+                    <p className="mb-4 line-clamp-2 text-sm text-muted font-fredoka">
                       {quiz.subtitle}
                     </p>
                   )}
 
                   {/* Details */}
                   <div className="space-y-1.5">
-                    <div className="text-sm text-gray-600 font-fredoka">
+                    <div className="text-sm text-muted font-fredoka">
                       {quiz.questionCount || 0} questions
                     </div>
                     {quiz.durationInMinutes && quiz.type === "quiz" && (
-                      <div className="text-sm text-gray-600 font-fredoka">
+                      <div className="text-sm text-muted font-fredoka">
                         Duration: {quiz.durationInMinutes}m
                       </div>
                     )}
                     {quiz.createdAt && (
-                      <div className="text-sm text-gray-600 font-fredoka">
+                      <div className="text-sm text-muted font-fredoka">
                         Created: {formatDate(quiz.createdAt)}
                       </div>
                     )}
@@ -221,7 +221,7 @@ export default function AdminQuizList() {
                 </div>
 
                 {/* Action Buttons - by status */}
-                <div className="flex gap-2 mt-4 pt-4 border-t border-gray-100 flex-wrap">
+                <div className="mt-4 flex flex-wrap gap-2 border-t border-border pt-4">
                   {isDraft ? (
                     <>
                       <button
@@ -229,14 +229,14 @@ export default function AdminQuizList() {
                           e.stopPropagation();
                           router.push(`/admin/quiz/${quiz.id}`);
                         }}
-                        className="flex-1 px-4 py-2.5 text-sm font-medium text-white bg-[#264653] rounded-full font-fredoka min-w-0"
+                        className="min-w-0 flex-1 rounded-full bg-highlight px-4 py-2.5 text-sm font-medium text-white font-fredoka hover:opacity-90"
                       >
                         Edit draft
                       </button>
                       <button
                         onClick={(e) => handlePublish(e, quiz)}
                         disabled={publishingId === quiz.id || (quiz.questionCount ?? 0) < 1}
-                        className="flex-1 px-4 py-2.5 text-sm font-medium text-teal-700 bg-teal-50 hover:bg-teal-100 rounded-full font-fredoka flex items-center justify-center gap-2 min-w-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                        className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-muted-bg px-4 py-2.5 text-sm font-medium text-highlight font-fredoka hover:bg-background disabled:cursor-not-allowed disabled:opacity-50"
                         title={(quiz.questionCount ?? 0) < 1 ? "Add at least one question to publish" : "Publish"}
                       >
                         <Upload className="w-4 h-4 shrink-0" />
@@ -249,7 +249,7 @@ export default function AdminQuizList() {
                         e.stopPropagation();
                         router.push(`/admin/quiz/${quiz.id}/attempts`);
                       }}
-                      className="shadow-sm flex-1 px-4 py-2.5 text-sm font-medium text-[#264653] bg-[#F2FFFF] rounded-full font-fredoka flex items-center justify-center gap-2 min-w-0"
+                      className="flex min-w-0 flex-1 items-center justify-center gap-2 rounded-full bg-muted-bg px-4 py-2.5 text-sm font-medium text-highlight font-fredoka shadow-sm"
                     >
                       <Users className="w-4 h-4 shrink-0" />
                       View attempts
@@ -261,7 +261,7 @@ export default function AdminQuizList() {
                   <button
                     onClick={(e) => handleDelete(e, quiz)}
                     disabled={deletingId === quiz.id}
-                    className="px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 rounded-full font-fredoka flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
+                    className="flex shrink-0 items-center justify-center gap-2 rounded-full px-4 py-2.5 text-sm font-medium text-red-600 font-fredoka hover:bg-muted-bg disabled:opacity-50"
                     title="Delete quiz"
                   >
                     <Trash2 className="w-4 h-4" />

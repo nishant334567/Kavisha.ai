@@ -126,10 +126,10 @@ export default function ApplicantCard({
 
     return (
         <>
-            <div className="flex flex-col sm:flex-row gap-5 p-4 rounded-2xl bg-white border border-gray-100 shadow-md font-fredoka">
+            <div className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-4 font-fredoka shadow-md sm:flex-row">
                 <div className="flex-1 min-w-0 sm:min-w-[60%]">
                     <div className="flex gap-4 mb-4">
-                        <div className="w-12 h-12 rounded-full bg-gray-100 flex items-center justify-center text-gray-600 font-semibold text-lg shrink-0 overflow-hidden">
+                        <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-full bg-muted-bg text-lg font-semibold text-muted">
                             {imageUrl ? (
                                 <img
                                     src={imageUrl}
@@ -143,29 +143,29 @@ export default function ApplicantCard({
                         </div>
                         <div className="min-w-0 flex-1">
                             <div className="flex items-center gap-2">
-                                <h3 className="text-gray-900 font-medium text-lg leading-tight truncate min-w-0">
+                                <h3 className="min-w-0 truncate text-lg font-medium leading-tight text-foreground">
                                     {name}
                                 </h3>
                                 <button
                                     type="button"
                                     onClick={toggleStar}
                                     disabled={starUpdating}
-                                    className="p-1 rounded hover:bg-gray-100 shrink-0 disabled:opacity-50"
+                                    className="shrink-0 rounded p-1 hover:bg-muted-bg disabled:opacity-50"
                                     aria-label={starred ? "Unstar" : "Star"}
                                 >
-                                    <Star className={`w-5 h-5 ${starred ? "fill-amber-400 text-amber-400" : "text-gray-400"}`} />
+                                    <Star className={`h-5 w-5 ${starred ? "fill-amber-400 text-amber-400" : "text-muted"}`} />
                                 </button>
                             </div>
-                            <p className="text-sm text-gray-500 mt-0.5 truncate">{email}</p>
+                            <p className="mt-0.5 truncate text-sm text-muted">{email}</p>
                         </div>
                     </div>
                     {summary ? (
-                        <p className="text-[12px] text-gray-800 leading-snug">{summary}</p>
+                        <p className="text-[12px] leading-snug text-foreground">{summary}</p>
                     ) : (
-                        <p className="text-[12px] text-gray-500 italic">No summary available.</p>
+                        <p className="text-[12px] italic text-muted">No summary available.</p>
                     )}
                     {assignedTo.length > 0 && (
-                        <p className="text-xs text-gray-600 mt-1.5">
+                        <p className="mt-1.5 text-xs text-muted">
                             Assigned to: {assignedTo.join(", ")}
                         </p>
                     )}
@@ -178,7 +178,7 @@ export default function ApplicantCard({
                                 value={effectiveSelectValue}
                                 onChange={handleStatusChange}
                                 disabled={statusUpdating}
-                                className="w-full appearance-none border border-gray-300 rounded-full pl-3 pr-8 py-2 bg-white text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-[#004A4E] focus:border-transparent disabled:opacity-60"
+                                className="w-full appearance-none rounded-full border border-border bg-input py-2 pl-3 pr-8 text-sm text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:opacity-60"
                             >
                                 <option value="">{statusCategories.length === 0 ? "No categories" : "Select status"}</option>
                                 {statusCategories.map((cat) => (
@@ -188,7 +188,7 @@ export default function ApplicantCard({
                                 ))}
                                 <option value={ADD_CATEGORY_VALUE}>+ Add new category</option>
                             </select>
-                            <ChevronDown className="absolute right-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500 pointer-events-none" />
+                            <ChevronDown className="pointer-events-none absolute right-2.5 top-1/2 h-4 w-4 -translate-y-1/2 text-muted" />
                         </div>
                         {showAddCategory && (
                             <div className="flex gap-2 items-center">
@@ -197,7 +197,7 @@ export default function ApplicantCard({
                                     value={newCategoryName}
                                     onChange={(e) => setNewCategoryName(e.target.value)}
                                     placeholder="Category name"
-                                    className="flex-1 min-w-0 border border-gray-300 rounded-lg px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-[#004A4E]/30"
+                                    className="min-w-0 flex-1 rounded-lg border border-border bg-input px-3 py-1.5 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ring/30"
                                     onKeyDown={(e) => e.key === "Enter" && handleAddCategory()}
                                 />
                                 <button
@@ -215,7 +215,7 @@ export default function ApplicantCard({
                                         setShowAddCategory(false);
                                         setNewCategoryName("");
                                     }}
-                                    className="shrink-0 text-sm text-gray-500 hover:text-gray-700"
+                                    className="shrink-0 text-sm text-muted hover:text-foreground"
                                 >
                                     Cancel
                                 </button>
@@ -237,7 +237,7 @@ export default function ApplicantCard({
                             View application
                         </Link>
                     ) : (
-                        <span className="w-full px-2 py-1 rounded-full bg-gray-300 text-gray-500 text-sm font-medium text-center inline-block cursor-not-allowed">
+                        <span className="inline-block w-full cursor-not-allowed rounded-full bg-muted-bg px-2 py-1 text-center text-sm font-medium text-muted">
                             View application
                         </span>
                     )}

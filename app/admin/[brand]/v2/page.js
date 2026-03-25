@@ -1,7 +1,7 @@
 "use client";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
-import { ChevronDown, User, MessageCircleMore } from "lucide-react";
+import { ChevronDown, MessageCircleMore } from "lucide-react";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useState, useEffect } from "react";
 import Inbox from "@/app/components/Inbox";
@@ -65,7 +65,7 @@ export default function AdminHome() {
       setShowInbox(false);
     }
   };
-  const topButtons = [
+  const primaryButtons = [
     {
       label: "Chat Requests",
       path: `/admin/${brand?.subdomain}/chat-requests`,
@@ -76,6 +76,20 @@ export default function AdminHome() {
       path: `/admin/${brand?.subdomain}/my-community`,
       count: countsLoading ? <LoadingDots /> : communityCount,
     },
+    {
+      label: "Revenue",
+      path: `/admin/${brand?.subdomain}/revenue`,
+    },
+  ];
+  const featureButtons = [
+    ...(brand?.enableBooking
+      ? [
+          {
+            label: "Booking Services",
+            path: `/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
+          },
+        ]
+      : []),
     ...(brand?.enableQuiz
       ? [
           {
@@ -85,49 +99,79 @@ export default function AdminHome() {
           },
         ]
       : []),
-  ];
-  const bottomButtons = [
+    ...(brand?.enableProducts
+      ? [
+          {
+            label: "Store",
+            path: `/admin/products?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
+          },
+        ]
+      : []),
+    ...(brand?.enableJobs
+      ? [
+          {
+            label: "My Jobs",
+            path: `/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
+          },
+        ]
+      : []),
+    ...(brand?.enableBlogs
+      ? [
+          {
+            label: "Blog",
+            path: `/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
+          },
+        ]
+      : []),
     {
-      label: "Revenue",
-      path: `/admin/${brand?.subdomain}/revenue`,
+      label: "Links",
+      path: `/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
     },
   ];
   return (
-    <div className="relative flex flex-col h-[calc(100vh-56px)] bg-white">
+    <div className="relative flex h-[calc(100vh-56px)] flex-col bg-background text-foreground">
       <div className="flex-1 flex flex-col items-center justify-center">
         <div className="flex items-center justify-center text-center">
-          <p className="font-zen text-[#000A67] text-5xl md:text-6xl px-4">
+          <p className="px-4 font-zen text-5xl text-highlight md:text-6xl">
             Welcome, {brand?.brandName?.split(" ")?.[0]} !
           </p>
         </div>
         <div className="mt-8 flex flex-col items-center justify-center gap-4 font-akshar">
           <div className="flex flex-wrap items-center justify-center gap-y-3">
-            {topButtons.map((button, index) => (
+            {primaryButtons.map((button, index) => (
               <div key={button.label} className="flex items-center">
-                {index > 0 && <div className="mx-1 h-6 w-px bg-gray-300 self-center" />}
+                {index > 0 && <div className="mx-1 h-6 w-px self-center bg-border" />}
                 <button
                   onClick={() => go(button.path)}
-                  className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl flex items-center gap-2"
+                  className="text-md flex items-center gap-2 bg-transparent px-4 py-2 uppercase text-foreground md:text-2xl"
                 >
                   {button.label}
-                  <span className="bg-gray-200 text-gray-700 text-sm md:text-base px-2 py-0.5 rounded font-normal min-w-[2ch]">
+                  <span className="min-w-[2ch] rounded bg-muted-bg px-2 py-0.5 text-sm font-normal text-muted md:text-base">
                     {button.count}
                   </span>
                 </button>
               </div>
             ))}
           </div>
-          {bottomButtons.length > 0 && (
+          {featureButtons.length > 0 && (
             <>
+              <div className="text-xs uppercase tracking-[0.3em] text-muted">
+                Featured Services
+              </div>
               <div className="flex flex-wrap items-center justify-center gap-y-3">
-                {bottomButtons.map((button, index) => (
+                {featureButtons.map((button, index) => (
                   <div key={button.label} className="flex items-center">
-                    {index > 0 && <div className="mx-1 h-6 w-px bg-gray-300 self-center" />}
+                    {index > 0 && <div className="mx-1 h-6 w-px self-center bg-border" />}
                     <button
                       onClick={() => go(button.path)}
-                      className="uppercase px-4 py-2 text-gray-800 bg-transparent text-md md:text-2xl flex items-center gap-2"
+                      className="text-md flex items-center gap-2 bg-transparent px-4 py-2 uppercase text-foreground md:text-2xl"
                     >
                       {button.label}
+                      {button.count ? (
+                        <span className="min-w-[2ch] rounded bg-muted-bg px-2 py-0.5 text-sm font-normal text-muted md:text-base">
+                          {button.count}
+                        </span>
+                      ) : null}
                     </button>
                   </div>
                 ))}
@@ -139,7 +183,7 @@ export default function AdminHome() {
 
       {/* Footer */}
       <div className=" h-12 flex items-center justify-center px-6">
-        <div className="text-gray-700 text-sm font-akshar">
+        <div className="text-sm font-akshar text-muted">
           Powered by KAVISHA
         </div>
       </div>
@@ -163,7 +207,7 @@ export default function AdminHome() {
 
       {/* Mobile Messaging Button */}
       <button
-        className="sm:hidden fixed bottom-4 right-4 text-black  p-3 rounded-full shadow-lg hover:bg-gray-300 transition-colors z-40"
+        className="fixed bottom-4 right-4 z-40 rounded-full bg-card p-3 text-foreground shadow-lg transition-colors hover:bg-muted-bg sm:hidden"
         onClick={() => {
           setShowInbox(true);
         }}
@@ -172,11 +216,11 @@ export default function AdminHome() {
       </button>
 
       {showInbox && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center md:items-end md:justify-end bg-black bg-opacity-30 md:bg-transparent">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 md:items-end md:justify-end md:bg-transparent">
           {/* Desktop: Show chat to the left of inbox if open */}
           {openChat && userA && userB && (
             <div className="hidden md:flex md:mr-4 md:mb-6">
-              <div className="bg-white w-[500px] h-[80vh] border border-slate-200 shadow-2xl flex flex-col overflow-hidden">
+              <div className="flex h-[80vh] w-[500px] flex-col overflow-hidden border border-border bg-card shadow-2xl">
                 <Livechat
                   userA={userA}
                   userB={userB}
@@ -189,7 +233,7 @@ export default function AdminHome() {
             </div>
           )}
           {/* Inbox - always at bottom right on desktop */}
-          <div className="w-full h-full md:w-80 md:h-auto md:max-h-[60vh] md:mx-0 md:mr-6 md:mb-6 overflow-hidden shadow-2xl bg-white border border-slate-200 flex flex-col">
+          <div className="flex h-full w-full flex-col overflow-hidden border border-border bg-card shadow-2xl md:mx-0 md:mb-6 md:mr-6 md:h-auto md:max-h-[60vh] md:w-80">
             <Inbox
               onOpenChat={openChatSession}
               onClose={() => setShowInbox(false)}

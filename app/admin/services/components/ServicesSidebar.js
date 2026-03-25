@@ -43,18 +43,18 @@ export default function ServicesSidebar({ onClose }) {
     return [
       "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium transition-colors",
       active
-        ? "bg-gray-100 text-gray-900"
-        : "text-gray-500 hover:text-gray-800 hover:bg-gray-50",
+        ? "bg-muted-bg text-foreground"
+        : "text-muted hover:text-foreground hover:bg-card",
     ].join(" ");
   };
 
   return (
-    <aside className="relative h-full w-56 shrink-0 border-r border-gray-200 py-6 px-4 overflow-y-auto bg-white">
+    <aside className="relative h-full w-56 shrink-0 overflow-y-auto border-r border-border bg-card px-4 py-6 text-foreground">
       {onClose && (
         <button
           type="button"
           onClick={onClose}
-          className="absolute top-4 right-3 p-1.5 rounded-lg hover:bg-gray-100 text-gray-500 hover:text-gray-700"
+          className="absolute right-3 top-4 rounded-lg p-1.5 text-muted hover:bg-muted-bg hover:text-foreground"
           aria-label="Close panel"
         >
           <X className="w-5 h-5" />
@@ -63,17 +63,17 @@ export default function ServicesSidebar({ onClose }) {
       <button
         type="button"
         onClick={() => router.back()}
-        className="p-1.5 rounded-lg hover:bg-gray-100 text-gray-600 mb-4 transition-colors"
+        className="mb-4 rounded-lg p-1.5 text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
         aria-label="Back"
       >
         <ArrowLeft className="w-5 h-5" />
       </button>
 
-      <h2 className="text-lg font-bold text-gray-900 mb-4">My Services</h2>
+      <h2 className="mb-4 text-lg font-bold text-foreground">My Services</h2>
 
       <Link
         href={addNewHref}
-        className="inline-flex items-center justify-center gap-2 w-full py-2.5 rounded-full px-4 mb-6 text-sm font-medium border border-[#2D545E] text-[#2D545E] bg-[#2D545E]/5 hover:bg-[#2D545E]/10 transition-colors"
+        className="mb-6 inline-flex w-full items-center justify-center gap-2 rounded-full border border-highlight bg-muted-bg px-4 py-2.5 text-sm font-medium text-highlight transition-colors hover:bg-card"
       >
         <Plus className="w-4 h-4" />
         Add booking

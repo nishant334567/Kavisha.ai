@@ -45,7 +45,7 @@ export default function ProductCardUser({ product }) {
     };
 
     return (
-        <div className="flex items-stretch gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm sm:gap-4 sm:p-4">
+        <div className="flex h-full min-h-[260px] items-stretch gap-3 rounded-2xl border border-border bg-card p-3 shadow-sm sm:gap-4 sm:p-4">
             {/* Left: Image + Quantity controls */}
             <div className="w-[40%] shrink-0 max-w-[180px] self-stretch flex flex-col sm:w-[42%]">
                 <Link href={detailHref} className="w-full block">
@@ -123,13 +123,13 @@ export default function ProductCardUser({ product }) {
                     <div>
                     <Link href={detailHref}>
                         <h3
-                            className="font-bold text-sm sm:text-base hover:underline leading-tight"
+                            className="min-h-[5rem] line-clamp-4 text-sm font-bold leading-tight hover:underline sm:text-base"
                             style={{ color: TEAL }}
                         >
                             {product.name || "Untitled"}
                         </h3>
                     </Link>
-                    <p className="mt-1.5 line-clamp-4 text-xs text-muted sm:text-sm">{description}</p>
+                    <p className="mt-1.5 min-h-[5rem] line-clamp-4 text-xs text-muted sm:text-sm">{description}</p>
                     <p className="text-xs sm:text-sm mt-1.5 font-medium" style={{ color: GREEN }}>
                         In stock
                     </p>
