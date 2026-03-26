@@ -275,10 +275,10 @@ export default function AddBookingPage() {
               <Field label="Calendar" icon={CalendarDays}>
                 <button
                   type="button"
-                  className="inline-flex items-center gap-3 text-[28px] font-medium text-highlight hover:opacity-85"
+                  className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted-bg"
                 >
                   Select date(s) in calendar
-                  <ArrowRight className="h-8 w-8" />
+                  <ArrowRight className="h-4 w-4" />
                 </button>
               </Field>
 
@@ -326,17 +326,17 @@ export default function AddBookingPage() {
               <button
                 type="submit"
                 disabled={saving || uploading}
-                className="inline-flex items-center gap-2 rounded-xl bg-highlight px-10 py-2 text-[30px] font-medium text-white hover:opacity-90 disabled:opacity-60"
+                className="inline-flex items-center gap-2 rounded-lg bg-highlight px-6 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90 disabled:opacity-60"
               >
-                <Save className="h-7 w-7" />
+                <Save className="h-4 w-4" />
                 {saving ? "Saving..." : "Save booking"}
               </button>
               <button
                 type="button"
                 onClick={() => router.back()}
-                className="inline-flex items-center gap-2 rounded-xl bg-[#9B0000] px-10 py-2 text-[30px] font-medium text-white hover:bg-[#840000]"
+                className="inline-flex items-center gap-2 rounded-lg border border-border bg-card px-6 py-2.5 text-sm font-medium text-foreground transition-colors hover:bg-muted-bg"
               >
-                <Undo2 className="h-7 w-7" />
+                <Undo2 className="h-4 w-4" />
                 Cancel
               </button>
             </div>

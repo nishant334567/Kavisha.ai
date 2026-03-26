@@ -145,7 +145,7 @@ export default function AdminQuizAttemptView() {
         {/* Back - always to admin attempts list */}
         <button
           onClick={() => router.push(`/admin/quiz/${qid}/attempts`)}
-          className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-fredoka"
+          className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-baloo"
         >
           <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
           Back to attempts
@@ -153,25 +153,25 @@ export default function AdminQuizAttemptView() {
 
         {!isCompleted ? (
           <div className="rounded-xl border border-amber-300/60 bg-amber-500/10 p-6 text-center">
-            <p className="text-amber-800 font-medium font-fredoka">
+            <p className="text-amber-800 font-medium font-baloo">
               This attempt is still in progress.
             </p>
-            <p className="text-sm text-amber-700 mt-1 font-fredoka">
+            <p className="text-sm text-amber-700 mt-1 font-baloo">
               Results will appear here when the user completes it.
             </p>
           </div>
         ) : (
           <>
             <div className="mb-6">
-              <h1 className="mb-2 text-2xl font-semibold text-highlight font-fredoka sm:text-3xl">
+              <h1 className="mb-2 text-2xl font-semibold text-highlight font-baloo sm:text-3xl">
                 {assessmentData?.title}
               </h1>
               {assessmentData?.subtitle && (
-                <p className="text-sm text-muted font-fredoka">
+                <p className="text-sm text-muted font-baloo">
                   {assessmentData.subtitle}
                 </p>
               )}
-              <div className="mt-2 flex items-center gap-2 text-sm text-muted font-fredoka">
+              <div className="mt-2 flex items-center gap-2 text-sm text-muted font-baloo">
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
                 <span>Completed</span>
                 <span className="text-muted">·</span>
@@ -191,20 +191,20 @@ export default function AdminQuizAttemptView() {
               <>
                 {assessmentData.scoringInfo && (
                   <div className="mb-6 rounded-xl border border-border bg-card p-4 sm:p-6">
-                    <h2 className="mb-3 text-lg font-semibold text-highlight font-fredoka">
+                    <h2 className="mb-3 text-lg font-semibold text-highlight font-baloo">
                       Scoring Instructions
                     </h2>
-                    <div className="whitespace-pre-line text-sm text-foreground font-fredoka">
+                    <div className="whitespace-pre-line text-sm text-foreground font-baloo">
                       {assessmentData.scoringInfo}
                     </div>
                   </div>
                 )}
                 {assessmentData.trends && (
                   <div className="mb-6 rounded-xl border border-border bg-card p-4 sm:p-6">
-                    <h2 className="mb-3 text-lg font-semibold text-highlight font-fredoka">
+                    <h2 className="mb-3 text-lg font-semibold text-highlight font-baloo">
                       Trends & Interpretation
                     </h2>
-                    <div className="whitespace-pre-line text-sm text-foreground font-fredoka">
+                    <div className="whitespace-pre-line text-sm text-foreground font-baloo">
                       {assessmentData.trends}
                     </div>
                   </div>

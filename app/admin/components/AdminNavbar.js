@@ -61,7 +61,7 @@ export default function AdminNavbar() {
   return (
     <>
       <nav className="fixed top-0 left-0 right-0 z-50 h-14 w-full border-b border-border bg-card text-muted">
-        <div className="hidden px-4 h-full md:flex items-center justify-between font-akshar text-sm">
+        <div className="hidden px-4 h-full md:flex items-center justify-between font-baloo text-sm">
           <div className="hidden md:flex items-center gap-3">
             <div className="flex justify-between items-center">
               <img
@@ -156,7 +156,7 @@ export default function AdminNavbar() {
         {showNavoption && (
           <div className="z-50 w-full border-t border-border bg-card shadow-lg md:hidden">
             <div className="flex items-center justify-between border-b border-border px-4 py-3">
-              <h3 className="font-akshar text-lg font-semibold text-foreground">
+              <h3 className="font-baloo text-lg font-semibold text-foreground">
                 Menu
               </h3>
               <button
@@ -174,7 +174,7 @@ export default function AdminNavbar() {
                     setShowNavoption(false);
                     handleNavigate(item.path, { closeMenu: true });
                   }}
-                  className={`w-full border-b border-border px-4 py-3 text-left font-akshar text-sm uppercase tracking-wide transition-colors ${pathname === item.path
+                  className={`w-full border-b border-border px-4 py-3 text-left font-baloo text-sm uppercase tracking-wide transition-colors ${pathname === item.path
                     ? "bg-muted-bg text-foreground font-semibold"
                     : "text-muted hover:bg-muted-bg hover:text-foreground"
                     }`}
@@ -186,7 +186,7 @@ export default function AdminNavbar() {
                 return (
                   <button
                     key={index}
-                    className="w-full border-b border-border px-4 py-3 text-left font-akshar text-sm uppercase tracking-wide text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
+                    className="w-full border-b border-border px-4 py-3 text-left font-baloo text-sm uppercase tracking-wide text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
                     onClick={() => {
                       setShowsettingDropdown(false);
                       if (item?.name === "Sign Out") {

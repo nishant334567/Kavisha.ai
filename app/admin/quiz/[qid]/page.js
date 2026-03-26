@@ -158,7 +158,7 @@ export default function QuizViewEdit() {
         <div className="mb-6">
           <button
             onClick={() => router.back()}
-            className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-fredoka"
+            className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-baloo"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back
@@ -166,17 +166,17 @@ export default function QuizViewEdit() {
 
           <div className="flex items-center justify-between mb-6 flex-wrap gap-2">
             <div className="flex items-center gap-2">
-              <h1 className="text-3xl font-semibold text-highlight font-fredoka">
+              <h1 className="text-3xl font-semibold text-highlight font-baloo">
                 Quiz Details
               </h1>
-              <span className={`px-2 py-1 text-sm font-medium rounded-full font-fredoka ${isDraft ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"}`}>
+              <span className={`px-2 py-1 text-sm font-medium rounded-full font-baloo ${isDraft ? "bg-amber-100 text-amber-800" : "bg-green-100 text-green-800"}`}>
                 {isDraft ? "Draft" : "Published"}
               </span>
             </div>
             <div className="flex items-center gap-2">
               <button
                 onClick={handleDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors text-sm font-medium font-fredoka flex items-center gap-2"
+                className="px-4 py-2 bg-red-600 text-white rounded-full hover:bg-red-700 transition-colors text-sm font-medium font-baloo flex items-center gap-2"
               >
                 <Trash2 className="w-4 h-4" />
                 Delete quiz
@@ -186,7 +186,7 @@ export default function QuizViewEdit() {
                   <button
                     onClick={handleSave}
                     disabled={saving}
-                    className="flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 font-fredoka"
+                    className="flex items-center gap-2 rounded-full bg-muted px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 font-baloo"
                   >
                     <Save className="w-4 h-4" />
                     {saving ? "Saving..." : "Save draft"}
@@ -194,7 +194,7 @@ export default function QuizViewEdit() {
                   <button
                     onClick={handlePublish}
                     disabled={saving || !questions?.length}
-                    className="flex items-center gap-2 rounded-full bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 font-fredoka"
+                    className="flex items-center gap-2 rounded-full bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50 font-baloo"
                   >
                     <Upload className="w-4 h-4" />
                     {saving ? "Publishing..." : "Publish"}
@@ -203,7 +203,7 @@ export default function QuizViewEdit() {
               ) : (
                 <button
                   onClick={() => router.push(`/admin/quiz/${qid}/attempts`)}
-                  className="flex items-center gap-2 rounded-full bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 font-fredoka"
+                  className="flex items-center gap-2 rounded-full bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 font-baloo"
                 >
                   <Eye className="w-4 h-4" />
                   View attempts
@@ -215,18 +215,18 @@ export default function QuizViewEdit() {
 
         {/* Assessment Details Card */}
         <div className="mb-6 rounded-xl border border-border bg-card p-6 shadow-sm">
-          <h2 className="mb-4 text-xl font-semibold text-foreground font-fredoka">
+          <h2 className="mb-4 text-xl font-semibold text-foreground font-baloo">
             Quiz Information
           </h2>
 
           <div className="space-y-4">
             {/* Type - Read Only */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-baloo">
                 Type
               </label>
               <div className="rounded-xl border border-border bg-muted-bg px-3 py-2">
-                <span className="capitalize text-foreground font-fredoka">
+                <span className="capitalize text-foreground font-baloo">
                   {assessment.type}
                 </span>
               </div>
@@ -234,7 +234,7 @@ export default function QuizViewEdit() {
 
             {/* Title */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-baloo">
                 Title <span className="text-red-500">*</span>
               </label>
               <input
@@ -244,14 +244,14 @@ export default function QuizViewEdit() {
                   setFormData((prev) => ({ ...prev, title: e.target.value }))
                 }
                 readOnly={!isDraft}
-                className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
+                className={`w-full rounded-xl border border-border px-4 py-2 font-baloo ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                 placeholder="Enter quiz title"
               />
             </div>
 
             {/* Subtitle */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-baloo">
                 Subtitle
               </label>
               <input
@@ -261,14 +261,14 @@ export default function QuizViewEdit() {
                   setFormData((prev) => ({ ...prev, subtitle: e.target.value }))
                 }
                 readOnly={!isDraft}
-                className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
+                className={`w-full rounded-xl border border-border px-4 py-2 font-baloo ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                 placeholder="Enter subtitle"
               />
             </div>
 
             {/* Objective */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-baloo">
                 Objective
               </label>
               <textarea
@@ -281,14 +281,14 @@ export default function QuizViewEdit() {
                 }
                 readOnly={!isDraft}
                 rows={3}
-                className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
+                className={`w-full rounded-xl border border-border px-4 py-2 font-baloo ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                 placeholder="Enter objective"
               />
             </div>
 
             {/* Instructions */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-baloo">
                 Instructions
               </label>
               <textarea
@@ -301,14 +301,14 @@ export default function QuizViewEdit() {
                 }
                 readOnly={!isDraft}
                 rows={3}
-                className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
+                className={`w-full rounded-xl border border-border px-4 py-2 font-baloo ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                 placeholder="Enter instructions"
               />
             </div>
 
             {/* Total Marks */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-baloo">
                 Total Marks
               </label>
               <input
@@ -321,14 +321,14 @@ export default function QuizViewEdit() {
                   }))
                 }
                 readOnly={!isDraft}
-                className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
+                className={`w-full rounded-xl border border-border px-4 py-2 font-baloo ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                 placeholder="Enter total marks"
               />
             </div>
 
             {/* Duration */}
             <div>
-              <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
+              <label className="mb-2 block text-sm font-medium text-foreground font-baloo">
                 Duration (minutes)
               </label>
               <input
@@ -343,7 +343,7 @@ export default function QuizViewEdit() {
                   }))
                 }
                 readOnly={!isDraft}
-                className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
+                className={`w-full rounded-xl border border-border px-4 py-2 font-baloo ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                 placeholder="Enter duration in minutes"
               />
             </div>
@@ -353,7 +353,7 @@ export default function QuizViewEdit() {
               <>
                 {/* Legend */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
+                  <label className="mb-2 block text-sm font-medium text-foreground font-baloo">
                     Legend / Response Scale
                   </label>
                   <textarea
@@ -366,17 +366,17 @@ export default function QuizViewEdit() {
                     }
                     readOnly={!isDraft}
                     rows={4}
-                    className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
+                    className={`w-full rounded-xl border border-border px-4 py-2 font-baloo ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                     placeholder="e.g., 1: Completely Disagree, 2: Moderately Disagree..."
                   />
-                  <p className="mt-1 text-xs text-muted font-fredoka">
+                  <p className="mt-1 text-xs text-muted font-baloo">
                     Describe the response scale or legend for your survey
                   </p>
                 </div>
 
                 {/* Scoring Info */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
+                  <label className="mb-2 block text-sm font-medium text-foreground font-baloo">
                     Scoring Instructions
                   </label>
                   <textarea
@@ -389,10 +389,10 @@ export default function QuizViewEdit() {
                     }
                     readOnly={!isDraft}
                     rows={6}
-                    className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
+                    className={`w-full rounded-xl border border-border px-4 py-2 font-baloo ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                     placeholder="e.g., Add up your scores for items 1, 2, 4 and 5..."
                   />
-                  <p className="mt-1 text-xs text-muted font-fredoka">
+                  <p className="mt-1 text-xs text-muted font-baloo">
                     Provide step-by-step instructions on how to calculate the
                     survey score
                   </p>
@@ -400,7 +400,7 @@ export default function QuizViewEdit() {
 
                 {/* Trends */}
                 <div>
-                  <label className="mb-2 block text-sm font-medium text-foreground font-fredoka">
+                  <label className="mb-2 block text-sm font-medium text-foreground font-baloo">
                     Trends / Interpretation Guide
                   </label>
                   <textarea
@@ -413,10 +413,10 @@ export default function QuizViewEdit() {
                     }
                     readOnly={!isDraft}
                     rows={6}
-                    className={`w-full rounded-xl border border-border px-4 py-2 font-fredoka ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
+                    className={`w-full rounded-xl border border-border px-4 py-2 font-baloo ${isDraft ? "bg-input text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30" : "cursor-default bg-muted-bg text-foreground"}`}
                     placeholder="e.g., If you scored 35 or below, you are in bottom 1/4th..."
                   />
-                  <p className="mt-1 text-xs text-muted font-fredoka">
+                  <p className="mt-1 text-xs text-muted font-baloo">
                     Provide interpretation guidelines based on score ranges
                   </p>
                 </div>
@@ -438,11 +438,11 @@ export default function QuizViewEdit() {
           </div>
         ) : (
           <div className="rounded-xl border border-border bg-card p-6 shadow-sm">
-            <h2 className="mb-4 text-xl font-semibold text-foreground font-fredoka">
+            <h2 className="mb-4 text-xl font-semibold text-foreground font-baloo">
               Questions ({questions.length})
             </h2>
             {questions.length === 0 ? (
-              <p className="py-8 text-center text-muted font-fredoka">No questions</p>
+              <p className="py-8 text-center text-muted font-baloo">No questions</p>
             ) : (
               <div className="space-y-4">
                 {questions.map((question, index) => {
@@ -462,7 +462,7 @@ export default function QuizViewEdit() {
                           <span className="px-2 py-1 bg-blue-100 text-blue-700 rounded text-xs font-medium">{question.maxMarks} marks</span>
                         )}
                       </div>
-                      <p className="mb-4 font-medium text-foreground font-fredoka">{question.questionText}</p>
+                      <p className="mb-4 font-medium text-foreground font-baloo">{question.questionText}</p>
                       {question.images && question.images.length > 0 && (
                         <div className="flex flex-wrap gap-2 mb-4">
                           {question.images.map((imageUrl, imgIndex) => (

@@ -198,6 +198,15 @@ export default function Community() {
     }, [brand?.subdomain]);
 
     const requirements = useMemo(() => flattenRequirements(users), [users]);
+    const visibleRequirements = useMemo(() => {
+        return requirements.filter((r) => {
+            if (r.role === "friends") return !!brand?.enableFriendConnect;
+            if (r.role === "job_seeker" || r.role === "recruiter") {
+                return !!brand?.enableProfessionalConnect;
+            }
+            return true;
+        });
+    }, [requirements, brand?.enableFriendConnect, brand?.enableProfessionalConnect]);
 
     // Community connect: only paid connections can open chat without paying again. Other places can initiate messages separately.
     const paidConnectedUserIds = useMemo(
@@ -329,7 +338,7 @@ export default function Community() {
                         Sign in to browse connection requests and connect with people.
                     </p>
                     {popupBlockedHint && !isBlocked && (
-                        <p className="text-amber-600 text-sm mb-4">Popup was blocked. Try again — it&apos;ll work.</p>
+                        <p className="text-amber-600 text-sm mb-4">Tap again to enable pop-up! Cheers! :)</p>
                     )}
                     {isBlocked ? (
                         <button
@@ -401,38 +410,40 @@ export default function Community() {
                                                 Browse through all connection requests and get connecting. Or create your own! :)
                                             </p>
                                         </div>
-                                        <div className="flex flex-wrap gap-2 sm:gap-3 items-center shrink-0">
-                                            {brand?.enableProfessionalConnect && (
-                                                <>
+                                        {visibleRequirements.length > 0 && (
+                                            <div className="flex flex-wrap gap-2 sm:gap-3 items-center shrink-0">
+                                                {brand?.enableProfessionalConnect && (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            disabled={creating === "job_seeker"}
+                                                            className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
+                                                            onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                                        >
+                                                            {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            disabled={creating === "recruiter"}
+                                                            className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
+                                                            onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                                        >
+                                                            {creating === "recruiter" ? "Creating..." : "Hire People"}
+                                                        </button>
+                                                    </>
+                                                )}
+                                                {brand?.enableFriendConnect && (
                                                     <button
                                                         type="button"
-                                                        disabled={creating === "job_seeker"}
+                                                        disabled={creating === "friends"}
                                                         className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
-                                                        onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                                        onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
                                                     >
-                                                        {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
+                                                        {creating === "friends" ? "Creating..." : "Find Friends"}
                                                     </button>
-                                                    <button
-                                                        type="button"
-                                                        disabled={creating === "recruiter"}
-                                                        className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
-                                                        onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                                    >
-                                                        {creating === "recruiter" ? "Creating..." : "Hire People"}
-                                                    </button>
-                                                </>
-                                            )}
-                                            {brand?.enableFriendConnect && (
-                                                <button
-                                                    type="button"
-                                                    disabled={creating === "friends"}
-                                                    className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
-                                                    onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                                >
-                                                    {creating === "friends" ? "Creating..." : "Find Friends"}
-                                                </button>
-                                            )}
-                                        </div>
+                                                )}
+                                            </div>
+                                        )}
                                     </div>
                                     {loading ? (
                                         <div className="p-4 sm:p-8 flex justify-center">
@@ -440,33 +451,60 @@ export default function Community() {
                                         </div>
                                     ) : error ? (
                                         <div className="p-4 sm:p-8 text-center text-red-600 text-sm sm:text-base">{error}</div>
-                                    ) : (() => {
-                                        const visibleRequirements = requirements.filter((r) => {
-                                            if (r.role === "friends") return !!brand?.enableFriendConnect;
-                                            if (r.role === "job_seeker" || r.role === "recruiter") return !!brand?.enableProfessionalConnect;
-                                            return true;
-                                        });
-                                        return visibleRequirements.length === 0 ? (
-                                            <div className="p-4 sm:p-8 text-center text-muted text-sm sm:text-base">
+                                    ) : visibleRequirements.length === 0 ? (
+                                        <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 py-8 text-center">
+                                            <p className="text-sm text-muted sm:text-base">
                                                 No community posts yet.
+                                            </p>
+                                            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
+                                                {brand?.enableFriendConnect && (
+                                                    <button
+                                                        type="button"
+                                                        disabled={creating === "friends"}
+                                                        className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
+                                                        onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                                    >
+                                                        {creating === "friends" ? "Creating..." : "Find Friends"}
+                                                    </button>
+                                                )}
+                                                {brand?.enableProfessionalConnect && (
+                                                    <>
+                                                        <button
+                                                            type="button"
+                                                            disabled={creating === "job_seeker"}
+                                                            className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
+                                                            onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                                        >
+                                                            {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
+                                                        </button>
+                                                        <button
+                                                            type="button"
+                                                            disabled={creating === "recruiter"}
+                                                            className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
+                                                            onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
+                                                        >
+                                                            {creating === "recruiter" ? "Creating..." : "Hire People"}
+                                                        </button>
+                                                    </>
+                                                )}
                                             </div>
-                                        ) : (
-                                            <div className="py-4 px-4 sm:px-8 sm:py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-                                                {visibleRequirements.map((r) => (
-                                                    <CommunityCard
-                                                        key={r.id}
-                                                        name={r.name}
-                                                        date={r.date}
-                                                        description={r.description}
-                                                        requirement={r.requirement}
-                                                        onConnect={() => handleConnect(user.id, r.userId, r.name)}
-                                                        connectLabel={paidConnectedUserIds.has(String(r.userId)) ? "Message" : "Connect"}
-                                                        isOwnPost={String(r.userId) === String(user?.id)}
-                                                    />
-                                                ))}
-                                            </div>
-                                        );
-                                    })()}
+                                        </div>
+                                    ) : (
+                                        <div className="py-4 px-4 sm:px-8 sm:py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                            {visibleRequirements.map((r) => (
+                                                <CommunityCard
+                                                    key={r.id}
+                                                    name={r.name}
+                                                    date={r.date}
+                                                    description={r.description}
+                                                    requirement={r.requirement}
+                                                    onConnect={() => handleConnect(user.id, r.userId, r.name)}
+                                                    connectLabel={paidConnectedUserIds.has(String(r.userId)) ? "Message" : "Connect"}
+                                                    isOwnPost={String(r.userId) === String(user?.id)}
+                                                />
+                                            ))}
+                                        </div>
+                                    )}
                                 </>
                             )}
                         </div>

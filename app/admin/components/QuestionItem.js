@@ -128,14 +128,14 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
   return (
     <div className="mb-4 rounded-xl border border-border bg-card p-6 text-foreground shadow-sm transition-shadow hover:shadow-md">
       <div className="mb-4 flex items-center justify-between">
-        <span className="font-fredoka text-sm font-semibold text-highlight">
+        <span className="font-baloo text-sm font-semibold text-highlight">
           Question {index >= 0 ? index + 1 : "New"}
         </span>
         {onDelete && index >= 0 && (
           <button
             type="button"
             onClick={handleDeleteQuestion}
-            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-fredoka text-sm font-medium text-red-600 transition-colors hover:bg-muted-bg"
+            className="flex items-center gap-1.5 rounded-lg px-3 py-1.5 font-baloo text-sm font-medium text-red-600 transition-colors hover:bg-muted-bg"
             title="Delete question"
           >
             <Trash2 className="w-4 h-4" />
@@ -146,14 +146,14 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
 
       {/* Question Type */}
       <div className="mb-4">
-        <label className="mb-2 block font-fredoka text-sm font-medium text-foreground">
+        <label className="mb-2 block font-baloo text-sm font-medium text-foreground">
           Question Type <span className="text-red-500">*</span>
         </label>
         <div className="flex gap-3">
           <button
             type="button"
             onClick={() => handleQuestionTypeChange("single_choice")}
-            className={`flex-1 py-2 px-4 rounded-full font-medium text-sm transition-all font-fredoka ${
+            className={`flex-1 py-2 px-4 rounded-full font-baloo text-sm font-medium transition-all ${
               localQuestion?.questionType === "single_choice"
                 ? "bg-highlight text-white shadow-md"
                 : "bg-muted-bg text-foreground hover:bg-background"
@@ -164,7 +164,7 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
           <button
             type="button"
             onClick={() => handleQuestionTypeChange("multi_choice")}
-            className={`flex-1 py-2 px-4 rounded-full font-medium text-sm transition-all font-fredoka ${
+            className={`flex-1 py-2 px-4 rounded-full font-baloo text-sm font-medium transition-all ${
               localQuestion?.questionType === "multi_choice"
                 ? "bg-highlight text-white shadow-md"
                 : "bg-muted-bg text-foreground hover:bg-background"
@@ -177,23 +177,23 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
 
       {/* Question Text */}
       <div className="mb-4">
-        <label className="mb-2 block font-fredoka text-sm font-medium text-foreground">
+        <label className="mb-2 block font-baloo text-sm font-medium text-foreground">
           Question Text <span className="text-red-500">*</span>
         </label>
         <textarea
           rows={3}
           value={localQuestion?.questionText || ""}
           onChange={handleQuestionTextChange}
-          className="w-full resize-none rounded-xl border border-border bg-input px-4 py-2 font-fredoka text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
+          className="w-full resize-none rounded-xl border border-border bg-input px-4 py-2 font-baloo text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
           placeholder="Enter your question"
         />
       </div>
       <div>
-        <label className="mb-2 block font-fredoka text-sm font-medium text-foreground">
+        <label className="mb-2 block font-baloo text-sm font-medium text-foreground">
           Question images (optional)
         </label>
         <input ref={fileInputRef} type="file" multiple className="hidden" accept="image/*" onChange={handleImageChange}/>
-      <button className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-fredoka text-highlight hover:bg-muted-bg disabled:opacity-50" type="button" onClick={()=>fileInputRef.current?.click()} disabled={uploadingImages}><ImagePlus className="w-4 h-4" />
+      <button className="flex items-center gap-1.5 rounded-xl border border-border bg-card px-3 py-2 text-sm font-baloo text-highlight hover:bg-muted-bg disabled:opacity-50" type="button" onClick={()=>fileInputRef.current?.click()} disabled={uploadingImages}><ImagePlus className="w-4 h-4" />
           {uploadingImages ? "Uploading…" : "Add images"}</button>
       <div className="flex flex-wrap gap-2 mt-2">
         {(localQuestion?.images || []).map((url, i) => (
@@ -215,13 +215,13 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
       {/* Options */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <label className="block font-fredoka text-sm font-medium text-foreground">
+          <label className="block font-baloo text-sm font-medium text-foreground">
             Options <span className="text-red-500">*</span>
           </label>
           <button
             type="button"
             onClick={handleAddOption}
-            className="flex items-center gap-1 font-fredoka text-sm font-medium text-highlight hover:opacity-80"
+            className="flex items-center gap-1 font-baloo text-sm font-medium text-highlight hover:opacity-80"
           >
             <Plus className="w-4 h-4" />
             Add Option
@@ -254,7 +254,7 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
                 type="text"
                 value={item?.text || ""}
                 onChange={(e) => handleOptionChange(optIndex, e.target.value)}
-                className="flex-1 rounded-xl border border-border bg-input px-3 py-2 font-fredoka text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
+                className="flex-1 rounded-xl border border-border bg-input px-3 py-2 font-baloo text-foreground placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
                 placeholder={`Option ${optIndex + 1}`}
               />
               {(localQuestion?.options || []).length > 1 && (
@@ -271,7 +271,7 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
           ))}
         </div>
         {(!localQuestion?.options || localQuestion.options.length === 0) && (
-          <p className="mt-2 font-fredoka text-sm italic text-muted">
+          <p className="mt-2 font-baloo text-sm italic text-muted">
             No options added. Click "Add Option" to add one.
           </p>
         )}
@@ -279,14 +279,14 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
 
       {/* Max Marks */}
       <div className="mb-2">
-        <label className="mb-2 block font-fredoka text-sm font-medium text-foreground">
+        <label className="mb-2 block font-baloo text-sm font-medium text-foreground">
           Max Marks
         </label>
         <input
           type="number"
           value={localQuestion?.maxMarks || 1}
           onChange={handleMaxMarksChange}
-          className="w-full rounded-xl border border-border bg-input px-3 py-2 font-fredoka text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
+          className="w-full rounded-xl border border-border bg-input px-3 py-2 font-baloo text-foreground focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30"
           min="1"
         />
       </div>
@@ -294,7 +294,7 @@ export default function QuestionItem({ question, index, onChange, isQuiz, brand,
       {/* Correct Answer Indicator */}
       {isQuiz && (
         <div className="mt-3 border-t border-border pt-3">
-          <p className="font-fredoka text-xs text-muted">
+          <p className="font-baloo text-xs text-muted">
             {localQuestion?.questionType === "single_choice"
               ? "Select one correct answer (radio button)"
               : "Select one or more correct answers (checkboxes)"}

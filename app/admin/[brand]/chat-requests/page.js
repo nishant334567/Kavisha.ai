@@ -107,7 +107,7 @@ export default function ChatRequests() {
             >
               <ArrowLeft className="w-6 h-6" />
             </button>
-            <h1 className="pb-1 font-zen text-2xl text-highlight sm:text-3xl md:text-4xl">
+            <h1 className="pb-1 font-baloo text-2xl text-highlight sm:text-3xl md:text-4xl">
               All Chat Requests
             </h1>
           </div>

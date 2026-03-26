@@ -77,7 +77,7 @@ export default function ServiceCard({ service, href, showBookingsHref, brand, op
           </p>
           <Link
             href={href}
-            className="mb-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-background"
+            className="mb-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted-bg"
           >
             <Pencil className="h-4 w-4" />
             Edit booking details
@@ -85,7 +85,7 @@ export default function ServiceCard({ service, href, showBookingsHref, brand, op
           <button
             type="button"
             onClick={handleShowBookings}
-            className="mb-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground hover:bg-background"
+            className="mb-2 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted-bg"
           >
             <List className="h-4 w-4" />
             Show bookings

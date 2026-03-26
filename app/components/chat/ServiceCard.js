@@ -39,7 +39,7 @@ export default function ServiceCard({
             type="button"
             onClick={() => onStart(service, serviceKey)}
             disabled={isLoading}
-            className="py-2 px-4 rounded-full font-medium text-sm transition-colors disabled:opacity-60 border border-[#00888E]/50 text-[#2D545E] bg-[linear-gradient(to_right,#DBF8F8_0%,#DBF3F8_50%,#DBEEF8_100%)] hover:opacity-90 dark:bg-none dark:bg-transparent dark:text-[#5eead4] dark:border-[#5eead4]/40 dark:hover:bg-muted-bg"
+            className="py-2 px-4 rounded-full font-medium text-sm transition-colors disabled:opacity-60 border-0 text-[#2D545E] bg-[linear-gradient(to_right,#DBF8F8_0%,#DBF3F8_50%,#DBEEF8_100%)] hover:opacity-90 dark:bg-none dark:bg-transparent dark:text-[#5eead4] dark:border dark:border-[#5eead4]/40 dark:hover:bg-muted-bg"
           >
             {isLoading ? (
               <span className="inline-flex items-center gap-2">

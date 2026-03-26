@@ -110,7 +110,7 @@ export default function BlogCardAdmin({
               type="button"
               onClick={handleDelete}
               disabled={deleting}
-              className="inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg border border-red-200 bg-red-50 text-red-700 text-sm font-medium hover:bg-red-100 disabled:opacity-50 transition-colors"
+              className="inline-flex items-center justify-center gap-1.5 rounded-lg border border-red-200 px-3 py-2 text-sm font-medium text-red-700 transition-colors hover:bg-muted-bg disabled:opacity-50"
             >
               <Trash2 className="w-4 h-4" />
               {deleting ? "Deleting…" : "Delete"}

@@ -83,7 +83,7 @@ export default function AdminLayout({ children }) {
   }
 
   return (
-    <div className="font-akshar min-h-screen bg-background text-foreground">
+    <div className="font-baloo min-h-screen bg-background text-foreground">
       <AdminUpdateNotice />
       {children}
     </div>

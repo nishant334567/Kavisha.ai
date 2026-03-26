@@ -170,7 +170,7 @@ export default function EditProfile() {
                 type="text"
                 value={formData.brandName}
                 onChange={(e) => handleChange("brandName", e.target.value)}
-                className={`${inputClass} font-akshar text-lg font-semibold`}
+                className={`${inputClass} font-baloo text-lg font-semibold`}
                 disabled={loading}
               />
               <button
@@ -190,13 +190,14 @@ export default function EditProfile() {
             </div>
           ) : (
             <>
-              <h2 className="font-akshar text-lg font-semibold text-highlight">
+              <h2 className="font-baloo text-lg font-semibold text-highlight">
                 {formData.brandName || brand?.brandName}
               </h2>
               <button
                 onClick={() => handleEdit("brandName")}
-                className="rounded-full bg-card px-3 py-1 text-sm text-foreground shadow-md transition-colors hover:bg-muted-bg"
+                className="inline-flex items-center gap-1.5 rounded-full bg-card px-3 py-1 text-sm text-foreground shadow-md transition-colors hover:bg-muted-bg"
               >
+                <Pencil className="h-3.5 w-3.5" />
                 Edit
               </button>
             </>
@@ -238,14 +239,14 @@ export default function EditProfile() {
         </div>
 
         {/* Title/Headline */}
-        <div className="mb-6">
+        <div className="mb-10">
           {editing.title ? (
             <div className="relative flex items-center justify-center gap-3">
               <input
                 type="text"
                 value={formData.title}
                 onChange={(e) => handleChange("title", e.target.value)}
-                className="w-full rounded-lg border border-border bg-input px-3 py-2 text-center font-fredoka text-3xl text-foreground sm:text-4xl"
+                className="w-full rounded-lg border border-border bg-input px-3 py-2 text-center font-baloo text-3xl text-foreground sm:text-4xl"
                 disabled={loading}
               />
               <div className="absolute right-0 flex flex-col gap-2">
@@ -266,18 +267,17 @@ export default function EditProfile() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center gap-4">
-              <div className="flex justify-end">
-                <button
-                  onClick={() => handleEdit("title")}
-                  className="whitespace-nowrap rounded-full bg-card px-3 py-1 text-sm text-foreground shadow-md transition-colors hover:bg-muted-bg"
-                >
-                  Edit
-                </button>
-              </div>
-              <p className="text-center font-fredoka text-3xl text-foreground sm:text-4xl">
+            <div className="relative flex items-center justify-center">
+              <p className="text-justify font-baloo text-3xl text-foreground sm:text-4xl">
                 {formData.title || brand?.title}
               </p>
+              <button
+                onClick={() => handleEdit("title")}
+                className="absolute right-0 top-1/2 inline-flex -translate-y-1/2 items-center gap-1.5 whitespace-nowrap rounded-full bg-card px-3 py-1 text-sm text-foreground shadow-md transition-colors hover:bg-muted-bg"
+              >
+                <Pencil className="h-3.5 w-3.5" />
+                Edit
+              </button>
             </div>
           )}
         </div>
@@ -289,7 +289,7 @@ export default function EditProfile() {
               <textarea
                 value={formData.subtitle}
                 onChange={(e) => handleChange("subtitle", e.target.value)}
-                className="w-full resize-none rounded-lg border border-border bg-input px-3 py-2 text-justify font-fredoka text-base leading-relaxed text-foreground"
+                className="w-full resize-none rounded-lg border border-border bg-input px-3 py-2 text-justify font-baloo text-base leading-relaxed text-foreground"
                 rows="4"
                 disabled={loading}
               />
@@ -311,14 +311,15 @@ export default function EditProfile() {
               </div>
             </div>
           ) : (
-            <div className="flex flex-col items-center justify-center gap-4">
-              <p className="text-justify font-fredoka text-base leading-relaxed text-muted">
+            <div className="relative">
+              <p className="px-20 text-justify font-baloo text-base leading-relaxed text-muted">
                 {formData.subtitle || brand?.subtitle}
               </p>
               <button
                 onClick={() => handleEdit("subtitle")}
-                className="whitespace-nowrap rounded-full bg-card px-3 py-1 text-sm text-foreground shadow-md transition-colors hover:bg-muted-bg"
+                className="absolute right-0 top-0 inline-flex items-center gap-1.5 whitespace-nowrap rounded-full bg-card px-3 py-1 text-sm text-foreground shadow-md transition-colors hover:bg-muted-bg"
               >
+                <Pencil className="h-3.5 w-3.5" />
                 Edit
               </button>
             </div>
@@ -326,7 +327,7 @@ export default function EditProfile() {
         </div>
 
         {/* Login Button */}
-        <div className="font-akshar mb-12 flex flex-col items-center gap-3">
+        <div className="font-baloo mb-12 flex flex-col items-center gap-3">
           {editing.loginButtonText ? (
             <div className="flex items-center gap-3">
               <input

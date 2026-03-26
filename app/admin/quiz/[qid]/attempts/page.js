@@ -77,17 +77,17 @@ export default function QuizAttemptsPage() {
         <div className="mb-6">
           <button
             onClick={() => router.push("/admin/quiz")}
-            className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-fredoka"
+            className="group mb-6 flex items-center gap-2 text-sm font-medium text-muted transition-colors hover:text-highlight font-baloo"
           >
             <ArrowLeft className="w-4 h-4 group-hover:-translate-x-1 transition-transform" />
             Back to quizzes
           </button>
 
           <div className="mb-6">
-            <h1 className="mb-2 text-3xl font-semibold text-highlight font-fredoka">
+            <h1 className="mb-2 text-3xl font-semibold text-highlight font-baloo">
               Quiz attempts
             </h1>
-            <p className="text-sm text-muted font-fredoka">
+            <p className="text-sm text-muted font-baloo">
               {quiz?.title || "Loading..."}
             </p>
           </div>
@@ -97,10 +97,10 @@ export default function QuizAttemptsPage() {
         {attemptsByUser.length === 0 ? (
           <div className="rounded-xl border border-border bg-card py-16 text-center shadow-sm">
             <Users className="mx-auto mb-4 h-12 w-12 text-muted" />
-            <p className="mb-2 text-lg font-medium text-foreground font-fredoka">
+            <p className="mb-2 text-lg font-medium text-foreground font-baloo">
               No attempts yet
             </p>
-            <p className="text-sm text-muted font-fredoka">
+            <p className="text-sm text-muted font-baloo">
               Users haven't attempted this quiz yet
             </p>
           </div>
@@ -114,19 +114,19 @@ export default function QuizAttemptsPage() {
                 {/* User Header */}
                 <div className="mb-4 flex items-center gap-3 border-b border-border pb-4">
                   <div className="flex h-10 w-10 items-center justify-center rounded-full bg-muted-bg">
-                    <span className="text-sm font-semibold text-muted font-fredoka">
+                    <span className="text-sm font-semibold text-muted font-baloo">
                       {userGroup.user.name?.charAt(0)?.toUpperCase() || "U"}
                     </span>
                   </div>
                   <div className="flex-1">
-                    <h3 className="font-semibold text-foreground font-fredoka">
+                    <h3 className="font-semibold text-foreground font-baloo">
                       {userGroup.user.name || "Unknown User"}
                     </h3>
-                    <p className="text-sm text-muted font-fredoka">
+                    <p className="text-sm text-muted font-baloo">
                       {userGroup.user.email}
                     </p>
                   </div>
-                  <div className="text-sm text-muted font-fredoka">
+                  <div className="text-sm text-muted font-baloo">
                     {userGroup.attempts.length}{" "}
                     {userGroup.attempts.length === 1 ? "Attempt" : "Attempts"}
                   </div>
@@ -156,13 +156,13 @@ export default function QuizAttemptsPage() {
                       >
                         {/* Col 1: Quiz Title */}
                         <div className="flex-1 min-w-0">
-                          <p className="text-sm font-medium text-foreground font-fredoka">
+                          <p className="text-sm font-medium text-foreground font-baloo">
                             {quiz?.title || "Quiz title"}
                           </p>
                         </div>
 
                         {/* Col 2: Started, Completed, Time taken (below) */}
-                        <div className="min-w-0 flex-1 space-y-0.5 text-sm text-muted font-fredoka">
+                        <div className="min-w-0 flex-1 space-y-0.5 text-sm text-muted font-baloo">
                           <div>Started: {formatDateTime(attempt.startedAt)}</div>
                           {attempt.completedAt && (
                             <div>Completed: {formatDateTime(attempt.completedAt)}</div>
@@ -177,7 +177,7 @@ export default function QuizAttemptsPage() {
                         {/* Col 3: Status */}
                         <div className="flex-shrink-0">
                           <span
-                            className={`rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap font-fredoka ${
+                            className={`rounded-full px-3 py-1 text-xs font-semibold whitespace-nowrap font-baloo ${
                               isCompleted
                                 ? "bg-green-100 text-green-700"
                                 : isInProgress

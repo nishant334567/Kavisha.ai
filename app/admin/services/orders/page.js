@@ -125,9 +125,10 @@ function AdminBookingCard({ booking, index }) {
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Join Google Meet"
-                className="inline-flex items-center justify-center rounded-md p-1.5 text-muted hover:bg-muted-bg hover:text-foreground"
+                className="inline-flex items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted-bg"
               >
                 <Link2 className="w-4 h-4" />
+                Join meet
               </a>
             ) : null}
           </div>

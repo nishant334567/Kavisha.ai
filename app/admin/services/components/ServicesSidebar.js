@@ -73,7 +73,7 @@ export default function ServicesSidebar({ onClose }) {
 
       <Link
         href={addNewHref}
-        className="mb-6 inline-flex w-full items-center justify-center gap-2 rounded-full border border-highlight bg-muted-bg px-4 py-2.5 text-sm font-medium text-highlight transition-colors hover:bg-card"
+        className="mb-6 inline-flex w-full items-center justify-center gap-2 rounded-lg border border-highlight bg-highlight/5 px-4 py-2.5 text-sm font-medium text-highlight transition-colors hover:bg-highlight/10"
       >
         <Plus className="w-4 h-4" />
         Add booking
