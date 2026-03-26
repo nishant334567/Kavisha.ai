@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { connectDB } from "@/app/lib/db";
-import { refreshJobJdLink, refreshImageUrl } from "@/app/lib/gcs";
+import { refreshImageUrl } from "@/app/lib/gcs";
 import Job from "@/app/models/Job";
 import JobApplication from "@/app/models/JobApplication";
 
@@ -35,14 +35,14 @@ export async function GET(req, { params }) {
           { status: 404 }
         );
       }
-      await refreshJobJdLink(job);
+      const jdLink = job.jdLink ? await refreshImageUrl(job.jdLink) : "";
       const resumeLink = application.resumeLink ? await refreshImageUrl(application.resumeLink) : "";
       return NextResponse.json({
         job: {
           _id: job._id,
           title: job.title || "",
           description: job.description || "",
-          jdLink: job.jdLink || "",
+          jdLink,
         },
         application: {
           _id: application._id,
