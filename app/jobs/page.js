@@ -56,7 +56,7 @@ export default function JobsPage() {
         <div>
           <h1 className="text-2xl font-bold text-foreground">Jobs</h1>
           <p className="mt-0.5 text-sm text-muted">
-            All jobs listed by {brandName ? `Prof. ${brandName}` : "this brand"}
+            All jobs listed {brandName ? `by ${brandName}` : ""}
           </p>
         </div>
       </div>

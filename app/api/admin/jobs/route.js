@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { uploadToBucket, refreshJobJdLink } from "@/app/lib/gcs";
+import { uploadToBucket, refreshImageUrl } from "@/app/lib/gcs";
 import { v4 as uuidv4 } from "uuid";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
@@ -35,8 +35,13 @@ export async function GET(req) {
         ...j,
         applicationCount: countByJobId[String(j._id)] ?? 0,
       }));
-      await Promise.all(jobsWithCount.map((j) => refreshJobJdLink(j)));
-      return NextResponse.json({ jobs: jobsWithCount });
+      const jobsOut = await Promise.all(
+        jobsWithCount.map(async (j) => ({
+          ...j,
+          jdLink: j.jdLink ? await refreshImageUrl(j.jdLink) : "",
+        }))
+      );
+      return NextResponse.json({ jobs: jobsOut });
     },
   });
 }

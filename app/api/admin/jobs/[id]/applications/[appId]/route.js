@@ -3,7 +3,7 @@ import mongoose from "mongoose";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { connectDB } from "@/app/lib/db";
-import { refreshJobJdLink, refreshImageUrl } from "@/app/lib/gcs";
+import { refreshImageUrl } from "@/app/lib/gcs";
 import Job from "@/app/models/Job";
 import JobApplication from "@/app/models/JobApplication";
 import User from "@/app/models/Users";
@@ -80,13 +80,13 @@ export async function GET(req, { params }) {
           { status: 404 }
         );
       }
-      await refreshJobJdLink(job);
+      const jdLink = job.jdLink ? await refreshImageUrl(job.jdLink) : "";
       return NextResponse.json({
         job: {
           _id: job._id,
           title: job.title || "",
           description: job.description || "",
-          jdLink: job.jdLink || "",
+          jdLink,
           statusCategories: Array.isArray(job.statusCategories) ? job.statusCategories : [],
         },
         application: await toApplicationResponse(application),
