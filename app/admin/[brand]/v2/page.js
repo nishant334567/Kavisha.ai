@@ -123,10 +123,14 @@ export default function AdminHome() {
           },
         ]
       : []),
-    {
-      label: "Links",
-      path: `/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
-    },
+    ...(brand?.enableLinks !== false
+      ? [
+          {
+            label: "Links",
+            path: `/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
+          },
+        ]
+      : []),
   ];
   return (
     <div className="relative flex h-[calc(100vh-56px)] flex-col bg-background text-foreground">

@@ -156,6 +156,14 @@ export default {
       initialValue: false,
     },
     {
+      name: "enableLinks",
+      title: "Enable Links",
+      type: "boolean",
+      description:
+        "When enabled, users see the Links page and navigation. Admins can manage the link tree in Admin → Links.",
+      initialValue: true,
+    },
+    {
       name: "enableJobs",
       title: "Enable Jobs",
       type: "boolean",

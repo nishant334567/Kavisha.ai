@@ -60,6 +60,7 @@ export default function BrandContextProvider({ children }) {
                   enableProducts,
                   enableBooking,
                   enableBlogs,
+                  enableLinks,
                   services
               }[0]`,
         );
@@ -100,6 +101,7 @@ export default function BrandContextProvider({ children }) {
             enableProducts: brand.enableProducts || false,
             enableBooking: brand.enableBooking || false,
             enableBlogs: brand.enableBlogs || false,
+            enableLinks: brand.enableLinks !== false,
             services: brand.services,
           };
 

@@ -52,7 +52,9 @@ export default function AvatarHomepage() {
   const homepageActionLinks = [
     { label: "TALK TO ME", path: "/chats", primary: true },
     { label: "COMMUNITY", path: "/community" },
-    { label: "LINKS", path: `/links${linksQs}` },
+    ...(brand?.enableLinks !== false
+      ? [{ label: "LINKS", path: `/links${linksQs}` }]
+      : []),
   ];
   const contentSpacingClass = user ? "pt-2 md:pt-0" : "pt-2 md:pt-4";
 

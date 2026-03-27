@@ -59,6 +59,7 @@ export default function LinksPage() {
   const [linkTree, setLinkTree] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [linksFeatureOn, setLinksFeatureOn] = useState(true);
 
   const headerName = brandContext?.brandName?.trim() || brand || "";
   const headerImage = brandContext?.brandImageUrl ?? null;
@@ -76,7 +77,10 @@ export default function LinksPage() {
           `/api/links?brand=${encodeURIComponent(brand)}`
         );
         const data = await res.json();
-        if (!cancelled && res.ok) setLinkTree(data?.linkTree || null);
+        if (!cancelled && res.ok) {
+          setLinksFeatureOn(data?.enableLinks !== false);
+          setLinkTree(data?.linkTree || null);
+        }
       } catch {
         if (!cancelled) setLinkTree(null);
       } finally {
@@ -143,6 +147,16 @@ export default function LinksPage() {
       <div className={shellClass}>
         <p className="text-center">
           Add ?brand=... to the URL to view a link tree.
+        </p>
+      </div>
+    );
+  }
+
+  if (!linksFeatureOn) {
+    return (
+      <div className={shellClass}>
+        <p className="text-center max-w-md text-foreground">
+          Links are not enabled for this brand.
         </p>
       </div>
     );

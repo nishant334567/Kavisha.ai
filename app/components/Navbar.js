@@ -142,7 +142,7 @@ export default function Navbar() {
     ...(communityEnabled
       ? [{ label: "COMMUNITY", mobileLabel: "Community", path: "/community", icon: Users }]
       : []),
-    ...(brand?.subdomain
+    ...(brand?.subdomain && brand?.enableLinks !== false
       ? [
           {
             label: "LINKS",

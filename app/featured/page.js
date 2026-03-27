@@ -9,6 +9,7 @@ import {
   BookOpen,
   Briefcase,
   Sparkles,
+  Link2,
 } from "lucide-react";
 
 function FeaturedCard({ href, title, description, icon: Icon }) {
@@ -50,6 +51,10 @@ export default function FeaturedPage() {
   const blogQuery =
     subdomain && subdomain !== "kavisha"
       ? `?subdomain=${encodeURIComponent(subdomain)}`
+      : "";
+  const linksQuery =
+    subdomain && subdomain !== "kavisha"
+      ? `?brand=${encodeURIComponent(subdomain)}`
       : "";
 
   const definitions = [
@@ -93,6 +98,14 @@ export default function FeaturedPage() {
       href: `/jobs`,
       icon: Briefcase,
     },
+    {
+      id: "links",
+      enabled: brand?.enableLinks !== false,
+      title: "Links",
+      description: "Social and custom links for this avatar.",
+      href: `/links${linksQuery}`,
+      icon: Link2,
+    },
   ];
 
   const visible = definitions.filter((d) => d.enabled);
@@ -116,8 +129,8 @@ export default function FeaturedPage() {
         <div className="rounded-xl border border-dashed border-border bg-card p-10 text-center">
           <p className="font-medium text-foreground">Nothing featured yet</p>
           <p className="mx-auto mt-2 max-w-md text-sm text-muted">
-            When this avatar enables quiz, products, bookable services, blog, or jobs
-            in Sanity, they will show up here.
+            When this avatar enables quiz, products, bookable services, blog, jobs, or
+            links in admin, they will show up here.
           </p>
         </div>
       ) : (
