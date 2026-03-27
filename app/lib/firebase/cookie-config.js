@@ -9,11 +9,16 @@ export function getCookieOptions() {
     : isProd
       ? `.${ROOT_DOMAIN}`
       : undefined;
+  const secure = isProd || isStaging;
+  // Lax blocks the session cookie in a third-party iframe (embed widget on a client's site).
+  // None + Secure is required for cross-site iframe; dev stays Lax without Secure.
+  const sameSite = secure ? "none" : "lax";
+
   return {
     path: "/",
     httpOnly: true,
-    secure: isProd || isStaging,
-    sameSite: "lax",
+    secure,
+    sameSite,
     maxAge: 12 * 60 * 60 * 24, // 12 days
     domain,
   };
