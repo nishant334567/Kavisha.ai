@@ -19,6 +19,13 @@ import { CartContextProvider } from "../context/cart/CartContextProvider";
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
+  if (pathname === "/widget") {
+    return (
+      <FirebaseSessionProvider>
+        <div className="h-full min-h-0 bg-background text-foreground">{children}</div>
+      </FirebaseSessionProvider>
+    );
+  }
   const isMaintenancePage = pathname === "/maintenance";
   const isAdmin = pathname?.startsWith("/admin");
 

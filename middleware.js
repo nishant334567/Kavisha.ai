@@ -5,7 +5,24 @@ import { getCookieOptions } from "./app/lib/firebase/cookie-config";
 
 import { isBrandAdmin } from "./app/lib/firebase/check-admin";
 
-const PUBLIC_PATHS = ["/", "/api/login", "/api/brands", "/tnc", "/privacy-policy", "/help", "/about", "/copyright", "/make-avatar", "/community", "/unsubscribe", "/api/unsubscribe", "/api/unsubscribe/resolve", "/links", "/api/links"];
+const PUBLIC_PATHS = [
+  "/",
+  "/widget",
+  "/api/login",
+  "/api/brands",
+  "/tnc",
+  "/privacy-policy",
+  "/help",
+  "/about",
+  "/copyright",
+  "/make-avatar",
+  "/community",
+  "/unsubscribe",
+  "/api/unsubscribe",
+  "/api/unsubscribe/resolve",
+  "/links",
+  "/api/links",
+];
 
 function getSubdomainFromRequest(hostname) {
   if (!hostname) return "kavisha";
@@ -29,6 +46,9 @@ export async function middleware(request) {
 
   // ✅ CRON BYPASS – allow scheduler POST without Firebase auth
   if (pathname.startsWith("/api/admin/cron")) {
+    return NextResponse.next();
+  }
+  if (pathname.startsWith("/api/widget")) {
     return NextResponse.next();
   }
   const hostname = request.nextUrl.hostname || "";
@@ -67,7 +87,10 @@ export async function middleware(request) {
       }
       return NextResponse.next();
     },
-    handleError: async (error) => {
+    handleError: async () => {
+      if (PUBLIC_PATHS.includes(request.nextUrl.pathname)) {
+        return NextResponse.next();
+      }
       return NextResponse.redirect(new URL("/", request.url));
     },
   });
