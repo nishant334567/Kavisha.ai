@@ -9,7 +9,8 @@ async function createSessionWithDefaultLog(
   initialmessage = null,
   isCommunityChat,
   chatName,
-  serviceKey
+  serviceKey,
+  options = {}
 ) {
   if (!serviceKey || typeof serviceKey !== "string" || !serviceKey.trim()) {
     throw new Error("serviceKey is required and must be a non-empty string");
@@ -23,6 +24,7 @@ async function createSessionWithDefaultLog(
       isCommunityChat: Boolean(isCommunityChat),
       name: chatName,
       serviceKey: serviceKey.trim(),
+      isWidget: Boolean(options.isWidget),
     });
 
     await Logs.create({
