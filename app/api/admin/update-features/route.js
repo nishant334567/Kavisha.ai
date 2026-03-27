@@ -6,7 +6,7 @@ import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 export async function PATCH(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
-      const { subdomain, enableQuiz, quizName, enableJobs, enableProducts, enableBooking, enableBlogs, enableCommunityOnboarding, communityName, enableProfessionalConnect, enableFriendConnect } =
+      const { subdomain, enableQuiz, quizName, enableJobs, enableProducts, enableBooking, enableBlogs, enableLinks, enableCommunityOnboarding, communityName, enableProfessionalConnect, enableFriendConnect } =
         await req.json();
 
       // Check if requester is admin for this brand
@@ -38,6 +38,7 @@ export async function PATCH(req) {
       if (enableFriendConnect !== undefined) updateData.enableFriendConnect = enableFriendConnect;
       if (enableBooking !== undefined) updateData.enableBooking = enableBooking;
       if (enableBlogs !== undefined) updateData.enableBlogs = enableBlogs;
+      if (enableLinks !== undefined) updateData.enableLinks = enableLinks;
 
       const updatedBrandData = await client
         .patch(brandData._id)

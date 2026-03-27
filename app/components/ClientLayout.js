@@ -89,7 +89,9 @@ export default function ClientLayout({ children }) {
     const homepageActionLinks = [
       { label: "TALK TO ME", path: "/chats", primary: true },
       { label: "COMMUNITY", path: "/community" },
-      { label: "LINKS", path: `/links${linksQs}` },
+      ...(brand?.enableLinks !== false
+        ? [{ label: "LINKS", path: `/links${linksQs}` }]
+        : []),
     ];
 
     if (!showHomepageLinks) {

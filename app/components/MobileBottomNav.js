@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { LayoutGrid, Users, Home, MessagesSquare, Link2 } from "lucide-react";
+import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 
 const ACTIVE = "text-[#00888E]";
 const INACTIVE = "text-muted";
@@ -22,6 +23,11 @@ const items = [
 
 export default function MobileBottomNav({ embedded = false }) {
   const pathname = usePathname() || "";
+  const brand = useBrandContext();
+  const showLinks = brand?.enableLinks !== false;
+  const visibleItems = showLinks
+    ? items
+    : items.filter((i) => i.href !== "/links");
 
   return (
     <nav
@@ -37,7 +43,7 @@ export default function MobileBottomNav({ embedded = false }) {
       aria-label="Main navigation"
     >
       <div className="flex items-stretch justify-around gap-0 px-1 pt-2">
-        {items.map(({ href, label, icon: Icon, match }) => {
+        {visibleItems.map(({ href, label, icon: Icon, match }) => {
           const active = match(pathname);
           return (
             <Link

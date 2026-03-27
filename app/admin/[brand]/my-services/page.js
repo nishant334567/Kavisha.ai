@@ -20,6 +20,7 @@ export default function MyServices() {
     enableProducts: brandContext?.enableProducts || false,
     enableBooking: brandContext?.enableBooking || false,
     enableBlogs: brandContext?.enableBlogs || false,
+    enableLinks: brandContext?.enableLinks !== false,
     enableCommunityOnboarding: true,
     communityName: brandContext?.communityName || "",
     enableProfessionalConnect: brandContext?.enableProfessionalConnect || false,
@@ -92,6 +93,7 @@ export default function MyServices() {
         enableProducts: brandContext.enableProducts || false,
         enableBooking: brandContext.enableBooking || false,
         enableBlogs: brandContext.enableBlogs || false,
+        enableLinks: brandContext.enableLinks !== false,
         enableCommunityOnboarding: true,
         communityName: brandContext.communityName || "",
         enableProfessionalConnect:
@@ -298,6 +300,7 @@ export default function MyServices() {
                 featureData.enableProducts ||
                 featureData.enableBooking ||
                 featureData.enableBlogs ||
+                featureData.enableLinks ||
                 featureData.enableCommunityOnboarding) && (
                 <div className="mb-5 rounded-xl border border-border bg-muted-bg p-3">
                   <p className="mb-2 text-xs uppercase tracking-widest text-muted">
@@ -332,6 +335,11 @@ export default function MyServices() {
                     {featureData.enableBlogs && (
                       <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
                         Blog
+                      </span>
+                    )}
+                    {featureData.enableLinks && (
+                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                        Links
                       </span>
                     )}
                   </div>
@@ -704,6 +712,39 @@ export default function MyServices() {
                     </div>
                     <span className="text-xs text-muted">
                       Blog posts for users
+                    </span>
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium uppercase tracking-wider text-foreground">
+                        Links
+                      </span>
+                      <GoToButton
+                        path={`/admin/links?subdomain=${encodeURIComponent(brandSubdomain)}`}
+                        label="Links"
+                        show={featureData.enableLinks}
+                      />
+                      <label className="relative inline-flex items-center cursor-pointer">
+                        <input
+                          type="checkbox"
+                          checked={featureData.enableLinks}
+                          onChange={(e) =>
+                            handleToggleFeature(
+                              "enableLinks",
+                              e.target.checked,
+                            )
+                          }
+                          disabled={updating}
+                          className="sr-only peer"
+                        />
+                        <div className="h-6 w-11 rounded-full bg-border peer peer-checked:bg-ring after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-border after:bg-card after:transition-all after:content-[''] peer-checked:after:translate-x-full"></div>
+                      </label>
+                    </div>
+                    <span className="text-xs text-muted">
+                      Link tree page &amp; navigation
                     </span>
                   </div>
                 </div>
