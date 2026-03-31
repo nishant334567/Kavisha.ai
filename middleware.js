@@ -48,9 +48,6 @@ export async function middleware(request) {
   if (pathname.startsWith("/api/admin/cron")) {
     return NextResponse.next();
   }
-  if (pathname.startsWith("/api/widget")) {
-    return NextResponse.next();
-  }
   const hostname = request.nextUrl.hostname || "";
   if (hostname.toLowerCase().startsWith("www.")) {
     const targetHost = hostname.replace(/^www\./i, "");
