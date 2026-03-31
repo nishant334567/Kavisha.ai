@@ -33,6 +33,7 @@ false
 - NEVER return more or fewer than 4 parts
 - ALWAYS include all 4 parts in every response
 - If you miss the format, the system will break
+- In the Summary (part 2), NEVER include any person's name. Do NOT write "ABC is...". Use neutral phrasing like "User is..." / "They are..." and only include the requirements/details.
 
 **SUMMARY PRESERVATION:**
 - If allDataCollected = true, you'll be given the existing summary. Return it EXACTLY unless user updates existing info.
