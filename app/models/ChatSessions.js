@@ -15,11 +15,6 @@ const ChatSessionsSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
-    /** Sessions started from the embed widget */
-    isWidget: {
-      type: Boolean,
-      default: false,
-    },
     brand: {
       type: String,
       required: true,

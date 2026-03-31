@@ -74,7 +74,7 @@ export default function BlogPostPage() {
   if (loading) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
-        <p className="text-muted">Loading...</p>
+        <p className="text-gray-500">Loading...</p>
       </div>
     );
   }
@@ -82,7 +82,7 @@ export default function BlogPostPage() {
   if (!post) {
     return (
       <div className="mx-auto max-w-3xl px-4 py-12">
-        <p className="text-muted">Post not found.</p>
+        <p className="text-gray-600">Post not found.</p>
         <button
           type="button"
           onClick={() => router.push(blogsHref)}
@@ -100,7 +100,7 @@ export default function BlogPostPage() {
       <button
         type="button"
         onClick={() => router.push(blogsHref)}
-        className="mb-6 inline-flex items-center gap-2 text-muted transition-colors hover:text-foreground"
+        className="mb-6 inline-flex items-center gap-2 text-gray-600 hover:text-gray-900"
       >
         <ArrowLeft className="h-4 w-4" />
         Back to blog
@@ -112,9 +112,9 @@ export default function BlogPostPage() {
         brandImageUrl={brandContext?.logoUrl || brandContext?.brandImageUrl}
       />
       {recentPosts.length > 0 && (
-        <section className="mx-auto mt-16 max-w-3xl border-t border-border pt-10">
+        <section className="mx-auto mt-16 max-w-3xl border-t border-gray-200 pt-10">
           <div className="flex flex-wrap items-center justify-between gap-2 mb-6">
-            <h2 className="text-xl font-bold text-foreground">Read more articles</h2>
+            <h2 className="text-xl font-bold text-gray-900">Read more articles</h2>
             <Link
               href={blogsHref}
               className="text-sm font-medium text-[#2D545E] hover:underline"

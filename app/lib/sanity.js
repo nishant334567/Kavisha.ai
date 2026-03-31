@@ -21,7 +21,7 @@ const getClient = () => {
     projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "wkgir1xd",
     dataset,
     apiVersion: "2025-01-01",
-    useCdn: process.env.NODE_ENV === "production", // Use CDN in production
+    useCdn: false, // Use CDN in production
     token: process.env.SANITY_API_TOKEN, // Add token for mutations
   });
 };
