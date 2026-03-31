@@ -662,8 +662,9 @@ export default function ChatBox({
             <div ref={endOfMessagesRef}></div>
             {/* </div> */}
           </div>
-          {/* Initial questions: show when 0 or 1 message, then hide */}
-          {messages.length <= 1 &&
+          {/* Initial questions: ONLY for lead_journey */}
+          {currentChatType?.toLowerCase() === "lead_journey" &&
+            messages.length <= 1 &&
             (() => {
               const service = brandContext?.services?.find(
                 (s) => s._key === serviceKey,

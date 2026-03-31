@@ -40,10 +40,9 @@ export async function GET(request) {
           .lean();
 
         const maskName = (name) => {
-          if (!name) return "A*****";
-          return name.split(" ").map(word =>
-            word.charAt(0) + "*".repeat(Math.max(4, word.length - 1))
-          ).join(" ");
+          const raw = String(name || "").trim();
+          if (!raw) return "A";
+          return raw.charAt(0).toUpperCase();
         };
 
         const usersMap = new Map();
