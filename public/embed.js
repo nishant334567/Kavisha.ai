@@ -3,10 +3,16 @@ function mount() {
   if (!script || !script.src) return;
 
   var base = new URL(script.src).origin;
+  var brand =
+    script.getAttribute("data-brand") ||
+    script.getAttribute("data-subdomain") ||
+    "";
+  var q = new URLSearchParams();
+  if (brand) q.set("brand", brand);
 
   var iframe = document.createElement("iframe");
   iframe.setAttribute("title", "Chat");
-  iframe.src = base + "/widget";
+  iframe.src = base + "/widget" + (q.toString() ? "?" + q.toString() : "");
   iframe.style.cssText =
     "position:fixed;right:24px;bottom:24px;width:72px;height:72px;border:0;z-index:2147483647;";
   document.body.appendChild(iframe);
