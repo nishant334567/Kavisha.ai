@@ -28,7 +28,7 @@ function WidgetShell() {
   }, [isOpen]);
 
   return (
-    <div className="fixed inset-0 box-border flex flex-col items-end justify-end overflow-hidden bg-background p-2">
+    <div className="fixed inset-0 box-border flex flex-col items-end justify-end overflow-hidden bg-transparent p-2">
       {isOpen ? (
         <div className="flex h-full min-h-0 w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40">
           <div className="relative flex w-full min-w-0 shrink-0 items-center rounded-t-2xl border-b border-border/40 bg-muted-bg/20 px-1 py-3 dark:border-border/30 dark:bg-muted-bg/15">
@@ -53,7 +53,7 @@ function WidgetShell() {
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label="Open chat"
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-highlight text-white shadow-lg ring-2 ring-highlight/30 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background"
+          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-highlight text-white shadow-lg ring-2 ring-highlight/30 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-transparent"
         >
           <MessageCircle className="h-6 w-6" strokeWidth={2} />
         </button>
@@ -66,7 +66,7 @@ export default function WidgetPage() {
   return (
     <Suspense
       fallback={
-        <div className="fixed inset-0 flex items-center justify-center bg-background p-4 text-sm text-muted">
+        <div className="fixed inset-0 flex items-center justify-center bg-transparent p-4 text-sm text-muted">
           Loading…
         </div>
       }

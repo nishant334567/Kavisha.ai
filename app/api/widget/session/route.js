@@ -27,7 +27,7 @@ export async function POST(request) {
 
       const data = await sanity.fetch(
         `*[_type == "brand" && subdomain == $brand][0]{
-          "services": services[]{ _key, name }
+          "services": services[]{ _key, name, initialMessage }
         }`,
         { brand }
       );
@@ -40,15 +40,23 @@ export async function POST(request) {
       }
 
       const requestedKey = String(body?.serviceKey ?? "").trim();
-      let serviceKey;
+      let selected;
       if (requestedKey) {
-        const match = leads.find((s) => s._key === requestedKey);
-        if (!match) {
+        selected = leads.find((s) => s._key === requestedKey);
+        if (!selected) {
           return fail("Invalid lead journey for this brand", 400);
         }
-        serviceKey = match._key;
       } else {
-        serviceKey = leads[0]._key;
+        selected = leads[0];
+      }
+
+      const serviceKey = selected._key;
+      const initialMessage = String(selected.initialMessage ?? "").trim();
+      if (!initialMessage) {
+        return fail(
+          "Lead journey has no ChatBot Initial Message in Sanity — set it on the service.",
+          400
+        );
       }
 
       try {
@@ -56,7 +64,7 @@ export async function POST(request) {
           user.id,
           "lead_journey",
           brand,
-          null,
+          initialMessage,
           false,
           null,
           serviceKey,

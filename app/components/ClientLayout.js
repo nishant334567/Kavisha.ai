@@ -22,7 +22,7 @@ export default function ClientLayout({ children }) {
   if (pathname === "/widget") {
     return (
       <FirebaseSessionProvider>
-        <div className="h-full min-h-0 bg-background text-foreground">{children}</div>
+        <div className="h-full min-h-0 bg-transparent text-foreground">{children}</div>
       </FirebaseSessionProvider>
     );
   }
