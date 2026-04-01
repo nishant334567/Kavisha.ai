@@ -4,7 +4,7 @@ import Session from "@/app/models/ChatSessions";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { getUserFromDB } from "@/app/lib/firebase/get-user";
 
-/** List widget-only lead journey sessions for this user + brand */
+/** Embed widget: only sessions started from the widget (`isWidget: true`) for this user + brand */
 export async function GET(request) {
   return withAuth(request, {
     onAuthenticated: async ({ decodedToken }) => {
@@ -26,7 +26,7 @@ export async function GET(request) {
         })
           .sort({ createdAt: -1 })
           .limit(50)
-          .select("_id title name createdAt")
+          .select("_id title name createdAt isWidget")
           .lean();
 
         return NextResponse.json({
@@ -34,6 +34,7 @@ export async function GET(request) {
             id: String(s._id),
             title: s.title || s.name || "Chat",
             createdAt: s.createdAt,
+            isWidget: true,
           })),
         });
       } catch (e) {

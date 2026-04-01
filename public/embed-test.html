@@ -4,10 +4,19 @@
     <meta charset="utf-8" />
     <title>Embed test (same-origin)</title>
     <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+      body {
+        min-height: 100vh;
+        margin: 0;
+        padding: 1.5rem;
+        background: #22c55e;
+        font-family: system-ui, sans-serif;
+      }
+    </style>
   </head>
   <body>
     <h1>Host page</h1>
     <p>Widget should appear bottom-right. Prefer this over <code>file://</code> for testing.</p>
-    <script src="/embed.js" async defer></script>
+    <script src="/embed.js" data-brand="nishantmittal" async defer></script>
   </body>
 </html>
