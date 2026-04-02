@@ -50,6 +50,9 @@ app/secrets/
 # vercel
 .vercel
 
+# Firebase Hosting (auth subdomain deploy from firebase-auth-hosting/)
+firebase-auth-hosting/.firebase/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

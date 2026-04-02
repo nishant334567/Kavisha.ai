@@ -7,7 +7,8 @@
     "dev:next": "next dev --turbopack",
     "build": "next build",
     "start": "node app/server.js",
-    "lint": "next lint"
+    "lint": "next lint",
+    "deploy:firebase-auth-hosting": "cd firebase-auth-hosting && npx --yes firebase-tools@latest deploy --only hosting"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",
