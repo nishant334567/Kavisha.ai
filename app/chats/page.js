@@ -78,8 +78,8 @@ export default function HomePage() {
         const fetchData = async () => {
             const endpoint =
                 brandContext.subdomain === "kavisha"
-                    ? "/api/allchats"
-                    : `/api/allchats/${brandContext.subdomain}`;
+                    ? "/api/allchats?leadJourneyOnly=true"
+                    : `/api/allchats/${brandContext.subdomain}?leadJourneyOnly=true`;
             const res = await fetch(endpoint);
             const data = await res.json();
             setAllchats(data);

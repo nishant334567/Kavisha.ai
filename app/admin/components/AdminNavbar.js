@@ -3,14 +3,15 @@ import { signIn } from "@/app/lib/firebase/sign-in";
 import { useFirebaseSession } from "../../lib/firebase/FirebaseSessionProvider";
 import { signOut } from "@/app/lib/firebase/logout";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { User, Settings, Menu, X, MessageCircleMore } from "lucide-react";
-import { useRouter, usePathname } from "next/navigation";
+import { Settings, Menu, X, MessageCircleMore } from "lucide-react";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
 export default function AdminNavbar() {
   const { user, loading } = useFirebaseSession();
   const router = useRouter();
   const brand = useBrandContext();
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [showNavoption, setShowNavoption] = useState(false);
   const [showSettingDropdown, setShowsettingDropdown] = useState(false);
   const [loadingPath, setLoadingPath] = useState(null);
@@ -33,6 +34,11 @@ export default function AdminNavbar() {
     };
   }, [showSettingDropdown]);
 
+  const searchKey = searchParams.toString();
+  useEffect(() => {
+    setLoadingPath(null);
+  }, [pathname, searchKey]);
+
   const settingOptions = [
     { name: "Sign Out", path: "" },
     { name: "Add Admin", path: `/admin/${brand?.subdomain}/add-admin` },
@@ -50,6 +56,14 @@ export default function AdminNavbar() {
   ];
 
   const handleNavigate = (path, { closeMenu = false, closeSettings = false } = {}) => {
+    if (typeof window !== "undefined") {
+      const here = window.location.pathname + window.location.search;
+      if (here === path) {
+        if (closeMenu) setShowNavoption(false);
+        if (closeSettings) setShowsettingDropdown(false);
+        return;
+      }
+    }
     setLoadingPath(path);
     if (closeMenu) setShowNavoption(false);
     if (closeSettings) setShowsettingDropdown(false);
@@ -63,18 +77,27 @@ export default function AdminNavbar() {
       <nav className="fixed top-0 left-0 right-0 z-50 h-14 w-full border-b border-border bg-card text-muted">
         <div className="hidden px-4 h-full md:flex items-center justify-between font-baloo text-sm">
           <div className="hidden md:flex items-center gap-3">
-            <div className="flex justify-between items-center">
-              <img
-                src="/avatar.png"
-                alt="Avatar"
-                className="w-6 h-6 rounded-full"
-              />
-            </div>
             <button
+              type="button"
               onClick={() => handleNavigate(`/admin/${brand?.subdomain}/v2`)}
-              className="text-foreground uppercase tracking-wide transition-opacity hover:opacity-80"
+              className="flex items-center gap-3 rounded-md transition-opacity hover:opacity-80"
             >
-              {getNavLabel(`/admin/${brand?.subdomain}/v2`, "Home")}
+              {brand?.logoUrl ? (
+                <div className="h-8 w-8 shrink-0 overflow-hidden rounded-full bg-muted-bg ring-1 ring-border">
+                  <img
+                    src={brand.logoUrl}
+                    alt={`${brand?.brandName || "Brand"} logo`}
+                    className="h-full w-full object-cover"
+                  />
+                </div>
+              ) : (
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#2D545E] text-sm font-bold text-white">
+                  {brand?.brandName?.[0]?.toUpperCase() || "K"}
+                </div>
+              )}
+              <span className="text-foreground uppercase tracking-wide">
+                {getNavLabel(`/admin/${brand?.subdomain}/v2`, "Home")}
+              </span>
             </button>
           </div>
           <button onClick={() => setShowNavoption(true)} className="md:hidden">

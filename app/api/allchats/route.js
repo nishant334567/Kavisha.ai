@@ -21,8 +21,13 @@ export async function GET(request) {
         await connectDB();
         const { searchParams } = new URL(request.url);
         const communityOnly = searchParams.get("community") === "true";
+        const leadJourneyOnly = searchParams.get("leadJourneyOnly") === "true";
         const filter = { userId: user.id };
         if (communityOnly) filter.isCommunityChat = true;
+        else if (leadJourneyOnly) {
+          filter.role = "lead_journey";
+          filter.isCommunityChat = { $ne: true };
+        }
         const sessions = await Session.find(filter)
           .select("_id title role updatedAt brand allDataCollected")
           .sort({ updatedAt: -1 });
