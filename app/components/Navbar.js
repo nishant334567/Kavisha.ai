@@ -4,7 +4,7 @@ import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { signIn } from "../lib/firebase/sign-in";
 import { signOut } from "../lib/firebase/logout";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname, useSearchParams } from "next/navigation";
 import {
   Menu,
   Settings,
@@ -36,6 +36,8 @@ export default function Navbar() {
   const { user, loading, refresh } = useFirebaseSession();
   const brand = useBrandContext();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
   const [signingIn, setSigningIn] = useState(false);
   const [loadingPath, setLoadingPath] = useState(null);
   const [popupBlockedHint, setPopupBlockedHint] = useState(false);
@@ -50,6 +52,11 @@ export default function Navbar() {
     setIsInAppBrowser(detectInAppBrowser());
     setIsMobile(isMobileDevice());
   }, []);
+
+  const searchKey = searchParams.toString();
+  useEffect(() => {
+    setLoadingPath(null);
+  }, [pathname, searchKey]);
 
   useEffect(() => {
     if (!openMenu) return;
@@ -118,6 +125,14 @@ export default function Navbar() {
   };
 
   const handleNavigate = (path, { closeMenu = false, closeSettings = false } = {}) => {
+    if (typeof window !== "undefined") {
+      const here = window.location.pathname + window.location.search;
+      if (here === path) {
+        if (closeMenu) setOpenmenu(false);
+        if (closeSettings) setShowsettingDropdown(false);
+        return;
+      }
+    }
     setLoadingPath(path);
     if (closeMenu) setOpenmenu(false);
     if (closeSettings) setShowsettingDropdown(false);
