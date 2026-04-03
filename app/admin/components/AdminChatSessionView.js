@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback } from "react";
 import FormatText from "@/app/components/FormatText";
-import { formatToIST } from "@/app/utils/formatToIST";
+import { formatToIST, formatTimeOnlyIST } from "@/app/utils/formatToIST";
 import { MessageCircle, Clock, User, FileText } from "lucide-react";
 import ChunkDetailModal from "./ChunkDetailModal";
 
@@ -59,8 +59,7 @@ export default function AdminChatSessionView({ sessionId }) {
     [session?.brand]
   );
 
-  const time = (d) =>
-    d ? new Date(d).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }) : "—";
+  const time = (d) => formatTimeOnlyIST(d);
 
   if (!sessionId) return null;
   if (loading)
