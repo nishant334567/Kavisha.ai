@@ -128,11 +128,14 @@ export default function UserCard({
             </button>
           </div>
 
-          {/* Total Messages and Cost */}
-          <div className="flex items-center gap-3 text-xs text-highlight">
+          {/* Total messages, sessions, and cost */}
+          <div className="flex flex-wrap items-center gap-3 text-xs text-highlight">
             <span className="flex items-center gap-1">
               <MessagesSquare className="h-4 w-4 shrink-0 text-highlight" aria-hidden />
               <span>{user.sessions?.reduce((sum, s) => sum + (s.messageCount || 0), 0) || 0}</span>
+            </span>
+            <span className="text-muted">
+              Sessions: {user.sessions?.length ?? 0}
             </span>
             <span className="flex items-center gap-1">
               <IndianRupee className="h-4 w-4 shrink-0 text-highlight" aria-hidden />
@@ -261,13 +264,7 @@ export default function UserCard({
                     ) || 0}
                   </p>
                   <p className="font-baloo">
-                    Total Cost: Rs.{" "}
-                    {(
-                      user.sessions?.reduce(
-                        (sum, session) => sum + (session.totalCost || 0),
-                        0
-                      ) || 0
-                    ).toFixed(2)}
+                    Chat sessions: {user.sessions?.length ?? 0}
                   </p>
                 </div>
               </div>
@@ -351,7 +348,11 @@ export default function UserCard({
                       </span>
                       <span className="flex items-center gap-1.5">
                         <MessageCircleMore className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />
-                        <span>{selectedChatSession?.comment ? "1 Comment" : "0 Comments"}</span>
+                        <span>
+                          {(selectedChatSession?.commentCount ?? 0) === 1
+                            ? "1 Comment"
+                            : `${selectedChatSession?.commentCount ?? 0} Comments`}
+                        </span>
                       </span>
                       <span className="flex items-center gap-1.5">
                         <ArrowRight className="h-3.5 w-3.5 shrink-0 text-muted" aria-hidden />

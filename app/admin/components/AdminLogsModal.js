@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import FormatText from "@/app/components/FormatText";
 import { X, FileText } from "lucide-react";
+import { formatDateIST, formatTimeOnlyIST } from "@/app/utils/formatToIST";
 import ChunkDetailModal from "./ChunkDetailModal";
 
 export default function AdminLogsModal({
@@ -45,41 +46,14 @@ export default function AdminLogsModal({
     },
     [brand]
   );
-  const formatTime = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleString("en-US", {
-      hour: "numeric",
-      minute: "2-digit",
-      hour12: true,
-    });
-  };
+  const formatTime = (dateString) => formatTimeOnlyIST(dateString);
 
-  const formatDate = (dateString) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", {
-      month: "2-digit",
-      day: "2-digit",
-      year: "numeric",
-    });
-  };
+  const formatDate = (dateString) => formatDateIST(dateString);
 
   const formatFooterDate = (dateString) => {
-    const date = new Date(dateString);
-    const months = [
-      "Jan",
-      "Feb",
-      "Mar",
-      "Apr",
-      "May",
-      "Jun",
-      "Jul",
-      "Aug",
-      "Sep",
-      "Oct",
-      "Nov",
-      "Dec",
-    ];
-    return `${date.getDate()} ${months[date.getMonth()]}. ${date.getFullYear()}, ${formatTime(dateString)}`;
+    const d = formatDateIST(dateString);
+    const t = formatTimeOnlyIST(dateString);
+    return d && t !== "—" ? `${d}, ${t}` : t;
   };
 
   const getFirstMessageDate = () => {

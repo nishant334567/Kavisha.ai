@@ -414,6 +414,7 @@ export default function ChatRequests() {
           <CommentModal
             sessionId={commentModalSessionId}
             onClose={() => setCommentModalSessionId(null)}
+            onCommentAdded={() => applyFilters(filters)}
           />
         )}
 

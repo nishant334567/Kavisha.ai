@@ -2,19 +2,21 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { X, Send } from "lucide-react";
+import { formatDateIST, formatToIST } from "@/app/utils/formatToIST";
 
 function formatTime(createdAt) {
   const d = new Date(createdAt);
+  if (Number.isNaN(d.getTime())) return "";
   const now = new Date();
   const diff = Math.floor((now - d) / 1000);
   if (diff < 60) return "Just now";
   if (diff < 3600) return `${Math.floor(diff / 60)} min ago`;
   if (diff < 86400) return `${Math.floor(diff / 3600)} hours ago`;
   if (diff < 2592000) return `${Math.floor(diff / 86400)} days ago`;
-  return d.toLocaleDateString();
+  return formatDateIST(createdAt) || formatToIST(createdAt);
 }
 
-export default function CommentModal({ sessionId, onClose }) {
+export default function CommentModal({ sessionId, onClose, onCommentAdded }) {
   const [comments, setComments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [text, setText] = useState("");
@@ -52,6 +54,7 @@ export default function CommentModal({ sessionId, onClose }) {
       if (data.success && data.comment) {
         setComments((prev) => [...prev, data.comment]);
         setText("");
+        onCommentAdded?.();
       }
     } finally {
       setSending(false);

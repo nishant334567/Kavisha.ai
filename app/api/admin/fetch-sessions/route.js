@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
+import AdminComment from "@/app/models/AdminComment";
 import Logs from "@/app/models/ChatLogs";
 import Assessments from "@/app/models/Assessment";
 import Attempts from "@/app/models/Attempt";
@@ -137,7 +138,7 @@ export async function GET(request) {
     const sessions = await Session.find(filter)
       .populate("userId", "name email _id")
       .select(
-        "userId role title chatSummary status allDataCollected createdAt updatedAt comment totalInputTokens totalOutputTokens assignedTo serviceKey"
+        "userId role title chatSummary status allDataCollected createdAt updatedAt totalInputTokens totalOutputTokens assignedTo serviceKey"
       )
       .sort({ createdAt: -1 })
       .lean();
@@ -149,6 +150,17 @@ export async function GET(request) {
     ]);
     const messageCountMap = new Map(
       messageCounts.map((item) => [item._id.toString(), item.count])
+    );
+
+    const commentCounts =
+      sessionIds.length === 0
+        ? []
+        : await AdminComment.aggregate([
+            { $match: { sessionId: { $in: sessionIds } } },
+            { $group: { _id: "$sessionId", count: { $sum: 1 } } },
+          ]);
+    const commentCountMap = new Map(
+      commentCounts.map((item) => [item._id.toString(), item.count])
     );
 
     const usersMap = new Map();
@@ -173,6 +185,7 @@ export async function GET(request) {
       }
 
       const messageCount = messageCountMap.get(session._id.toString()) || 0;
+      const commentCount = commentCountMap.get(session._id.toString()) || 0;
       const inputTokens = session.totalInputTokens || 0;
       const outputTokens = session.totalOutputTokens || 0;
       const totalCostUSD =
@@ -189,7 +202,7 @@ export async function GET(request) {
         allDataCollected: session.allDataCollected,
         createdAt: session.createdAt,
         updatedAt: session.updatedAt,
-        comment: session.comment,
+        commentCount,
         assignedTo: Array.isArray(session.assignedTo) ? session.assignedTo : (session.assignedTo ? [session.assignedTo] : []),
         messageCount: messageCount,
         totalInputTokens: inputTokens,
