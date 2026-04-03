@@ -60,7 +60,7 @@ export default function AvatarHomepage() {
 
   return (
     <div className="h-full flex flex-col bg-background">
-      <div className={`flex-1 overflow-y-auto mx-auto w-full md:max-w-[60%] md:px-8 ${contentSpacingClass} space-y-4 pb-32 md:pb-24`}>
+      <div className="flex-1 w-full overflow-y-auto space-y-4 pb-32 md:mx-auto md:max-w-[85%] md:px-8 md:pb-24 xl:max-w-[60%]">
         {/* <div className="md:hidden flex gap-4 my-2 px-4">
           <img
             src={brand?.logoUrl}
@@ -78,7 +78,7 @@ export default function AvatarHomepage() {
           <img
             src={brand.brandImageUrl}
             alt={brand?.brandName?.toUpperCase() || "Brand"}
-            className="w-full h-[250px] md:max-h-[50vh] object-cover md:rounded-lg"
+            className="w-full h-full md:h-[250px] md:max-h-[50vh] md:rounded-lg"
           />
         )}
 
