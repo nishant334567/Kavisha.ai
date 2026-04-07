@@ -5,8 +5,17 @@ import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import Resume from "./Resume";
 import FormatText from "./FormatText";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { Mic, MicOff, Send, Paperclip, ChevronLeft, ChevronRight } from "lucide-react";
+import {
+  Mic,
+  MicOff,
+  Send,
+  Paperclip,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import Matches from "@/app/components/Matches";
+import CommunityOnboardingProgress from "@/app/components/CommunityOnboardingProgress";
+import { normalizeBrandHex } from "@/app/lib/brandTheme";
 
 export default function ChatBox({
   currentChatId,
@@ -50,6 +59,8 @@ export default function ChatBox({
   const [serviceKey, setServiceKey] = useState(null);
   const [sessionMessageCount, setSessionMessageCount] = useState(0);
   const [sessionDetailsLoading, setSessionDetailsLoading] = useState(true);
+  const [isCommunitySession, setIsCommunitySession] = useState(false);
+  const [onboardingPercent, setOnboardingPercent] = useState(0);
 
   // Fetch chat type from chat ID
   useEffect(() => {
@@ -57,6 +68,8 @@ export default function ChatBox({
       setCurrentChatType(null);
       setServiceKey(null);
       setSessionMessageCount(0);
+      setIsCommunitySession(false);
+      setOnboardingPercent(0);
       setSessionDetailsLoading(false);
       return;
     }
@@ -73,6 +86,19 @@ export default function ChatBox({
           setSessionMessageCount(
             typeof data.messageCount === "number" ? data.messageCount : 0,
           );
+          const community = Boolean(data.isCommunityChat);
+          setIsCommunitySession(community);
+          const pct =
+            typeof data.onboardingPercent === "number" &&
+            !Number.isNaN(data.onboardingPercent)
+              ? Math.max(0, Math.min(100, data.onboardingPercent))
+              : 0;
+          setOnboardingPercent(data.allDataCollected ? 100 : pct);
+          if (data.allDataCollected) {
+            setHasDatacollected(true);
+          } else {
+            setHasDatacollected(false);
+          }
         }
       } catch (error) {
         console.error("Error fetching chat type:", error);
@@ -314,6 +340,15 @@ export default function ChatBox({
           setMatches([]);
           setHasDatacollected(false);
         }
+
+        const pct = data?.onboardingProgress?.percent;
+        if (
+          isCommunitySession &&
+          typeof pct === "number" &&
+          !Number.isNaN(pct)
+        ) {
+          setOnboardingPercent(Math.max(0, Math.min(100, pct)));
+        }
       };
       resumeSent();
     }
@@ -431,6 +466,13 @@ export default function ChatBox({
     } else if (data?.allDataCollected === "false") {
       setHasDatacollected(false);
     }
+
+    if (currentChatType !== "lead_journey" && isCommunitySession) {
+      const pct = data?.onboardingProgress?.percent;
+      if (typeof pct === "number" && !Number.isNaN(pct)) {
+        setOnboardingPercent(Math.max(0, Math.min(100, pct)));
+      }
+    }
   };
   useEffect(() => {
     if (!currentChatId) {
@@ -477,6 +519,9 @@ export default function ChatBox({
       </div>
     );
   }
+
+  const primaryBrandHex = normalizeBrandHex(brandContext?.primaryBrandColor);
+  const displayOnboardingPct = hasDatacollected ? 100 : onboardingPercent;
 
   return (
     <div className="font-baloo w-full max-w-full md:w-3/5 flex bg-background rounded-xl p-2 md:p-4 h-full min-h-0 mx-2 md:mx-4 overflow-hidden">
@@ -547,6 +592,15 @@ export default function ChatBox({
               </div>
             </div>
           </div>
+
+          {isCommunitySession &&
+            currentChatType?.toLowerCase() !== "lead_journey" && (
+              <CommunityOnboardingProgress
+                percent={displayOnboardingPct}
+                primaryBrandHex={primaryBrandHex}
+              />
+            )}
+
           {/* Messages Section - flex-2, scrollable */}
           <div className="flex-[4] min-h-0 overflow-y-scroll overflow-x-hidden scrollbar-none">
             {/* <div className="flex flex-col gap-2 min-h-full justify-end"> */}

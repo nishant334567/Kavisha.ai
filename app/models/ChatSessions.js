@@ -53,6 +53,11 @@ const ChatSessionsSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    /** Last model-reported onboarding completion 0–100 (part 5 of /api/ai) */
+    onboardingPercent: {
+      type: Number,
+      default: 0,
+    },
     embedding: {
       type: [Number],
       required: false,
