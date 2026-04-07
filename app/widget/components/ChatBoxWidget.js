@@ -30,7 +30,7 @@ function buildBrandCommunityUrl(subdomain) {
   return `https://${s}.kavisha.ai/community`;
 }
 
-export default function ChatBoxWidget({ brand }) {
+export default function ChatBoxWidget({ brand, primaryColor = null }) {
   const { user, loading: authLoading, refresh } = useFirebaseSession();
   const endRef = useRef(null);
 
@@ -467,7 +467,8 @@ export default function ChatBoxWidget({ brand }) {
             <button
               type="button"
               onClick={openInChrome}
-              className="w-full rounded-lg bg-highlight px-3 py-2 text-xs font-medium text-white hover:opacity-90"
+              className={`w-full rounded-lg px-3 py-2 text-xs font-medium text-white hover:opacity-90 ${!primaryColor ? "bg-highlight" : ""}`}
+              style={primaryColor ? { backgroundColor: primaryColor } : undefined}
             >
               Open in Chrome
             </button>
@@ -478,7 +479,8 @@ export default function ChatBoxWidget({ brand }) {
             type="button"
             onClick={handleWidgetSignIn}
             disabled={signingIn}
-            className="mx-auto inline-flex w-full max-w-[240px] items-center justify-center rounded-xl bg-highlight px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-90 disabled:opacity-50"
+            className={`mx-auto inline-flex w-full max-w-[240px] items-center justify-center rounded-xl px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-90 disabled:opacity-50 ${!primaryColor ? "bg-highlight" : ""}`}
+            style={primaryColor ? { backgroundColor: primaryColor } : undefined}
           >
             {signingIn ? (
               <>
@@ -673,8 +675,13 @@ export default function ChatBoxWidget({ brand }) {
                 key={m.id != null ? String(m.id) : `${m.role}-${i}`}
                 className={
                   m.role === "user"
-                    ? "ml-auto max-w-[min(100%,22rem)] min-w-0 rounded-2xl rounded-br-md bg-highlight px-4 py-2.5 text-sm text-white shadow-md"
+                    ? `ml-auto max-w-[min(100%,22rem)] min-w-0 rounded-2xl rounded-br-md px-4 py-2.5 text-sm text-white shadow-md ${!primaryColor ? "bg-highlight" : ""}`
                     : "mr-auto w-full max-w-full min-w-0 rounded-2xl rounded-bl-md bg-card px-4 py-2.5 text-sm text-foreground shadow-sm dark:bg-card/90"
+                }
+                style={
+                  m.role === "user" && primaryColor
+                    ? { backgroundColor: primaryColor }
+                    : undefined
                 }
               >
                 {m.role === "assistant" ? (
@@ -712,7 +719,8 @@ export default function ChatBoxWidget({ brand }) {
             <button
               type="submit"
               disabled={sendLoading || !input.trim()}
-              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-highlight text-white shadow-sm transition hover:opacity-90 disabled:opacity-40"
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition hover:opacity-90 disabled:opacity-40 ${!primaryColor ? "bg-highlight" : ""}`}
+              style={primaryColor ? { backgroundColor: primaryColor } : undefined}
               aria-label="Send"
             >
               {sendLoading ? (

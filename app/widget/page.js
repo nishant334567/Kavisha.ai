@@ -5,6 +5,7 @@ import { MessageCircle, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import ChatBoxWidget from "./components/ChatBoxWidget";
 import { WIDGET_SESSION_STORAGE_KEY } from "./constants";
+import { hexToRgba } from "@/app/lib/brandTheme";
 
 export { WIDGET_SESSION_STORAGE_KEY };
 
@@ -14,6 +15,31 @@ function WidgetShell() {
     searchParams.get("brand") || searchParams.get("subdomain") || "";
 
   const [isOpen, setIsOpen] = useState(false);
+  const [primaryColor, setPrimaryColor] = useState(null);
+
+  useEffect(() => {
+    const b = brand.trim().toLowerCase();
+    if (!b) {
+      setPrimaryColor(null);
+      return;
+    }
+    let cancelled = false;
+    fetch(`/api/public/brand-theme?brand=${encodeURIComponent(b)}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (!cancelled && data?.primaryBrandColor) {
+          setPrimaryColor(data.primaryBrandColor);
+        } else if (!cancelled) {
+          setPrimaryColor(null);
+        }
+      })
+      .catch(() => {
+        if (!cancelled) setPrimaryColor(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [brand]);
 
   useEffect(() => {
     if (typeof window === "undefined" || window.parent === window) return;
@@ -45,7 +71,7 @@ function WidgetShell() {
             </button>
           </div>
           <div className="flex min-h-[240px] min-w-0 flex-1 flex-col overflow-hidden px-3 pb-3 pt-2">
-            <ChatBoxWidget brand={brand.trim()} />
+            <ChatBoxWidget brand={brand.trim()} primaryColor={primaryColor} />
           </div>
         </div>
       ) : (
@@ -53,7 +79,15 @@ function WidgetShell() {
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label="Open chat"
-          className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-highlight text-white shadow-lg ring-2 ring-highlight/30 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-transparent"
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-lg ring-2 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-transparent ${!primaryColor ? "bg-highlight ring-highlight/30" : ""}`}
+          style={
+            primaryColor
+              ? {
+                  backgroundColor: primaryColor,
+                  boxShadow: `0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1), 0 0 0 2px ${hexToRgba(primaryColor, 0.35)}`,
+                }
+              : undefined
+          }
         >
           <MessageCircle className="h-6 w-6" strokeWidth={2} />
         </button>

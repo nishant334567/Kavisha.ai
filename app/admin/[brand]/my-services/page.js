@@ -4,6 +4,7 @@ import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, Edit2, Check, X, ArrowUpRight } from "lucide-react";
 import ServiceModal from "@/app/admin/components/ServiceModal";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
+import { normalizeBrandHex } from "@/app/lib/brandTheme";
 
 export default function MyServices() {
   const router = useRouter();
@@ -27,6 +28,10 @@ export default function MyServices() {
     enableFriendConnect: brandContext?.enableFriendConnect || false,
   });
   const [updating, setUpdating] = useState(false);
+  const [brandColors, setBrandColors] = useState({
+    primaryBrandColor: "",
+    secondaryBrandColor: "",
+  });
   const brandSubdomain = brandContext?.subdomain || "";
 
   const services = brandContext?.services || [];
@@ -100,8 +105,38 @@ export default function MyServices() {
           brandContext.enableProfessionalConnect || false,
         enableFriendConnect: brandContext.enableFriendConnect || false,
       });
+      setBrandColors({
+        primaryBrandColor: brandContext.primaryBrandColor || "",
+        secondaryBrandColor: brandContext.secondaryBrandColor || "",
+      });
     }
   }, [brandContext]);
+
+  const handleSaveBrandColors = async () => {
+    if (updating) return;
+    setUpdating(true);
+    try {
+      const response = await fetch("/api/admin/update-features", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: brandContext?.subdomain,
+          primaryBrandColor: brandColors.primaryBrandColor,
+          secondaryBrandColor: brandColors.secondaryBrandColor,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save brand colors");
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to save brand colors");
+      setUpdating(false);
+    }
+  };
 
   const handleToggleFeature = async (featureType, value) => {
     if (updating) return;
@@ -499,6 +534,119 @@ export default function MyServices() {
                           visitors.
                         </p>
                       )}
+                  </div>
+                </div>
+
+                <div className="rounded-xl border border-border bg-muted-bg p-4">
+                  <div className="mb-3">
+                    <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+                      Community &amp; widget colors
+                    </h3>
+                    <p className="mt-1 text-xs text-muted">
+                      Optional. Leave fields empty to keep default Kavisha styling.
+                      Primary applies to the Community title, action buttons, Connect,
+                      sidebar &quot;New&quot;, and the chat widget launcher. Secondary
+                      accents tags and card highlights on Community.
+                    </p>
+                  </div>
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <label className="text-xs font-medium text-muted" htmlFor="primary-brand-color">
+                        Primary (hex)
+                      </label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          id="primary-brand-color"
+                          type="text"
+                          value={brandColors.primaryBrandColor}
+                          onChange={(e) =>
+                            setBrandColors((p) => ({
+                              ...p,
+                              primaryBrandColor: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. #2d545e"
+                          disabled={updating}
+                          className="min-w-[8rem] flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
+                        />
+                        <input
+                          type="color"
+                          aria-label="Pick primary color"
+                          value={
+                            normalizeBrandHex(brandColors.primaryBrandColor) ||
+                            "#2d545e"
+                          }
+                          onChange={(e) =>
+                            setBrandColors((p) => ({
+                              ...p,
+                              primaryBrandColor: e.target.value,
+                            }))
+                          }
+                          disabled={updating}
+                          className="h-10 w-14 cursor-pointer rounded border border-border bg-background p-0.5"
+                        />
+                      </div>
+                    </div>
+                    <div className="min-w-0 flex-1 space-y-2">
+                      <label className="text-xs font-medium text-muted" htmlFor="secondary-brand-color">
+                        Secondary (hex)
+                      </label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          id="secondary-brand-color"
+                          type="text"
+                          value={brandColors.secondaryBrandColor}
+                          onChange={(e) =>
+                            setBrandColors((p) => ({
+                              ...p,
+                              secondaryBrandColor: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. #004A4E"
+                          disabled={updating}
+                          className="min-w-[8rem] flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
+                        />
+                        <input
+                          type="color"
+                          aria-label="Pick secondary color"
+                          value={
+                            normalizeBrandHex(brandColors.secondaryBrandColor) ||
+                            "#004A4E"
+                          }
+                          onChange={(e) =>
+                            setBrandColors((p) => ({
+                              ...p,
+                              secondaryBrandColor: e.target.value,
+                            }))
+                          }
+                          disabled={updating}
+                          className="h-10 w-14 cursor-pointer rounded border border-border bg-background p-0.5"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={handleSaveBrandColors}
+                        className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
+                      >
+                        Save colors
+                      </button>
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={() =>
+                          setBrandColors({
+                            primaryBrandColor: "",
+                            secondaryBrandColor: "",
+                          })
+                        }
+                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted-bg disabled:opacity-50"
+                      >
+                        Clear
+                      </button>
+                    </div>
                   </div>
                 </div>
 

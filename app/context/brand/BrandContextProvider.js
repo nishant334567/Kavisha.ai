@@ -61,7 +61,9 @@ export default function BrandContextProvider({ children }) {
                   enableBooking,
                   enableBlogs,
                   enableLinks,
-                  services
+                  services,
+                  primaryBrandColor,
+                  secondaryBrandColor
               }[0]`,
         );
         if (brand) {
@@ -103,6 +105,8 @@ export default function BrandContextProvider({ children }) {
             enableBlogs: brand.enableBlogs || false,
             enableLinks: brand.enableLinks !== false,
             services: brand.services,
+            primaryBrandColor: brand.primaryBrandColor || "",
+            secondaryBrandColor: brand.secondaryBrandColor || "",
           };
 
           setBrandContext(context);
