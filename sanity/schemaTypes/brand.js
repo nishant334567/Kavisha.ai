@@ -119,6 +119,20 @@ export default {
       hidden: ({ parent }) => !parent?.enableCommunityOnboarding,
     },
     {
+      name: "primaryBrandColor",
+      title: "Primary brand color (Community & widget)",
+      type: "string",
+      description:
+        "Optional hex (e.g. #2d545e). Community title, Find Jobs / Hire / Friends, Connect, sidebar New button, and widget launcher / primary actions. Leave empty for default teal (highlight) styling.",
+    },
+    {
+      name: "secondaryBrandColor",
+      title: "Secondary brand color (Community & widget)",
+      type: "string",
+      description:
+        "Optional hex for card accents (name, tags, “Already connected”). Leave empty for default.",
+    },
+    {
       name: "enableQuiz",
       title: "Enable Quiz/Survey",
       type: "boolean",

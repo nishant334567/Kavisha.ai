@@ -2,12 +2,27 @@ import { client } from "@/app/lib/sanity";
 import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
+import { normalizeBrandHex } from "@/app/lib/brandTheme";
 
 export async function PATCH(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
-      const { subdomain, enableQuiz, quizName, enableJobs, enableProducts, enableBooking, enableBlogs, enableLinks, enableCommunityOnboarding, communityName, enableProfessionalConnect, enableFriendConnect } =
-        await req.json();
+      const {
+        subdomain,
+        enableQuiz,
+        quizName,
+        enableJobs,
+        enableProducts,
+        enableBooking,
+        enableBlogs,
+        enableLinks,
+        enableCommunityOnboarding,
+        communityName,
+        enableProfessionalConnect,
+        enableFriendConnect,
+        primaryBrandColor,
+        secondaryBrandColor,
+      } = await req.json();
 
       // Check if requester is admin for this brand
       const isAdmin = await isBrandAdmin(decodedToken.email, subdomain);
@@ -40,10 +55,60 @@ export async function PATCH(req) {
       if (enableBlogs !== undefined) updateData.enableBlogs = enableBlogs;
       if (enableLinks !== undefined) updateData.enableLinks = enableLinks;
 
-      const updatedBrandData = await client
-        .patch(brandData._id)
-        .set(updateData)
-        .commit();
+      let patch = client.patch(brandData._id);
+      let hasOps = false;
+
+      if (Object.keys(updateData).length > 0) {
+        patch = patch.set(updateData);
+        hasOps = true;
+      }
+
+      if (primaryBrandColor !== undefined) {
+        const raw =
+          typeof primaryBrandColor === "string" ? primaryBrandColor.trim() : "";
+        if (raw === "") {
+          patch = patch.unset(["primaryBrandColor"]);
+        } else {
+          const hex = normalizeBrandHex(raw);
+          if (!hex) {
+            return NextResponse.json(
+              { error: "Invalid primary brand color (use #rrggbb or #rgb)" },
+              { status: 400 }
+            );
+          }
+          patch = patch.set({ primaryBrandColor: hex });
+        }
+        hasOps = true;
+      }
+
+      if (secondaryBrandColor !== undefined) {
+        const raw =
+          typeof secondaryBrandColor === "string"
+            ? secondaryBrandColor.trim()
+            : "";
+        if (raw === "") {
+          patch = patch.unset(["secondaryBrandColor"]);
+        } else {
+          const hex = normalizeBrandHex(raw);
+          if (!hex) {
+            return NextResponse.json(
+              { error: "Invalid secondary brand color (use #rrggbb or #rgb)" },
+              { status: 400 }
+            );
+          }
+          patch = patch.set({ secondaryBrandColor: hex });
+        }
+        hasOps = true;
+      }
+
+      if (!hasOps) {
+        return NextResponse.json(
+          { error: "No updates provided" },
+          { status: 400 }
+        );
+      }
+
+      const updatedBrandData = await patch.commit();
 
       return NextResponse.json(updatedBrandData);
     },

@@ -16,6 +16,7 @@ import LiveChat from "@/app/components/LiveChat";
 import Loader from "@/app/components/Loader";
 import PoweredByKavisha from "@/app/components/PoweredByKavisha";
 import { ArrowLeft } from "lucide-react";
+import { normalizeBrandHex } from "@/app/lib/brandTheme";
 
 const ROLE_LABELS = {
     job_seeker: "Jobs",
@@ -328,12 +329,22 @@ export default function Community() {
 
     if (authLoading || !brand) return <Loader loadingMessage="Loading..." />;
 
+    const primaryHex = normalizeBrandHex(brand?.primaryBrandColor);
+    const secondaryHex = normalizeBrandHex(brand?.secondaryBrandColor);
+    const primaryCtaClass =
+        "rounded-full px-6 py-3 text-white transition-colors hover:opacity-90 disabled:opacity-50";
+
     // Sign-in gate: show when not logged in (user lands on /community directly)
     if (!user) {
         return (
             <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-foreground">
                 <div className="max-w-md w-full text-center">
-                    <h1 className="mb-4 text-2xl text-highlight md:text-3xl">Community</h1>
+                    <h1
+                        className={`mb-4 text-2xl md:text-3xl ${!primaryHex ? "text-highlight" : ""}`}
+                        style={primaryHex ? { color: primaryHex } : undefined}
+                    >
+                        Community
+                    </h1>
                     <p className="mb-8 text-muted">
                         Sign in to browse connection requests and connect with people.
                     </p>
@@ -343,7 +354,8 @@ export default function Community() {
                     {isBlocked ? (
                         <button
                             onClick={openInChrome}
-                            className="rounded-full bg-highlight px-6 py-3 text-white transition-colors hover:opacity-90"
+                            className={`${primaryCtaClass} ${!primaryHex ? "bg-highlight" : ""}`}
+                            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
                         >
                             Open in Chrome to sign in
                         </button>
@@ -351,14 +363,16 @@ export default function Community() {
                         <button
                             onClick={handleSignInToCommunity}
                             disabled={signingIn}
-                            className="rounded-full bg-highlight px-6 py-3 text-white transition-colors hover:opacity-90 disabled:opacity-50"
+                            className={`${primaryCtaClass} ${!primaryHex ? "bg-highlight" : ""} disabled:opacity-50`}
+                            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
                         >
                             {signingIn ? "Signing in..." : "Sign in to continue"}
                         </button>
                     )}
                     <button
                         onClick={() => router.push("/")}
-                            className="mx-auto mt-6 flex items-center justify-center gap-2 text-highlight hover:opacity-80"
+                        className={`mx-auto mt-6 flex items-center justify-center gap-2 hover:opacity-80 ${!primaryHex ? "text-highlight" : ""}`}
+                        style={primaryHex ? { color: primaryHex } : undefined}
                     >
                         <ArrowLeft className="w-4 h-4" />
                         <span className="text-sm">Back to home</span>
@@ -391,7 +405,8 @@ export default function Community() {
                             {/* Back button - pl-12/pl-14 reserves space for collapsed sidebar toggle */}
                             <button
                                 onClick={() => router.push("/")}
-                                className="-mb-1 flex items-center gap-2 py-1 pl-4 text-highlight transition-colors hover:opacity-80"
+                                className={`-mb-1 flex items-center gap-2 py-1 pl-4 transition-colors hover:opacity-80 ${!primaryHex ? "text-highlight" : ""}`}
+                                style={primaryHex ? { color: primaryHex } : undefined}
                             >
                                 <ArrowLeft className="w-5 h-5 flex-shrink-0" />
                                 <span className="text-sm sm:text-base">Back</span>
@@ -405,7 +420,12 @@ export default function Community() {
                                 <>
                                     <div className="px-4 flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-4 sm:py-3">
                                         <div className="min-w-0">
-                                            <p className="text-2xl text-highlight sm:text-3xl lg:text-4xl">Community</p>
+                                            <p
+                                                className={`text-2xl sm:text-3xl lg:text-4xl ${!primaryHex ? "text-highlight" : ""}`}
+                                                style={primaryHex ? { color: primaryHex } : undefined}
+                                            >
+                                                Community
+                                            </p>
                                             <p className="text-sm sm:text-base font-extralight mt-1">
                                                 Browse through all connection requests and get connecting. Or create your own! :)
                                             </p>
@@ -417,7 +437,8 @@ export default function Community() {
                                                         <button
                                                             type="button"
                                                             disabled={creating === "job_seeker"}
-                                                            className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
+                                                            className={`rounded-full px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base ${!primaryHex ? "bg-highlight" : ""}`}
+                                                            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
                                                             onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
                                                         >
                                                             {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
@@ -425,7 +446,8 @@ export default function Community() {
                                                         <button
                                                             type="button"
                                                             disabled={creating === "recruiter"}
-                                                            className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
+                                                            className={`rounded-full px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base ${!primaryHex ? "bg-highlight" : ""}`}
+                                                            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
                                                             onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
                                                         >
                                                             {creating === "recruiter" ? "Creating..." : "Hire People"}
@@ -436,7 +458,8 @@ export default function Community() {
                                                     <button
                                                         type="button"
                                                         disabled={creating === "friends"}
-                                                        className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
+                                                        className={`rounded-full px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base ${!primaryHex ? "bg-highlight" : ""}`}
+                                                        style={primaryHex ? { backgroundColor: primaryHex } : undefined}
                                                         onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
                                                     >
                                                         {creating === "friends" ? "Creating..." : "Find Friends"}
@@ -461,7 +484,8 @@ export default function Community() {
                                                     <button
                                                         type="button"
                                                         disabled={creating === "friends"}
-                                                        className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
+                                                        className={`rounded-full px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base ${!primaryHex ? "bg-highlight" : ""}`}
+                                                        style={primaryHex ? { backgroundColor: primaryHex } : undefined}
                                                         onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
                                                     >
                                                         {creating === "friends" ? "Creating..." : "Find Friends"}
@@ -472,7 +496,8 @@ export default function Community() {
                                                         <button
                                                             type="button"
                                                             disabled={creating === "job_seeker"}
-                                                            className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
+                                                            className={`rounded-full px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base border border-white ${!primaryHex ? "bg-highlight" : ""}`}
+                                                            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
                                                             onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
                                                         >
                                                             {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
@@ -480,7 +505,8 @@ export default function Community() {
                                                         <button
                                                             type="button"
                                                             disabled={creating === "recruiter"}
-                                                            className="rounded-full bg-highlight px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base"
+                                                            className={`rounded-full px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base border border-white ${!primaryHex ? "bg-highlight" : ""}`}
+                                                            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
                                                             onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
                                                         >
                                                             {creating === "recruiter" ? "Creating..." : "Hire People"}
@@ -501,6 +527,8 @@ export default function Community() {
                                                     onConnect={() => handleConnect(user.id, r.userId, r.name)}
                                                     connectLabel={paidConnectedUserIds.has(String(r.userId)) ? "Message" : "Connect"}
                                                     isOwnPost={String(r.userId) === String(user?.id)}
+                                                    primaryBrandColor={primaryHex}
+                                                    secondaryBrandColor={secondaryHex}
                                                 />
                                             ))}
                                         </div>
@@ -518,9 +546,17 @@ export default function Community() {
                     <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-8 py-6 shadow-xl">
                         <div className="relative">
                             <div className="h-10 w-10 rounded-full border-4 border-border" />
-                            <div className="absolute inset-0 h-10 w-10 animate-spin rounded-full border-4 border-transparent border-t-highlight" />
+                            <div
+                                className={`absolute inset-0 h-10 w-10 animate-spin rounded-full border-4 border-transparent ${!primaryHex ? "border-t-highlight" : ""}`}
+                                style={primaryHex ? { borderTopColor: primaryHex } : undefined}
+                            />
                         </div>
-                        <span className="text-sm font-medium text-highlight">Connecting...</span>
+                        <span
+                            className={`text-sm font-medium ${!primaryHex ? "text-highlight" : ""}`}
+                            style={primaryHex ? { color: primaryHex } : undefined}
+                        >
+                            Connecting...
+                        </span>
                     </div>
                 </div>
             )}
