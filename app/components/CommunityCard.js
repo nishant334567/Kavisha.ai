@@ -102,7 +102,8 @@ export default function CommunityCard({
                         )}
                         <button
                             type="button"
-                            className="rounded-full border border-border bg-muted-bg text-foreground px-3 py-1.5 sm:px-4 text-sm hover:bg-border/50 transition-colors"
+                            className={`rounded-full border border-border bg-muted-bg px-3 py-1.5 sm:px-4 text-sm hover:bg-border/50 transition-colors ${!primaryBrandColor ? "text-highlight" : ""}`}
+                            style={primaryBrandColor ? { color: primaryBrandColor } : undefined}
                             onClick={() => setShowDialog(true)}
                         >
                             View
@@ -130,6 +131,8 @@ export default function CommunityCard({
                     onConnect={isOwnPost ? undefined : handleConnectClick}
                     connectLabel={connectLabel}
                     isOwnPost={isOwnPost}
+                    primaryBrandColor={primaryBrandColor}
+                    secondaryBrandColor={secondaryBrandColor}
                 />
             )}
             <ConfirmModal
