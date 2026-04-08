@@ -10,6 +10,7 @@ import {
   openInChrome,
 } from "@/app/lib/in-app-browser";
 import FormatText from "@/app/components/FormatText";
+import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 import { WIDGET_SESSION_STORAGE_KEY } from "../constants";
 
 const LEAD_JOURNEY_ROLE = "lead_journey";
@@ -33,6 +34,7 @@ function buildBrandCommunityUrl(subdomain) {
 export default function ChatBoxWidget({ brand, primaryColor = null }) {
   const { user, loading: authLoading, refresh } = useFirebaseSession();
   const endRef = useRef(null);
+  const primaryHex = normalizeBrandHex(primaryColor);
 
   const [sessions, setSessions] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
@@ -467,8 +469,8 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
             <button
               type="button"
               onClick={openInChrome}
-              className={`w-full rounded-lg px-3 py-2 text-xs font-medium text-white hover:opacity-90 ${!primaryColor ? "bg-highlight" : ""}`}
-              style={primaryColor ? { backgroundColor: primaryColor } : undefined}
+              className={`w-full rounded-lg px-3 py-2 text-xs font-medium text-white hover:opacity-90 ${!primaryHex ? "bg-highlight" : ""}`}
+              style={primaryHex ? { backgroundColor: primaryHex } : undefined}
             >
               Open in Chrome
             </button>
@@ -479,8 +481,15 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
             type="button"
             onClick={handleWidgetSignIn}
             disabled={signingIn}
-            className={`mx-auto inline-flex w-full max-w-[240px] items-center justify-center rounded-xl px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-90 disabled:opacity-50 ${!primaryColor ? "bg-highlight" : ""}`}
-            style={primaryColor ? { backgroundColor: primaryColor } : undefined}
+            className={`mx-auto inline-flex w-full max-w-[240px] items-center justify-center rounded-xl px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-90 disabled:opacity-50 ${!primaryHex ? "bg-highlight" : ""}`}
+            style={
+              primaryHex
+                ? {
+                    backgroundColor: primaryHex,
+                    boxShadow: `0 2px 8px ${hexToRgba(primaryHex, 0.28) || "rgba(0,0,0,0.08)"}`,
+                  }
+                : undefined
+            }
           >
             {signingIn ? (
               <>
@@ -535,7 +544,19 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
               sessionsLoading ||
               signingOut
             }
-            className="flex min-h-[3rem] min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl border border-border/50 bg-background px-1.5 py-2 text-[11px] font-medium leading-tight text-foreground shadow-sm transition hover:bg-muted-bg disabled:opacity-50"
+            className={`flex min-h-[3rem] min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-2 text-[11px] font-medium leading-tight shadow-sm transition hover:opacity-92 disabled:opacity-50 ${
+              primaryHex
+                ? "border border-transparent text-white"
+                : "border border-border/50 bg-background text-foreground hover:bg-muted-bg"
+            }`}
+            style={
+              primaryHex
+                ? {
+                    backgroundColor: primaryHex,
+                    boxShadow: `0 2px 10px ${hexToRgba(primaryHex, 0.32) || "rgba(0,0,0,0.1)"}`,
+                  }
+                : undefined
+            }
           >
             {newChatLoading || leadJourneysLoading ? (
               <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
@@ -675,18 +696,51 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
                 key={m.id != null ? String(m.id) : `${m.role}-${i}`}
                 className={
                   m.role === "user"
-                    ? `ml-auto max-w-[min(100%,22rem)] min-w-0 rounded-2xl rounded-br-md px-4 py-2.5 text-sm text-white shadow-md ${!primaryColor ? "bg-highlight" : ""}`
+                    ? `ml-auto max-w-[min(100%,22rem)] min-w-0 rounded-2xl rounded-br-md px-4 py-2.5 text-sm text-white ${!primaryHex ? "bg-highlight shadow-md" : ""}`
                     : "mr-auto w-full max-w-full min-w-0 rounded-2xl rounded-bl-md bg-card px-4 py-2.5 text-sm text-foreground shadow-sm dark:bg-card/90"
                 }
                 style={
-                  m.role === "user" && primaryColor
-                    ? { backgroundColor: primaryColor }
+                  m.role === "user" && primaryHex
+                    ? {
+                        backgroundColor: primaryHex,
+                        boxShadow: `0 4px 14px -3px ${hexToRgba(primaryHex, 0.42) || "rgba(0,0,0,0.12)"}, 0 0 0 1px ${hexToRgba(primaryHex, 0.18) || "transparent"}`,
+                      }
                     : undefined
                 }
               >
                 {m.role === "assistant" ? (
-                  <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
-                    <FormatText text={m.message || ""} />
+                  <div className="min-w-0 max-w-full">
+                    <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
+                      <FormatText text={m.message || ""} />
+                    </div>
+                    {Array.isArray(m.sourceUrls) && m.sourceUrls.length > 0 && (
+                      <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/25 pt-2 dark:border-border/30">
+                        <span className="text-xs text-muted">Links:</span>
+                        {m.sourceUrls.map((url, idx) => (
+                          <a
+                            key={idx}
+                            href={url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className={`max-w-full break-all rounded-md px-2 py-0.5 text-xs transition-colors hover:underline ${
+                              primaryHex
+                                ? "font-medium"
+                                : "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60"
+                            }`}
+                            style={
+                              primaryHex
+                                ? {
+                                    backgroundColor: hexToRgba(primaryHex, 0.12) || undefined,
+                                    color: primaryHex,
+                                  }
+                                : undefined
+                            }
+                          >
+                            {url.length > 36 ? `${url.slice(0, 36)}…` : url}
+                          </a>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 ) : (
                   <p className="whitespace-pre-wrap [word-break:break-word] [overflow-wrap:anywhere]">
@@ -714,13 +768,30 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
               onChange={(e) => setInput(e.target.value)}
               placeholder="Message…"
               disabled={sendLoading}
-              className="min-w-0 flex-1 rounded-xl border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-border focus:outline-none focus:ring-2 focus:ring-ring/25"
+              className={`min-w-0 flex-1 rounded-xl border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-border focus:outline-none ${
+                primaryHex ? "focus:ring-2 focus:ring-offset-1" : "focus:ring-2 focus:ring-ring/25"
+              }`}
+              onFocus={(e) => {
+                if (!primaryHex) return;
+                const ring = hexToRgba(primaryHex, 0.35);
+                if (ring) e.target.style.boxShadow = `0 0 0 2px ${ring}`;
+              }}
+              onBlur={(e) => {
+                e.target.style.boxShadow = "";
+              }}
             />
             <button
               type="submit"
               disabled={sendLoading || !input.trim()}
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition hover:opacity-90 disabled:opacity-40 ${!primaryColor ? "bg-highlight" : ""}`}
-              style={primaryColor ? { backgroundColor: primaryColor } : undefined}
+              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition hover:opacity-90 disabled:opacity-40 ${!primaryHex ? "bg-highlight" : ""}`}
+              style={
+                primaryHex
+                  ? {
+                      backgroundColor: primaryHex,
+                      boxShadow: `0 2px 8px ${hexToRgba(primaryHex, 0.3) || "rgba(0,0,0,0.1)"}`,
+                    }
+                  : undefined
+              }
               aria-label="Send"
             >
               {sendLoading ? (

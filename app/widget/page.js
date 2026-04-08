@@ -5,7 +5,7 @@ import { MessageCircle, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import ChatBoxWidget from "./components/ChatBoxWidget";
 import { WIDGET_SESSION_STORAGE_KEY } from "./constants";
-import { hexToRgba } from "@/app/lib/brandTheme";
+import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 
 export { WIDGET_SESSION_STORAGE_KEY };
 
@@ -16,6 +16,7 @@ function WidgetShell() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [primaryColor, setPrimaryColor] = useState(null);
+  const primaryHex = normalizeBrandHex(primaryColor);
 
   useEffect(() => {
     const b = brand.trim().toLowerCase();
@@ -57,7 +58,17 @@ function WidgetShell() {
     <div className="fixed inset-0 box-border flex flex-col items-end justify-end overflow-hidden bg-transparent p-2">
       {isOpen ? (
         <div className="flex h-full min-h-0 w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40">
-          <div className="relative flex w-full min-w-0 shrink-0 items-center rounded-t-2xl border-b border-border/40 bg-muted-bg/20 px-1 py-3 dark:border-border/30 dark:bg-muted-bg/15">
+          <div
+            className="relative flex w-full min-w-0 shrink-0 items-center rounded-t-2xl border-b border-border/40 bg-muted-bg/20 px-1 py-3 dark:border-border/30 dark:bg-muted-bg/15"
+            style={
+              primaryHex
+                ? {
+                    borderBottomColor: hexToRgba(primaryHex, 0.28) || undefined,
+                    backgroundColor: hexToRgba(primaryHex, 0.06) || undefined,
+                  }
+                : undefined
+            }
+          >
             <span className="w-full text-center text-sm font-semibold tracking-tight text-foreground">
               Chat
             </span>
@@ -79,12 +90,12 @@ function WidgetShell() {
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label="Open chat"
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-lg ring-2 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-transparent ${!primaryColor ? "bg-highlight ring-highlight/30" : ""}`}
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-lg ring-2 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-transparent ${!primaryHex ? "bg-highlight ring-highlight/30" : ""}`}
           style={
-            primaryColor
+            primaryHex
               ? {
-                  backgroundColor: primaryColor,
-                  boxShadow: `0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1), 0 0 0 2px ${hexToRgba(primaryColor, 0.35)}`,
+                  backgroundColor: primaryHex,
+                  boxShadow: `0 10px 15px -3px rgb(0 0 0 / 0.12), 0 4px 6px -4px rgb(0 0 0 / 0.08), 0 0 0 2px ${hexToRgba(primaryHex, 0.38) || "transparent"}`,
                 }
               : undefined
           }

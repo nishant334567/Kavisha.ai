@@ -340,8 +340,8 @@ export default function Community() {
             <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-foreground">
                 <div className="max-w-md w-full text-center">
                     <h1
-                        className={`mb-4 text-2xl md:text-3xl ${!primaryHex ? "text-highlight" : ""}`}
-                        style={primaryHex ? { color: primaryHex } : undefined}
+                        className={`mb-4 text-2xl md:text-3xl ${!secondaryHex ? "text-highlight" : ""}`}
+                        style={secondaryHex ? { color: secondaryHex } : undefined}
                     >
                         Community
                     </h1>
@@ -421,8 +421,8 @@ export default function Community() {
                                     <div className="px-4 flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-4 sm:py-3">
                                         <div className="min-w-0">
                                             <p
-                                                className={`text-2xl sm:text-3xl lg:text-4xl ${!primaryHex ? "text-highlight" : ""}`}
-                                                style={primaryHex ? { color: primaryHex } : undefined}
+                                                className={`text-2xl sm:text-3xl lg:text-4xl ${!secondaryHex ? "text-highlight" : ""}`}
+                                                style={secondaryHex ? { color: secondaryHex } : undefined}
                                             >
                                                 Community
                                             </p>

@@ -2,7 +2,18 @@
 
 import { X } from "lucide-react";
 
-export default function CommunityPostDialog({ name, description, date, requirement, onClose, onConnect, connectLabel = "Connect", isOwnPost = false }) {
+export default function CommunityPostDialog({
+  name,
+  description,
+  date,
+  requirement,
+  onClose,
+  onConnect,
+  connectLabel = "Connect",
+  isOwnPost = false,
+  primaryBrandColor = null,
+  secondaryBrandColor = null,
+}) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/30" onClick={onClose}>
       <div
@@ -10,7 +21,10 @@ export default function CommunityPostDialog({ name, description, date, requireme
         onClick={(e) => e.stopPropagation()}
       >
         <div className="flex items-start justify-between gap-3 p-4 sm:p-6 border-b border-border shrink-0">
-          <h2 className="text-xl sm:text-2xl md:text-3xl text-[#004A4E] break-words pr-8">
+          <h2
+            className={`text-xl sm:text-2xl md:text-3xl break-words pr-8 ${!secondaryBrandColor ? "text-[#004A4E]" : ""}`}
+            style={secondaryBrandColor ? { color: secondaryBrandColor } : undefined}
+          >
             {name || "—"}
           </h2>
           <button
@@ -42,7 +56,8 @@ export default function CommunityPostDialog({ name, description, date, requireme
           {!isOwnPost && (
             <button
               type="button"
-              className="flex-1 rounded-full bg-[#004A4E] text-white px-4 py-2 text-sm hover:bg-[#003538] transition-colors"
+              className={`flex-1 rounded-full text-white px-4 py-2 text-sm transition-colors hover:opacity-90 ${!primaryBrandColor ? "bg-highlight" : ""}`}
+              style={primaryBrandColor ? { backgroundColor: primaryBrandColor } : undefined}
               onClick={() => {
                 const proceeded = onConnect?.();
                 if (proceeded !== false) onClose();

@@ -21,6 +21,15 @@ function estimateTokens(text) {
   return Math.ceil(words.length * 1.33);
 }
 
+/** Part 5 → 0–100 for DB / client */
+function parseOnboardingPercent(raw) {
+  if (raw == null) return 0;
+  const s = String(raw).trim().replace(/%/g, "").trim();
+  const n = parseInt(s, 10);
+  if (!Number.isFinite(n)) return 0;
+  return Math.max(0, Math.min(100, n));
+}
+
 export async function GET(request) {
   const { searchParams } = new URL(request.url);
   const sessionId = searchParams.get("sessionId");
@@ -151,8 +160,8 @@ export async function POST(request) {
         let reParts = responseText.split("////").map((item) => item.trim());
 
         // Retry once if format is invalid
-        if (reParts.length !== 4) {
-          const retryPrompt = `CRITICAL: Your response must have EXACTLY 4 parts separated by ////. You returned ${reParts.length} parts. Format: [reply] //// [summary] //// [title] //// [true/false]. Return ONLY these 4 parts, nothing else.`;
+        if (reParts.length !== 5) {
+          const retryPrompt = `CRITICAL: Your response must have EXACTLY 5 parts separated by ////. You returned ${reParts.length} parts. Format: [reply] //// [summary] //// [title] //// [true or false] //// [single integer 0-100 only = onboarding completion %]. Return ONLY these 5 parts, nothing else.`;
           inputToken += estimateTokens(retryPrompt);
 
           const retryContents = [...geminiContents];
@@ -166,7 +175,7 @@ export async function POST(request) {
           });
           responseText =
             responseGemini.response.candidates[0].content.parts[0].text;
-          outputToken = estimateTokens(responseText); // Replace with retry count
+          outputToken += estimateTokens(responseText);
           reParts = responseText.split("////").map((item) => item.trim());
         }
 
@@ -174,20 +183,26 @@ export async function POST(request) {
         let summary = "";
         let title = "";
         let allDataCollected = "";
+        let onboardingPercent = 0;
 
-        if (reParts.length === 4) {
+        if (reParts.length === 5) {
           reply = reParts[0];
           summary = reParts[1];
           title = reParts[2];
           allDataCollected = reParts[3];
+          onboardingPercent = parseOnboardingPercent(reParts[4]);
         } else {
           return NextResponse.json(
             {
               error: "AI response format invalid",
-              details: `Expected 4 parts, got ${reParts.length}`,
+              details: `Expected 5 parts, got ${reParts.length}`,
             },
             { status: 500 }
           );
+        }
+
+        if (allDataCollected === "true") {
+          onboardingPercent = 100;
         }
 
         let matchesLatest = [];
@@ -223,6 +238,7 @@ export async function POST(request) {
                   chatSummary: summary,
                   title: title,
                   allDataCollected: allDataCollected === "true",
+                  onboardingPercent,
                 },
                 $inc: {
                   totalInputTokens: inputToken,
@@ -243,6 +259,7 @@ export async function POST(request) {
           inputTokens: inputToken,
           outputTokens: outputToken,
           totalTokens: inputToken + outputToken,
+          onboardingProgress: { percent: onboardingPercent },
         });
       } catch (error) {
         return NextResponse.json(
