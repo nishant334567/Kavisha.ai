@@ -10,6 +10,7 @@ function hostFromUrl(url) {
 
 /**
  * Horizontally scrollable source cards (KB title/description). Whole card is the link.
+ * Row uses full width of the parent; cards keep a fixed max width and scroll sideways.
  */
 export default function AssistantSourceCards({ items, primaryHex = null }) {
   const list = Array.isArray(items)
@@ -18,9 +19,9 @@ export default function AssistantSourceCards({ items, primaryHex = null }) {
   if (list.length === 0) return null;
 
   return (
-    <div className="mt-2 border-t border-border/25 pt-2 dark:border-border/30">
+    <div className="mt-2 w-full min-w-0 border-t border-border/25 pt-2 dark:border-border/30">
       <p className="mb-1.5 text-xs text-muted">Sources</p>
-      <div className="-mx-1 flex gap-2 overflow-x-auto px-1 pb-0.5 [scrollbar-width:thin]">
+      <div className="-mx-1 flex w-full min-w-0 gap-2 overflow-x-auto px-1 pb-0.5 [scrollbar-width:thin]">
         {list.map((c, idx) => {
           const url = c.url.trim();
           const title =

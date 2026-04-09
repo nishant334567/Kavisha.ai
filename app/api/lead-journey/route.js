@@ -46,6 +46,98 @@ function sourcesFromUsedChunkIds(usedChunkIds, uniqueContext) {
   return { sourceUrls, sourceCards };
 }
 
+const PUBLISHED_AT_MS_MIN = Date.UTC(1995, 0, 1);
+function publishedAtMsMaxAllowed() {
+  return Date.now() + 2 * 86400000;
+}
+
+/** Normalize rewriter output for Pinecone `publishedAtMs` (number metadata). */
+function normalizeTimeFilterPublishedAtMs(raw) {
+  if (raw == null || raw === false) return null;
+  if (typeof raw !== "object" || Array.isArray(raw)) return null;
+  let gte = raw.gte;
+  let lte = raw.lte;
+  if (gte != null && gte !== "") {
+    const n = Number(gte);
+    gte = Number.isFinite(n) ? n : undefined;
+  } else gte = undefined;
+  if (lte != null && lte !== "") {
+    const n = Number(lte);
+    lte = Number.isFinite(n) ? n : undefined;
+  } else lte = undefined;
+  if (gte === undefined && lte === undefined) return null;
+  const hi = publishedAtMsMaxAllowed();
+  const clamp = (x) => Math.min(hi, Math.max(PUBLISHED_AT_MS_MIN, x));
+  if (gte !== undefined) gte = clamp(gte);
+  if (lte !== undefined) lte = clamp(lte);
+  if (gte !== undefined && lte !== undefined && gte > lte) return null;
+  /** @type {{ gte?: number, lte?: number }} */
+  const out = {};
+  if (gte !== undefined) out.gte = gte;
+  if (lte !== undefined) out.lte = lte;
+  return out;
+}
+
+/** Pinecone metadata filter: only matches records that have numeric `publishedAtMs` in range. */
+function buildPublishedAtMsMetadataFilter(t) {
+  if (!t || (t.gte === undefined && t.lte === undefined)) return null;
+  const inner = {};
+  if (t.gte !== undefined) inner.$gte = t.gte;
+  if (t.lte !== undefined) inner.$lte = t.lte;
+  return { publishedAtMs: inner };
+}
+
+/** Parse Part 4 chunk-id JSON (same rules as main + retry paths). */
+function extractChunkIdsFromPart4(chunkIdsPart) {
+  const raw = typeof chunkIdsPart === "string" ? chunkIdsPart.trim() : "";
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (Array.isArray(parsed)) {
+      return parsed.filter((id) => typeof id === "string" && id.trim());
+    }
+  } catch {
+    const jsonArrayMatch = raw.match(/\[(.*?)\]/);
+    if (jsonArrayMatch) {
+      try {
+        const parsed = JSON.parse(jsonArrayMatch[0]);
+        if (Array.isArray(parsed)) {
+          return parsed.filter((id) => typeof id === "string" && id.trim());
+        }
+      } catch {
+        const quotedIds = raw.match(/"([^"]+)"/g);
+        if (quotedIds) {
+          return quotedIds
+            .map((q) => q.replace(/"/g, ""))
+            .filter((id) => id.trim());
+        }
+      }
+    }
+  }
+  return [];
+}
+
+function mergePineconeIntoUniqueContext(uniqueContext, results, results2) {
+  results?.matches?.forEach((match) => {
+    uniqueContext.set(match.id, {
+      text: match.metadata?.text || "",
+      url: match.metadata?.chunkSourceUrl || "",
+      title: String(match.metadata?.title || "").trim(),
+      description: String(match.metadata?.description || "").trim(),
+    });
+  });
+  results2?.result?.hits?.forEach((hit) => {
+    if (!uniqueContext.has(hit._id)) {
+      uniqueContext.set(hit._id, {
+        text: hit.fields?.text || "",
+        url: hit.fields?.chunkSourceUrl || hit.chunkSourceUrl || "",
+        title: String(hit.fields?.title || "").trim(),
+        description: String(hit.fields?.description || "").trim(),
+      });
+    }
+  });
+}
+
 function serializeError(error) {
   if (!error) return null;
 
@@ -161,9 +253,13 @@ export async function POST(req) {
           .map((h) => `${h.role}: ${h.message || h.text || ""}`)
           .join("\n");
 
+        const referenceNowMsUtc = Date.now();
+        const referenceNowIsoUtc = new Date(referenceNowMsUtc).toISOString();
         const rewritePrompt = buildLeadRewritePrompt(
           formattedHistory,
-          userMessage
+          userMessage,
+          referenceNowIsoUtc,
+          referenceNowMsUtc
         );
         inputToken += estimateTokens(rewritePrompt);
         const responseQuery = await generateLeadJourneyGeminiContent({
@@ -176,15 +272,16 @@ export async function POST(req) {
             },
           ],
           generationConfig: {
-            temperature: 0.2,
+            temperature: 0,
+            responseMimeType: "application/json",
           },
         });
 
         let responseText = extractGeminiText(responseQuery);
         outputToken += estimateTokens(responseText);
 
-      // Extract JSON if wrapped in markdown
-      let jsonText = responseText;
+      // Extract JSON (JSON mode should return raw object text; still tolerate markdown)
+      let jsonText = responseText.trim();
       if (jsonText.includes("```")) {
         const match = jsonText.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
         if (match) jsonText = match[1];
@@ -194,7 +291,7 @@ export async function POST(req) {
         try {
           parsedResponse = JSON.parse(jsonText);
         } catch (error) {
-          parsedResponse = { requery: userMessage };
+          parsedResponse = { requery: userMessage, timeFilterPublishedAtMs: null };
         }
 
         const requery = parsedResponse?.requery;
@@ -202,6 +299,12 @@ export async function POST(req) {
           requery !== undefined && requery !== null
             ? String(requery).trim()
             : userMessage;
+
+        const timeFilterPublishedAtMs = normalizeTimeFilterPublishedAtMs(
+          parsedResponse?.timeFilterPublishedAtMs
+        );
+        const pineconePublishedAtFilter =
+          buildPublishedAtMsMetadataFilter(timeFilterPublishedAtMs);
 
       let context = "";
       const uniqueContext = new Map(); // Declare at higher scope so it's always available
@@ -223,44 +326,51 @@ export async function POST(req) {
           return errorResponse(500, "Invalid embedding generated", "validate-embedding");
         }
         try {
-          const [results, results2] = await Promise.all([
-            pc.index("intelligent-kavisha").namespace(brand).query({
+          const runPineconeRetrieval = async (metadataFilter) => {
+            const denseOpts = {
               vector: userMessageEmbedding,
               topK: 10,
               includeMetadata: true,
               includeValues: false,
-            }),
-            pc
-              .index("kavisha-sparse")
-              .namespace(brand)
-              .searchRecords({
-                query: {
-                  topK: 10,
-                  inputs: { text: betterQuery },
-                },
-              })
-              .catch(() => ({ result: { hits: [] } })),
-          ]);
-          results?.matches?.forEach((match) => {
-            uniqueContext.set(match.id, {
-              text: match.metadata?.text || "",
-              url: match.metadata?.chunkSourceUrl || "",
-              title: String(match.metadata?.title || "").trim(),
-              description: String(match.metadata?.description || "").trim(),
-            });
-          });
+              ...(metadataFilter ? { filter: metadataFilter } : {}),
+            };
+            const sparseQuery = {
+              topK: 10,
+              inputs: { text: betterQuery },
+              ...(metadataFilter ? { filter: metadataFilter } : {}),
+            };
+            const [results, results2] = await Promise.all([
+              pc.index("intelligent-kavisha").namespace(brand).query(denseOpts),
+              pc
+                .index("kavisha-sparse")
+                .namespace(brand)
+                .searchRecords({ query: sparseQuery })
+                .catch(() => ({ result: { hits: [] } })),
+            ]);
+            const map = new Map();
+            mergePineconeIntoUniqueContext(map, results, results2);
+            return map;
+          };
 
-          results2?.result?.hits?.forEach((hit) => {
-
-            if (!uniqueContext.has(hit._id)) {
-              uniqueContext.set(hit._id, {
-                text: hit.fields?.text || "",
-                url: hit.fields?.chunkSourceUrl || hit.chunkSourceUrl || "",
-                title: String(hit.fields?.title || "").trim(),
-                description: String(hit.fields?.description || "").trim(),
-              });
+          if (pineconePublishedAtFilter) {
+            try {
+              const filteredMap = await runPineconeRetrieval(
+                pineconePublishedAtFilter
+              );
+              if (filteredMap.size > 0) {
+                filteredMap.forEach((v, k) => uniqueContext.set(k, v));
+              } else {
+                const unfiltered = await runPineconeRetrieval(null);
+                unfiltered.forEach((v, k) => uniqueContext.set(k, v));
+              }
+            } catch {
+              const unfiltered = await runPineconeRetrieval(null);
+              unfiltered.forEach((v, k) => uniqueContext.set(k, v));
             }
-          });
+          } else {
+            const m = await runPineconeRetrieval(null);
+            m.forEach((v, k) => uniqueContext.set(k, v));
+          }
 
           const documentsForRerank = Array.from(uniqueContext.entries()).map(
             ([id, data]) => ({
@@ -361,6 +471,11 @@ export async function POST(req) {
         betterQuery = userMessage;
       }
 
+      const citationAllowlistChunkIds =
+        Array.isArray(sourceChunkIds) && sourceChunkIds.length > 0
+          ? [...sourceChunkIds]
+          : [];
+
       const fullName = user?.name || "";
       const firstName = fullName.split(" ")[0] || "";
       const nameInstruction = firstName
@@ -368,6 +483,17 @@ export async function POST(req) {
         : "";
 
 
+
+      const citationRequirement =
+        context.trim().length > 0
+          ? `
+              CITATIONS (mandatory when context is non-empty): If you use ANY fact from RELEVANT CONTEXT,
+              Part 4 MUST be a JSON array of chunk ids you used — each string MUST be the **full** id inside the bracket,
+              copied **verbatim** from \`[CHUNK_ID:FULL_ID_HERE]\` (same spelling and length; ids are long, often TitleWords_hex_0).
+              Do NOT shorten to a suffix (e.g. only hex_0); source links require the complete id. At least one id if you used context.
+              Do NOT return [] unless you truly used no retrieved chunks.
+`
+          : "";
 
       const finalPrompt = `${prompt}${nameInstruction}
 
@@ -379,11 +505,11 @@ export async function POST(req) {
 
               USER QUESTION: ${betterQuery}
 
-              IMPORTANT: The [CHUNK_ID:...] markers are for your internal tracking only. 
-              Do NOT include these markers in your response text. 
+              IMPORTANT: The [CHUNK_ID:...] markers are for your internal tracking only.
+              Do NOT include these markers in your response text.
               Extract the information but remove all [CHUNK_ID:...] markers from your answer.
-              Only list the chunk IDs in Part 4 of your response.
-
+              In Part 4, paste each **full** id exactly as it appears after \`[CHUNK_ID:\` and before \`]\` — no truncation.
+              ${citationRequirement}
               Please provide a helpful response based on the above information.`;
 
       const mainPrompt = finalPrompt + SYSTEM_PROMPT_LEAD;
@@ -408,38 +534,12 @@ export async function POST(req) {
 
         let reParts = responseText.split("////").map((item) => item.trim());
 
-        // Extract chunk IDs from 4th part if present
-        let usedChunkIds = [];
-        if (reParts.length >= 4) {
-          const chunkIdsPart = reParts[3].trim();
-          try {
-            // Try to parse as JSON array
-            const parsed = JSON.parse(chunkIdsPart);
-            if (Array.isArray(parsed)) {
-              usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
-            }
-          } catch (e) {
-            // If not valid JSON, try to extract from text
-            const jsonArrayMatch = chunkIdsPart.match(/\[(.*?)\]/);
-            if (jsonArrayMatch) {
-              try {
-                const parsed = JSON.parse(jsonArrayMatch[0]);
-                if (Array.isArray(parsed)) {
-                  usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
-                }
-              } catch (e2) {
-                // Try extracting quoted strings
-                const quotedIds = chunkIdsPart.match(/"([^"]+)"/g);
-                if (quotedIds) {
-                  usedChunkIds = quotedIds.map(q => q.replace(/"/g, '')).filter(id => id.trim());
-                }
-              }
-            }
-          }
-        }
-
-        // Filter to only include valid chunk IDs that exist in sourceChunkIds
-        usedChunkIds = usedChunkIds.filter(id => sourceChunkIds.includes(id));
+        const chunkIdsPartRawFirst =
+          reParts.length >= 4 ? reParts[3].trim() : "";
+        let usedChunkIds = extractChunkIdsFromPart4(chunkIdsPartRawFirst);
+        usedChunkIds = usedChunkIds.filter((id) =>
+          citationAllowlistChunkIds.includes(id)
+        );
 
         if (usedChunkIds.length > 0) {
           const next = sourcesFromUsedChunkIds(usedChunkIds, uniqueContext);
@@ -453,7 +553,7 @@ export async function POST(req) {
         }
 
         if (reParts.length !== 4) {
-          const strictPrompt = `CRITICAL ERROR: Your previous response had ${reParts.length} parts but the format requires EXACTLY 4 parts separated by ////.\n\nYou MUST follow the format specified in the system instructions. This is MANDATORY, not optional.\n\nREMINDER: Do NOT include [CHUNK_ID:...] markers in your response text. Only list the chunk IDs in Part 4.\n\nPlease retry with the correct 4-part format.`;
+          const strictPrompt = `CRITICAL ERROR: Your previous response had ${reParts.length} parts but the format requires EXACTLY 4 parts separated by ////.\n\nYou MUST follow the format specified in the system instructions. This is MANDATORY, not optional.\n\nREMINDER: Part 4 must be a JSON array of the **complete** chunk id strings exactly as shown inside each [CHUNK_ID:...] in context — full length, not a short suffix. Do NOT include [CHUNK_ID:...] in Part 1.\n\nPlease retry with the correct 4-part format.`;
 
           inputToken += estimateTokens(strictPrompt);
           responseGemini = await generateLeadJourneyGeminiContent({
@@ -475,28 +575,12 @@ export async function POST(req) {
           outputToken = estimateTokens(responseText);
           reParts = responseText.split("////").map((item) => item.trim());
 
-          // Re-extract chunk IDs after retry
           if (reParts.length >= 4) {
-            const chunkIdsPart = reParts[3].trim();
-            try {
-              const parsed = JSON.parse(chunkIdsPart);
-              if (Array.isArray(parsed)) {
-                usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
-              }
-            } catch (e) {
-              const jsonArrayMatch = chunkIdsPart.match(/\[(.*?)\]/);
-              if (jsonArrayMatch) {
-                try {
-                  const parsed = JSON.parse(jsonArrayMatch[0]);
-                  if (Array.isArray(parsed)) {
-                    usedChunkIds = parsed.filter(id => typeof id === 'string' && id.trim());
-                  }
-                } catch (e2) {
-                  usedChunkIds = [];
-                }
-              }
-            }
-            usedChunkIds = usedChunkIds.filter(id => sourceChunkIds.includes(id));
+            const chunkIdsPartRetry = reParts[3].trim();
+            usedChunkIds = extractChunkIdsFromPart4(chunkIdsPartRetry);
+            usedChunkIds = usedChunkIds.filter((id) =>
+              citationAllowlistChunkIds.includes(id)
+            );
 
             if (usedChunkIds.length > 0) {
               const next = sourcesFromUsedChunkIds(usedChunkIds, uniqueContext);
@@ -570,7 +654,6 @@ export async function POST(req) {
           );
         }
       } catch (error) {
-        console.error("[lead-journey] Failed to generate AI response:", error);
         return errorResponse(
           500,
           "Failed to generate AI response",
@@ -579,7 +662,6 @@ export async function POST(req) {
         );
       }
       } catch (error) {
-        console.error("[lead-journey] Unhandled request error:", error);
         return errorResponse(
           500,
           "Lead journey request failed",

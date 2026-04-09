@@ -656,7 +656,7 @@ export default function ChatBox({
                   {/* Show sources for assistant messages */}
                   {m.role === "assistant" &&
                     (m.sourceCards?.length > 0 || m.sourceUrls?.length > 0) && (
-                      <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0">
+                      <div className="mt-1.5 w-full min-w-0">
                         {m.sourceCards?.length > 0 ? (
                           <AssistantSourceCards
                             items={m.sourceCards}
