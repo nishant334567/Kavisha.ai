@@ -9,6 +9,17 @@ import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 
 export { WIDGET_SESSION_STORAGE_KEY };
 
+/** e.g. `entrackr` → `Entrackr's AI Chat`; empty → `AI Chat`. */
+function widgetHeadingFromBrand(brandSlug) {
+  const s = String(brandSlug || "").trim();
+  if (!s) return "AI Chat";
+  const label = s
+    .split(/[-_]/)
+    .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+    .join(" ");
+  return `${label}'s AI Chat`;
+}
+
 function WidgetShell() {
   const searchParams = useSearchParams();
   const brand =
@@ -48,7 +59,7 @@ function WidgetShell() {
       {
         source: "kavisha-widget",
         width: isOpen ? 400 : 72,
-        height: isOpen ? 520 : 72,
+        height: isOpen ? 640 : 72,
       },
       "*"
     );
@@ -59,24 +70,31 @@ function WidgetShell() {
       {isOpen ? (
         <div className="flex h-full min-h-0 w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40">
           <div
-            className="relative flex w-full min-w-0 shrink-0 items-center rounded-t-2xl border-b border-border/40 bg-muted-bg/20 px-1 py-3 dark:border-border/30 dark:bg-muted-bg/15"
-            style={
+            className={
               primaryHex
-                ? {
-                    borderBottomColor: hexToRgba(primaryHex, 0.28) || undefined,
-                    backgroundColor: hexToRgba(primaryHex, 0.06) || undefined,
-                  }
-                : undefined
+                ? "relative flex w-full min-w-0 shrink-0 items-center rounded-t-2xl border-b border-black/15 px-1 py-3"
+                : "relative flex w-full min-w-0 shrink-0 items-center rounded-t-2xl border-b border-border/40 bg-muted-bg/20 px-1 py-3 dark:border-border/30 dark:bg-muted-bg/15"
             }
+            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
           >
-            <span className="w-full text-center text-sm font-semibold tracking-tight text-foreground">
-              Chat
+            <span
+              className={
+                primaryHex
+                  ? "w-full text-center text-sm font-semibold tracking-tight text-white"
+                  : "w-full text-center text-sm font-semibold tracking-tight text-foreground"
+              }
+            >
+              {widgetHeadingFromBrand(brand)}
             </span>
             <button
               type="button"
               onClick={() => setIsOpen(false)}
               aria-label="Close chat"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted transition hover:bg-muted-bg hover:text-foreground"
+              className={
+                primaryHex
+                  ? "absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-white/90 transition hover:bg-white/15 hover:text-white"
+                  : "absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted transition hover:bg-muted-bg hover:text-foreground"
+              }
             >
               <X className="h-5 w-5" strokeWidth={2} />
             </button>

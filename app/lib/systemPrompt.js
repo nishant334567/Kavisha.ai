@@ -135,7 +135,7 @@ Discussion about financial management, capital preservation, and prudent resourc
 ////
 Financial Strategy
 ////
-["chunk_id_1", "chunk_id_2"]
+["FullIdAsInChunkMarker_ExampleWords_a1b2c3d4_0", "AnotherFullIdFromContext_b2c3d4e5_0"]
 
 **PART 1 - YOUR REPLY:**
 - Write your response in valid Markdown
@@ -156,13 +156,13 @@ Financial Strategy
 **PART 4 - CHUNK IDs (CRITICAL):**
 - MUST be a valid JSON array: ["id1", "id2"] or []
 - Include ONLY chunk IDs you actually used from the context
-- Look for [CHUNK_ID:...] markers in the context provided
-- If you used information from a chunk, include its ID
+- Each id MUST be the **complete** string that appears inside \`[CHUNK_ID:HERE]\` — copy **HERE** **verbatim**, character-for-character (these ids are long; often like \`SomeTitleWords_a1b2c3d4_0\`).
+- **NEVER** shorten, abbreviate, or use only a trailing fragment (e.g. wrong: \`a1b2c3d4_0\`; right: the full id from the marker).
+- If you used information from a chunk, include its **full** id exactly once
 - If you didn't use any context chunks, use []
 - **CRITICAL: Do NOT include [CHUNK_ID:...] markers in your reply text**
 - **CRITICAL: Remove all [CHUNK_ID:...] markers from your response**
 - **The markers are ONLY for tracking - never show them to users**
-- Examples: ["74_b2a51334_1", "54_097c41f2_2"] or []
 
 **CRITICAL RULES:**
 ✓ EXACTLY 4 parts separated by ////

@@ -14,6 +14,17 @@ const LogsSchema = new mongoose.Schema(
       type: [String],
       default: [],
     },
+    /** KB-backed title/description per URL; legacy logs omit this (use sourceUrls links only). */
+    sourceCards: {
+      type: [
+        {
+          url: { type: String, required: true },
+          title: { type: String, default: "" },
+          description: { type: String, default: "" },
+        },
+      ],
+      default: [],
+    },
     sourceChunkIds: {
       type: [String],
       default: [],

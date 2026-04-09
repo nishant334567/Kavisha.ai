@@ -16,6 +16,7 @@ import {
 import Matches from "@/app/components/Matches";
 import CommunityOnboardingProgress from "@/app/components/CommunityOnboardingProgress";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import AssistantSourceCards from "@/app/components/AssistantSourceCards";
 
 export default function ChatBox({
   currentChatId,
@@ -444,6 +445,7 @@ export default function ChatBox({
         role: "assistant",
         message: data.reply,
         sourceUrls: data?.sourceUrls || [],
+        sourceCards: data?.sourceCards || [],
         intent: data?.intent || "",
       },
     ]);
@@ -652,22 +654,36 @@ export default function ChatBox({
                     </div>
                   )} */}
                   {/* Show sources for assistant messages */}
-                  {m.role === "assistant" && m.sourceUrls?.length > 0 && (
-                    <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0 flex flex-wrap gap-1.5">
-                      <span className="text-xs text-muted">📚 Links:</span>
-                      {m.sourceUrls.map((url, idx) => (
-                        <a
-                          key={idx}
-                          href={url}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-xs text-blue-600 hover:text-blue-800 hover:underline px-2 py-0.5 rounded bg-blue-50 hover:bg-blue-100 transition-colors"
-                        >
-                          {url.length > 30 ? `${url.slice(0, 30)}...` : url}
-                        </a>
-                      ))}
-                    </div>
-                  )}
+                  {m.role === "assistant" &&
+                    (m.sourceCards?.length > 0 || m.sourceUrls?.length > 0) && (
+                      <div className="mt-1.5 w-full min-w-0">
+                        {m.sourceCards?.length > 0 ? (
+                          <AssistantSourceCards
+                            items={m.sourceCards}
+                            primaryHex={primaryBrandHex}
+                          />
+                        ) : (
+                          <div className="flex flex-wrap gap-1.5">
+                            <span className="text-xs text-muted">
+                              📚 Links:
+                            </span>
+                            {m.sourceUrls.map((url, idx) => (
+                              <a
+                                key={idx}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-800 hover:underline"
+                              >
+                                {url.length > 30
+                                  ? `${url.slice(0, 30)}...`
+                                  : url}
+                              </a>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   {/* Show payment QR code for personal_call intent */}
                   {m.role === "assistant" &&
                     m.intent === "personal_call" &&
