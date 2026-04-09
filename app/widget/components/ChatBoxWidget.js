@@ -10,6 +10,7 @@ import {
   openInChrome,
 } from "@/app/lib/in-app-browser";
 import FormatText from "@/app/components/FormatText";
+import AssistantSourceCards from "@/app/components/AssistantSourceCards";
 import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 import { WIDGET_SESSION_STORAGE_KEY } from "../constants";
 
@@ -54,6 +55,8 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
   const [leadJourneysLoading, setLeadJourneysLoading] = useState(false);
   const [pickerError, setPickerError] = useState(null);
   const [logsError, setLogsError] = useState(null);
+  /** Lead journey starter prompts from Sanity (same as main ChatBox). */
+  const [introQuestions, setIntroQuestions] = useState([]);
 
   const [signingIn, setSigningIn] = useState(false);
   const [signInError, setSignInError] = useState("");
@@ -119,6 +122,7 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
       setChatRole(null);
       setSessionError(null);
       setSessionLoading(false);
+      setIntroQuestions([]);
       return;
     }
     setChatRole(null);
@@ -140,6 +144,11 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
         if (cancelled) return;
         const role = (data.role || "").toLowerCase();
         setChatRole(role);
+        setIntroQuestions(
+          role === LEAD_JOURNEY_ROLE && Array.isArray(data.introQuestions)
+            ? data.introQuestions
+            : []
+        );
         if (role !== LEAD_JOURNEY_ROLE) {
           setSessionError("This session is not a lead journey chat.");
         }
@@ -148,6 +157,7 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
         if (!cancelled) {
           setSessionError(e.message || "Could not load session");
           setChatRole(null);
+          setIntroQuestions([]);
         }
       })
       .finally(() => {
@@ -190,6 +200,7 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
               message: row.message || "",
               requery: null,
               sourceUrls: row.sourceUrls,
+              sourceCards: row.sourceCards,
             }))
           );
         }
@@ -300,9 +311,8 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
     }
   };
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    const text = input.trim();
+  async function sendUserMessage(rawText) {
+    const text = String(rawText ?? "").trim();
     if (
       !text ||
       !activeSessionId ||
@@ -363,6 +373,7 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
           role: "assistant",
           message: data.reply ?? "",
           sourceUrls: data?.sourceUrls || [],
+          sourceCards: data?.sourceCards || [],
         },
       ]);
     } catch {
@@ -370,6 +381,11 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
     } finally {
       setSendLoading(false);
     }
+  }
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    void sendUserMessage(input);
   };
 
   const handleWidgetSignIn = async () => {
@@ -544,7 +560,7 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
               sessionsLoading ||
               signingOut
             }
-            className={`flex min-h-[3rem] min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl px-1.5 py-2 text-[11px] font-medium leading-tight shadow-sm transition hover:opacity-92 disabled:opacity-50 ${
+            className={`flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl px-2 py-1 text-[11px] font-medium shadow-sm transition hover:opacity-92 disabled:opacity-50 ${
               primaryHex
                 ? "border border-transparent text-white"
                 : "border border-border/50 bg-background text-foreground hover:bg-muted-bg"
@@ -563,24 +579,24 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
             ) : (
               <Plus className="h-4 w-4 shrink-0" />
             )}
-            <span className="line-clamp-2 w-full text-center">New chat</span>
+            <span className="min-w-0 truncate">New chat</span>
           </button>
           <button
             type="button"
             onClick={() =>
               window.open(buildBrandCommunityUrl(brand), "_blank", "noopener,noreferrer")
             }
-            className="flex min-h-[3rem] min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl border border-border/50 bg-background px-1.5 py-2 text-[11px] font-medium leading-tight text-foreground shadow-sm transition hover:bg-muted-bg"
+            className="flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg"
             title="Open community in a new tab"
           >
             <Users className="h-4 w-4 shrink-0" />
-            <span className="line-clamp-2 w-full text-center">Community</span>
+            <span className="min-w-0 truncate">Community</span>
           </button>
           <button
             type="button"
             onClick={handleWidgetSignOut}
             disabled={signingOut}
-            className="flex min-h-[3rem] min-w-0 flex-col items-center justify-center gap-0.5 rounded-xl border border-border/50 bg-background px-1.5 py-2 text-[11px] font-medium leading-tight text-muted shadow-sm transition hover:bg-muted-bg hover:text-foreground disabled:opacity-50"
+            className="flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2 py-1 text-[11px] font-medium text-muted shadow-sm transition hover:bg-muted-bg hover:text-foreground disabled:opacity-50"
             title="Sign out"
           >
             {signingOut ? (
@@ -588,7 +604,7 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
             ) : (
               <LogOut className="h-4 w-4 shrink-0" />
             )}
-            <span className="line-clamp-2 w-full text-center">Sign out</span>
+            <span className="min-w-0 truncate">Sign out</span>
           </button>
         </div>
       </div>
@@ -686,9 +702,11 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
       {activeSessionId && chatRole === LEAD_JOURNEY_ROLE && !logsLoading && (
         <>
           <div className="scrollbar-thin min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden border-t border-border/25 bg-muted-bg/20 p-3 dark:border-border/20 dark:bg-muted-bg/10">
-            {messages.length === 0 && (
+            {messages.length === 0 && !logsLoading && (
               <p className="py-8 text-center text-xs text-muted">
-                Say hi to start.
+                {introQuestions.length > 0
+                  ? "Pick a starter question below or type a message."
+                  : "Say hi to start."}
               </p>
             )}
             {messages.map((m, i) => (
@@ -713,7 +731,14 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
                     <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
                       <FormatText text={m.message || ""} />
                     </div>
-                    {Array.isArray(m.sourceUrls) && m.sourceUrls.length > 0 && (
+                    {Array.isArray(m.sourceCards) &&
+                    m.sourceCards.length > 0 ? (
+                      <AssistantSourceCards
+                        items={m.sourceCards}
+                        primaryHex={primaryHex}
+                      />
+                    ) : Array.isArray(m.sourceUrls) &&
+                      m.sourceUrls.length > 0 ? (
                       <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/25 pt-2 dark:border-border/30">
                         <span className="text-xs text-muted">Links:</span>
                         {m.sourceUrls.map((url, idx) => (
@@ -730,7 +755,8 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
                             style={
                               primaryHex
                                 ? {
-                                    backgroundColor: hexToRgba(primaryHex, 0.12) || undefined,
+                                    backgroundColor:
+                                      hexToRgba(primaryHex, 0.12) || undefined,
                                     color: primaryHex,
                                   }
                                 : undefined
@@ -740,7 +766,7 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
                           </a>
                         ))}
                       </div>
-                    )}
+                    ) : null}
                   </div>
                 ) : (
                   <p className="whitespace-pre-wrap [word-break:break-word] [overflow-wrap:anywhere]">
@@ -757,6 +783,26 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
             )}
             <div ref={endRef} />
           </div>
+
+          {introQuestions.length > 0 &&
+            messages.length <= 1 &&
+            !sendLoading && (
+              <div className="shrink-0 border-t border-border/25 px-1 py-2 dark:border-border/20">
+                <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
+                  {introQuestions.map((q, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => void sendUserMessage(q)}
+                      disabled={sendLoading}
+                      className="max-w-[min(280px,85vw)] shrink-0 rounded-xl border border-border/50 bg-background px-3 py-2 text-left text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-muted-bg disabled:opacity-50 dark:border-border/40"
+                    >
+                      {q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
 
           <form
             onSubmit={handleSubmit}
@@ -801,6 +847,24 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
               )}
             </button>
           </form>
+          <p
+            className={`mt-2 shrink-0 text-center text-xs ${
+              primaryHex ? "" : "text-muted"
+            }`}
+            style={primaryHex ? { color: primaryHex } : undefined}
+          >
+            Powered by{" "}
+            <a
+              href="https://kavisha.ai"
+              target="_blank"
+              rel="noopener noreferrer"
+              className={`font-semibold underline-offset-2 hover:underline ${
+                primaryHex ? "" : "text-highlight"
+              }`}
+            >
+              Kavisha
+            </a>
+          </p>
         </>
       )}
     </div>

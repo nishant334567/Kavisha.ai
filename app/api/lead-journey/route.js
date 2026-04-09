@@ -26,6 +26,26 @@ function estimateTokens(text) {
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
+/** Ordered unique URLs + KB cards from Pinecone chunk metadata. */
+function sourcesFromUsedChunkIds(usedChunkIds, uniqueContext) {
+  const seen = new Set();
+  const sourceUrls = [];
+  const sourceCards = [];
+  for (const chunkId of usedChunkIds) {
+    const d = uniqueContext.get(chunkId);
+    const url = (d?.url || "").trim();
+    if (!url || seen.has(url)) continue;
+    seen.add(url);
+    sourceUrls.push(url);
+    sourceCards.push({
+      url,
+      title: String(d?.title ?? "").trim(),
+      description: String(d?.description ?? "").trim(),
+    });
+  }
+  return { sourceUrls, sourceCards };
+}
+
 function serializeError(error) {
   if (!error) return null;
 
@@ -118,6 +138,7 @@ export async function POST(req) {
         let outputToken = 0;
         let sourceChunkIds = [];
         let sourceUrls = [];
+        let sourceCards = [];
         const modelName = process.env.AI_MODEL ?? "gemini-2.5-flash";
 
         if (!modelName) {
@@ -224,6 +245,8 @@ export async function POST(req) {
             uniqueContext.set(match.id, {
               text: match.metadata?.text || "",
               url: match.metadata?.chunkSourceUrl || "",
+              title: String(match.metadata?.title || "").trim(),
+              description: String(match.metadata?.description || "").trim(),
             });
           });
 
@@ -233,6 +256,8 @@ export async function POST(req) {
               uniqueContext.set(hit._id, {
                 text: hit.fields?.text || "",
                 url: hit.fields?.chunkSourceUrl || hit.chunkSourceUrl || "",
+                title: String(hit.fields?.title || "").trim(),
+                description: String(hit.fields?.description || "").trim(),
               });
             }
           });
@@ -416,22 +441,14 @@ export async function POST(req) {
         // Filter to only include valid chunk IDs that exist in sourceChunkIds
         usedChunkIds = usedChunkIds.filter(id => sourceChunkIds.includes(id));
 
-        // Map used chunk IDs to URLs (deduplicate with Set)
         if (usedChunkIds.length > 0) {
-          const urlsSet = new Set();
-          usedChunkIds.forEach((chunkId) => {
-            const chunkData = uniqueContext.get(chunkId);
-            const url = chunkData?.url || "";
-            if (url && url.trim() !== "") {
-              urlsSet.add(url);
-            }
-          });
-          sourceUrls = Array.from(urlsSet);
-          // Update sourceChunkIds to only include used ones
+          const next = sourcesFromUsedChunkIds(usedChunkIds, uniqueContext);
+          sourceUrls = next.sourceUrls;
+          sourceCards = next.sourceCards;
           sourceChunkIds = usedChunkIds;
         } else {
-          // No chunks were used, return empty arrays
           sourceUrls = [];
+          sourceCards = [];
           sourceChunkIds = [];
         }
 
@@ -482,18 +499,13 @@ export async function POST(req) {
             usedChunkIds = usedChunkIds.filter(id => sourceChunkIds.includes(id));
 
             if (usedChunkIds.length > 0) {
-              const urlsSet = new Set();
-              usedChunkIds.forEach((chunkId) => {
-                const chunkData = uniqueContext.get(chunkId);
-                const url = chunkData?.url || "";
-                if (url && url.trim() !== "") {
-                  urlsSet.add(url);
-                }
-              });
-              sourceUrls = Array.from(urlsSet);
+              const next = sourcesFromUsedChunkIds(usedChunkIds, uniqueContext);
+              sourceUrls = next.sourceUrls;
+              sourceCards = next.sourceCards;
               sourceChunkIds = usedChunkIds;
             } else {
               sourceUrls = [];
+              sourceCards = [];
               sourceChunkIds = [];
             }
           }
@@ -516,6 +528,7 @@ export async function POST(req) {
                 userId: user.id,
                 role: "assistant",
                 sourceUrls: Array.isArray(sourceUrls) ? sourceUrls : [],
+                sourceCards: Array.isArray(sourceCards) ? sourceCards : [],
                 sourceChunkIds: Array.isArray(sourceChunkIds) ? sourceChunkIds : [],
               });
 
@@ -543,6 +556,7 @@ export async function POST(req) {
             title: reParts[2],
             requery: betterQuery,
             sourceUrls: sourceUrls,
+            sourceCards: sourceCards,
             inputTokens: inputToken,
             outputTokens: outputToken,
             totalTokens: inputToken + outputToken,
