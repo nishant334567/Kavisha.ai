@@ -8,6 +8,7 @@
     "build": "next build",
     "start": "node app/server.js",
     "lint": "next lint",
+    "blog:sync-and-ingest": "node scripts/blog-feed-sync-and-ingest.js",
     "deploy:firebase-auth-hosting": "cd firebase-auth-hosting && npx --yes firebase-tools@latest deploy --only hosting"
   },
   "dependencies": {
@@ -21,6 +22,7 @@
     "@tiptap/extension-placeholder": "^3.20.0",
     "@tiptap/react": "^3.20.0",
     "@tiptap/starter-kit": "^3.20.0",
+    "cheerio": "^1.0.0-rc.12",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "firebase": "^12.5.0",
