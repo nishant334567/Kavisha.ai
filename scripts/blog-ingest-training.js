@@ -3,6 +3,7 @@
  * Loaded by blog-ingest-handlers via require; uses dynamic import for app ESM modules.
  */
 const path = require("path");
+const fs = require("fs");
 const { pathToFileURL } = require("url");
 const { v4: uuidv4 } = require("uuid");
 
@@ -14,7 +15,29 @@ const MAX_TRAINING_CHUNKS = 10;
 const DENSE_INDEX = "intelligent-kavisha";
 const SPARSE_INDEX = "kavisha-sparse";
 
-const ROOT = path.join(__dirname, "..");
+/**
+ * Next bundles this file under `.next/server/...`; `__dirname` is not `scripts/`.
+ * Walk up to the directory that has package.json (repo root, e.g. /app in Docker).
+ */
+function resolveProjectRoot() {
+  const fromEnv = process.env.PROJECT_ROOT?.trim();
+  if (fromEnv) return path.resolve(fromEnv);
+
+  let dir = __dirname;
+  for (let i = 0; i < 40; i++) {
+    try {
+      if (fs.existsSync(path.join(dir, "package.json"))) return dir;
+    } catch {
+      /* ignore */
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) break;
+    dir = parent;
+  }
+  return path.join(__dirname, "..");
+}
+
+const ROOT = resolveProjectRoot();
 
 /** @type {Promise<{ generateEmbeddingsInBatches: Function, pc: import('@pinecone-database/pinecone').Pinecone | null, TrainingData: import('mongoose').Model }> | null} */
 let depsPromise = null;
