@@ -10,7 +10,7 @@ const TrainingDataSchema = new mongoose.Schema(
     title: {
       type: String,
       required: true,
-      maxlength: 50,
+      maxlength: 512,
     },
     description: {
       type: String,
@@ -48,6 +48,15 @@ const TrainingDataSchema = new mongoose.Schema(
       type: String,
       required: false,
       default: "",
+    },
+    author: {
+      type: String,
+      required: false,
+      default: "",
+    },
+    publishedAt: {
+      type: Date,
+      required: false,
     },
   },
   { timestamps: true }

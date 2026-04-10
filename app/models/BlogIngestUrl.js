@@ -1,4 +1,4 @@
-import mongoose from "mongoose";
+const mongoose = require("mongoose");
 
 const STATUS = ["pending", "scraped", "failed"];
 
@@ -40,8 +40,54 @@ const BlogIngestUrlSchema = new mongoose.Schema(
       type: String,
       default: "",
     },
+    description: {
+      type: String,
+      default: "",
+    },
+    title: {
+      type: String,
+      default: "",
+    },
+    author: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    /** Raw published date string from the article page */
+    publishedDate: {
+      type: String,
+      default: "",
+      trim: true,
+    },
+    text: {
+      type: String,
+      default: "",
+    },
+    sourceUrl: {
+      type: String,
+      default: "",
+    },
+    imageUrls: {
+      type: [String],
+      default: [],
+    },
+    scrapedAt: {
+      type: Date,
+    },
+    /** Set true after the worker scrape step succeeds */
+    scraped: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    /** Set true after the worker ingest step succeeds */
+    ingested: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
   },
-  { timestamps: true }
+  { timestamps: true, collection: "blogingesturls" }
 );
 
 BlogIngestUrlSchema.index({ brand: 1, status: 1 });
@@ -51,5 +97,5 @@ const BlogIngestUrl =
   mongoose.models.BlogIngestUrl ||
   mongoose.model("BlogIngestUrl", BlogIngestUrlSchema);
 
-export default BlogIngestUrl;
-export { STATUS as BLOG_INGEST_STATUS };
+module.exports = BlogIngestUrl;
+module.exports.BLOG_INGEST_STATUS = STATUS;

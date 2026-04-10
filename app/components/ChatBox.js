@@ -14,7 +14,6 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Matches from "@/app/components/Matches";
-import CommunityOnboardingProgress from "@/app/components/CommunityOnboardingProgress";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
 
@@ -529,7 +528,6 @@ export default function ChatBox({
     <div className="font-baloo w-full max-w-full md:w-3/5 flex bg-background rounded-xl p-2 md:p-4 h-full min-h-0 mx-2 md:mx-4 overflow-hidden">
       <div className="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
         <div className="rounded-xl w-full p-1 md:p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
-          <div className="gap-2 absolute right-2 px-2 flex flex-col items-end rounded-lg -top-8 sm:top-0 bg-card sm:bg-muted-bg z-10"></div>
           {/* Logo Section - flex-1 */}
           <div className="flex-2 flex flex-col md:flex-row justify-center items-center md:gap-4 md:items-start md:mb-8 my-4 min-h-0 md:mt-4 md:px-2">
             <img
@@ -597,10 +595,27 @@ export default function ChatBox({
 
           {isCommunitySession &&
             currentChatType?.toLowerCase() !== "lead_journey" && (
-              <CommunityOnboardingProgress
-                percent={displayOnboardingPct}
-                primaryBrandHex={primaryBrandHex}
-              />
+              <div className="mb-2 flex w-full shrink-0 justify-start px-1 md:mb-3 md:px-2">
+                <div
+                  className="inline-flex items-baseline gap-0.5 rounded-md border border-border/45 bg-muted/35 px-2.5 py-1 text-[13px] italic tabular-nums shadow-sm backdrop-blur-[2px] dark:border-border/35 dark:bg-muted/25"
+                  style={
+                    primaryBrandHex
+                      ? {
+                          borderLeftWidth: 3,
+                          borderLeftColor: primaryBrandHex,
+                        }
+                      : undefined
+                  }
+                >
+                  <span className="font-semibold not-italic tracking-tight text-foreground">
+                    {Math.round(
+                      Math.min(100, Math.max(0, displayOnboardingPct))
+                    )}
+                    %
+                  </span>
+                  <span className="text-muted-foreground">completed</span>
+                </div>
+              </div>
             )}
 
           {/* Messages Section - flex-2, scrollable */}
