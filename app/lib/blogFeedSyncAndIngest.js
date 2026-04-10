@@ -139,6 +139,8 @@ async function runIngestPending() {
 
   let ok = 0;
   let fail = 0;
+  /** @type {{ url: string, error: string }[]} */
+  const failures = [];
   for (const url of urls) {
     try {
       const scraped = await scrape(url);
@@ -147,16 +149,18 @@ async function runIngestPending() {
       console.log("[ok — scraped + ingested]", url);
       ok += 1;
     } catch (e) {
-      console.error("[fail]", url, e?.message || e);
+      const msg = (e && e.message) || String(e);
+      console.error("[fail]", url, msg);
+      failures.push({ url, error: msg });
       fail += 1;
     }
   }
-  return { ok, fail };
+  return { ok, fail, failures };
 }
 
 /**
  * @param {{ disconnectAfter?: boolean }} [opts]
- * @returns {Promise<{ success: true, feedUrl: string, articleUrlsCount: number, upserted: number, ingestOk: number, ingestFail: number }>}
+ * @returns {Promise<{ success: true, feedUrl: string, articleUrlsCount: number, upserted: number, ingestOk: number, ingestFail: number, ingestFailures: { url: string, error: string }[] }>}
  */
 async function runBlogFeedSyncAndIngest(opts = {}) {
   const { disconnectAfter = false } = opts;
@@ -180,7 +184,11 @@ async function runBlogFeedSyncAndIngest(opts = {}) {
     const upserted = await upsertNewUrls(urls, source);
     console.log(`Inserted new rows: ${upserted}`);
 
-    const { ok: ingestOk, fail: ingestFail } = await runIngestPending();
+    const {
+      ok: ingestOk,
+      fail: ingestFail,
+      failures: ingestFailures,
+    } = await runIngestPending();
     console.log(`Done. OK: ${ingestOk}, failed: ${ingestFail}`);
 
     return {
@@ -190,6 +198,7 @@ async function runBlogFeedSyncAndIngest(opts = {}) {
       upserted,
       ingestOk,
       ingestFail,
+      ingestFailures,
     };
   } finally {
     if (disconnectAfter) {
