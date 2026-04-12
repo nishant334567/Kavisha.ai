@@ -16,6 +16,7 @@ import {
 import Matches from "@/app/components/Matches";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
+import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
 
 export default function ChatBox({
@@ -700,6 +701,15 @@ export default function ChatBox({
                         )}
                       </div>
                     )}
+                  {m.role === "assistant" && (
+                    <div className="mt-1.5 w-full min-w-0 max-w-[90%] sm:max-w-[60%]">
+                      <AssistantReplyCopyButton
+                        message={m.message}
+                        sourceCards={m.sourceCards}
+                        sourceUrls={m.sourceUrls}
+                      />
+                    </div>
+                  )}
                   {/* Show payment QR code for personal_call intent */}
                   {m.role === "assistant" &&
                     m.intent === "personal_call" &&

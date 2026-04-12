@@ -15,6 +15,7 @@ import ChatSidebar from "@/app/components/ChatSidebar";
 import LiveChat from "@/app/components/LiveChat";
 import Loader from "@/app/components/Loader";
 import PoweredByKavisha from "@/app/components/PoweredByKavisha";
+import CommunityBrandStrip from "@/app/components/CommunityBrandStrip";
 import { ArrowLeft } from "lucide-react";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 
@@ -382,8 +383,31 @@ export default function Community() {
         );
     }
 
+    const findJobsMsg =
+        "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)";
+    const hireMsg =
+        "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)";
+    const friendsMsg =
+        "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)";
+
     return (
         <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden">
+            <CommunityBrandStrip
+                communityName={brand?.communityName || "Community"}
+                primaryHex={primaryHex}
+                enableProfessionalConnect={!!brand?.enableProfessionalConnect}
+                enableFriendConnect={!!brand?.enableFriendConnect}
+                creating={creating}
+                onFindJobs={() =>
+                    createCommunityPost("job_seeker", "Looking for work", findJobsMsg)
+                }
+                onHirePeople={() =>
+                    createCommunityPost("recruiter", "Looking at hiring", hireMsg)
+                }
+                onFindFriends={() =>
+                    createCommunityPost("friends", "Looking for a friend", friendsMsg)
+                }
+            />
             <div className="flex flex-1 min-h-0 overflow-hidden">
                 <div>
                     <ChatSidebar
@@ -413,60 +437,15 @@ export default function Community() {
                             </button>
 
                             {!brand?.enableProfessionalConnect && !brand?.enableFriendConnect ? (
-                                <div className="px-8 py-12 text-center text-lg text-muted opacity-60">
+                                <div className="px-4 py-12 text-center text-lg text-muted opacity-60">
                                     Community is not available right now.
                                 </div>
                             ) : (
                                 <>
-                                    <div className="px-4 flex flex-col md:flex-row md:justify-between md:items-start gap-3 py-4 sm:py-3">
-                                        <div className="min-w-0">
-                                            <p
-                                                className={`text-2xl sm:text-3xl lg:text-4xl ${!secondaryHex ? "text-highlight" : ""}`}
-                                                style={secondaryHex ? { color: secondaryHex } : undefined}
-                                            >
-                                                Community
-                                            </p>
-                                            <p className="text-sm sm:text-base font-extralight mt-1">
-                                                Browse through all connection requests and get connecting. Or create your own! :)
-                                            </p>
-                                        </div>
-                                        {visibleRequirements.length > 0 && (
-                                            <div className="flex flex-wrap gap-2 sm:gap-3 items-center shrink-0">
-                                                {brand?.enableProfessionalConnect && (
-                                                    <>
-                                                        <button
-                                                            type="button"
-                                                            disabled={creating === "job_seeker"}
-                                                            className={`rounded-full px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base ${!primaryHex ? "bg-highlight" : ""}`}
-                                                            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
-                                                            onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                                        >
-                                                            {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            disabled={creating === "recruiter"}
-                                                            className={`rounded-full px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base ${!primaryHex ? "bg-highlight" : ""}`}
-                                                            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
-                                                            onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                                        >
-                                                            {creating === "recruiter" ? "Creating..." : "Hire People"}
-                                                        </button>
-                                                    </>
-                                                )}
-                                                {brand?.enableFriendConnect && (
-                                                    <button
-                                                        type="button"
-                                                        disabled={creating === "friends"}
-                                                        className={`rounded-full px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base ${!primaryHex ? "bg-highlight" : ""}`}
-                                                        style={primaryHex ? { backgroundColor: primaryHex } : undefined}
-                                                        onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                                    >
-                                                        {creating === "friends" ? "Creating..." : "Find Friends"}
-                                                    </button>
-                                                )}
-                                            </div>
-                                        )}
+                                    <div className="px-4 py-3">
+                                        <p className="text-sm font-extralight text-muted sm:text-base">
+                                            Browse through all connection requests and get connecting. Or create your own! :)
+                                        </p>
                                     </div>
                                     {loading ? (
                                         <div className="p-4 sm:p-8 flex justify-center">
@@ -475,48 +454,13 @@ export default function Community() {
                                     ) : error ? (
                                         <div className="p-4 sm:p-8 text-center text-red-600 text-sm sm:text-base">{error}</div>
                                     ) : visibleRequirements.length === 0 ? (
-                                        <div className="flex min-h-[50vh] flex-col items-center justify-center px-4 py-8 text-center">
+                                        <div className="flex min-h-[40vh] flex-col items-center justify-center px-4 py-8 text-center">
                                             <p className="text-sm text-muted sm:text-base">
-                                                No community posts yet.
+                                                No community posts yet. Use the bar above to create your first post.
                                             </p>
-                                            <div className="mt-6 flex flex-wrap items-center justify-center gap-2 sm:gap-3">
-                                                {brand?.enableFriendConnect && (
-                                                    <button
-                                                        type="button"
-                                                        disabled={creating === "friends"}
-                                                        className={`rounded-full px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base ${!primaryHex ? "bg-highlight" : ""}`}
-                                                        style={primaryHex ? { backgroundColor: primaryHex } : undefined}
-                                                        onClick={() => createCommunityPost("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                                    >
-                                                        {creating === "friends" ? "Creating..." : "Find Friends"}
-                                                    </button>
-                                                )}
-                                                {brand?.enableProfessionalConnect && (
-                                                    <>
-                                                        <button
-                                                            type="button"
-                                                            disabled={creating === "job_seeker"}
-                                                            className={`rounded-full px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base border border-white ${!primaryHex ? "bg-highlight" : ""}`}
-                                                            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
-                                                            onClick={() => createCommunityPost("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                                        >
-                                                            {creating === "job_seeker" ? "Creating..." : "Find Jobs"}
-                                                        </button>
-                                                        <button
-                                                            type="button"
-                                                            disabled={creating === "recruiter"}
-                                                            className={`rounded-full px-3 py-1.5 text-sm text-white transition-colors hover:opacity-90 disabled:opacity-50 sm:px-4 sm:text-base border border-white ${!primaryHex ? "bg-highlight" : ""}`}
-                                                            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
-                                                            onClick={() => createCommunityPost("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)")}
-                                                        >
-                                                            {creating === "recruiter" ? "Creating..." : "Hire People"}
-                                                        </button>
-                                                    </>
-                                                )}
-                                            </div>
                                         </div>
                                     ) : (
-                                        <div className="py-4 px-4 sm:px-8 sm:py-8 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                                        <div className="grid grid-cols-1 gap-3 px-4 py-4 sm:grid-cols-2 sm:gap-4 sm:py-8 lg:grid-cols-3">
                                             {visibleRequirements.map((r) => (
                                                 <CommunityCard
                                                     key={r.id}
