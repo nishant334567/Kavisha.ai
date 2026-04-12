@@ -409,7 +409,11 @@ export default function ChatSidebar({
         {isCollapsed && (
           <button
             onClick={() => toggleLeftSideBar()}
-            className="fixed left-0 top-16 z-[60] flex h-10 w-6 items-center justify-center rounded-r-md border border-l-0 border-border bg-background/95 text-muted shadow-sm transition-all hover:w-7 hover:bg-muted-bg hover:text-foreground md:top-14"
+            className={`fixed left-0 z-[60] flex h-10 w-6 items-center justify-center rounded-r-md border border-l-0 border-border bg-background/95 text-muted shadow-sm transition-all hover:w-7 hover:bg-muted-bg hover:text-foreground ${
+              isCommunity
+                ? "top-28 md:top-28"
+                : "top-16 md:top-14"
+            }`}
             style={{ touchAction: "manipulation" }}
             title="Open sidebar"
             aria-label="Open sidebar"
