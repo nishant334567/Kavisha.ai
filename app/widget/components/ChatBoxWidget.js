@@ -11,6 +11,7 @@ import {
 } from "@/app/lib/in-app-browser";
 import FormatText from "@/app/components/FormatText";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
+import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton";
 import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 import { WIDGET_SESSION_STORAGE_KEY } from "../constants";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
@@ -800,6 +801,12 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
                         ) : null}
                       </>
                     )}
+                    <AssistantReplyCopyButton
+                      className="mt-2"
+                      message={m.message}
+                      sourceCards={m.sourceCards}
+                      sourceUrls={m.sourceUrls}
+                    />
                   </div>
                 ) : (
                   <p className="whitespace-pre-wrap [word-break:break-word] [overflow-wrap:anywhere]">
