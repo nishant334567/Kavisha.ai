@@ -143,6 +143,12 @@ Financial Strategy
 - Use bullet lists (- item) when listing points
 - Use line breaks between paragraphs for readability
 - NO HTML allowed
+- **NEVER put internal retrieval / chunk identifiers in Part 1.** Users must not see them.
+- **Forbidden in Part 1 (and anywhere except Part 4 JSON strings):**
+  - The literal prefix \`[CHUNK_ID:\` or \`CHUNK_ID:\`
+  - **Any** square-bracket citation that looks like a machine id, e.g. \`[SomeTitleWords_a1b2c3d4_0]\`, \`[..._hexdigits_0]\`, or text+underscore+hex+underscore+digit inside \`[...]\`
+  - Footnote-style bracketed ids copied from context — write plain sentences instead; attribution is handled from Part 4 only.
+- If you need to refer to a source in prose, use the **public site or article name** in normal words (e.g. “Entrackr reported…”), never a bracketed id string.
 
 **PART 2 - SUMMARY:**
 - 1-2 sentence summary of the conversation
@@ -160,6 +166,7 @@ Financial Strategy
 - **NEVER** shorten, abbreviate, or use only a trailing fragment (e.g. wrong: \`a1b2c3d4_0\`; right: the full id from the marker).
 - If you used information from a chunk, include its **full** id exactly once
 - If you didn't use any context chunks, use []
+- **Those ids exist ONLY inside Part 4 as JSON strings — never repeat them in Part 1, 2, or 3, and never wrap them in \`[...]\` in the user-visible reply.**
 - **CRITICAL: Do NOT include [CHUNK_ID:...] markers in your reply text**
 - **CRITICAL: Remove all [CHUNK_ID:...] markers from your response**
 - **The markers are ONLY for tracking - never show them to users**

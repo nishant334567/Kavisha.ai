@@ -13,6 +13,8 @@ import FormatText from "@/app/components/FormatText";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
 import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 import { WIDGET_SESSION_STORAGE_KEY } from "../constants";
+import ChatThinkingRow from "@/app/components/ChatThinkingRow";
+import WidgetIntroTypewriter from "./WidgetIntroTypewriter";
 
 const LEAD_JOURNEY_ROLE = "lead_journey";
 
@@ -57,6 +59,8 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
   const [logsError, setLogsError] = useState(null);
   /** Lead journey starter prompts from Sanity (same as main ChatBox). */
   const [introQuestions, setIntroQuestions] = useState([]);
+  /** Set when POST /api/widget/session succeeds; enables one-time intro typewriter for that id. */
+  const [introTypewriterSessionId, setIntroTypewriterSessionId] = useState(null);
 
   const [signingIn, setSigningIn] = useState(false);
   const [signInError, setSignInError] = useState("");
@@ -112,6 +116,15 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
   useEffect(() => {
     if (!authLoading && user && brand) loadSessions();
   }, [authLoading, user, brand, loadSessions]);
+
+  useEffect(() => {
+    if (
+      introTypewriterSessionId &&
+      introTypewriterSessionId !== activeSessionId
+    ) {
+      setIntroTypewriterSessionId(null);
+    }
+  }, [activeSessionId, introTypewriterSessionId]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -222,6 +235,7 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
 
   const handleSelectSession = (e) => {
     const id = e.target.value || null;
+    setIntroTypewriterSessionId(null);
     setActiveSessionId(id);
     persistSession(id);
   };
@@ -259,6 +273,7 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
       if (!res.ok) throw new Error(data.error || "Could not create chat");
       const id = data.sessionId;
       if (!id) throw new Error("No session id");
+      setIntroTypewriterSessionId(id);
       setActiveSessionId(id);
       persistSession(id);
       setSessions((prev) => [
@@ -321,6 +336,7 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
     )
       return;
 
+    setIntroTypewriterSessionId(null);
     setInput("");
     const userMsg = { role: "user", message: text, requery: null, id: null };
     const historyToUse = [...messages, userMsg];
@@ -709,7 +725,13 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
                   : "Say hi to start."}
               </p>
             )}
-            {messages.map((m, i) => (
+            {messages.map((m, i) => {
+              const introTypewriterActive =
+                m.role === "assistant" &&
+                i === 0 &&
+                introTypewriterSessionId &&
+                introTypewriterSessionId === activeSessionId;
+              return (
               <div
                 key={m.id != null ? String(m.id) : `${m.role}-${i}`}
                 className={
@@ -728,45 +750,56 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
               >
                 {m.role === "assistant" ? (
                   <div className="min-w-0 max-w-full">
-                    <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
-                      <FormatText text={m.message || ""} />
-                    </div>
-                    {Array.isArray(m.sourceCards) &&
-                    m.sourceCards.length > 0 ? (
-                      <AssistantSourceCards
-                        items={m.sourceCards}
-                        primaryHex={primaryHex}
+                    {introTypewriterActive ? (
+                      <WidgetIntroTypewriter
+                        text={m.message || ""}
+                        scrollRef={endRef}
+                        onComplete={() => setIntroTypewriterSessionId(null)}
                       />
-                    ) : Array.isArray(m.sourceUrls) &&
-                      m.sourceUrls.length > 0 ? (
-                      <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/25 pt-2 dark:border-border/30">
-                        <span className="text-xs text-muted">Links:</span>
-                        {m.sourceUrls.map((url, idx) => (
-                          <a
-                            key={idx}
-                            href={url}
-                            target="_blank"
-                            rel="noopener noreferrer"
-                            className={`max-w-full break-all rounded-md px-2 py-0.5 text-xs transition-colors hover:underline ${
-                              primaryHex
-                                ? "font-medium"
-                                : "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60"
-                            }`}
-                            style={
-                              primaryHex
-                                ? {
-                                    backgroundColor:
-                                      hexToRgba(primaryHex, 0.12) || undefined,
-                                    color: primaryHex,
-                                  }
-                                : undefined
-                            }
-                          >
-                            {url.length > 36 ? `${url.slice(0, 36)}…` : url}
-                          </a>
-                        ))}
-                      </div>
-                    ) : null}
+                    ) : (
+                      <>
+                        <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
+                          <FormatText text={m.message || ""} />
+                        </div>
+                        {Array.isArray(m.sourceCards) &&
+                        m.sourceCards.length > 0 ? (
+                          <AssistantSourceCards
+                            items={m.sourceCards}
+                            primaryHex={primaryHex}
+                          />
+                        ) : Array.isArray(m.sourceUrls) &&
+                          m.sourceUrls.length > 0 ? (
+                          <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/25 pt-2 dark:border-border/30">
+                            <span className="text-xs text-muted">Links:</span>
+                            {m.sourceUrls.map((url, idx) => (
+                              <a
+                                key={idx}
+                                href={url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className={`max-w-full break-all rounded-md px-2 py-0.5 text-xs transition-colors hover:underline ${
+                                  primaryHex
+                                    ? "font-medium"
+                                    : "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60"
+                                }`}
+                                style={
+                                  primaryHex
+                                    ? {
+                                        backgroundColor:
+                                          hexToRgba(primaryHex, 0.12) ||
+                                          undefined,
+                                        color: primaryHex,
+                                      }
+                                    : undefined
+                                }
+                              >
+                                {url.length > 36 ? `${url.slice(0, 36)}…` : url}
+                              </a>
+                            ))}
+                          </div>
+                        ) : null}
+                      </>
+                    )}
                   </div>
                 ) : (
                   <p className="whitespace-pre-wrap [word-break:break-word] [overflow-wrap:anywhere]">
@@ -774,18 +807,21 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
                   </p>
                 )}
               </div>
-            ))}
+            );
+            })}
             {sendLoading && (
-              <div className="mr-auto flex w-fit max-w-full items-center gap-2 rounded-2xl bg-muted-bg px-3.5 py-2 text-xs text-muted shadow-sm dark:bg-muted-bg/80">
-                <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-                Thinking…
-              </div>
+              <ChatThinkingRow
+                className="mr-auto"
+                brandSlug={brand}
+                primaryColor={primaryColor}
+                variant="outline"
+              />
             )}
             <div ref={endRef} />
           </div>
 
           {introQuestions.length > 0 &&
-            messages.length <= 1 &&
+            !messages.some((m) => m.role === "user") &&
             !sendLoading && (
               <div className="shrink-0 border-t border-border/25 px-1 py-2 dark:border-border/20">
                 <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:thin]">

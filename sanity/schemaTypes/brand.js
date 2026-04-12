@@ -133,6 +133,44 @@ export default {
         "Optional hex for card accents (name, tags, “Already connected”). Leave empty for default.",
     },
     {
+      name: "widgetLauncher",
+      title: "Embed widget (floating button)",
+      type: "object",
+      description:
+        "Controls the closed-state chat launcher on sites that embed the Kavisha widget (bottom-right).",
+      options: {
+        collapsible: true,
+        collapsed: false,
+      },
+      fields: [
+        {
+          name: "buttonImage",
+          title: "Button image / logo",
+          type: "image",
+          description:
+            "Optional. Replaces the default chat bubble icon. Use a square or near-square image (about 96–128px) for best results.",
+          options: {
+            hotspot: true,
+          },
+        },
+        {
+          name: "enableAttentionAnimation",
+          title: "Subtle attention animation",
+          type: "boolean",
+          description:
+            "When enabled, the floating button plays a gentle periodic shake so visitors notice it.",
+          initialValue: false,
+        },
+        {
+          name: "chatbotWidgetHeader",
+          title: "Chatbot widget header",
+          type: "string",
+          description:
+            "Title in the top bar when the embed chat is open. Leave empty to use the default “{Brand}'s AI Chat” title.",
+        },
+      ],
+    },
+    {
       name: "enableQuiz",
       title: "Enable Quiz/Survey",
       type: "boolean",
@@ -204,6 +242,8 @@ export default {
               title: "ChatBot Initial Message",
               type: "string",
               validation: (Rule) => Rule.required(),
+              description:
+                "First assistant message in chat (saved to history). On the embed widget, it types out letter-by-letter once when a new chat is created.",
             },
             {
               name: "title",

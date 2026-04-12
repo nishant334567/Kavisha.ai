@@ -12,9 +12,23 @@ module.exports = {
           "0%, 80%, 100%": { opacity: "0.4" },
           "40%": { opacity: "1" },
         },
+        /** One full 360° spin, then idle until next loop (same class name as before) */
+        "widget-launcher-nudge": {
+          "0%": { transform: "rotate(0deg)" },
+          "9%": { transform: "rotate(360deg)" },
+          "100%": { transform: "rotate(360deg)" },
+        },
+        "widget-welcome-bubble-in": {
+          "0%": { opacity: "0", transform: "translateY(8px)" },
+          "100%": { opacity: "1", transform: "translateY(0)" },
+        },
       },
       animation: {
         "loading-dots": "loading-dots 1.4s ease-in-out infinite both",
+        "widget-launcher-nudge":
+          "widget-launcher-nudge 5s linear infinite",
+        "widget-welcome-bubble-in":
+          "widget-welcome-bubble-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both",
       },
       colors: {
         background: "var(--background)",

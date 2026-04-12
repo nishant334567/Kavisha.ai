@@ -492,6 +492,7 @@ export async function POST(req) {
               copied **verbatim** from \`[CHUNK_ID:FULL_ID_HERE]\` (same spelling and length; ids are long, often TitleWords_hex_0).
               Do NOT shorten to a suffix (e.g. only hex_0); source links require the complete id. At least one id if you used context.
               Do NOT return [] unless you truly used no retrieved chunks.
+              **Never paste those ids into Part 1** — not as \`[CHUNK_ID:...]\`, not as \`[TitleWords_hex_0]\`, not as footnotes. Part 1 must read like a normal article for humans; ids are **only** the JSON strings in Part 4.
 `
           : "";
 
@@ -505,10 +506,11 @@ export async function POST(req) {
 
               USER QUESTION: ${betterQuery}
 
-              IMPORTANT: The [CHUNK_ID:...] markers are for your internal tracking only.
-              Do NOT include these markers in your response text.
-              Extract the information but remove all [CHUNK_ID:...] markers from your answer.
-              In Part 4, paste each **full** id exactly as it appears after \`[CHUNK_ID:\` and before \`]\` — no truncation.
+              IMPORTANT: The [CHUNK_ID:...] prefixes in RELEVANT CONTEXT are for your internal tracking only.
+              Part 1 (your visible answer) must contain **zero** retrieval identifiers: no \`[CHUNK_ID:...]\`, and no bracketed strings that look like chunk ids (e.g. long tokens with underscores and hex, ending in \`_0\`, \`_1\`, etc.).
+              Do not invent inline “citations” in square brackets — the product shows sources from Part 4 separately.
+              Extract facts into clean prose; attribute in words when helpful (e.g. publication name), never by pasting ids.
+              In Part 4 only, output each **full** id exactly as it appears after \`[CHUNK_ID:\` and before \`]\` — no truncation.
               ${citationRequirement}
               Please provide a helpful response based on the above information.`;
 
@@ -553,7 +555,7 @@ export async function POST(req) {
         }
 
         if (reParts.length !== 4) {
-          const strictPrompt = `CRITICAL ERROR: Your previous response had ${reParts.length} parts but the format requires EXACTLY 4 parts separated by ////.\n\nYou MUST follow the format specified in the system instructions. This is MANDATORY, not optional.\n\nREMINDER: Part 4 must be a JSON array of the **complete** chunk id strings exactly as shown inside each [CHUNK_ID:...] in context — full length, not a short suffix. Do NOT include [CHUNK_ID:...] in Part 1.\n\nPlease retry with the correct 4-part format.`;
+          const strictPrompt = `CRITICAL ERROR: Your previous response had ${reParts.length} parts but the format requires EXACTLY 4 parts separated by ////.\n\nYou MUST follow the format specified in the system instructions. This is MANDATORY, not optional.\n\nREMINDER: Part 4 must be a JSON array of the **complete** chunk id strings exactly as shown inside each [CHUNK_ID:...] in context — full length, not a short suffix. Part 1 must be human-readable only: no [CHUNK_ID:...], no bracketed chunk ids like [TitleWords_hex_0], no internal id footnotes.\n\nPlease retry with the correct 4-part format.`;
 
           inputToken += estimateTokens(strictPrompt);
           responseGemini = await generateLeadJourneyGeminiContent({
