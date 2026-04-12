@@ -16,6 +16,7 @@ import {
 import Matches from "@/app/components/Matches";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
+import ChatThinkingRow from "@/app/components/ChatThinkingRow";
 
 export default function ChatBox({
   currentChatId,
@@ -715,26 +716,11 @@ export default function ChatBox({
                 </div>
               ))}
             {messageLoading && (
-              <div className="flex justify-start mb-4">
-                <div className="bg-[#59646F] rounded-2xl px-4 py-2 hover:shadow-md transition-all duration-300 cursor-default">
-                  <div className="flex items-center gap-3">
-                    <div className="flex gap-1">
-                      <div className="w-2 h-2 bg-[#FFEED8] rounded-full animate-pulse"></div>
-                      <div
-                        className="w-2 h-2 bg-[#FFEED8] rounded-full animate-pulse"
-                        style={{ animationDelay: "0.3s" }}
-                      ></div>
-                      <div
-                        className="w-2 h-2 bg-[#FFEED8] rounded-full animate-pulse"
-                        style={{ animationDelay: "0.6s" }}
-                      ></div>
-                    </div>
-                    <span className="text-[#FFEED8] text-sm font-medium">
-                      {brandContext?.brandName} is thinking
-                    </span>
-                  </div>
-                </div>
-              </div>
+              <ChatThinkingRow
+                className="mb-4"
+                displayName={brandContext?.brandName}
+                primaryColor={brandContext?.primaryBrandColor}
+              />
             )}
 
             {hasDatacollected && (
