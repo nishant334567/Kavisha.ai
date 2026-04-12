@@ -27,31 +27,70 @@ function WidgetShell() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [primaryColor, setPrimaryColor] = useState(null);
+  const [launcherImageUrl, setLauncherImageUrl] = useState(null);
+  const [launcherAnimation, setLauncherAnimation] = useState(false);
+  const [widgetChatbotHeader, setWidgetChatbotHeader] = useState(null);
+  const brandTrimmed = brand.trim();
+  const needsBrandTheme = brandTrimmed.length > 0;
+  /** Start false: with `?brand=` we show an empty slot until theme fetch finishes (no default teal flash). */
+  const [themeReady, setThemeReady] = useState(false);
   const primaryHex = normalizeBrandHex(primaryColor);
 
+  const headerTitle =
+    (typeof widgetChatbotHeader === "string" && widgetChatbotHeader.trim()
+      ? widgetChatbotHeader.trim()
+      : null) || widgetHeadingFromBrand(brand);
+
   useEffect(() => {
-    const b = brand.trim().toLowerCase();
+    const b = brandTrimmed.toLowerCase();
     if (!b) {
+      setThemeReady(true);
       setPrimaryColor(null);
+      setLauncherImageUrl(null);
+      setLauncherAnimation(false);
+      setWidgetChatbotHeader(null);
       return;
     }
+    setThemeReady(false);
     let cancelled = false;
     fetch(`/api/public/brand-theme?brand=${encodeURIComponent(b)}`)
       .then((res) => (res.ok ? res.json() : null))
       .then((data) => {
-        if (!cancelled && data?.primaryBrandColor) {
+        if (cancelled) return;
+        if (data?.primaryBrandColor) {
           setPrimaryColor(data.primaryBrandColor);
-        } else if (!cancelled) {
+        } else {
           setPrimaryColor(null);
         }
+        const url =
+          typeof data?.widgetLauncherImageUrl === "string" &&
+          data.widgetLauncherImageUrl.trim()
+            ? data.widgetLauncherImageUrl.trim()
+            : null;
+        setLauncherImageUrl(url);
+        setLauncherAnimation(Boolean(data?.widgetLauncherAnimation));
+        const h =
+          typeof data?.widgetChatbotHeader === "string" &&
+          data.widgetChatbotHeader.trim()
+            ? data.widgetChatbotHeader.trim()
+            : null;
+        setWidgetChatbotHeader(h);
       })
       .catch(() => {
-        if (!cancelled) setPrimaryColor(null);
+        if (!cancelled) {
+          setPrimaryColor(null);
+          setLauncherImageUrl(null);
+          setLauncherAnimation(false);
+          setWidgetChatbotHeader(null);
+        }
+      })
+      .finally(() => {
+        if (!cancelled) setThemeReady(true);
       });
     return () => {
       cancelled = true;
     };
-  }, [brand]);
+  }, [brandTrimmed]);
 
   useEffect(() => {
     if (typeof window === "undefined" || window.parent === window) return;
@@ -84,7 +123,7 @@ function WidgetShell() {
                   : "w-full text-center text-sm font-semibold tracking-tight text-foreground"
               }
             >
-              {widgetHeadingFromBrand(brand)}
+              {headerTitle}
             </span>
             <button
               type="button"
@@ -103,12 +142,14 @@ function WidgetShell() {
             <ChatBoxWidget brand={brand.trim()} primaryColor={primaryColor} />
           </div>
         </div>
+      ) : needsBrandTheme && !themeReady ? (
+        <div className="h-12 w-12 shrink-0" aria-hidden />
       ) : (
         <button
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label="Open chat"
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-lg ring-2 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-transparent ${!primaryHex ? "bg-highlight ring-highlight/30" : ""}`}
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-lg ring-2 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-transparent ${launcherAnimation ? "animate-widget-launcher-nudge will-change-transform" : ""} ${!primaryHex ? "bg-highlight ring-highlight/30" : ""} ${launcherImageUrl ? "p-1" : ""}`}
           style={
             primaryHex
               ? {
@@ -118,7 +159,24 @@ function WidgetShell() {
               : undefined
           }
         >
-          <MessageCircle className="h-6 w-6" strokeWidth={2} />
+          {launcherImageUrl ? (
+            <span
+              className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-white shadow-[inset_0_1px_0_rgba(255,255,255,0.85),0_1px_2px_rgba(0,0,0,0.12)] ring-1 ring-black/10"
+              aria-hidden
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element -- Sanity CDN; avoids remotePatterns setup */}
+              <img
+                src={launcherImageUrl}
+                alt=""
+                className="h-[1.35rem] w-[1.35rem] object-contain drop-shadow-sm"
+                width={22}
+                height={22}
+                decoding="async"
+              />
+            </span>
+          ) : (
+            <MessageCircle className="h-6 w-6" strokeWidth={2} />
+          )}
         </button>
       )}
     </div>
@@ -129,8 +187,11 @@ export default function WidgetPage() {
   return (
     <Suspense
       fallback={
-        <div className="fixed inset-0 flex items-center justify-center bg-transparent p-4 text-sm text-muted">
-          Loading…
+        <div
+          className="fixed inset-0 box-border flex flex-col items-end justify-end overflow-hidden bg-transparent p-2"
+          aria-hidden
+        >
+          <div className="h-12 w-12 shrink-0" />
         </div>
       }
     >

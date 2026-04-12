@@ -22,6 +22,7 @@ const PUBLIC_PATHS = [
   "/api/unsubscribe/resolve",
   "/links",
   "/api/links",
+  "/api/widget/sso-introspect",
 ];
 
 function getSubdomainFromRequest(hostname) {
