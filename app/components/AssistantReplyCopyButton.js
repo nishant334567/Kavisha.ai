@@ -108,7 +108,7 @@ export default function AssistantReplyCopyButton({
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
     } catch {
-      /* ignore — clipboard may be denied */
+      /* denied or unsupported — widget needs parent iframe allow="clipboard-write" */
     }
   }, [message, sourceCards, sourceUrls]);
 
