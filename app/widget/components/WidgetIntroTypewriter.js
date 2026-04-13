@@ -3,7 +3,8 @@
 import { useEffect, useRef, useState } from "react";
 import FormatText from "@/app/components/FormatText";
 
-const MS_PER_CHAR = 28;
+/** ~12ms/char (~80/s) — was 28ms; keeps typewriter feel without a long first reply. */
+const MS_PER_CHAR = 12;
 
 /**
  * Letter-by-letter intro for a newly created widget session only (parent gates when to mount).

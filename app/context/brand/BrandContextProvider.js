@@ -63,7 +63,10 @@ export default function BrandContextProvider({ children }) {
                   enableLinks,
                   services,
                   primaryBrandColor,
-                  secondaryBrandColor
+                  secondaryBrandColor,
+                  widgetLauncher{
+                    copyReadMoreUrl
+                  }
               }[0]`,
         );
         if (brand) {
@@ -107,6 +110,10 @@ export default function BrandContextProvider({ children }) {
             services: brand.services,
             primaryBrandColor: brand.primaryBrandColor || "",
             secondaryBrandColor: brand.secondaryBrandColor || "",
+            assistantCopyReadMoreUrl:
+              typeof brand.widgetLauncher?.copyReadMoreUrl === "string"
+                ? brand.widgetLauncher.copyReadMoreUrl.trim()
+                : "",
           };
 
           setBrandContext(context);

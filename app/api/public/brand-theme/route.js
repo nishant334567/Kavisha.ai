@@ -22,6 +22,7 @@ export async function GET(req) {
       widgetLauncherImageUrl: null,
       widgetLauncherAnimation: false,
       widgetChatbotHeader: null,
+      widgetCopyReadMoreUrl: null,
     });
   }
 
@@ -33,7 +34,8 @@ export async function GET(req) {
         widgetLauncher{
           buttonImage,
           enableAttentionAnimation,
-          chatbotWidgetHeader
+          chatbotWidgetHeader,
+          copyReadMoreUrl
         }
       }`,
       { brand }
@@ -45,6 +47,12 @@ export async function GET(req) {
         ? wl.chatbotWidgetHeader.trim()
         : "";
     const widgetChatbotHeader = headerRaw.length > 0 ? headerRaw : null;
+
+    const readMoreRaw =
+      typeof wl?.copyReadMoreUrl === "string"
+        ? wl.copyReadMoreUrl.trim()
+        : "";
+    const widgetCopyReadMoreUrl = readMoreRaw.length > 0 ? readMoreRaw : null;
 
     let widgetLauncherImageUrl = null;
     if (wl?.buttonImage && urlFor) {
@@ -67,6 +75,7 @@ export async function GET(req) {
         widgetLauncherImageUrl,
         widgetLauncherAnimation: Boolean(wl?.enableAttentionAnimation),
         widgetChatbotHeader,
+        widgetCopyReadMoreUrl,
       },
       {
         headers: {
