@@ -168,6 +168,13 @@ export default {
           description:
             "Title in the top bar when the embed chat is open. Leave empty to use the default “{Brand}'s AI Chat” title.",
         },
+        {
+          name: "copyReadMoreUrl",
+          title: "“Read more” URL for copy to clipboard",
+          type: "url",
+          description:
+            "If set, copied assistant replies begin with: To read more, visit [this URL]. Use your public site (e.g. https://entrackr.com). Applies to main chat and embed widget.",
+        },
       ],
     },
     {

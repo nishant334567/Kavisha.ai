@@ -50,10 +50,48 @@ function labelForSourceCard(c) {
 }
 
 /**
+ * Sanity `copyReadMoreUrl` wins; else Entrackr brand or entrackr.com sources → https://entrackr.com
+ */
+function resolveReadMoreForCopy(
+  readMoreUrl,
+  brandSubdomain,
+  sourceCards,
+  sourceUrls
+) {
+  const explicit = typeof readMoreUrl === "string" ? readMoreUrl.trim() : "";
+  if (explicit) return explicit;
+  const slug = (brandSubdomain || "").trim().toLowerCase();
+  if (slug === "entrackr") return "https://entrackr.com";
+
+  const fromSources = [];
+  if (Array.isArray(sourceCards)) {
+    for (const c of sourceCards) {
+      if (c && typeof c.url === "string" && c.url.trim()) {
+        fromSources.push(c.url.trim());
+      }
+    }
+  }
+  if (Array.isArray(sourceUrls)) {
+    for (const u of sourceUrls) {
+      if (typeof u === "string" && u.trim()) fromSources.push(u.trim());
+    }
+  }
+  for (const u of fromSources) {
+    if (hostFromUrl(u) === "entrackr.com") return "https://entrackr.com";
+  }
+  return "";
+}
+
+/**
  * Plain text for clipboard: answer + compact sources (title + URL per row).
  * Omits long Pinecone descriptions (Author/Published/body blobs) so paste is shareable.
  */
-export function buildAssistantReplyCopyText(message, sourceCards, sourceUrls) {
+export function buildAssistantReplyCopyText(
+  message,
+  sourceCards,
+  sourceUrls,
+  readMoreUrl = ""
+) {
   const body = String(message ?? "").trim();
   const lines = [body || "(empty response)"];
 
@@ -65,7 +103,9 @@ export function buildAssistantReplyCopyText(message, sourceCards, sourceUrls) {
     : [];
 
   if (cards.length === 0 && urls.length === 0) {
-    return lines.join("\n");
+    const core = lines.join("\n");
+    const more = typeof readMoreUrl === "string" ? readMoreUrl.trim() : "";
+    return more ? `To read more, visit ${more}\n\n${core}` : core;
   }
 
   lines.push("");
@@ -90,19 +130,36 @@ export function buildAssistantReplyCopyText(message, sourceCards, sourceUrls) {
     });
   }
 
-  return lines.join("\n");
+  const core = lines.join("\n");
+  const more = typeof readMoreUrl === "string" ? readMoreUrl.trim() : "";
+  return more ? `To read more, visit ${more}\n\n${core}` : core;
 }
 
 export default function AssistantReplyCopyButton({
   message,
   sourceCards,
   sourceUrls,
+  /** e.g. https://entrackr.com — from Sanity widget launcher */
+  readMoreUrl = "",
+  /** Kavisha brand slug (e.g. entrackr) — used when readMoreUrl not set in CMS */
+  brandSubdomain = "",
   className = "",
 }) {
   const [copied, setCopied] = useState(false);
 
   const handleCopy = useCallback(async () => {
-    const text = buildAssistantReplyCopyText(message, sourceCards, sourceUrls);
+    const more = resolveReadMoreForCopy(
+      readMoreUrl,
+      brandSubdomain,
+      sourceCards,
+      sourceUrls
+    );
+    const text = buildAssistantReplyCopyText(
+      message,
+      sourceCards,
+      sourceUrls,
+      more
+    );
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
@@ -110,7 +167,7 @@ export default function AssistantReplyCopyButton({
     } catch {
       /* denied or unsupported — widget needs parent iframe allow="clipboard-write" */
     }
-  }, [message, sourceCards, sourceUrls]);
+  }, [message, sourceCards, sourceUrls, readMoreUrl, brandSubdomain]);
 
   return (
     <button

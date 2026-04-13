@@ -707,6 +707,8 @@ export default function ChatBox({
                         message={m.message}
                         sourceCards={m.sourceCards}
                         sourceUrls={m.sourceUrls}
+                        readMoreUrl={brandContext?.assistantCopyReadMoreUrl}
+                        brandSubdomain={brandContext?.subdomain}
                       />
                     </div>
                   )}

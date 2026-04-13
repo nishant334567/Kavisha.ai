@@ -13,9 +13,12 @@ import FormatText from "@/app/components/FormatText";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
 import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton";
 import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
-import { WIDGET_SESSION_STORAGE_KEY } from "../constants";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
 import WidgetIntroTypewriter from "./WidgetIntroTypewriter";
+import WidgetChatLoader, {
+  WIDGET_LOADER_MESSAGES,
+  widgetLoaderMessagesFromFlags,
+} from "./WidgetChatLoader";
 
 const LEAD_JOURNEY_ROLE = "lead_journey";
 
@@ -35,13 +38,19 @@ function buildBrandCommunityUrl(subdomain) {
   return `https://${s}.kavisha.ai/community`;
 }
 
-export default function ChatBoxWidget({ brand, primaryColor = null }) {
+export default function ChatBoxWidget({
+  brand,
+  primaryColor = null,
+  readMoreCopyUrl = "",
+}) {
   const { user, loading: authLoading, refresh } = useFirebaseSession();
   const endRef = useRef(null);
   const primaryHex = normalizeBrandHex(primaryColor);
 
   const [sessions, setSessions] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
+  /** True after the latest widget session list fetch finished (used to auto-start a fresh chat on open). */
+  const [sessionsHydrated, setSessionsHydrated] = useState(false);
   const [activeSessionId, setActiveSessionId] = useState(null);
 
   const [messages, setMessages] = useState([]);
@@ -75,14 +84,9 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
     setIsMobile(isMobileDevice());
   }, []);
 
-  const persistSession = useCallback((id) => {
-    if (typeof window === "undefined") return;
-    if (id) localStorage.setItem(WIDGET_SESSION_STORAGE_KEY, id);
-    else localStorage.removeItem(WIDGET_SESSION_STORAGE_KEY);
-  }, []);
-
   const loadSessions = useCallback(async () => {
     if (!user || !brand) return;
+    setSessionsHydrated(false);
     setSessionsLoading(true);
     try {
       const res = await fetch(
@@ -93,26 +97,15 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
       const data = await res.json();
       const list = data.sessions || [];
       setSessions(list);
-
-      const saved =
-        typeof window !== "undefined"
-          ? localStorage.getItem(WIDGET_SESSION_STORAGE_KEY)
-          : null;
-      const savedOk = saved && list.some((s) => s.id === saved);
-      if (savedOk) setActiveSessionId(saved);
-      else if (list[0]) {
-        setActiveSessionId(list[0].id);
-        persistSession(list[0].id);
-      } else {
-        setActiveSessionId(null);
-        persistSession(null);
-      }
+      setActiveSessionId(null);
     } catch {
       setSessions([]);
+      setActiveSessionId(null);
     } finally {
       setSessionsLoading(false);
+      setSessionsHydrated(true);
     }
-  }, [user, brand, persistSession]);
+  }, [user, brand]);
 
   useEffect(() => {
     if (!authLoading && user && brand) loadSessions();
@@ -238,7 +231,6 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
     const id = e.target.value || null;
     setIntroTypewriterSessionId(null);
     setActiveSessionId(id);
-    persistSession(id);
   };
 
   const closeServicePicker = () => {
@@ -276,7 +268,6 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
       if (!id) throw new Error("No session id");
       setIntroTypewriterSessionId(id);
       setActiveSessionId(id);
-      persistSession(id);
       setSessions((prev) => [
         {
           id,
@@ -326,6 +317,15 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
       setLeadJourneysLoading(false);
     }
   };
+
+  const openNewChatPickerRef = useRef(openNewChatPicker);
+  openNewChatPickerRef.current = openNewChatPicker;
+
+  useEffect(() => {
+    if (!sessionsHydrated || !user || !brand || authLoading || signingOut)
+      return;
+    void openNewChatPickerRef.current();
+  }, [sessionsHydrated, user, brand, authLoading, signingOut]);
 
   async function sendUserMessage(rawText) {
     const text = String(rawText ?? "").trim();
@@ -437,7 +437,6 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
         return;
       }
       setSessionError(null);
-      persistSession(null);
       setSessions([]);
       setActiveSessionId(null);
       setMessages([]);
@@ -473,10 +472,10 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
 
   if (authLoading) {
     return (
-      <div className="flex flex-1 items-center justify-center gap-2 py-8 text-sm text-muted">
-        <Loader2 className="h-4 w-4 animate-spin" />
-        Checking session…
-      </div>
+      <WidgetChatLoader
+        primaryHex={primaryHex}
+        {...WIDGET_LOADER_MESSAGES.checkingSession}
+      />
     );
   }
 
@@ -548,6 +547,32 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
     );
   }
 
+  const showFullBleedLoader =
+    sessionsLoading ||
+    (!servicePickerOpen && leadJourneysLoading) ||
+    newChatLoading ||
+    (Boolean(activeSessionId) && sessionLoading) ||
+    (Boolean(activeSessionId) &&
+      chatRole === LEAD_JOURNEY_ROLE &&
+      logsLoading);
+
+  if (showFullBleedLoader) {
+    const { title, subtitle } = widgetLoaderMessagesFromFlags({
+      sessionsLoading,
+      servicePickerOpen,
+      leadJourneysLoading,
+      newChatLoading,
+      activeSessionId,
+      sessionLoading,
+      chatRole,
+      logsLoading,
+      leadJourneyRole: LEAD_JOURNEY_ROLE,
+    });
+    return (
+      <WidgetChatLoader primaryHex={primaryHex} title={title} subtitle={subtitle} />
+    );
+  }
+
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
       <div className="flex flex-col gap-2">
@@ -560,11 +585,16 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
           {sessions.length === 0 ? (
             <option value="">No widget chats yet</option>
           ) : (
-            sessions.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.title}
-              </option>
-            ))
+            <>
+              {!activeSessionId && (
+                <option value="">Starting new chat…</option>
+              )}
+              {sessions.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.title}
+                </option>
+              ))}
+            </>
           )}
         </select>
         <div className="grid grid-cols-3 gap-2">
@@ -658,10 +688,20 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
             </div>
             <div className="scrollbar-thin min-h-0 max-h-[min(72vh,440px)] overflow-y-auto px-3 py-3">
               {leadJourneysLoading && (
-                <p className="flex items-center gap-2 text-xs text-muted">
-                  <Loader2 className="h-3.5 w-3.5 shrink-0 animate-spin" />
-                  Loading options…
-                </p>
+                <div
+                  className="flex flex-col items-center justify-center gap-3 py-10 text-center"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <Loader2
+                    className="h-7 w-7 animate-spin text-muted-foreground"
+                    strokeWidth={2}
+                    aria-hidden
+                  />
+                  <p className="max-w-[14rem] text-xs leading-relaxed text-muted-foreground">
+                    Loading conversation types you can start here.
+                  </p>
+                </div>
               )}
               {pickerError && (
                 <p className="text-xs text-red-600 dark:text-red-400">
@@ -699,14 +739,6 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
 
       {!activeSessionId && !sessionsLoading && !servicePickerOpen && (
         <p className="text-xs text-muted">Create a chat with New chat.</p>
-      )}
-
-      {sessionLoading && activeSessionId && (
-        <p className="text-xs text-muted">Loading session…</p>
-      )}
-
-      {logsLoading && activeSessionId && chatRole === LEAD_JOURNEY_ROLE && (
-        <p className="text-xs text-muted">Loading messages…</p>
       )}
 
       {logsError &&
@@ -806,6 +838,8 @@ export default function ChatBoxWidget({ brand, primaryColor = null }) {
                       message={m.message}
                       sourceCards={m.sourceCards}
                       sourceUrls={m.sourceUrls}
+                      readMoreUrl={readMoreCopyUrl}
+                      brandSubdomain={brand}
                     />
                   </div>
                 ) : (

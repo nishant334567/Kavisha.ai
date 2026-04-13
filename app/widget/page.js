@@ -4,10 +4,10 @@ import { Suspense, useEffect, useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import ChatBoxWidget from "./components/ChatBoxWidget";
-import { WIDGET_SESSION_STORAGE_KEY } from "./constants";
 import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 
-export { WIDGET_SESSION_STORAGE_KEY };
+/** First launcher spin waits this long after theme loads (attention animation only). */
+const LAUNCHER_NUDGE_DELAY_MS = 4000;
 
 /** e.g. `entrackr` → `Entrackr's AI Chat`; empty → `AI Chat`. */
 function widgetHeadingFromBrand(brandSlug) {
@@ -30,6 +30,8 @@ function WidgetShell() {
   const [launcherImageUrl, setLauncherImageUrl] = useState(null);
   const [launcherAnimation, setLauncherAnimation] = useState(false);
   const [widgetChatbotHeader, setWidgetChatbotHeader] = useState(null);
+  const [widgetCopyReadMoreUrl, setWidgetCopyReadMoreUrl] = useState("");
+  const [launcherNudgeReady, setLauncherNudgeReady] = useState(false);
   const brandTrimmed = brand.trim();
   const needsBrandTheme = brandTrimmed.length > 0;
   /** Start false: with `?brand=` we show an empty slot until theme fetch finishes (no default teal flash). */
@@ -49,6 +51,7 @@ function WidgetShell() {
       setLauncherImageUrl(null);
       setLauncherAnimation(false);
       setWidgetChatbotHeader(null);
+      setWidgetCopyReadMoreUrl("");
       return;
     }
     setThemeReady(false);
@@ -75,6 +78,12 @@ function WidgetShell() {
             ? data.widgetChatbotHeader.trim()
             : null;
         setWidgetChatbotHeader(h);
+        const rm =
+          typeof data?.widgetCopyReadMoreUrl === "string" &&
+          data.widgetCopyReadMoreUrl.trim()
+            ? data.widgetCopyReadMoreUrl.trim()
+            : "";
+        setWidgetCopyReadMoreUrl(rm);
       })
       .catch(() => {
         if (!cancelled) {
@@ -82,6 +91,7 @@ function WidgetShell() {
           setLauncherImageUrl(null);
           setLauncherAnimation(false);
           setWidgetChatbotHeader(null);
+          setWidgetCopyReadMoreUrl("");
         }
       })
       .finally(() => {
@@ -91,6 +101,18 @@ function WidgetShell() {
       cancelled = true;
     };
   }, [brandTrimmed]);
+
+  useEffect(() => {
+    if (!launcherAnimation || !themeReady) {
+      setLauncherNudgeReady(false);
+      return;
+    }
+    const id = window.setTimeout(
+      () => setLauncherNudgeReady(true),
+      LAUNCHER_NUDGE_DELAY_MS
+    );
+    return () => clearTimeout(id);
+  }, [launcherAnimation, themeReady]);
 
   useEffect(() => {
     if (typeof window === "undefined" || window.parent === window) return;
@@ -139,7 +161,11 @@ function WidgetShell() {
             </button>
           </div>
           <div className="flex min-h-[240px] min-w-0 flex-1 flex-col overflow-hidden px-3 pb-3 pt-2">
-            <ChatBoxWidget brand={brand.trim()} primaryColor={primaryColor} />
+            <ChatBoxWidget
+              brand={brand.trim()}
+              primaryColor={primaryColor}
+              readMoreCopyUrl={widgetCopyReadMoreUrl}
+            />
           </div>
         </div>
       ) : needsBrandTheme && !themeReady ? (
@@ -149,7 +175,7 @@ function WidgetShell() {
           type="button"
           onClick={() => setIsOpen(true)}
           aria-label="Open chat"
-          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-lg ring-2 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-transparent ${launcherAnimation ? "animate-widget-launcher-nudge will-change-transform" : ""} ${!primaryHex ? "bg-highlight ring-highlight/30" : ""} ${launcherImageUrl ? "p-1" : ""}`}
+          className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-lg ring-2 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-transparent ${launcherAnimation && launcherNudgeReady ? "animate-widget-launcher-nudge will-change-transform" : ""} ${!primaryHex ? "bg-highlight ring-highlight/30" : ""} ${launcherImageUrl ? "p-1" : ""}`}
           style={
             primaryHex
               ? {

@@ -11,11 +11,10 @@ const getClient = () => {
     return null;
   }
 
-  // Determine dataset based on environment
-  // Use 'production' dataset in production, 'development' otherwise
+  // Match Sanity Studio default (sanity/sanity.config.js): "development" when unset.
+  // Staging/production must set NEXT_PUBLIC_SANITY_DATASET explicitly (e.g. test-dataset).
   const dataset =
-    process.env.NEXT_PUBLIC_SANITY_DATASET ||
-    (process.env.NODE_ENV === "production" ? "development" : "test-dataset");
+    process.env.NEXT_PUBLIC_SANITY_DATASET || "development";
 
   return createClient({
     projectId: process.env.NEXT_PUBLIC_SANITY_PROJECT_ID || "wkgir1xd",
