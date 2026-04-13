@@ -1,3 +1,6 @@
+/**
+ * Manual / local: RSS sync + blog ingest (same code path as POST /api/admin/cron/blog).
+ */
 const path = require("path");
 const fs = require("fs");
 
