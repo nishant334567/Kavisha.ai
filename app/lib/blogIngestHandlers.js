@@ -1,11 +1,11 @@
 /**
- * Blog ingest pipeline — scrape + ingest.
- * Used by scripts/blog-feed-sync-and-ingest.js
+ * Blog ingest pipeline — scrape + persist to Mongo, then train/embed.
+ * Used only from app/lib/blogFeedSyncAndIngest.js (cron + local script).
  */
-const { scrapeEntrackrArticle } = require("./entrackr-article-scrape.js");
-const { connectDB } = require("../app/lib/db.js");
-const BlogIngestUrl = require("../app/models/BlogIngestUrl.js");
-const { runBlogIngestTraining } = require("./blog-ingest-training.js");
+const { scrapeEntrackrArticle } = require("./entrackrArticleScrape");
+const { connectDB } = require("./db");
+const BlogIngestUrl = require("../models/BlogIngestUrl");
+const { runBlogIngestTraining } = require("./blogIngestTraining");
 
 /**
  * @param {string} url

@@ -1,61 +1,33 @@
 /**
  * Persist scraped blog → TrainingData + Pinecone (same flow as /api/embeddings POST).
- * Loaded by blog-ingest-handlers via require; uses dynamic import for app ESM modules.
+ * Lives under app/lib so Next bundles it with cron (no file:// imports from scripts/).
  */
-const path = require("path");
-const fs = require("fs");
-const { pathToFileURL } = require("url");
 const { v4: uuidv4 } = require("uuid");
 
-const { connectDB } = require("../app/lib/db.js");
-const BlogIngestUrl = require("../app/models/BlogIngestUrl.js");
+const { connectDB } = require("./db");
+const BlogIngestUrl = require("../models/BlogIngestUrl");
 
 const MIN_CHUNK_WORDS = 500;
 const MAX_TRAINING_CHUNKS = 10;
 const DENSE_INDEX = "intelligent-kavisha";
 const SPARSE_INDEX = "kavisha-sparse";
 
-/**
- * Next bundles this file under `.next/server/...`; `__dirname` is not `scripts/`.
- * Walk up to the directory that has package.json (repo root, e.g. /app in Docker).
- */
-function resolveProjectRoot() {
-  const fromEnv = process.env.PROJECT_ROOT?.trim();
-  if (fromEnv) return path.resolve(fromEnv);
-
-  let dir = __dirname;
-  for (let i = 0; i < 40; i++) {
-    try {
-      if (fs.existsSync(path.join(dir, "package.json"))) return dir;
-    } catch {
-      /* ignore */
-    }
-    const parent = path.dirname(dir);
-    if (parent === dir) break;
-    dir = parent;
-  }
-  return path.join(__dirname, "..");
-}
-
-const ROOT = resolveProjectRoot();
-
 /** @type {Promise<{ generateEmbeddingsInBatches: Function, pc: import('@pinecone-database/pinecone').Pinecone | null, TrainingData: import('mongoose').Model }> | null} */
-let depsPromise = null;
+let blogIngestDepsPromise = null;
 
-function loadDeps() {
-  if (!depsPromise) {
-    const fileUrl = (rel) => import(pathToFileURL(path.join(ROOT, rel)).href);
-    depsPromise = Promise.all([
-      fileUrl("app/lib/embeddings.js"),
-      fileUrl("app/lib/pinecone.js"),
-      fileUrl("app/models/TrainingData.js"),
+function loadBlogIngestDeps() {
+  if (!blogIngestDepsPromise) {
+    blogIngestDepsPromise = Promise.all([
+      import("./embeddings.js"),
+      import("./pinecone.js"),
+      import("../models/TrainingData.js"),
     ]).then(([emb, pineconeMod, td]) => ({
       generateEmbeddingsInBatches: emb.generateEmbeddingsInBatches,
       pc: pineconeMod.default,
       TrainingData: td.default,
     }));
   }
-  return depsPromise;
+  return blogIngestDepsPromise;
 }
 
 function buildChunkId(docid, index, embeddingVersion = 0) {
@@ -288,7 +260,8 @@ async function runBlogIngestTraining(scraped) {
   });
   const embeddingText = buildEmbeddingTextBody(headerBlock, body);
 
-  const { generateEmbeddingsInBatches, pc, TrainingData } = await loadDeps();
+  const { generateEmbeddingsInBatches, pc, TrainingData } =
+    await loadBlogIngestDeps();
 
   if (!pc) {
     throw new Error("Pinecone not configured (PINECONE_API_KEY)");
@@ -364,7 +337,7 @@ async function runBlogIngestTraining(scraped) {
     try {
       await deleteDocumentVectors(pc, brand, docid);
     } catch (rollbackErr) {
-      console.error("[blog-ingest-training] rollback failed", rollbackErr);
+      console.error("[blogIngestTraining] rollback failed", rollbackErr);
     }
     await BlogIngestUrl.updateOne({ url }, { $set: { lastError: err.message || String(err) } });
     throw err;

@@ -1,11 +1,12 @@
 /**
  * RSS sync → BlogIngestUrl upsert → scrape + ingest.
- * Used by scripts/blog-feed-sync-and-ingest.js and admin cron.
+ * Used by scripts/blog-feed-sync-and-ingest.js (local) and POST /api/admin/cron/blog.
+ * All ingest logic lives under app/lib (same pattern as session cleanup cron).
  */
 const mongoose = require("mongoose");
 const { connectDB } = require("./db");
 const BlogIngestUrl = require("../models/BlogIngestUrl");
-const { scrape, ingest } = require("../../scripts/blog-ingest-handlers.js");
+const { scrape, ingest } = require("./blogIngestHandlers");
 
 const DEFAULT_FEED_URL = "https://entrackr.com/rss";
 const USER_AGENT = "KavishaBlogIngest/1.0 (+https://kavisha.ai)";
@@ -136,6 +137,10 @@ async function runIngestPending() {
   console.log(
     `Scrape + ingest: ${urls.length} URL(s) where ingested is not yet true`
   );
+
+  if (urls.length === 0) {
+    return { ok: 0, fail: 0, failures: [] };
+  }
 
   let ok = 0;
   let fail = 0;

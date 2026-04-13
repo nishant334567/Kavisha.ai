@@ -4,9 +4,6 @@ FROM node:20-alpine
 # Set working directory
 WORKDIR /app
 
-# Dynamic imports in blog ingest resolve source files under /app (see scripts/blog-ingest-training.js)
-ENV PROJECT_ROOT=/app
-
 # Copy package files
 COPY package*.json ./
 
