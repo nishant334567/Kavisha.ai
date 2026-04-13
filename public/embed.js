@@ -20,15 +20,35 @@ function mount() {
 
   var trusted = new URL(iframe.src).origin;
 
+  /** Last size the iframe asked for (open vs closed); re-clamped on host resize. */
+  var lastRequestedW = 72;
+  var lastRequestedH = 72;
+
+  /** Fit iframe to host window: use requested size, or smaller if viewport is tight. */
+  function applyIframeSize() {
+    var inset = 28; // ~fixed right/bottom 24px + buffer
+    var vw =
+      window.innerWidth || document.documentElement.clientWidth || lastRequestedW;
+    var vh =
+      window.innerHeight || document.documentElement.clientHeight || lastRequestedH;
+    iframe.style.width =
+      Math.min(lastRequestedW, Math.max(240, vw - inset)) + "px";
+    iframe.style.height =
+      Math.min(lastRequestedH, Math.max(280, vh - inset)) + "px";
+  }
+
   window.addEventListener("message", function (e) {
     if (e.source !== iframe.contentWindow || e.origin !== trusted) return;
     var d = e.data;
     if (!d || d.source !== "kavisha-widget") return;
     if (typeof d.width === "number" && typeof d.height === "number") {
-      iframe.style.width = d.width + "px";
-      iframe.style.height = d.height + "px";
+      lastRequestedW = d.width;
+      lastRequestedH = d.height;
+      applyIframeSize();
     }
   });
+
+  window.addEventListener("resize", applyIframeSize);
 }
 
 (function () {
