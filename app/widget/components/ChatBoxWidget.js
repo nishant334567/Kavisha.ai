@@ -1,7 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { Loader2, LogOut, Plus, Send, Users, X } from "lucide-react";
+import { ChevronDown, Loader2, LogOut, Plus, Send, Users, X } from "lucide-react";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { signIn } from "@/app/lib/firebase/sign-in";
 import {
@@ -22,6 +22,11 @@ import WidgetChatLoader, {
 
 const LEAD_JOURNEY_ROLE = "lead_journey";
 
+function widgetSessionTitle(s) {
+  const raw = String(s?.title || "").trim();
+  return raw || "Chat";
+}
+
 /** Opens this brand's Kavisha community in a new tab (matches BrandContext localhost ?subdomain=). */
 function buildBrandCommunityUrl(subdomain) {
   if (typeof window === "undefined") return "#";
@@ -41,11 +46,14 @@ function buildBrandCommunityUrl(subdomain) {
 export default function ChatBoxWidget({
   brand,
   primaryColor = null,
+  secondaryColor = null,
   readMoreCopyUrl = "",
 }) {
   const { user, loading: authLoading, refresh } = useFirebaseSession();
   const endRef = useRef(null);
   const primaryHex = normalizeBrandHex(primaryColor);
+  /** User message bubbles use brand primary when set. */
+  const userBubbleHex = primaryHex;
 
   const [sessions, setSessions] = useState([]);
   const [sessionsLoading, setSessionsLoading] = useState(false);
@@ -78,6 +86,8 @@ export default function ChatBoxWidget({
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [signingOut, setSigningOut] = useState(false);
+  const [historyMenuOpen, setHistoryMenuOpen] = useState(false);
+  const historyMenuRef = useRef(null);
 
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
@@ -227,11 +237,32 @@ export default function ChatBoxWidget({
     };
   }, [activeSessionId, user, authLoading, chatRole]);
 
-  const handleSelectSession = (e) => {
-    const id = e.target.value || null;
+  const selectSessionById = useCallback((id) => {
     setIntroTypewriterSessionId(null);
-    setActiveSessionId(id);
-  };
+    setActiveSessionId(id || null);
+    setHistoryMenuOpen(false);
+  }, []);
+
+  useEffect(() => {
+    if (!historyMenuOpen) return;
+    const onPointerDown = (e) => {
+      if (
+        historyMenuRef.current &&
+        !historyMenuRef.current.contains(e.target)
+      ) {
+        setHistoryMenuOpen(false);
+      }
+    };
+    const onKeyDown = (e) => {
+      if (e.key === "Escape") setHistoryMenuOpen(false);
+    };
+    document.addEventListener("mousedown", onPointerDown);
+    window.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", onPointerDown);
+      window.removeEventListener("keydown", onKeyDown);
+    };
+  }, [historyMenuOpen]);
 
   const closeServicePicker = () => {
     setServicePickerOpen(false);
@@ -576,27 +607,52 @@ export default function ChatBoxWidget({
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
       <div className="flex flex-col gap-2">
-        <select
-          value={activeSessionId || ""}
-          onChange={handleSelectSession}
-          disabled={sessionsLoading || sessions.length === 0}
-          className="w-full min-w-0 rounded-xl border border-border/50 bg-background px-3 py-2 text-xs text-foreground shadow-sm transition focus:border-border focus:outline-none focus:ring-2 focus:ring-ring/20"
-        >
-          {sessions.length === 0 ? (
-            <option value="">No widget chats yet</option>
-          ) : (
-            <>
-              {!activeSessionId && (
-                <option value="">Starting new chat…</option>
-              )}
+        <div className="relative" ref={historyMenuRef}>
+          <button
+            type="button"
+            id="widget-chat-history-trigger"
+            aria-expanded={historyMenuOpen}
+            aria-haspopup="listbox"
+            aria-controls="widget-chat-history-listbox"
+            disabled={sessionsLoading || sessions.length === 0}
+            onClick={() => setHistoryMenuOpen((open) => !open)}
+            className="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-border/50 bg-background px-3 py-2 text-left text-xs text-foreground shadow-sm transition hover:bg-muted-bg/60 focus:border-border focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <span className="min-w-0 truncate font-medium">Chat history</span>
+            <ChevronDown
+              className={`h-4 w-4 shrink-0 text-muted transition-transform ${historyMenuOpen ? "rotate-180" : ""}`}
+              aria-hidden
+            />
+          </button>
+          {historyMenuOpen && sessions.length > 0 && (
+            <div
+              id="widget-chat-history-listbox"
+              role="listbox"
+              aria-labelledby="widget-chat-history-trigger"
+              className="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-auto rounded-xl border border-border/50 bg-background py-1 text-xs shadow-lg ring-1 ring-border/40"
+            >
               {sessions.map((s) => (
-                <option key={s.id} value={s.id}>
-                  {s.title}
-                </option>
+                <button
+                  key={s.id}
+                  type="button"
+                  role="option"
+                  aria-selected={activeSessionId === s.id}
+                  onClick={() => selectSessionById(s.id)}
+                  className={`flex w-full min-w-0 items-center px-3 py-2 text-left transition hover:bg-muted-bg ${
+                    activeSessionId === s.id
+                      ? "bg-muted-bg/80 font-medium text-foreground"
+                      : "text-foreground"
+                  }`}
+                >
+                  <span className="min-w-0 truncate">{widgetSessionTitle(s)}</span>
+                </button>
               ))}
-            </>
+            </div>
           )}
-        </select>
+        </div>
+        {sessions.length === 0 && !sessionsLoading && (
+          <p className="text-[11px] text-muted">No widget chats yet</p>
+        )}
         <div className="grid grid-cols-3 gap-2">
           <button
             type="button"
@@ -769,14 +825,14 @@ export default function ChatBoxWidget({
                 key={m.id != null ? String(m.id) : `${m.role}-${i}`}
                 className={
                   m.role === "user"
-                    ? `ml-auto max-w-[min(100%,22rem)] min-w-0 rounded-2xl rounded-br-md px-4 py-2.5 text-sm text-white ${!primaryHex ? "bg-highlight shadow-md" : ""}`
+                    ? `ml-auto max-w-[min(100%,22rem)] min-w-0 rounded-2xl rounded-br-md px-4 py-2.5 text-sm text-white ${!userBubbleHex ? "bg-highlight shadow-md" : ""}`
                     : "mr-auto w-full max-w-full min-w-0 rounded-2xl rounded-bl-md bg-card px-4 py-2.5 text-sm text-foreground shadow-sm dark:bg-card/90"
                 }
                 style={
-                  m.role === "user" && primaryHex
+                  m.role === "user" && userBubbleHex
                     ? {
-                        backgroundColor: primaryHex,
-                        boxShadow: `0 4px 14px -3px ${hexToRgba(primaryHex, 0.42) || "rgba(0,0,0,0.12)"}, 0 0 0 1px ${hexToRgba(primaryHex, 0.18) || "transparent"}`,
+                        backgroundColor: userBubbleHex,
+                        boxShadow: `0 4px 14px -3px ${hexToRgba(userBubbleHex, 0.42) || "rgba(0,0,0,0.12)"}, 0 0 0 1px ${hexToRgba(userBubbleHex, 0.18) || "transparent"}`,
                       }
                     : undefined
                 }
@@ -833,14 +889,16 @@ export default function ChatBoxWidget({
                         ) : null}
                       </>
                     )}
-                    <AssistantReplyCopyButton
-                      className="mt-2"
-                      message={m.message}
-                      sourceCards={m.sourceCards}
-                      sourceUrls={m.sourceUrls}
-                      readMoreUrl={readMoreCopyUrl}
-                      brandSubdomain={brand}
-                    />
+                    {chatRole === LEAD_JOURNEY_ROLE && (
+                      <AssistantReplyCopyButton
+                        className="mt-2"
+                        message={m.message}
+                        sourceCards={m.sourceCards}
+                        sourceUrls={m.sourceUrls}
+                        readMoreUrl={readMoreCopyUrl}
+                        brandSubdomain={brand}
+                      />
+                    )}
                   </div>
                 ) : (
                   <p className="whitespace-pre-wrap [word-break:break-word] [overflow-wrap:anywhere]">

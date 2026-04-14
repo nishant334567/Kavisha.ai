@@ -5,13 +5,16 @@ import { useRouter } from "next/navigation";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { X } from "lucide-react";
+import {
+  JOB_SEEKER_CHAT_TITLE,
+  JOB_SEEKER_OPENING_MESSAGE,
+} from "@/app/lib/jobSeekerIntro";
 
 const TYPE_OF_CONNECTION = [
   {
     name: "job_seeker",
-    title: "Looking for work",
-    initialMessage:
-      "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)",
+    title: JOB_SEEKER_CHAT_TITLE,
+    initialMessage: JOB_SEEKER_OPENING_MESSAGE,
   },
   {
     name: "recruiter",
