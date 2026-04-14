@@ -24,7 +24,7 @@ function mount() {
   var lastRequestedW = 72;
   var lastRequestedH = 72;
 
-  /** Fit iframe to host window; open panel max 80vh tall, centered horizontally. */
+  /** Fit iframe to host window; open panel max 80vh tall. Open iframe: centered on narrow viewports, right-aligned from md (768px) up — matches widget layout. */
   function applyIframeSize() {
     var inset = 28; // ~fixed bottom/right 24px + buffer
     var vw =
@@ -32,6 +32,7 @@ function mount() {
     var vh =
       window.innerHeight || document.documentElement.clientHeight || lastRequestedH;
     var openPanel = lastRequestedW > 100 && lastRequestedH > 100;
+    var mdUp = vw >= 768;
 
     var maxW = Math.max(240, vw - inset);
     var maxH = openPanel
@@ -42,11 +43,17 @@ function mount() {
     iframe.style.height = Math.min(lastRequestedH, maxH) + "px";
 
     if (openPanel) {
-      iframe.style.left = "50%";
-      iframe.style.right = "auto";
       iframe.style.top = "auto";
       iframe.style.bottom = "24px";
-      iframe.style.transform = "translateX(-50%)";
+      if (mdUp) {
+        iframe.style.left = "auto";
+        iframe.style.right = "24px";
+        iframe.style.transform = "none";
+      } else {
+        iframe.style.left = "50%";
+        iframe.style.right = "auto";
+        iframe.style.transform = "translateX(-50%)";
+      }
     } else {
       iframe.style.left = "auto";
       iframe.style.right = "24px";
