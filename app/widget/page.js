@@ -136,7 +136,7 @@ function WidgetShell() {
 
   return (
     <div
-      className={`fixed inset-0 box-border flex flex-col justify-end overflow-hidden bg-transparent p-2 ${isOpen ? "items-center" : "items-end"}`}
+      className={`fixed inset-0 box-border flex flex-col justify-end overflow-hidden bg-transparent p-2 ${isOpen ? "items-center md:items-end" : "items-end"}`}
     >
       {isOpen ? (
         <div className="flex h-full min-h-0 w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40">
