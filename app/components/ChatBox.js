@@ -493,15 +493,29 @@ export default function ChatBox({
     fetchChat();
   }, [currentChatId]);
 
+  const primaryBrandHex = normalizeBrandHex(brandContext?.primaryBrandColor);
+  const secondaryBrandHex = normalizeBrandHex(
+    brandContext?.secondaryBrandColor,
+  );
+
   if (chatLoading) {
     return (
-      <div className="h-full mx-auto w-full lg:w-3/5 bg-background rounded-xl p-4 flex items-center justify-center">
+      <div className="h-full mx-auto flex w-full items-center justify-center rounded-xl bg-background p-4 lg:w-3/5">
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
-            <div className="w-6 h-6 border-2 border-border rounded-full"></div>
-            <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-t-[#59646F] rounded-full animate-spin"></div>
+            <div className="h-6 w-6 rounded-full border-2 border-border"></div>
+            <div
+              className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${
+                !primaryBrandHex ? "border-t-[#59646F]" : ""
+              }`}
+              style={
+                primaryBrandHex
+                  ? { borderTopColor: primaryBrandHex }
+                  : undefined
+              }
+            ></div>
           </div>
-          <div className="text-muted text-xs font-medium">Loading chat…</div>
+          <div className="text-xs font-medium text-muted">Loading chat…</div>
         </div>
       </div>
     );
@@ -509,13 +523,22 @@ export default function ChatBox({
 
   if (sessionDetailsLoading) {
     return (
-      <div className="h-full mx-auto w-full lg:w-3/5 bg-background rounded-xl p-4 flex items-center justify-center">
+      <div className="h-full mx-auto flex w-full items-center justify-center rounded-xl bg-background p-4 lg:w-3/5">
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
-            <div className="w-6 h-6 border-2 border-border rounded-full"></div>
-            <div className="absolute inset-0 w-6 h-6 border-2 border-transparent border-t-[#59646F] rounded-full animate-spin"></div>
+            <div className="h-6 w-6 rounded-full border-2 border-border"></div>
+            <div
+              className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${
+                !primaryBrandHex ? "border-t-[#59646F]" : ""
+              }`}
+              style={
+                primaryBrandHex
+                  ? { borderTopColor: primaryBrandHex }
+                  : undefined
+              }
+            ></div>
           </div>
-          <div className="text-muted text-xs font-medium">
+          <div className="text-xs font-medium text-muted">
             Fetching session details…
           </div>
         </div>
@@ -523,73 +546,65 @@ export default function ChatBox({
     );
   }
 
-  const primaryBrandHex = normalizeBrandHex(brandContext?.primaryBrandColor);
   const displayOnboardingPct = hasDatacollected ? 100 : onboardingPercent;
 
+  const isCommunityRoleType = [
+    "job_seeker",
+    "recruiter",
+    "friends",
+  ].includes(String(currentChatType || "").toLowerCase());
+
+  const communitySecondBadgeLabel = (() => {
+    if (!isCommunityRoleType) return "";
+    const communityTitles = {
+      job_seeker: "Looking for work",
+      recruiter: "Looking at hiring",
+      friends: "Looking for a friend",
+    };
+    return (
+      communityTitles[String(currentChatType || "").toLowerCase()]?.toUpperCase() ||
+      String(currentChatType || "")
+        .split("_")
+        .join(" ")
+        .toUpperCase() ||
+      ""
+    );
+  })();
+
+  const firstHeaderBadge =
+    isCommunitySession && isCommunityRoleType ? "COMMUNITY" : "SERVICE";
+  const secondHeaderBadge = isCommunityRoleType
+    ? communitySecondBadgeLabel
+    : sessionName
+      ? sessionName.toUpperCase()
+      : currentChatType?.split("_").join(" ").toUpperCase() || "";
+
   return (
-    <div className="font-baloo w-full max-w-full md:w-3/5 flex bg-background rounded-xl p-2 md:p-4 h-full min-h-0 mx-2 md:mx-4 overflow-hidden">
+    <div className="font-baloo mx-auto flex h-full min-h-0 w-full max-w-full overflow-hidden rounded-xl bg-background p-2 md:w-3/5 md:p-4">
       <div className="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
         <div className="rounded-xl w-full p-1 md:p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
-          {/* Logo Section - flex-1 */}
-          <div className="flex-2 flex flex-col md:flex-row justify-center items-center md:gap-4 md:items-start md:mb-8 my-4 min-h-0 md:mt-4 md:px-2">
+          {/* Logo + role badges only (brand name is in the navbar on /chats and /community). */}
+          <div className="flex-2 my-4 flex min-h-0 flex-col items-center justify-center md:mb-8 md:mt-4 md:flex-row md:items-center md:gap-4 md:px-2">
             <img
               src={brandContext?.logoUrl}
-              className="rounded-full w-[65px] h-[65px] object-cover flex-shrink-0"
+              alt=""
+              className="h-[65px] w-[65px] flex-shrink-0 rounded-full object-cover"
             />
             <div className="flex flex-col items-center md:items-start">
-              <p className="font-baloo font-medium mt-2 md:mt-0">
-                {brandContext?.brandName.toUpperCase() || ""}
-              </p>
-              <div className="flex font-baloo border border-border my-2">
+              <div className="my-2 flex border border-border font-baloo">
                 <button
-                  className="bg-foreground text-background px-1.5 py-0.5 cursor-default"
+                  type="button"
+                  className="cursor-default bg-foreground px-1.5 py-0.5 text-background"
                   disabled
                 >
-                  {(() => {
-                    const isCommunityChat = [
-                      "job_seeker",
-                      "recruiter",
-                      "friends",
-                    ].includes(currentChatType?.toLowerCase());
-                    return isCommunityChat ? "COMMUNITY" : "SERVICE";
-                  })()}
+                  {firstHeaderBadge}
                 </button>
                 <button
-                  className="bg-background text-foreground px-1.5 py-0.5 cursor-default border border-border"
+                  type="button"
+                  className="cursor-default border border-border bg-background px-1.5 py-0.5 text-foreground"
                   disabled
                 >
-                  {(() => {
-                    const isCommunityChat = [
-                      "job_seeker",
-                      "recruiter",
-                      "friends",
-                    ].includes(currentChatType?.toLowerCase());
-
-                    if (isCommunityChat) {
-                      const communityTitles = {
-                        job_seeker: "Looking for work",
-                        recruiter: "Looking at hiring",
-                        friends: "Looking for a friend",
-                      };
-                      return (
-                        communityTitles[
-                          currentChatType?.toLowerCase()
-                        ]?.toUpperCase() ||
-                        currentChatType?.split("_").join(" ").toUpperCase() ||
-                        ""
-                      );
-                    } else {
-                      // Use name from database if available, otherwise fallback to brandContext lookup
-                      if (sessionName) {
-                        return sessionName.toUpperCase();
-                      }
-
-                      return (
-                        currentChatType?.split("_").join(" ").toUpperCase() ||
-                        ""
-                      );
-                    }
-                  })()}
+                  {secondHeaderBadge}
                 </button>
               </div>
             </div>
@@ -644,7 +659,13 @@ export default function ChatBox({
                   )}
                   {m.role === "user" ? (
                     <div className="flex justify-end w-full min-w-0">
-                      <div className="text-xs text-white font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-[#004A4E]">
+                      <div
+                        className="text-xs text-white font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%]"
+                        style={{
+                          backgroundColor:
+                            primaryBrandHex || "#004A4E",
+                        }}
+                      >
                         {m.message}
                       </div>
                     </div>
@@ -701,17 +722,18 @@ export default function ChatBox({
                         )}
                       </div>
                     )}
-                  {m.role === "assistant" && (
-                    <div className="mt-1.5 w-full min-w-0 max-w-[90%] sm:max-w-[60%]">
-                      <AssistantReplyCopyButton
-                        message={m.message}
-                        sourceCards={m.sourceCards}
-                        sourceUrls={m.sourceUrls}
-                        readMoreUrl={brandContext?.assistantCopyReadMoreUrl}
-                        brandSubdomain={brandContext?.subdomain}
-                      />
-                    </div>
-                  )}
+                  {m.role === "assistant" &&
+                    currentChatType?.toLowerCase() === "lead_journey" && (
+                      <div className="mt-1.5 w-full min-w-0 max-w-[90%] sm:max-w-[60%]">
+                        <AssistantReplyCopyButton
+                          message={m.message}
+                          sourceCards={m.sourceCards}
+                          sourceUrls={m.sourceUrls}
+                          readMoreUrl={brandContext?.assistantCopyReadMoreUrl}
+                          brandSubdomain={brandContext?.subdomain}
+                        />
+                      </div>
+                    )}
                   {/* Show payment QR code for personal_call intent */}
                   {m.role === "assistant" &&
                     m.intent === "personal_call" &&

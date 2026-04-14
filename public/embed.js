@@ -24,17 +24,36 @@ function mount() {
   var lastRequestedW = 72;
   var lastRequestedH = 72;
 
-  /** Fit iframe to host window: use requested size, or smaller if viewport is tight. */
+  /** Fit iframe to host window; open panel max 80vh tall, centered horizontally. */
   function applyIframeSize() {
-    var inset = 28; // ~fixed right/bottom 24px + buffer
+    var inset = 28; // ~fixed bottom/right 24px + buffer
     var vw =
       window.innerWidth || document.documentElement.clientWidth || lastRequestedW;
     var vh =
       window.innerHeight || document.documentElement.clientHeight || lastRequestedH;
-    iframe.style.width =
-      Math.min(lastRequestedW, Math.max(240, vw - inset)) + "px";
-    iframe.style.height =
-      Math.min(lastRequestedH, Math.max(280, vh - inset)) + "px";
+    var openPanel = lastRequestedW > 100 && lastRequestedH > 100;
+
+    var maxW = Math.max(240, vw - inset);
+    var maxH = openPanel
+      ? Math.max(280, Math.min(Math.floor(vh * 0.8), vh - inset))
+      : Math.max(280, vh - inset);
+
+    iframe.style.width = Math.min(lastRequestedW, maxW) + "px";
+    iframe.style.height = Math.min(lastRequestedH, maxH) + "px";
+
+    if (openPanel) {
+      iframe.style.left = "50%";
+      iframe.style.right = "auto";
+      iframe.style.top = "auto";
+      iframe.style.bottom = "24px";
+      iframe.style.transform = "translateX(-50%)";
+    } else {
+      iframe.style.left = "auto";
+      iframe.style.right = "24px";
+      iframe.style.top = "auto";
+      iframe.style.bottom = "24px";
+      iframe.style.transform = "none";
+    }
   }
 
   window.addEventListener("message", function (e) {

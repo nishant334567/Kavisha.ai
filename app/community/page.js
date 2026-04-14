@@ -18,6 +18,10 @@ import PoweredByKavisha from "@/app/components/PoweredByKavisha";
 import CommunityBrandStrip from "@/app/components/CommunityBrandStrip";
 import { ArrowLeft } from "lucide-react";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import {
+  JOB_SEEKER_CHAT_TITLE,
+  JOB_SEEKER_OPENING_MESSAGE,
+} from "@/app/lib/jobSeekerIntro";
 
 const ROLE_LABELS = {
     job_seeker: "Jobs",
@@ -328,7 +332,16 @@ export default function Community() {
         });
     };
 
-    if (authLoading || !brand) return <Loader loadingMessage="Loading..." />;
+    if (authLoading || !brand) {
+        return (
+            <Loader
+                loadingMessage="Loading..."
+                primaryHex={
+                    brand ? normalizeBrandHex(brand.primaryBrandColor) : null
+                }
+            />
+        );
+    }
 
     const primaryHex = normalizeBrandHex(brand?.primaryBrandColor);
     const secondaryHex = normalizeBrandHex(brand?.secondaryBrandColor);
@@ -341,7 +354,7 @@ export default function Community() {
             <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-foreground">
                 <div className="max-w-md w-full text-center">
                     <h1
-                        className={`mb-4 text-2xl md:text-3xl ${!secondaryHex ? "text-highlight" : ""}`}
+                        className={`mb-4 text-2xl uppercase tracking-wide md:text-3xl ${!secondaryHex ? "text-highlight" : ""}`}
                         style={secondaryHex ? { color: secondaryHex } : undefined}
                     >
                         Community
@@ -383,8 +396,7 @@ export default function Community() {
         );
     }
 
-    const findJobsMsg =
-        "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)";
+    const findJobsMsg = JOB_SEEKER_OPENING_MESSAGE;
     const hireMsg =
         "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)";
     const friendsMsg =
@@ -395,11 +407,12 @@ export default function Community() {
             <CommunityBrandStrip
                 communityName={brand?.communityName || "Community"}
                 primaryHex={primaryHex}
+                secondaryHex={secondaryHex}
                 enableProfessionalConnect={!!brand?.enableProfessionalConnect}
                 enableFriendConnect={!!brand?.enableFriendConnect}
                 creating={creating}
                 onFindJobs={() =>
-                    createCommunityPost("job_seeker", "Looking for work", findJobsMsg)
+                    createCommunityPost("job_seeker", JOB_SEEKER_CHAT_TITLE, findJobsMsg)
                 }
                 onHirePeople={() =>
                     createCommunityPost("recruiter", "Looking at hiring", hireMsg)
@@ -448,8 +461,11 @@ export default function Community() {
                                         </p>
                                     </div>
                                     {loading ? (
-                                        <div className="p-4 sm:p-8 flex justify-center">
-                                            <Loader loadingMessage="Loading community..." />
+                                        <div className="flex justify-center p-4 sm:p-8">
+                                            <Loader
+                                                loadingMessage="Loading community..."
+                                                primaryHex={primaryHex}
+                                            />
                                         </div>
                                     ) : error ? (
                                         <div className="p-4 sm:p-8 text-center text-red-600 text-sm sm:text-base">{error}</div>

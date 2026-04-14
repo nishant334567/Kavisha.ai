@@ -7,7 +7,7 @@ import ChatBoxWidget from "./components/ChatBoxWidget";
 import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 
 /** First launcher spin waits this long after theme loads (attention animation only). */
-const LAUNCHER_NUDGE_DELAY_MS = 4000;
+const LAUNCHER_NUDGE_DELAY_MS = 3000;
 
 /** e.g. `entrackr` → `Entrackr's AI Chat`; empty → `AI Chat`. */
 function widgetHeadingFromBrand(brandSlug) {
@@ -27,6 +27,7 @@ function WidgetShell() {
 
   const [isOpen, setIsOpen] = useState(false);
   const [primaryColor, setPrimaryColor] = useState(null);
+  const [secondaryColor, setSecondaryColor] = useState(null);
   const [launcherImageUrl, setLauncherImageUrl] = useState(null);
   const [launcherAnimation, setLauncherAnimation] = useState(false);
   const [widgetChatbotHeader, setWidgetChatbotHeader] = useState(null);
@@ -48,6 +49,7 @@ function WidgetShell() {
     if (!b) {
       setThemeReady(true);
       setPrimaryColor(null);
+      setSecondaryColor(null);
       setLauncherImageUrl(null);
       setLauncherAnimation(false);
       setWidgetChatbotHeader(null);
@@ -64,6 +66,11 @@ function WidgetShell() {
           setPrimaryColor(data.primaryBrandColor);
         } else {
           setPrimaryColor(null);
+        }
+        if (data?.secondaryBrandColor) {
+          setSecondaryColor(data.secondaryBrandColor);
+        } else {
+          setSecondaryColor(null);
         }
         const url =
           typeof data?.widgetLauncherImageUrl === "string" &&
@@ -88,6 +95,7 @@ function WidgetShell() {
       .catch(() => {
         if (!cancelled) {
           setPrimaryColor(null);
+          setSecondaryColor(null);
           setLauncherImageUrl(null);
           setLauncherAnimation(false);
           setWidgetChatbotHeader(null);
@@ -127,7 +135,9 @@ function WidgetShell() {
   }, [isOpen]);
 
   return (
-    <div className="fixed inset-0 box-border flex flex-col items-end justify-end overflow-hidden bg-transparent p-2">
+    <div
+      className={`fixed inset-0 box-border flex flex-col justify-end overflow-hidden bg-transparent p-2 ${isOpen ? "items-center" : "items-end"}`}
+    >
       {isOpen ? (
         <div className="flex h-full min-h-0 w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40">
           <div
@@ -164,6 +174,7 @@ function WidgetShell() {
             <ChatBoxWidget
               brand={brand.trim()}
               primaryColor={primaryColor}
+              secondaryColor={secondaryColor}
               readMoreCopyUrl={widgetCopyReadMoreUrl}
             />
           </div>

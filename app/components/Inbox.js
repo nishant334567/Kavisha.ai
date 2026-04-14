@@ -26,7 +26,7 @@ export default function Inbox({ onOpenChat, onClose }) {
   if (loading) {
     return (
       <div className="flex items-center justify-center h-full md:h-[400px] bg-background border border-border shadow-sm">
-        <Loader message="Loading messages..." />
+        <Loader loadingMessage="Loading messages..." />
       </div>
     );
   }

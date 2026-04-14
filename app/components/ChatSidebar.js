@@ -7,6 +7,10 @@ import { useRouter, usePathname } from "next/navigation";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { PanelLeftClose, MoreVertical, Trash2 } from "lucide-react";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import {
+  JOB_SEEKER_CHAT_TITLE,
+  JOB_SEEKER_OPENING_MESSAGE,
+} from "@/app/lib/jobSeekerIntro";
 
 export default function ChatSidebar({
   allChats,
@@ -64,6 +68,17 @@ export default function ChatSidebar({
     } catch (e) {
       return "";
     }
+  };
+
+  /** Sidebar row label: avoid repeating generic service titles like “Talk to me”; prefer date when generic. */
+  const sessionListLabel = (session, idx) => {
+    const raw = String(session?.title ?? "").trim();
+    const generic =
+      /^talk to me$/i.test(raw) || raw === "" || /^chat$/i.test(raw);
+    const timePart = formatIST(session?.updatedAt);
+    if (generic && timePart) return timePart;
+    if (timePart) return `${raw || `Chat ${idx + 1}`} · ${timePart}`;
+    return raw || `Chat ${idx + 1}`;
   };
 
   const toggleLeftSideBar = () => {
@@ -154,7 +169,7 @@ export default function ChatSidebar({
             <div className="font-baloo h-full max-h-[100vh] md:mt-12 md:h-[calc(100vh-3rem)] fixed top-0 left-0 z-40 flex flex-col w-[280px] border-r border-border bg-background shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
               <div className="flex-1 flex flex-col min-h-0 p-4">
               <div className="flex justify-between">
-                <p className="font-semibold text-muted">Your Chats</p>
+                <p className="font-semibold text-muted">Chat history</p>
                 <button className="rounded-md p-1 text-muted transition-colors hover:bg-muted-bg hover:text-foreground" onClick={() => toggleLeftSideBar()} title="Close sidebar" aria-label="Close sidebar">
                   <PanelLeftClose className="w-5 h-5" />
                 </button>
@@ -191,7 +206,11 @@ export default function ChatSidebar({
                                 type="button"
                                 className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
                                 onClick={() => {
-                                  onNewCommunityChat("job_seeker", "Looking for work", "Hello! Looking for a job? Beautiful! Tell me all about it and we'll see what can be done. :)");
+                                  onNewCommunityChat(
+                                    "job_seeker",
+                                    JOB_SEEKER_CHAT_TITLE,
+                                    JOB_SEEKER_OPENING_MESSAGE
+                                  );
                                   setShowCommunityNewDropdown(false);
                                 }}
                               >
@@ -293,13 +312,22 @@ export default function ChatSidebar({
                 </div>
                 <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none">
                   {!allChats ? (
-                    <div className="flex items-center justify-center h-full">
+                    <div className="flex h-full items-center justify-center">
                       <div className="flex flex-col items-center gap-3">
                         <div className="relative">
-                          <div className="w-6 h-6 border-2 border-border rounded-full"></div>
-                          <div className="absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent border-t-highlight"></div>
+                          <div className="h-6 w-6 rounded-full border-2 border-border" />
+                          <div
+                            className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${
+                              !communityPrimaryHex ? "border-t-highlight" : ""
+                            }`}
+                            style={
+                              communityPrimaryHex
+                                ? { borderTopColor: communityPrimaryHex }
+                                : undefined
+                            }
+                          />
                         </div>
-                        <div className="text-muted text-xs font-medium">
+                        <div className="text-xs font-medium text-muted">
                           Loading chats...
                         </div>
                       </div>
@@ -347,9 +375,8 @@ export default function ChatSidebar({
                             onCollapsedChange?.(true);
                           }}
                         >
-                          <span className="truncate block">
-                            {allChats?.sessions[id]?.title ||
-                              `Chat ${idx + 1}`}
+                          <span className="block truncate">
+                            {sessionListLabel(allChats?.sessions[id], idx)}
                           </span>
                         </button>
                         <button
