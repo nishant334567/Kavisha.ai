@@ -147,11 +147,7 @@ export default function JobsPage() {
           <p className="text-sm text-muted">No jobs listed yet.</p>
           {jobSeekerServiceKey ? (
             <>
-              <p className="mt-4 text-sm text-muted">
-                Post what you&apos;re looking for. You&apos;ll get the same kind of chat as
-                community job posts, saved as a private requirement (not on the community
-                board).
-              </p>
+              
               <button
                 type="button"
                 onClick={() => void handlePostRequirement()}
