@@ -1,6 +1,7 @@
 "use client";
 
 import { X } from "lucide-react";
+import { hexToRgba } from "@/app/lib/brandTheme";
 
 export default function CommunityPostDialog({
   name,
@@ -37,9 +38,21 @@ export default function CommunityPostDialog({
           </button>
         </div>
         <div className="p-4 sm:p-6 overflow-y-auto flex-1 min-h-0">
-          <div className="inline-flex rounded-full border border-border bg-muted-bg overflow-hidden mb-4">
-            <span className="px-2.5 py-1 text-xs sm:text-sm text-foreground">Looking for</span>
-            <span className="px-2.5 py-1 text-xs sm:text-sm text-foreground bg-teal-100/80">
+          <div className="mb-4 inline-flex overflow-hidden rounded-full border border-border bg-muted-bg">
+            <span className="px-2 py-1 text-xs text-foreground sm:px-2.5 sm:text-sm">
+              Looking for
+            </span>
+            <span
+              className={`px-2 py-1 text-xs sm:px-2.5 sm:text-sm bg-background ${!secondaryBrandColor ? "text-foreground" : ""}`}
+              style={
+                secondaryBrandColor
+                  ? {
+                      color: secondaryBrandColor,
+                      backgroundColor: hexToRgba(secondaryBrandColor, 0.14),
+                    }
+                  : undefined
+              }
+            >
               {requirement || "—"}
             </span>
           </div>
