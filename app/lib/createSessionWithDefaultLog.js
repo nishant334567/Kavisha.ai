@@ -25,6 +25,7 @@ async function createSessionWithDefaultLog(
       name: chatName,
       serviceKey: serviceKey.trim(),
       isWidget: Boolean(options?.isWidget),
+      isJobsRequirementPost: Boolean(options?.isJobsRequirementPost),
     });
 
     await Logs.create({

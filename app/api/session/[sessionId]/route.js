@@ -12,7 +12,7 @@ export async function GET(req, { params }) {
         const { sessionId } = await params;
         await connectDB();
         const session = await Session.findById(sessionId).select(
-          "role title name brand serviceKey isCommunityChat onboardingPercent allDataCollected isWidget",
+          "role title name brand serviceKey isCommunityChat onboardingPercent allDataCollected isWidget isJobsRequirementPost",
         );
 
         if (!session) {
@@ -68,6 +68,7 @@ export async function GET(req, { params }) {
           messageCount,
           isCommunityChat: Boolean(session.isCommunityChat),
           isWidget: Boolean(session.isWidget),
+          isJobsRequirementPost: Boolean(session.isJobsRequirementPost),
           onboardingPercent,
           allDataCollected: Boolean(session.allDataCollected),
           introQuestions,
