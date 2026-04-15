@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { ArrowLeft, Star } from "lucide-react";
@@ -11,8 +11,12 @@ import Livechat from "@/app/components/LiveChat";
 
 export default function Applications() {
     const params = useParams();
+    const searchParams = useSearchParams();
     const brandContext = useBrandContext();
-    const brand = brandContext?.subdomain;
+    const brand =
+        searchParams?.get("subdomain")?.trim() ||
+        searchParams?.get("brand")?.trim() ||
+        brandContext?.subdomain;
     const { user } = useFirebaseSession();
 
     const [applications, setApplications] = useState([]);

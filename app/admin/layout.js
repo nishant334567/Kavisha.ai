@@ -6,7 +6,6 @@ import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { signOut } from "@/app/lib/firebase/logout";
 import Loader from "@/app/components/Loader";
-import AdminUpdateNotice from "./components/AdminUpdateNotice";
 
 const REDIRECT_SECONDS = 5;
 
@@ -84,7 +83,6 @@ export default function AdminLayout({ children }) {
 
   return (
     <div className="font-baloo min-h-screen bg-background text-foreground">
-      <AdminUpdateNotice />
       {children}
     </div>
   );

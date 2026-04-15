@@ -18,11 +18,12 @@ export async function GET(req, { params }) {
     const query = { _id: id };
     if (brand) query.brand = brand;
     const job = await Job.findOne(query).lean();
-    if (!job) {
+    if (!job || job.published === false) {
       return NextResponse.json({ error: "Job not found" }, { status: 404 });
     }
     const jdLink = job.jdLink ? await refreshImageUrl(job.jdLink) : "";
-    return NextResponse.json({ job: { ...job, jdLink } });
+    const { published: _p, ...jobOut } = job;
+    return NextResponse.json({ job: { ...jobOut, jdLink } });
   } catch (e) {
     console.error("jobs [id] GET:", e);
     return NextResponse.json({ error: "Failed to fetch job" }, { status: 500 });

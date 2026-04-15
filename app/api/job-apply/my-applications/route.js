@@ -41,6 +41,7 @@ export async function GET(req) {
         const jobs = await Job.find({
           _id: { $in: jobIds },
           brand,
+          published: { $ne: false },
         })
           .select("title statusCategories")
           .lean();

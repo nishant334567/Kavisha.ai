@@ -10,12 +10,18 @@ export async function GET(req) {
       return NextResponse.json({ error: "brand required" }, { status: 400 });
     }
     await connectDB();
-    const jobs = await Job.find({ brand }).sort({ createdAt: -1 }).lean();
+    const jobs = await Job.find({
+      brand,
+      published: { $ne: false },
+    })
+      .sort({ createdAt: -1 })
+      .lean();
     const jobsWithFreshJd = await Promise.all(
-      jobs.map(async (j) => ({
-        ...j,
-        jdLink: j.jdLink ? await refreshImageUrl(j.jdLink) : "",
-      }))
+      jobs.map(async (j) => {
+        const jdLink = j.jdLink ? await refreshImageUrl(j.jdLink) : "";
+        const { published: _p, ...rest } = j;
+        return { ...rest, jdLink };
+      })
     );
     return NextResponse.json({ jobs: jobsWithFreshJd });
   } catch (e) {
