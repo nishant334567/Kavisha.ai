@@ -7,6 +7,8 @@ const JobSchema = new mongoose.Schema(
     questions: [{ type: String }],
     jdLink: { type: String, required: true, trim: true },
     brand: { type: String, required: true, trim: true, index: true },
+    /** false = hidden from public /jobs; admins still see it */
+    published: { type: Boolean, default: true },
     statusCategories: { type: [String], default: [] }, // Admin-defined; no defaults
   },
   { timestamps: true }

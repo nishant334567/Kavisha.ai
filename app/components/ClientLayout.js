@@ -39,13 +39,13 @@ export default function ClientLayout({ children }) {
             <div
               className={
                 !isMaintenancePage
-                  ? `pt-0 md:pt-14 ${
-                      !isAdmin
-                        ? pathname === "/"
+                  ? isAdmin
+                    ? "pt-14"
+                    : `pt-0 md:pt-14 ${
+                        pathname === "/"
                           ? "pb-32 md:pb-0"
                           : "pb-[4.5rem] md:pb-0"
-                        : ""
-                    }`
+                      }`
                   : ""
               }
             >

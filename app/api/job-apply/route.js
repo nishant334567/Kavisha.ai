@@ -53,7 +53,7 @@ export async function POST(req) {
     await connectDB();
 
     const job = await Job.findById(jobId).lean();
-    if (!job) {
+    if (!job || job.published === false) {
       return NextResponse.json({ success: false, error: "Job not found" }, { status: 404 });
     }
 

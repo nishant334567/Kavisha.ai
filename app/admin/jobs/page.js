@@ -57,7 +57,9 @@ export default function JobsPage() {
           type="button"
           onClick={() =>
             router.push(
-              brand ? `/admin/upload-job?subdomain=${encodeURIComponent(brand)}` : "/admin/upload-job"
+              brand
+                ? `/admin/jobs/upload-job?subdomain=${encodeURIComponent(brand)}`
+                : "/admin/jobs/upload-job"
             )
           }
           className="flex items-center gap-2 px-4 py-2 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90"
@@ -69,7 +71,7 @@ export default function JobsPage() {
       {jobs.length === 0 ? (
         <p className="text-sm text-muted">No jobs yet.</p>
       ) : (
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-3">
           {jobs.map((job) => {
             const description =
               job.description && job.description.length > 180
@@ -79,16 +81,23 @@ export default function JobsPage() {
             return (
               <article
                 key={job._id}
-                className="flex min-h-[200px] flex-col rounded-xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
+                className="flex min-h-[200px] min-w-0 w-full flex-col rounded-xl border border-border bg-card p-5 shadow-sm transition-shadow hover:shadow-md"
               >
                 <button
                   type="button"
                   onClick={() => router.push(jobDetailHref(job._id))}
                   className="flex-1 min-h-0 text-left block w-full group"
                 >
-                  <h2 className="text-highlight font-bold text-lg leading-tight group-hover:underline">
-                    {job.title}
-                  </h2>
+                  <div className="flex flex-wrap items-baseline gap-2">
+                    <h2 className="text-highlight font-bold text-lg leading-tight group-hover:underline">
+                      {job.title}
+                    </h2>
+                    {job.published === false ? (
+                      <span className="rounded bg-muted-bg px-1.5 py-0.5 text-[11px] font-medium text-muted">
+                        Unpublished
+                      </span>
+                    ) : null}
+                  </div>
                   {description ? (
                     <p className="mt-2 line-clamp-3 text-sm leading-relaxed text-muted">
                       {description}
@@ -101,25 +110,28 @@ export default function JobsPage() {
                   </p>
                 </button>
 
-                <div className="mt-auto flex flex-wrap gap-2 pt-4">
+                <div className="mt-auto flex w-full min-w-0 flex-col gap-2 pt-4">
                   {job.jdLink && (
                     <a
                       href={job.jdLink}
                       target="_blank"
                       rel="noopener noreferrer"
                       onClick={(e) => e.stopPropagation()}
-                      className="inline-flex min-w-0 flex-1 items-center justify-center gap-1.5 rounded-lg border-2 border-highlight px-4 py-2 text-sm font-medium text-highlight transition-colors hover:bg-muted-bg"
+                      className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg border-2 border-highlight px-4 py-2.5 text-sm font-medium text-highlight transition-colors hover:bg-muted-bg"
                     >
-                      <FileText className="w-4 h-4 shrink-0" /> View JD
-                      <ExternalLink className="w-3.5 h-3.5" />
+                      <FileText className="h-4 w-4 shrink-0" /> View JD
+                      <ExternalLink className="h-3.5 w-3.5 shrink-0" />
                     </a>
                   )}
                   <button
                     type="button"
                     onClick={() => router.push(applicationsHref(job._id))}
-                    className="flex-1 min-w-0 inline-flex items-center justify-center gap-1.5 px-4 py-2 rounded-lg bg-[#004A4E] text-white text-sm font-medium hover:opacity-90 transition-opacity whitespace-nowrap"
+                    className="inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-[#004A4E] px-4 py-2.5 text-sm font-medium text-white transition-opacity hover:opacity-90"
                   >
-                    <Users className="w-4 h-4 shrink-0" /> View applicants ({applicantCount})
+                    <Users className="h-4 w-4 shrink-0" />
+                    <span className="text-center leading-snug">
+                      View applicants ({applicantCount})
+                    </span>
                   </button>
                 </div>
               </article>
