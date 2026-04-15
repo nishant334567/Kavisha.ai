@@ -23,7 +23,7 @@ export default function CommunityBrandStrip({
   const linkClassPlain =
     "text-left text-xs uppercase tracking-wide text-white/95 transition-opacity hover:opacity-85 disabled:opacity-45 sm:text-lg";
   const linkClassBranded =
-    "rounded-lg bg-white px-3 py-1.5 text-left text-xs font-semibold uppercase tracking-wide text-black shadow-sm transition-opacity hover:opacity-90 disabled:opacity-45 sm:px-4 sm:py-1 sm:text-lg";
+    "rounded-full bg-white px-3 py-1.5 text-left text-xs uppercase tracking-wide text-black shadow-sm transition-opacity hover:opacity-90 disabled:opacity-45 sm:px-4 sm:py-1 sm:text-lg";
   const brandedNavTextStyle =
     primaryHex && secondaryHex ? { color: secondaryHex } : undefined;
 
@@ -39,7 +39,7 @@ export default function CommunityBrandStrip({
         </p>
         {hasNav ? (
           <nav
-            className="flex flex-wrap items-center gap-x-5 gap-y-2 sm:gap-x-8 md:gap-x-10"
+            className="flex flex-wrap items-center gap-x-3 gap-y-2 sm:gap-x-4 md:gap-x-5"
             aria-label="Community shortcuts"
           >
             {showJobs ? (
