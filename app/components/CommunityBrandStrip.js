@@ -23,7 +23,7 @@ export default function CommunityBrandStrip({
   const linkClassPlain =
     "text-left text-xs uppercase tracking-wide text-white/95 transition-opacity hover:opacity-85 disabled:opacity-45 sm:text-lg";
   const linkClassBranded =
-    "rounded-full bg-white px-3 py-1.5 text-left text-xs uppercase tracking-wide text-black shadow-sm transition-opacity hover:opacity-90 disabled:opacity-45 sm:px-4 sm:py-1 sm:text-lg";
+    "rounded-full bg-white px-3 py-1.5 text-left text-xs uppercase tracking-wide text-black shadow-sm transition-opacity hover:opacity-90 disabled:opacity-45 sm:px-4 sm:py-1 sm:text-sm";
   const brandedNavTextStyle =
     primaryHex && secondaryHex ? { color: secondaryHex } : undefined;
 
@@ -34,7 +34,7 @@ export default function CommunityBrandStrip({
     >
       {/* px-4 matches desktop Navbar inner (`px-4 h-14`) so title lines up with brand logo */}
       <div className="flex w-full flex-col gap-3 px-4 sm:px-16 py-2.5 sm:flex-row sm:items-center sm:justify-between sm:py-3">
-        <p className="text-lg font-semibold uppercase leading-tight tracking-wide text-white sm:text-xl">
+        <p className="text-lg font-semibold uppercase leading-tight tracking-wide text-white sm:text-2xl">
           {communityName}
         </p>
         {hasNav ? (
