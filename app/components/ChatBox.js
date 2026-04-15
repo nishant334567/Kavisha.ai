@@ -62,6 +62,7 @@ export default function ChatBox({
   const [sessionMessageCount, setSessionMessageCount] = useState(0);
   const [sessionDetailsLoading, setSessionDetailsLoading] = useState(true);
   const [isCommunitySession, setIsCommunitySession] = useState(false);
+  const [isJobsRequirementPost, setIsJobsRequirementPost] = useState(false);
   const [onboardingPercent, setOnboardingPercent] = useState(0);
 
   // Fetch chat type from chat ID
@@ -71,6 +72,7 @@ export default function ChatBox({
       setServiceKey(null);
       setSessionMessageCount(0);
       setIsCommunitySession(false);
+      setIsJobsRequirementPost(false);
       setOnboardingPercent(0);
       setSessionDetailsLoading(false);
       return;
@@ -90,6 +92,7 @@ export default function ChatBox({
           );
           const community = Boolean(data.isCommunityChat);
           setIsCommunitySession(community);
+          setIsJobsRequirementPost(Boolean(data.isJobsRequirementPost));
           const pct =
             typeof data.onboardingPercent === "number" &&
             !Number.isNaN(data.onboardingPercent)
@@ -345,7 +348,7 @@ export default function ChatBox({
 
         const pct = data?.onboardingProgress?.percent;
         if (
-          isCommunitySession &&
+          (isCommunitySession || isJobsRequirementPost) &&
           typeof pct === "number" &&
           !Number.isNaN(pct)
         ) {
@@ -470,7 +473,10 @@ export default function ChatBox({
       setHasDatacollected(false);
     }
 
-    if (currentChatType !== "lead_journey" && isCommunitySession) {
+    if (
+      currentChatType !== "lead_journey" &&
+      (isCommunitySession || isJobsRequirementPost)
+    ) {
       const pct = data?.onboardingProgress?.percent;
       if (typeof pct === "number" && !Number.isNaN(pct)) {
         setOnboardingPercent(Math.max(0, Math.min(100, pct)));
@@ -548,6 +554,10 @@ export default function ChatBox({
 
   const displayOnboardingPct = hasDatacollected ? 100 : onboardingPercent;
 
+  const showOnboardingProgress =
+    (isCommunitySession || isJobsRequirementPost) &&
+    currentChatType?.toLowerCase() !== "lead_journey";
+
   const isCommunityRoleType = [
     "job_seeker",
     "recruiter",
@@ -610,8 +620,7 @@ export default function ChatBox({
             </div>
           </div>
 
-          {isCommunitySession &&
-            currentChatType?.toLowerCase() !== "lead_journey" && (
+          {showOnboardingProgress && (
               <div className="mb-2 flex w-full shrink-0 justify-start px-1 md:mb-3 md:px-2">
                 <div
                   className="inline-flex items-baseline gap-0.5 rounded-md border border-border/45 bg-muted/35 px-2.5 py-1 text-[13px] italic tabular-nums shadow-sm backdrop-blur-[2px] dark:border-border/35 dark:bg-muted/25"

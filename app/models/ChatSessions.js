@@ -20,6 +20,11 @@ const ChatSessionsSchema = new mongoose.Schema(
       type: Boolean,
       default: false,
     },
+    /** Private job requirement chat created from the Jobs page (not community) */
+    isJobsRequirementPost: {
+      type: Boolean,
+      default: false,
+    },
     brand: {
       type: String,
       required: true,
@@ -93,6 +98,12 @@ ChatSessionsSchema.index({ role: 1 });
 ChatSessionsSchema.index({ allDataCollected: 1 });
 ChatSessionsSchema.index({ embedding: 1 });
 ChatSessionsSchema.index({ createdAt: -1 });
+ChatSessionsSchema.index({
+  userId: 1,
+  brand: 1,
+  isJobsRequirementPost: 1,
+  createdAt: -1,
+});
 
 const Session =
   mongoose.models.ChatSessions ||

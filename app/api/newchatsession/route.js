@@ -10,8 +10,15 @@ const fail = (message, status) =>
 export async function POST(request) {
   return withAuth(request, {
     onAuthenticated: async ({ decodedToken }) => {
-      const { role, brand, initialmessage, isCommunityChat, chatName, serviceKey } =
-        await request.json();
+      const {
+        role,
+        brand,
+        initialmessage,
+        isCommunityChat,
+        chatName,
+        serviceKey,
+        isJobsRequirementPost,
+      } = await request.json();
 
       const user = await getUserFromDB(decodedToken.email);
       if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -36,7 +43,8 @@ export async function POST(request) {
           initialmessage || null,
           isCommunityChat,
           chatName,
-          sk
+          sk,
+          { isJobsRequirementPost: Boolean(isJobsRequirementPost) }
         );
         return NextResponse.json({ success: true, sessionId: session._id });
       } catch (err) {
