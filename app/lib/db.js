@@ -1,4 +1,15 @@
+const dns = require("dns");
 const mongoose = require("mongoose");
+
+/** Node on some Windows / network setups gets querySrv ECONNREFUSED for mongodb+srv. */
+function applyMongoDnsServers() {
+  const raw = process.env.MONGODB_DNS_SERVERS;
+  if (!raw?.trim()) return;
+  const servers = raw.split(",").map((s) => s.trim()).filter(Boolean);
+  if (servers.length) dns.setServers(servers);
+}
+
+applyMongoDnsServers();
 
 const uri = process.env.MONGODB_URI;
 
@@ -23,6 +34,8 @@ async function connectDB() {
   if (connectionPromise) {
     return connectionPromise;
   }
+
+  applyMongoDnsServers();
 
   connectionPromise = mongoose
     .connect(uri, options)
