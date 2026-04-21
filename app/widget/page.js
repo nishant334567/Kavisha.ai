@@ -124,12 +124,12 @@ function WidgetShell() {
 
   useEffect(() => {
     if (typeof window === "undefined" || window.parent === window) return;
+    const width = isOpen ? 400 : 72;
+    const height = isOpen ? 640 : 72;
+    window.parent.postMessage({ source: "kavisha-widget", width, height }, "*");
+    // AMP `amp-iframe` + `resizable`: https://amp.dev/documentation/components/amp-iframe/#iframe-resizing
     window.parent.postMessage(
-      {
-        source: "kavisha-widget",
-        width: isOpen ? 400 : 72,
-        height: isOpen ? 640 : 72,
-      },
+      { sentinel: "amp", type: "embed-size", width, height },
       "*"
     );
   }, [isOpen]);
