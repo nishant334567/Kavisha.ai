@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "../lib/firebase/sign-in";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
@@ -192,22 +193,15 @@ export default function Homepage() {
           {loadingPath === "/make-avatar" ? "Opening..." : "Make my Avataar"}
         </button>
         <button
+          type="button"
           onClick={() => {
-            if (user) {
-              setLoadingPath("/widget-intro");
-              router.push("/widget-intro");
-            } else if (!isBlocked) {
-              handleSignIn("/widget-intro");
-            }
+            setLoadingPath("/widget-intro");
+            router.push("/widget-intro");
           }}
-          disabled={signingIn || isBlocked || loadingPath !== null}
+          disabled={loadingPath !== null}
           className="min-w-0 w-[80%] rounded-lg bg-gradient-to-b from-[#B9ECEC] to-[#CEFDFD] hover:brightness-105 px-4 py-2 text-lg md:text-xl text-highlight shadow-md transition-colors hover:bg-card disabled:opacity-50 md:w-auto"
         >
-          {signingIn
-            ? "Signing in..."
-            : loadingPath === "/widget-intro"
-              ? "Opening..."
-              : "Explore AI Widgets"}
+          {loadingPath === "/widget-intro" ? "Opening..." : "Explore AI Widgets"}
         </button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-[85%] mx-auto my-16">
@@ -274,14 +268,17 @@ export default function Homepage() {
 
       <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16 max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-24">
         <div className="flex-1 flex justify-center md:justify-start">
-          <div className="w-full max-w-[260px] md:max-w-[300px]">
+          <Link
+            href="/widget-intro"
+            className="block w-full max-w-[260px] md:max-w-[300px] rounded-2xl transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
             <img
               src="/entrackr-widget.png"
               alt="Kavisha AI widget on a website — Entrackr example"
               className="block w-full h-auto object-cover"
               loading="lazy"
             />
-          </div>
+          </Link>
         </div>
 
         <div className="flex-1 flex flex-col text-center md:text-left items-center md:items-start">
@@ -293,12 +290,12 @@ export default function Homepage() {
             in the form of a widget. That Agent will talk to your visitors and
             turn casual observers into customers and fans.
           </p>
-          <a
-            href="/make-avatar"
+          <Link
+            href="/widget-intro"
             className="text-[#17638C] font-medium text-base md:text-lg hover:underline self-center md:self-end"
           >
             Read more &gt;&gt;
-          </a>
+          </Link>
         </div>
       </div>
 
@@ -410,17 +407,11 @@ export default function Homepage() {
               <span className="md:block">revenue for you)</span>
             </p>
             <button
-              onClick={() => {
-                if (user) {
-                  router.push("/community");
-                } else if (!isBlocked) {
-                  handleSignIn("/community");
-                }
-              }}
-              disabled={signingIn || isBlocked}
-              className="w-fit mx-auto md:mx-0 px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl hover:bg-white hover:text-[#35515b] transition-colors disabled:opacity-50"
+              type="button"
+              onClick={() => router.push("/widget-intro")}
+              className="w-fit mx-auto md:mx-0 px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl hover:bg-white hover:text-[#35515b] transition-colors"
             >
-              {signingIn ? "Signing in..." : "Get started"}
+              Get started
             </button>
           </div>
 
