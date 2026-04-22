@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronDown, Loader2, LogOut, Plus, Send, Users, X } from "lucide-react";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
-import { isRunningInIframe, signIn } from "@/app/lib/firebase/sign-in";
+import { signIn } from "@/app/lib/firebase/sign-in";
 import {
   detectInAppBrowser,
   isMobileDevice,
@@ -19,37 +19,6 @@ import WidgetChatLoader, {
   WIDGET_LOADER_MESSAGES,
   widgetLoaderMessagesFromFlags,
 } from "./WidgetChatLoader";
-
-/** Shared with `app/widget-login/page.js` — the bridge between the 1st-party login popup and this (potentially 3rd-party) iframe. */
-const WIDGET_LOGIN_CHANNEL = "kavisha-widget-login";
-const WIDGET_LOGIN_COMPLETE = "kavisha-widget-login-complete";
-
-/** How long we'll leave the "signing in" spinner up with no signal from the popup. */
-const WIDGET_LOGIN_SAFETY_TIMEOUT_MS = 5 * 60 * 1000;
-
-/** Pin the login popup to the widget iframe's origin (kavisha.ai) so Firebase runs 1st-party there. */
-function buildWidgetLoginUrl() {
-  if (typeof window === "undefined") return "/widget-login";
-  return `${window.location.origin}/widget-login`;
-}
-
-/**
- * Safari partitions cookies for a 3rd-party iframe. Once the session
- * cookie has been set 1st-party for kavisha.ai (by the popup), this
- * asks Safari to unpartition access from inside this iframe. No-op on
- * browsers that don't implement the Storage Access API.
- */
-async function tryRequestStorageAccess() {
-  if (typeof document === "undefined") return;
-  if (typeof document.requestStorageAccess !== "function") return;
-  try {
-    if (typeof document.hasStorageAccess === "function") {
-      const has = await document.hasStorageAccess();
-      if (has) return;
-    }
-    await document.requestStorageAccess();
-  } catch {}
-}
 
 const LEAD_JOURNEY_ROLE = "lead_journey";
 
@@ -467,148 +436,22 @@ export default function ChatBoxWidget({
     void sendUserMessage(input);
   };
 
-  const loginPopupRef = useRef(null);
-  const loginPollRef = useRef(null);
-  const loginSafetyTimeoutRef = useRef(null);
-
-  const clearLoginTimers = useCallback(() => {
-    if (loginPollRef.current) {
-      clearInterval(loginPollRef.current);
-      loginPollRef.current = null;
-    }
-    if (loginSafetyTimeoutRef.current) {
-      clearTimeout(loginSafetyTimeoutRef.current);
-      loginSafetyTimeoutRef.current = null;
-    }
-  }, []);
-
-  const completeWidgetLogin = useCallback(async () => {
-    clearLoginTimers();
-    try {
-      if (loginPopupRef.current && !loginPopupRef.current.closed) {
-        loginPopupRef.current.close();
-      }
-    } catch {}
-    loginPopupRef.current = null;
-
-    // Safari: unpartition the 1st-party kavisha.ai session cookie for this iframe.
-    await tryRequestStorageAccess();
-    await refresh();
-    setSigningIn(false);
-  }, [clearLoginTimers, refresh]);
-
-  /**
-   * Listen for the popup's "login complete" signal on three redundant
-   * transports. Any one firing is sufficient:
-   *   1. BroadcastChannel — same-origin pub/sub, survives Google's COOP.
-   *   2. window.message   — works when the opener relationship is intact.
-   *   3. storage event    — fallback if BroadcastChannel is unavailable.
-   */
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-
-    let bc;
-    try {
-      if (typeof BroadcastChannel === "function") {
-        bc = new BroadcastChannel(WIDGET_LOGIN_CHANNEL);
-        bc.onmessage = (e) => {
-          if (e?.data?.type === WIDGET_LOGIN_COMPLETE) {
-            void completeWidgetLogin();
-          }
-        };
-      }
-    } catch {}
-
-    const onMessage = (e) => {
-      if (e.origin !== window.location.origin) return;
-      if (e?.data?.type === WIDGET_LOGIN_COMPLETE) {
-        void completeWidgetLogin();
-      }
-    };
-    const onStorage = (e) => {
-      if (e.key !== `${WIDGET_LOGIN_CHANNEL}:last`) return;
-      void completeWidgetLogin();
-    };
-    window.addEventListener("message", onMessage);
-    window.addEventListener("storage", onStorage);
-
-    return () => {
-      window.removeEventListener("message", onMessage);
-      window.removeEventListener("storage", onStorage);
-      if (bc) {
-        try {
-          bc.close();
-        } catch {}
-      }
-    };
-  }, [completeWidgetLogin]);
-
-  useEffect(() => {
-    return clearLoginTimers;
-  }, [clearLoginTimers]);
-
   const handleWidgetSignIn = async () => {
     setSigningIn(true);
     setSignInError("");
     setPopupBlocked(false);
-
-    // Top-level context (e.g. the /widget page opened directly): use the
-    // in-place Safari-aware flow from sign-in.js. Only the iframe case
-    // needs the popup-window bridge.
-    if (!isRunningInIframe()) {
-      try {
-        const result = await signIn();
-        // On Safari signIn() returns null because the page is navigating
-        // to Google. Keep the spinner up — when we come back, the
-        // session provider will hydrate user state.
-        if (result) {
-          await refresh();
-          setSigningIn(false);
-        }
-      } catch (e) {
-        if (e?.code === "auth/popup-blocked") {
-          setPopupBlocked(true);
-        } else {
-          setSignInError(e.message || "Sign in failed");
-        }
-        setSigningIn(false);
-      }
-      return;
-    }
-
-    const popup = window.open(
-      buildWidgetLoginUrl(),
-      "kavisha-widget-login",
-      "popup=yes,width=500,height=650,noopener=no,noreferrer=no"
-    );
-    if (!popup) {
-      setPopupBlocked(true);
-      setSigningIn(false);
-      return;
-    }
     try {
-      popup.focus();
-    } catch {}
-    loginPopupRef.current = popup;
-
-    // If the user closes the popup before it signals completion (crossed
-    // out, swiped away, etc.), fall back to a session refresh so the
-    // spinner doesn't hang. `popup.closed` becomes readable again once
-    // the popup navigates back to our origin.
-    clearLoginTimers();
-    loginPollRef.current = setInterval(() => {
-      try {
-        if (loginPopupRef.current && loginPopupRef.current.closed) {
-          loginPopupRef.current = null;
-          void completeWidgetLogin();
-        }
-      } catch {}
-    }, 1500);
-
-    loginSafetyTimeoutRef.current = setTimeout(() => {
-      loginSafetyTimeoutRef.current = null;
+      await signIn();
+      await refresh();
+    } catch (e) {
+      if (e?.code === "auth/popup-blocked") {
+        setPopupBlocked(true);
+      } else {
+        setSignInError(e.message || "Sign in failed");
+      }
+    } finally {
       setSigningIn(false);
-    }, WIDGET_LOGIN_SAFETY_TIMEOUT_MS);
+    }
   };
 
   const handleWidgetSignOut = async () => {

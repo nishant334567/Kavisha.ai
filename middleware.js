@@ -8,7 +8,6 @@ import { isBrandAdmin } from "./app/lib/firebase/check-admin";
 const PUBLIC_PATHS = [
   "/",
   "/widget",
-  "/widget-login",
   "/api/login",
   "/api/brands",
   "/tnc",
