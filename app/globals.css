@@ -81,3 +81,24 @@ body {
   scrollbar-width: thin;
   scrollbar-color: var(--border) var(--muted-bg);
 }
+
+/* Widget intro — animated gradient text on CTA (replaces inline <style>) */
+@keyframes widget-intro-shine {
+  to {
+    background-position: 200% center;
+  }
+}
+
+.widget-intro-moving-gradient {
+  background: linear-gradient(
+    to right,
+    #00b5bd 20%,
+    #80ffff 50%,
+    #00b5bd 80%
+  );
+  background-size: 200% auto;
+  color: transparent;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: widget-intro-shine 3s linear infinite;
+}
