@@ -215,8 +215,8 @@ export default function Homepage() {
           <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
           <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
         </div>
-        {/* Top cream section */}
-        <div className="flex h-[120px] items-center justify-center bg-gradient-to-b from-[#FFF7E0] to-[#F8F3E5] px-4 text-foreground md:h-[160px]">
+        {/* Top cream section — same bg as light mode; explicit ink so dark theme foreground never lands on cream */}
+        <div className="flex h-[120px] items-center justify-center bg-gradient-to-b from-[#FFF7E0] to-[#F8F3E5] px-4 text-[#17484B] dark:text-[#17484B] md:h-[160px]">
           <p className="font-baloo text-xl sm:text-2xl md:text-4xl lg:text-5xl text-center">
             Your Digital Avataar on Kavisha
           </p>
@@ -415,8 +415,8 @@ export default function Homepage() {
             </button>
           </div>
 
-          {/* Right - Cream section */}
-          <div className="flex items-center bg-gradient-to-b md:from-[#FFF7E0] md:to-[#F8F3E5] px-6 py-8 text-foreground md:flex-[6] md:px-10 md:py-12">
+          {/* Right — cream strip matches light mode; body copy uses ink, not theme foreground */}
+          <div className="flex items-center bg-gradient-to-b from-[#FFF7E0] to-[#F8F3E5] px-6 py-8 text-[#264653] dark:text-[#264653] md:flex-[6] md:px-10 md:py-12">
             <p className="text-lg leading-relaxed text-center md:text-left">
               Your Digital Avataar doesn't just enable conversations between you
               and your fans, it also gives your fans a chance to connect with

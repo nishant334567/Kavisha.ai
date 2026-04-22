@@ -7,15 +7,15 @@ const TEAL_GRADIENT_MD =
   "md:bg-gradient-to-b md:from-[#17484B] md:to-[#156568]";
 
 const colorClasses = {
-  teal: `${TEAL_GRADIENT} text-white`,
-  beige: `${BEIGE_GRADIENT} text-[#3D5A5E]`,
-  yellow: "bg-[#F2E7B4] text-[#2F2F2F]",
-  green: "bg-[#DDEBC8] text-[#2F2F2F]",
+  teal: `${TEAL_GRADIENT} text-white dark:text-white`,
+  beige: `${BEIGE_GRADIENT} text-[#3D5A5E] dark:text-[#3D5A5E]`,
+  yellow: "bg-[#F2E7B4] text-[#2F2F2F] dark:text-[#2F2F2F]",
+  green: "bg-[#DDEBC8] text-[#2F2F2F] dark:text-[#2F2F2F]",
 };
 // Responsive: mobile first, then md: desktop (so Tailwind can purge)
 const responsivePairs = {
-  "beige-teal": `${BEIGE_GRADIENT} text-[#3D5A5E] ${TEAL_GRADIENT_MD} md:text-white`,
-  "teal-beige": `${TEAL_GRADIENT} text-white ${BEIGE_GRADIENT_MD} md:text-[#3D5A5E]`,
+  "beige-teal": `${BEIGE_GRADIENT} text-[#3D5A5E] dark:text-[#3D5A5E] ${TEAL_GRADIENT_MD} md:text-white md:dark:text-white`,
+  "teal-beige": `${TEAL_GRADIENT} text-white dark:text-white ${BEIGE_GRADIENT_MD} md:text-[#3D5A5E] md:dark:text-[#3D5A5E]`,
 };
 
 export default function InfoCard({ title, body, variant = "teal", variantMobile }) {

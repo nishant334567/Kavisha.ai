@@ -30,10 +30,14 @@ const FEATURES = [
     },
 ];
 
-const CONTACT_SALES_MAILTO = `mailto:hello@kavisha.ai?${new URLSearchParams({
-    subject: "Kavisha AI Widget — sales inquiry",
-    body: "Hey I'm interested in getting the Kavisha AI Widget on my website. Tell me how I can go ahead!",
-}).toString()}`;
+/** Use encodeURIComponent (not URLSearchParams) so spaces are %20, not + — mail clients often show + literally. */
+const CONTACT_SALES_MAILTO = (() => {
+    const subject = encodeURIComponent("Kavisha AI Widget — sales inquiry");
+    const body = encodeURIComponent(
+        "Hey I'm interested in getting the Kavisha AI Widget on my website. Tell me how I can go ahead!",
+    );
+    return `mailto:hello@kavisha.ai?subject=${subject}&body=${body}`;
+})();
 
 export default function WidgetIntroPage() {
     return (
