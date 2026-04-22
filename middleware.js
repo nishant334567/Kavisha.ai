@@ -16,6 +16,7 @@ const PUBLIC_PATHS = [
   "/about",
   "/copyright",
   "/make-avatar",
+  "/widget-intro",
   "/community",
   "/unsubscribe",
   "/api/unsubscribe",
