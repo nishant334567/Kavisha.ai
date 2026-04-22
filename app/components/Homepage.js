@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "../lib/firebase/sign-in";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
@@ -274,14 +275,17 @@ export default function Homepage() {
 
       <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16 max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-24">
         <div className="flex-1 flex justify-center md:justify-start">
-          <div className="w-full max-w-[260px] md:max-w-[300px]">
+          <Link
+            href="/widget-intro"
+            className="block w-full max-w-[260px] md:max-w-[300px] rounded-2xl transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
             <img
               src="/entrackr-widget.png"
               alt="Kavisha AI widget on a website — Entrackr example"
               className="block w-full h-auto object-cover"
               loading="lazy"
             />
-          </div>
+          </Link>
         </div>
 
         <div className="flex-1 flex flex-col text-center md:text-left items-center md:items-start">
@@ -293,12 +297,12 @@ export default function Homepage() {
             in the form of a widget. That Agent will talk to your visitors and
             turn casual observers into customers and fans.
           </p>
-          <a
-            href="/make-avatar"
+          <Link
+            href="/widget-intro"
             className="text-[#17638C] font-medium text-base md:text-lg hover:underline self-center md:self-end"
           >
             Read more &gt;&gt;
-          </a>
+          </Link>
         </div>
       </div>
 

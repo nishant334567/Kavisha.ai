@@ -30,6 +30,11 @@ const FEATURES = [
     },
 ];
 
+const CONTACT_SALES_MAILTO = `mailto:hello@kavisha.ai?${new URLSearchParams({
+    subject: "Kavisha AI Widget — sales inquiry",
+    body: "Hey I'm interested in getting the Kavisha AI Widget on my website. Tell me how I can go ahead!",
+}).toString()}`;
+
 export default function WidgetIntroPage() {
     return (
         <main className="min-h-screen bg-background text-foreground">
@@ -175,7 +180,7 @@ export default function WidgetIntroPage() {
                     Subscriptions start at ₹999 (~$10) per month
                 </p>
                 <a
-                    href="mailto:hello@kavisha.ai?subject=Kavisha%20AI%20Widget%20%E2%80%94%20sales%20inquiry"
+                    href={CONTACT_SALES_MAILTO}
                     className="inline-block rounded-full border border-white/60 px-12 py-3 text-lg font-medium transition-all duration-300 hover:bg-background hover:text-highlight md:text-xl"
                 >
                     Contact sales
