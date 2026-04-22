@@ -1,9 +1,12 @@
 "use client";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
-import { signIn } from "../lib/firebase/sign-in";
+import {
+  signIn,
+  completeRedirectSignInIfPresent,
+} from "../lib/firebase/sign-in";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Loader from "../components/Loader";
 import {
   detectInAppBrowser,
@@ -20,11 +23,29 @@ export default function LoginPage() {
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState("");
   const [popupBlocked, setPopupBlocked] = useState(false);
+  const handledRedirectRef = useRef(false);
 
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
     setIsMobile(isMobileDevice());
   }, []);
+
+  // Safari uses signInWithRedirect — when the browser navigates back to
+  // this page from Google, we must finalize the session here.
+  useEffect(() => {
+    if (handledRedirectRef.current) return;
+    handledRedirectRef.current = true;
+    (async () => {
+      try {
+        const session = await completeRedirectSignInIfPresent();
+        if (session) {
+          await refresh();
+        }
+      } catch (e) {
+        setError(e?.message || "Sign in failed after redirect");
+      }
+    })();
+  }, [refresh]);
 
   useEffect(() => {
     if (user && !loading) {
@@ -37,16 +58,20 @@ export default function LoginPage() {
     setError("");
     setPopupBlocked(false);
     try {
-      await signIn();
-      await refresh();
-      // The useEffect will handle redirect when user state updates
+      const result = await signIn();
+      if (result) {
+        await refresh();
+        setSigningIn(false);
+      }
+      // On Safari `result` is null because the page is navigating to
+      // Google. Keep the spinner up until we come back — the redirect
+      // useEffect above finalizes the session.
     } catch (e) {
       if (e?.code === "auth/popup-blocked") {
         setPopupBlocked(true);
       } else {
         setError(e.message || "Sign in failed");
       }
-    } finally {
       setSigningIn(false);
     }
   };
