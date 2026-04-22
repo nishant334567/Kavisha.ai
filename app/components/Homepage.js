@@ -34,7 +34,7 @@ const cards = [
     variantMobile: "beige",
   },
   {
-    title: "Give your fans an experience like never before",
+    title: "Give your fans an unparalleled experience",
     body: "Your fans now get the gift of your conversations, knowing you're behind them. This is something they'd really appreciate, and never forget.",
     variant: "teal",
     variantMobile: "teal",
@@ -385,13 +385,13 @@ export default function Homepage() {
         )}
       </div>
 
-      {/* Connect with people section */}
+      {/* An Agent that creates your community*/}
       <div className="mt-8 md:mt-12">
         {/* Header with line */}
         <div className="flex items-center gap-4 mb-6 px-4 md:px-8">
           <div className="h-[1px] flex-1 bg-border"></div>
           <p className="whitespace-nowrap text-lg text-[#264653] dark:text-foreground md:text-2xl">
-            Connect with people
+            An Agent that creates your community
           </p>
         </div>
 

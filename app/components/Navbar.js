@@ -155,27 +155,27 @@ export default function Navbar() {
     (brand?.subdomain ? `?subdomain=${encodeURIComponent(brand.subdomain)}` : "");
   const enabledFeatureNavItems = [
     ...(communityEnabled
-      ? [{ label: "COMMUNITY", mobileLabel: "Community", path: "/community", icon: Users }]
+      ? [{ label: "BUILD AI AGENT", mobileLabel: "Build AI Agent", path: "/widget-intro", icon: Users }]
       : []),
     ...(brand?.subdomain && brand?.enableLinks !== false
       ? [
-          {
-            label: "LINKS",
-            mobileLabel: "Links",
-            path: `/links?brand=${encodeURIComponent(brand.subdomain)}`,
-            icon: Link2,
-          },
-        ]
+        {
+          label: "LINKS",
+          mobileLabel: "Links",
+          path: `/links?brand=${encodeURIComponent(brand.subdomain)}`,
+          icon: Link2,
+        },
+      ]
       : []),
     ...(brand?.enableQuiz
       ? [
-          {
-            label: (brand?.quizName || "QUIZ / SURVEY").toUpperCase(),
-            mobileLabel: brand?.quizName || "Quiz / Survey",
-            path: "/quiz",
-            icon: LayoutGrid,
-          },
-        ]
+        {
+          label: (brand?.quizName || "QUIZ / SURVEY").toUpperCase(),
+          mobileLabel: brand?.quizName || "Quiz / Survey",
+          path: "/quiz",
+          icon: LayoutGrid,
+        },
+      ]
       : []),
     ...(brand?.enableBooking
       ? [{ label: "BOOKINGS", mobileLabel: "Bookings", path: "/services", icon: Sparkles }]
@@ -244,7 +244,7 @@ export default function Navbar() {
                 onClick={() => handleNavigate("/make-avatar")}
                 disabled={isNavigating}
                 className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
-                // className="px-3 py-1.5 rounded-md text-sm bg-blue-600 hover:bg-blue-700 transition-colors"
+              // className="px-3 py-1.5 rounded-md text-sm bg-blue-600 hover:bg-blue-700 transition-colors"
               >
                 {getNavLabel("/make-avatar", "MAKE MY AVATAAR")}
               </button>
