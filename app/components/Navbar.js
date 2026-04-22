@@ -155,7 +155,7 @@ export default function Navbar() {
     (brand?.subdomain ? `?subdomain=${encodeURIComponent(brand.subdomain)}` : "");
   const enabledFeatureNavItems = [
     ...(communityEnabled
-      ? [{ label: "BUILD AI AGENT", mobileLabel: "Build AI Agent", path: "/widget-intro", icon: Users }]
+      ? [{ label: "BUILD MY AGENT", mobileLabel: "Build My Agent", path: "/widget-intro", icon: Users }]
       : []),
     ...(brand?.subdomain && brand?.enableLinks !== false
       ? [
