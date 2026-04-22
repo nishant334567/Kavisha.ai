@@ -462,6 +462,8 @@ export default function ChatRequests() {
             currentUserId={user?.id}
             onClose={() => setOpenChat(false)}
             connectionId={connectionId}
+            messagingBrand={brandContext?.subdomain}
+            showMessagingControls
           />
         )}
       </div>

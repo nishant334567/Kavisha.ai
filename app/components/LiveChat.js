@@ -1,8 +1,8 @@
 "use client";
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import useSocket from "../context/useSocket";
-import { X } from "lucide-react";
+import { X, Lock, Unlock } from "lucide-react";
 import { formatDate } from "../utils/dateUtils";
 
 export default function Livechat({
@@ -13,15 +13,24 @@ export default function Livechat({
   connectionId,
   isEmbedded = false,
   otherUserDisplayName = null,
+  /** When set with showMessagingControls, admin can close/reopen user messaging for this thread. */
+  messagingBrand = "",
+  showMessagingControls = false,
 }) {
   const [message, setMessage] = useState("");
   const { user } = useFirebaseSession();
   const [messages, setMessages] = useState([]);
   const listRef = useRef(null);
   const [connectionLoading, setConnectionLoading] = useState(true);
+  const [messagingActionLoading, setMessagingActionLoading] = useState(false);
+  const [reopenSubmitting, setReopenSubmitting] = useState(false);
+  const [reopenError, setReopenError] = useState("");
   const [chatInfo, setChatInfo] = useState({
     otherUser: "",
     connectionId: null,
+    blockedUserId: null,
+    sendAllowed: true,
+    reopenRequestedAt: null,
   });
 
   const { socket, isOnline } = useSocket();
@@ -48,33 +57,44 @@ export default function Livechat({
     return grouped;
   }, [messages]);
 
+  const refreshConnectionMeta = useCallback(async () => {
+    const response = await fetch(`/api/check-connection`, {
+      method: "POST",
+      credentials: "include",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        userA,
+        userB,
+        connectionId: connectionId,
+        currentUserId,
+      }),
+    });
+    const data = await response.json();
+    if (data.status && data.connectionId) {
+      setChatInfo({
+        otherUser: data.otherUser,
+        connectionId: data.connectionId,
+        blockedUserId: data.blockedUserId ?? null,
+        sendAllowed: data.sendAllowed !== false,
+        reopenRequestedAt: data.reopenRequestedAt ?? null,
+      });
+    }
+  }, [userA, userB, connectionId, currentUserId]);
+
   useEffect(() => {
     setConnectionLoading(true);
-    const checkConnection = async () => {
+    (async () => {
       try {
-        const response = await fetch(`/api/check-connection`, {
-          method: "POST",
-          body: JSON.stringify({
-            userA,
-            userB,
-            connectionId: connectionId,
-            currentUserId,
-          }),
-        });
-        const data = await response.json();
-
-        if (data.status && data.connectionId) {
-          setChatInfo({
-            otherUser: data.otherUser,
-            connectionId: data.connectionId,
-          });
-        }
+        await refreshConnectionMeta();
       } finally {
         setConnectionLoading(false);
       }
-    };
-    checkConnection();
-  }, [userA, userB, connectionId, currentUserId]);
+    })();
+  }, [refreshConnectionMeta]);
+
+  const conversationClosedForUser = Boolean(chatInfo.blockedUserId);
+  const isBlockedEndUser = !chatInfo.sendAllowed && !showMessagingControls;
+  const hasReopenRequest = Boolean(chatInfo.reopenRequestedAt);
 
   useEffect(() => {
     if (!socket || !chatInfo.connectionId) return;
@@ -134,14 +154,25 @@ export default function Livechat({
         .off("message_received", handleMessage)
         .on("message_received", handleMessage);
 
+      const handleSendRejected = (payload) => {
+        if (payload?.connectionId !== chatInfo.connectionId) return;
+        setChatInfo((prev) => ({
+          ...prev,
+          sendAllowed: false,
+          blockedUserId: user?.id ? String(user.id) : prev.blockedUserId,
+        }));
+      };
+      socket.off("send_rejected", handleSendRejected).on("send_rejected", handleSendRejected);
+
       return () => {
         socket.off("connect", handleConnect);
         socket.off("message_history", handleHistory);
         socket.off("message_received", handleMessage);
+        socket.off("send_rejected", handleSendRejected);
         // socket.disconnect();
       };
     }
-  }, [socket, chatInfo.connectionId]);
+  }, [socket, chatInfo.connectionId, user?.id]);
 
   useEffect(() => {
     // Auto-scroll to bottom when new messages arrive
@@ -151,18 +182,64 @@ export default function Livechat({
   }, [messages]);
 
   const sendMessage = () => {
-    if (message.trim() && socket?.connected) {
-      const payload = {
-        text: message,
-        connectionId: chatInfo.connectionId,
-        senderUserId: user?.id,
-        // timestamp: new Date().toISOString(),
-      };
-      socket.emit("send_message", payload);
-      // Don't add to local state here - let the socket handle it
-      // This prevents duplicate messages
+    if (!chatInfo.sendAllowed || !message.trim() || !socket?.connected) {
+      setMessage("");
+      return;
     }
+    const payload = {
+      text: message,
+      connectionId: chatInfo.connectionId,
+      senderUserId: user?.id,
+    };
+    socket.emit("send_message", payload);
     setMessage("");
+  };
+
+  const toggleUserMessaging = async (closed) => {
+    const cid = chatInfo.connectionId || connectionId;
+    if (!showMessagingControls || !messagingBrand?.trim() || !cid) return;
+    setMessagingActionLoading(true);
+    try {
+      const res = await fetch("/api/admin/conversations/messaging", {
+        method: "PATCH",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          connectionId: cid,
+          brand: messagingBrand.trim(),
+          closed,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        await refreshConnectionMeta();
+      }
+    } finally {
+      setMessagingActionLoading(false);
+    }
+  };
+
+  const submitReopenRequest = async () => {
+    const cid = chatInfo.connectionId || connectionId;
+    if (!cid || reopenSubmitting || hasReopenRequest) return;
+    setReopenSubmitting(true);
+    setReopenError("");
+    try {
+      const res = await fetch("/api/conversation/reopen-request", {
+        method: "POST",
+        credentials: "include",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ connectionId: cid }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data.success) {
+        await refreshConnectionMeta();
+      } else {
+        setReopenError(data.error || "Could not send request. Try again.");
+      }
+    } finally {
+      setReopenSubmitting(false);
+    }
   };
 
   const handleKeyPress = (e) => {
@@ -176,22 +253,56 @@ export default function Livechat({
     <div
       className={`flex flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-lg ${isEmbedded ? "h-full w-full" : "h-full w-full md:h-[500px] md:max-w-sm"}`}
     >
-      <div className="sticky top-0 z-10 flex items-center justify-between border-b border-border bg-muted-bg px-4 py-3">
-        <div>
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-highlight text-sm font-semibold text-white">
-            {(displayName || "U").charAt(0).toUpperCase()}
+      <div className="sticky top-0 z-10 border-b border-border bg-muted-bg px-4 py-3">
+        <div className="flex items-start justify-between gap-2">
+          <div className="min-w-0 flex-1">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-highlight text-sm font-semibold text-white">
+              {(displayName || "U").charAt(0).toUpperCase()}
+            </div>
+            <div className="py-2 text-lg font-semibold uppercase text-highlight font-baloo">
+              {displayName}
+            </div>
+            {showMessagingControls && conversationClosedForUser ? (
+              <p className="text-xs text-muted">
+                User cannot send messages until you reopen.
+                {hasReopenRequest ? (
+                  <span className="mt-1 block font-medium text-highlight">
+                    User requested to chat again.
+                  </span>
+                ) : null}
+              </p>
+            ) : null}
           </div>
-          <div className="py-2 text-lg font-semibold uppercase text-highlight font-baloo">
-            {displayName}
+          <div className="flex shrink-0 flex-col items-end gap-2">
+            {showMessagingControls && messagingBrand ? (
+              <button
+                type="button"
+                disabled={messagingActionLoading || connectionLoading}
+                onClick={() => toggleUserMessaging(!conversationClosedForUser)}
+                className="inline-flex items-center gap-1.5 rounded-lg border border-border bg-card px-2.5 py-1.5 text-xs font-medium text-foreground shadow-sm transition hover:bg-muted-bg disabled:opacity-50"
+              >
+                {conversationClosedForUser ? (
+                  <>
+                    <Unlock className="h-3.5 w-3.5" aria-hidden />
+                    Allow user
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-3.5 w-3.5" aria-hidden />
+                    Close for user
+                  </>
+                )}
+              </button>
+            ) : null}
+            <button
+              onClick={onClose}
+              className="flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-card"
+              aria-label="Close Chat"
+            >
+              <X className="h-4 w-4 text-highlight" />
+            </button>
           </div>
         </div>
-        <button
-          onClick={onClose}
-          className="flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-card"
-          aria-label="Close Chat"
-        >
-          <X className="h-4 w-4 text-highlight" />
-        </button>
       </div>
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto bg-background p-2 scrollbar-none" ref={listRef}>
@@ -246,31 +357,75 @@ export default function Livechat({
           </div>
         )}
       </div>
-      {/* Message Input */}
-      <div className="w-full border-t border-border px-3 py-3 bg-card">
-        <textarea
-          rows={4}
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyPress={handleKeyPress}
-          disabled={connectionLoading}
-          className="font-baloo w-full resize-none rounded-xl border border-border bg-input px-3 py-2 text-sm text-foreground transition placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-60"
-          placeholder={connectionLoading ? "Loading..." : "Write a message..."}
-        />
-      </div>
-      <div className="flex justify-end border-t border-border bg-card p-2">
-        <button
-          onClick={(e) => {
-            e.preventDefault();
-            sendMessage();
-          }}
-          type="submit"
-          disabled={connectionLoading || !message.trim()}
-          className="rounded-lg bg-highlight px-8 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted-bg disabled:text-muted"
-        >
-          Send
-        </button>
-      </div>
+      {/* Message input or resolved + reopen request (blocked user) */}
+      {isBlockedEndUser ? (
+        <div className="w-full border-t border-border bg-muted-bg/60 px-4 py-4">
+          <p className="font-baloo text-sm font-semibold text-foreground">
+            This conversation has been resolved by admin.
+          </p>
+          <p className="mt-2 text-xs leading-relaxed text-muted">
+            To start again, send a request — an admin can reopen this chat when
+            they&apos;re ready.
+          </p>
+          {hasReopenRequest ? (
+            <p className="mt-3 text-xs font-medium text-highlight">
+              Your request was sent. You&apos;ll be able to message again once the
+              admin reopens the conversation.
+            </p>
+          ) : (
+            <>
+              <button
+                type="button"
+                disabled={reopenSubmitting || connectionLoading}
+                onClick={submitReopenRequest}
+                className="mt-4 w-full rounded-lg bg-highlight px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                {reopenSubmitting ? "Sending request…" : "Request to chat again"}
+              </button>
+              {reopenError ? (
+                <p className="mt-2 text-xs text-red-600" role="alert">
+                  {reopenError}
+                </p>
+              ) : null}
+            </>
+          )}
+        </div>
+      ) : (
+        <>
+          <div className="w-full border-t border-border px-3 py-3 bg-card">
+            <textarea
+              rows={4}
+              value={message}
+              onChange={(e) => setMessage(e.target.value)}
+              onKeyPress={handleKeyPress}
+              disabled={connectionLoading || !chatInfo.sendAllowed}
+              className="font-baloo w-full resize-none rounded-xl border border-border bg-input px-3 py-2 text-sm text-foreground transition placeholder:text-muted focus:border-ring focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-60"
+              placeholder={
+                connectionLoading
+                  ? "Loading..."
+                  : !chatInfo.sendAllowed
+                    ? "Messaging is closed"
+                    : "Write a message..."
+              }
+            />
+          </div>
+          <div className="flex justify-end border-t border-border bg-card p-2">
+            <button
+              onClick={(e) => {
+                e.preventDefault();
+                sendMessage();
+              }}
+              type="submit"
+              disabled={
+                connectionLoading || !chatInfo.sendAllowed || !message.trim()
+              }
+              className="rounded-lg bg-highlight px-8 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted-bg disabled:text-muted"
+            >
+              Send
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 

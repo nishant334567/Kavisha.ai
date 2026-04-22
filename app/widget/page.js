@@ -9,6 +9,9 @@ import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 /** First launcher spin waits this long after theme loads (attention animation only). */
 const LAUNCHER_NUDGE_DELAY_MS = 3000;
 
+/** Closed widget embed / iframe size (matches AMP `embed-size` minimum height). */
+const WIDGET_CLOSED_SIZE = 100;
+
 /** e.g. `entrackr` → `Entrackr's AI Chat`; empty → `AI Chat`. */
 function widgetHeadingFromBrand(brandSlug) {
   const s = String(brandSlug || "").trim();
@@ -124,12 +127,12 @@ function WidgetShell() {
 
   useEffect(() => {
     if (typeof window === "undefined" || window.parent === window) return;
+    const width = isOpen ? 400 : WIDGET_CLOSED_SIZE;
+    const height = isOpen ? 640 : WIDGET_CLOSED_SIZE;
+    window.parent.postMessage({ source: "kavisha-widget", width, height }, "*");
+    // AMP `amp-iframe` + `resizable`: https://amp.dev/documentation/components/amp-iframe/#iframe-resizing
     window.parent.postMessage(
-      {
-        source: "kavisha-widget",
-        width: isOpen ? 400 : 72,
-        height: isOpen ? 640 : 72,
-      },
+      { sentinel: "amp", type: "embed-size", width, height },
       "*"
     );
   }, [isOpen]);
@@ -180,7 +183,11 @@ function WidgetShell() {
           </div>
         </div>
       ) : needsBrandTheme && !themeReady ? (
-        <div className="h-12 w-12 shrink-0" aria-hidden />
+        <div
+          className="shrink-0"
+          style={{ width: WIDGET_CLOSED_SIZE, height: WIDGET_CLOSED_SIZE }}
+          aria-hidden
+        />
       ) : (
         <button
           type="button"
@@ -228,7 +235,13 @@ export default function WidgetPage() {
           className="fixed inset-0 box-border flex flex-col items-end justify-end overflow-hidden bg-transparent p-2"
           aria-hidden
         >
-          <div className="h-12 w-12 shrink-0" />
+          <div
+            className="shrink-0"
+            style={{
+              width: WIDGET_CLOSED_SIZE,
+              height: WIDGET_CLOSED_SIZE,
+            }}
+          />
         </div>
       }
     >

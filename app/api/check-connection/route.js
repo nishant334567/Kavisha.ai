@@ -34,6 +34,21 @@ export async function POST(req) {
       { upsert: true, new: true }
     );
 
+    const conv = await Conversations.findOne({
+      connectionId: canonicalConnectionId,
+    })
+      .select("blockedUserId reopenRequestedAt")
+      .lean();
+
+    const blockedUserId = conv?.blockedUserId
+      ? String(conv.blockedUserId)
+      : null;
+    const sendAllowed =
+      !blockedUserId || String(currentUserId) !== blockedUserId;
+    const reopenRequestedAt = conv?.reopenRequestedAt
+      ? new Date(conv.reopenRequestedAt).toISOString()
+      : null;
+
     // Get the other user's information
     const otherUserId = userA === currentUserId ? userB : userA;
     const otherUser = await User.findById(otherUserId).select("name email");
@@ -43,6 +58,9 @@ export async function POST(req) {
       status: true,
       otherUser: otherUser?.name || "Unknown User",
       otherUserEmail: otherUser?.email || "",
+      blockedUserId,
+      sendAllowed,
+      reopenRequestedAt,
     });
   } catch (error) {
     return NextResponse.json(
