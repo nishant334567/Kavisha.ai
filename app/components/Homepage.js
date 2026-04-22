@@ -183,24 +183,6 @@ export default function Homepage() {
       <div className="gap-2 md:gap-4 flex flex-col md:flex-row flex-wrap justify-center items-center mb-8 px-4">
         <button
           onClick={() => {
-            if (user) {
-              setLoadingPath("/talk-to-avatar");
-              router.push("/talk-to-avatar");
-            } else if (!isBlocked) {
-              handleSignIn("/talk-to-avatar");
-            }
-          }}
-          disabled={signingIn || isBlocked || loadingPath !== null}
-          className="min-w-0 w-[80%] rounded-lg bg-muted-bg px-3 py-2 text-sm text-highlight shadow-md transition-colors hover:bg-card disabled:opacity-50 md:w-auto md:px-4 md:text-base"
-        >
-          {signingIn
-            ? "Signing in..."
-            : loadingPath === "/talk-to-avatar"
-              ? "Opening..."
-              : "Talk to Avataars"}
-        </button>
-        <button
-          onClick={() => {
             setLoadingPath("/make-avatar");
             router.push("/make-avatar");
           }}
@@ -212,10 +194,10 @@ export default function Homepage() {
         <button
           onClick={() => {
             if (user) {
-              setLoadingPath("/community");
-              router.push("/community");
+              setLoadingPath("/widget-intro");
+              router.push("/widget-intro");
             } else if (!isBlocked) {
-              handleSignIn("/community");
+              handleSignIn("/widget-intro");
             }
           }}
           disabled={signingIn || isBlocked || loadingPath !== null}
@@ -223,9 +205,9 @@ export default function Homepage() {
         >
           {signingIn
             ? "Signing in..."
-            : loadingPath === "/community"
+            : loadingPath === "/widget-intro"
               ? "Opening..."
-              : "Connect with people"}
+              : "Explore AI Widgets"}
         </button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-[85%] mx-auto my-16">
@@ -240,7 +222,7 @@ export default function Homepage() {
           <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
         </div>
         {/* Top cream section */}
-        <div className="flex h-[120px] items-center justify-center bg-muted-bg px-4 text-foreground md:h-[160px]">
+        <div className="flex h-[120px] items-center justify-center bg-[#F9F1D8] px-4 text-foreground md:h-[160px]">
           <p className="font-baloo text-xl sm:text-2xl md:text-4xl lg:text-5xl text-center">
             Your Digital Avataar on Kavisha
           </p>
@@ -253,15 +235,77 @@ export default function Homepage() {
             <span className="text-[#E8B84A]">+</span> Style)
           </p>
           <p className="text-[#B8C5C9] text-sm md:text-lg text-center">
-            With Kavisha, you'll be able to give your fans delightful
+            With Kavisha, you&apos;ll be able to give your fans delightful
             interactions 24x7x365
           </p>
         </div>
       </div>
+
+      <div className="flex flex-col-reverse md:flex-row items-center gap-10 md:gap-16 max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-24">
+        <div className="flex-1 flex flex-col text-center md:text-left items-center md:items-start">
+          <h2 className="text-2xl md:text-4xl font-normal text-foreground leading-snug mb-4">
+            Your Digital Avataar on a <br className="hidden md:block" />
+            custom domain
+          </h2>
+          <p className="text-base md:text-lg text-muted leading-relaxed mb-6 max-w-lg">
+            You could host your Digital Avataar on yourname.kavisha.ai for free!
+            It&apos;ll be the place for conversations with your AI, your community,
+            your social links, and everything else.
+          </p>
+          <a
+            href="/make-avatar"
+            className="text-[#17638C] font-medium text-base md:text-lg hover:underline"
+          >
+            Read more &gt;&gt;
+          </a>
+        </div>
+
+        <div className="flex-1 flex justify-center md:justify-end">
+          <div className="w-full max-w-[260px] md:max-w-[310px]">
+            <img
+              src="/kavisha-avataar.png"
+              alt="Digital Avataar on a custom Kavisha domain"
+              className="block w-full h-auto object-cover"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16 max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-24">
+        <div className="flex-1 flex justify-center md:justify-start">
+          <div className="w-full max-w-[260px] md:max-w-[300px]">
+            <img
+              src="/entrackr-widget.png"
+              alt="Kavisha AI widget on a website — Entrackr example"
+              className="block w-full h-auto object-cover"
+              loading="lazy"
+            />
+          </div>
+        </div>
+
+        <div className="flex-1 flex flex-col text-center md:text-left items-center md:items-start">
+          <h2 className="text-2xl md:text-4xl font-normal text-foreground leading-snug mb-4">
+            An AI widget on your website itself, giving it Agentic abilities
+          </h2>
+          <p className="text-base md:text-lg text-muted leading-relaxed mb-6 max-w-lg">
+            If you have an existing website, you could give it a super AI Agent
+            in the form of a widget. That Agent will talk to your visitors and
+            turn casual observers into customers and fans.
+          </p>
+          <a
+            href="/make-avatar"
+            className="text-[#17638C] font-medium text-base md:text-lg hover:underline self-center md:self-end"
+          >
+            Read more &gt;&gt;
+          </a>
+        </div>
+      </div>
+
       {/* Avatar cards */}
       <div className="flex items-center gap-4 my-6 px-4 md:px-8">
         <p className="whitespace-nowrap text-lg text-[#264653] dark:text-foreground md:text-2xl">
-          Talk to Avataars
+          Existing Avataars
         </p>
         <div className="h-[1px] flex-1 bg-border"></div>
       </div>
