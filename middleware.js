@@ -23,6 +23,7 @@ const PUBLIC_PATHS = [
   "/links",
   "/api/links",
   "/api/widget/sso-introspect",
+  "/api/public/brand-theme"
 ];
 
 function getSubdomainFromRequest(hostname) {

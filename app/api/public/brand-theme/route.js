@@ -77,11 +77,6 @@ export async function GET(req) {
         widgetChatbotHeader,
         widgetCopyReadMoreUrl,
       },
-      {
-        headers: {
-          "Cache-Control": "public, s-maxage=120, stale-while-revalidate=600",
-        },
-      }
     );
   } catch (e) {
     return NextResponse.json(
