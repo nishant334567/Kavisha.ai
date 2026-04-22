@@ -187,7 +187,7 @@ export default function Homepage() {
             router.push("/make-avatar");
           }}
           disabled={loadingPath !== null}
-          className="w-[80%] md:w-auto min-w-0 px-3 md:px-4 py-2 text-sm md:text-base rounded-lg bg-[#3D5E6B] text-white shadow-md hover:bg-[#2d4752] transition-colors disabled:opacity-50"
+          className="w-[80%] md:w-auto min-w-0 px-3 md:px-4 py-2 text-lg md:text-xl rounded-lg bg-gradient-to-b from-[#17484B] to-[#156568] hover:brightness-110 text-white shadow-md transition-colors disabled:opacity-50"
         >
           {loadingPath === "/make-avatar" ? "Opening..." : "Make my Avataar"}
         </button>
@@ -201,7 +201,7 @@ export default function Homepage() {
             }
           }}
           disabled={signingIn || isBlocked || loadingPath !== null}
-          className="min-w-0 w-[80%] rounded-lg bg-muted-bg px-4 py-2 text-sm text-highlight shadow-md transition-colors hover:bg-card disabled:opacity-50 md:w-auto md:text-base"
+          className="min-w-0 w-[80%] rounded-lg bg-gradient-to-b from-[#B9ECEC] to-[#CEFDFD] hover:brightness-105 px-4 py-2 text-lg md:text-xl text-highlight shadow-md transition-colors hover:bg-card disabled:opacity-50 md:w-auto"
         >
           {signingIn
             ? "Signing in..."
@@ -217,18 +217,18 @@ export default function Homepage() {
       </div>
       <div className="relative">
         {/* '=' badge: pinned to boundary between cream and teal so it stays vertically consistent on mobile */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[120px] md:top-[160px] -translate-y-1/2 z-10 bg-[#3D4A52] w-10 h-10 md:w-14 md:h-14 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[120px] md:top-[160px] -translate-y-1/2 z-10 bg-[#00646A] w-10 h-10 md:w-14 md:h-14 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1">
           <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
           <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
         </div>
         {/* Top cream section */}
-        <div className="flex h-[120px] items-center justify-center bg-[#F9F1D8] px-4 text-foreground md:h-[160px]">
+        <div className="flex h-[120px] items-center justify-center bg-gradient-to-b from-[#FFF7E0] to-[#F8F3E5] px-4 text-foreground md:h-[160px]">
           <p className="font-baloo text-xl sm:text-2xl md:text-4xl lg:text-5xl text-center">
             Your Digital Avataar on Kavisha
           </p>
         </div>
         {/* Bottom teal section */}
-        <div className="bg-[#4A6670] text-white h-auto min-h-[150px] md:h-[180px] flex flex-col justify-center items-center px-4 py-6 md:py-0">
+        <div className="bg-gradient-to-b from-[#17484B] to-[#156568] text-white h-auto min-h-[150px] md:h-[180px] flex flex-col justify-center items-center px-4 py-6 md:py-0">
           <p className="font-baloo text-lg sm:text-xl md:text-3xl lg:text-4xl mb-2 md:mb-3 text-center">
             Your (Knowledge <span className="text-[#E8B84A]">+</span> History{" "}
             <span className="text-[#E8B84A]">+</span> Personality{" "}
@@ -401,13 +401,13 @@ export default function Homepage() {
         {/* Two column layout */}
         <div className="flex flex-col md:flex-row">
           {/* Left - Teal section: on mobile full-width paragraph + centered button */}
-          <div className="md:flex-[4] bg-[#35515b] text-white px-6 md:px-10 py-8 md:py-12 flex flex-col justify-center text-center md:text-left items-center md:items-start">
-            <p className="w-full max-w-full text-3xl md:text-5xl lg:text-6xl leading-snug mb-4 md:mb-6">
-              <span className="md:block">Your fans can </span>
+          <div className="md:flex-[4] bg-gradient-to-b from-[#17484B] to-[#156568] text-white px-6 md:px-10 py-8 md:py-12 flex flex-col justify-center text-center md:text-left items-center md:items-start">
+            <p className="w-full max-w-full text-xl md:text-2xl lg:text-4xl leading-snug mb-4 md:mb-6 font-medium tracking-wide">
               <span className="md:block">
-                <span className="text-[#f2d75e]">connect </span> with
+                Your fans can <span className="text-[#E8B84A]">connect</span> with
               </span>
-              <span className="md:block"> each other</span>
+              <span className="md:block">each other (and generate</span>
+              <span className="md:block">revenue for you)</span>
             </p>
             <button
               onClick={() => {
@@ -420,12 +420,12 @@ export default function Homepage() {
               disabled={signingIn || isBlocked}
               className="w-fit mx-auto md:mx-0 px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl hover:bg-white hover:text-[#35515b] transition-colors disabled:opacity-50"
             >
-              {signingIn ? "Signing in..." : "Connect with people"}
+              {signingIn ? "Signing in..." : "Get started"}
             </button>
           </div>
 
           {/* Right - Cream section */}
-          <div className="flex items-center bg-card px-6 py-8 text-foreground md:flex-[6] md:px-10 md:py-12">
+          <div className="flex items-center bg-gradient-to-b md:from-[#FFF7E0] md:to-[#F8F3E5] px-6 py-8 text-foreground md:flex-[6] md:px-10 md:py-12">
             <p className="text-lg leading-relaxed text-center md:text-left">
               Your Digital Avataar doesn't just enable conversations between you
               and your fans, it also gives your fans a chance to connect with
