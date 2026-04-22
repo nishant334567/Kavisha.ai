@@ -6,6 +6,7 @@ const { createServer } = require("http");
 const { Server } = require("socket.io");
 const { connectDB } = require("./lib/db.js");
 const Messages = require("./models/Messages.js");
+const Conversations = require("./models/Conversations.js");
 const next = require("next");
 const express = require("express");
 
@@ -71,6 +72,20 @@ app.prepare().then(() => {
         }
 
         await connectDB();
+
+        const conv = await Conversations.findOne({ connectionId })
+          .select("blockedUserId")
+          .lean();
+        const blocked = conv?.blockedUserId
+          ? String(conv.blockedUserId)
+          : null;
+        if (blocked && String(senderUserId) === blocked) {
+          socket.emit("send_rejected", {
+            connectionId,
+            reason: "messaging_closed",
+          });
+          return;
+        }
 
         const msg = await Messages.create({
           conversationId: connectionId,

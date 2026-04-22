@@ -16,6 +16,17 @@ const ConversationSchema = new mongoose.Schema(
       unique: true,
       required: true,
     },
+    /** When set, this user may not send messages in this thread (e.g. admin closed the conversation for the end user). */
+    blockedUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
+    /** Set when the blocked user asks to chat again; cleared when admin reopens or re-closes. */
+    reopenRequestedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true }
 );
