@@ -15,14 +15,14 @@ function mount() {
   iframe.setAttribute("allow", "clipboard-write");
   iframe.src = base + "/widget" + (q.toString() ? "?" + q.toString() : "");
   iframe.style.cssText =
-    "position:fixed;right:24px;bottom:24px;width:72px;height:72px;border:0;z-index:2147483647;background:transparent;";
+    "position:fixed;right:24px;bottom:24px;width:100px;height:100px;border:0;z-index:2147483647;background:transparent;";
   document.body.appendChild(iframe);
 
   var trusted = new URL(iframe.src).origin;
 
   /** Last size the iframe asked for (open vs closed); re-clamped on host resize. */
-  var lastRequestedW = 72;
-  var lastRequestedH = 72;
+  var lastRequestedW = 100;
+  var lastRequestedH = 100;
 
   /** Fit iframe to host window; open panel max 80vh tall. Open iframe: centered on narrow viewports, right-aligned from md (768px) up — matches widget layout. */
   function applyIframeSize() {
