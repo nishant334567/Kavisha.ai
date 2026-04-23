@@ -174,6 +174,7 @@ function WidgetShell() {
             </button>
           </div>
           <div className="flex min-h-[240px] min-w-0 flex-1 flex-col overflow-hidden px-3 pb-3 pt-2">
+            {/* Sign-in + bearer tokens: `ChatBoxWidget` + `app/lib/widget-session.js` (not this shell). */}
             <ChatBoxWidget
               brand={brand.trim()}
               primaryColor={primaryColor}

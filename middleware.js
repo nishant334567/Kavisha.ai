@@ -23,7 +23,8 @@ const PUBLIC_PATHS = [
   "/links",
   "/api/links",
   "/api/widget/sso-introspect",
-  "/api/public/brand-theme"
+  "/api/public/brand-theme",
+  "/widget-auth",
 ];
 
 function getSubdomainFromRequest(hostname) {
@@ -50,6 +51,17 @@ export async function middleware(request) {
   if (pathname.startsWith("/api/admin/cron")) {
     return NextResponse.next();
   }
+
+  // Bearer widget calls: let route `withAuth` verify the token (no cookie in iframe).
+  if (
+    pathname.startsWith("/api/") &&
+    (request.headers.get("authorization") || "")
+      .toLowerCase()
+      .startsWith("bearer ")
+  ) {
+    return NextResponse.next();
+  }
+
   const hostname = request.nextUrl.hostname || "";
   if (hostname.toLowerCase().startsWith("www.")) {
     const targetHost = hostname.replace(/^www\./i, "");

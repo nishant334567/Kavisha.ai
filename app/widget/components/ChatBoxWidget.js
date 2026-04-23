@@ -3,7 +3,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { ChevronDown, Loader2, LogOut, Plus, Send, Users, X } from "lucide-react";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
-import { signIn } from "@/app/lib/firebase/sign-in";
+import {
+  clearWidgetAuth,
+  commitWidgetAuth,
+  getCurrentWidgetUser,
+  subscribeWidgetSession,
+  widgetAwareFetch,
+  WIDGET_AUTH_POSTMESSAGE_SOURCE,
+} from "@/app/lib/widget-session";
 import {
   detectInAppBrowser,
   isMobileDevice,
@@ -21,6 +28,13 @@ import WidgetChatLoader, {
 } from "./WidgetChatLoader";
 
 const LEAD_JOURNEY_ROLE = "lead_journey";
+
+function buildWidgetAuthPopupUrl() {
+  if (typeof window === "undefined") return "/widget-auth";
+  const url = new URL("/widget-auth", window.location.origin);
+  url.searchParams.set("origin", window.location.origin);
+  return url.toString();
+}
 
 function widgetSessionTitle(s) {
   const raw = String(s?.title || "").trim();
@@ -49,7 +63,12 @@ export default function ChatBoxWidget({
   secondaryColor = null,
   readMoreCopyUrl = "",
 }) {
-  const { user, loading: authLoading, refresh } = useFirebaseSession();
+  const { user: firebaseUser, loading: authLoading, refresh } =
+    useFirebaseSession();
+  const [widgetUser, setWidgetUser] = useState(() =>
+    typeof window !== "undefined" ? getCurrentWidgetUser() : null
+  );
+  const effectiveUser = firebaseUser || widgetUser;
   const endRef = useRef(null);
   const primaryHex = normalizeBrandHex(primaryColor);
   /** User message bubbles use brand primary when set. */
@@ -94,14 +113,39 @@ export default function ChatBoxWidget({
     setIsMobile(isMobileDevice());
   }, []);
 
+  useEffect(() => {
+    return subscribeWidgetSession((session) => {
+      setWidgetUser(session?.user || null);
+    });
+  }, []);
+
+  /** `/widget-auth` popup → tokens → persist + unlock widget UI. */
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const expectedOrigin = window.location.origin;
+    const onMessage = (e) => {
+      if (e.origin !== expectedOrigin) return;
+      const d = e.data;
+      if (
+        !d ||
+        d.source !== WIDGET_AUTH_POSTMESSAGE_SOURCE ||
+        d.type !== "auth-success"
+      ) {
+        return;
+      }
+      commitWidgetAuth(d);
+    };
+    window.addEventListener("message", onMessage);
+    return () => window.removeEventListener("message", onMessage);
+  }, []);
+
   const loadSessions = useCallback(async () => {
-    if (!user || !brand) return;
+    if (!effectiveUser || !brand) return;
     setSessionsHydrated(false);
     setSessionsLoading(true);
     try {
-      const res = await fetch(
-        `/api/widget/sessions?brand=${encodeURIComponent(brand)}`,
-        { credentials: "include" }
+      const res = await widgetAwareFetch(
+        `/api/widget/sessions?brand=${encodeURIComponent(brand)}`
       );
       if (!res.ok) throw new Error("Failed to load chats");
       const data = await res.json();
@@ -115,11 +159,11 @@ export default function ChatBoxWidget({
       setSessionsLoading(false);
       setSessionsHydrated(true);
     }
-  }, [user, brand]);
+  }, [effectiveUser, brand]);
 
   useEffect(() => {
-    if (!authLoading && user && brand) loadSessions();
-  }, [authLoading, user, brand, loadSessions]);
+    if (!authLoading && effectiveUser && brand) loadSessions();
+  }, [authLoading, effectiveUser, brand, loadSessions]);
 
   useEffect(() => {
     if (
@@ -135,7 +179,7 @@ export default function ChatBoxWidget({
   }, [messages]);
 
   useEffect(() => {
-    if (!activeSessionId || authLoading || !user) {
+    if (!activeSessionId || authLoading || !effectiveUser) {
       setChatRole(null);
       setSessionError(null);
       setSessionLoading(false);
@@ -147,9 +191,7 @@ export default function ChatBoxWidget({
     setSessionLoading(true);
     setSessionError(null);
 
-    fetch(`/api/session/${encodeURIComponent(activeSessionId)}`, {
-      credentials: "include",
-    })
+    widgetAwareFetch(`/api/session/${encodeURIComponent(activeSessionId)}`)
       .then(async (res) => {
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -184,10 +226,15 @@ export default function ChatBoxWidget({
     return () => {
       cancelled = true;
     };
-  }, [activeSessionId, user, authLoading]);
+  }, [activeSessionId, effectiveUser, authLoading]);
 
   useEffect(() => {
-    if (!activeSessionId || authLoading || !user || chatRole !== LEAD_JOURNEY_ROLE) {
+    if (
+      !activeSessionId ||
+      authLoading ||
+      !effectiveUser ||
+      chatRole !== LEAD_JOURNEY_ROLE
+    ) {
       setMessages([]);
       setSummary("");
       setLogsLoading(false);
@@ -198,9 +245,7 @@ export default function ChatBoxWidget({
     setLogsLoading(true);
     setLogsError(null);
 
-    fetch(`/api/logs/${encodeURIComponent(activeSessionId)}`, {
-      credentials: "include",
-    })
+    widgetAwareFetch(`/api/logs/${encodeURIComponent(activeSessionId)}`)
       .then(async (res) => {
         if (!res.ok) {
           const err = await res.json().catch(() => ({}));
@@ -235,7 +280,7 @@ export default function ChatBoxWidget({
     return () => {
       cancelled = true;
     };
-  }, [activeSessionId, user, authLoading, chatRole]);
+  }, [activeSessionId, effectiveUser, authLoading, chatRole]);
 
   const selectSessionById = useCallback((id) => {
     setIntroTypewriterSessionId(null);
@@ -283,13 +328,12 @@ export default function ChatBoxWidget({
   }, [servicePickerOpen, newChatLoading]);
 
   const handleSelectLeadJourney = async (serviceKey, sessionTitle) => {
-    if (!brand || newChatLoading || !user || !serviceKey) return;
+    if (!brand || newChatLoading || !effectiveUser || !serviceKey) return;
     setNewChatLoading(true);
     setSessionError(null);
     try {
-      const res = await fetch("/api/widget/session", {
+      const res = await widgetAwareFetch("/api/widget/session", {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brand, serviceKey }),
       });
@@ -319,15 +363,14 @@ export default function ChatBoxWidget({
   };
 
   const openNewChatPicker = async () => {
-    if (!brand || newChatLoading || !user || signingOut) return;
+    if (!brand || newChatLoading || !effectiveUser || signingOut) return;
     setSessionError(null);
     setLeadJourneyOptions([]);
     setPickerError(null);
     setLeadJourneysLoading(true);
     try {
-      const res = await fetch(
-        `/api/widget/lead-journeys?brand=${encodeURIComponent(brand)}`,
-        { credentials: "include" }
+      const res = await widgetAwareFetch(
+        `/api/widget/lead-journeys?brand=${encodeURIComponent(brand)}`
       );
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Could not load services");
@@ -353,10 +396,16 @@ export default function ChatBoxWidget({
   openNewChatPickerRef.current = openNewChatPicker;
 
   useEffect(() => {
-    if (!sessionsHydrated || !user || !brand || authLoading || signingOut)
+    if (
+      !sessionsHydrated ||
+      !effectiveUser ||
+      !brand ||
+      authLoading ||
+      signingOut
+    )
       return;
     void openNewChatPickerRef.current();
-  }, [sessionsHydrated, user, brand, authLoading, signingOut]);
+  }, [sessionsHydrated, effectiveUser, brand, authLoading, signingOut]);
 
   async function sendUserMessage(rawText) {
     const text = String(rawText ?? "").trim();
@@ -387,9 +436,8 @@ export default function ChatBoxWidget({
     };
 
     try {
-      const response = await fetch("/api/lead-journey", {
+      const response = await widgetAwareFetch("/api/lead-journey", {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           history: historyToUse,
@@ -436,36 +484,21 @@ export default function ChatBoxWidget({
     void sendUserMessage(input);
   };
 
-  const handleWidgetSignIn = async () => {
-    setSigningIn(true);
-    setSignInError("");
-    setPopupBlocked(false);
-    try {
-      await signIn();
-      await refresh();
-    } catch (e) {
-      if (e?.code === "auth/popup-blocked") {
-        setPopupBlocked(true);
-      } else {
-        setSignInError(e.message || "Sign in failed");
-      }
-    } finally {
-      setSigningIn(false);
-    }
-  };
-
   const handleWidgetSignOut = async () => {
     if (signingOut) return;
     setSigningOut(true);
     try {
-      const res = await fetch("/api/logout", {
-        method: "GET",
-        credentials: "include",
-      });
-      if (!res.ok) {
-        setSessionError("Could not sign out. Try again.");
-        await refresh();
-        return;
+      clearWidgetAuth();
+      if (firebaseUser) {
+        const res = await fetch("/api/logout", {
+          method: "GET",
+          credentials: "include",
+        });
+        if (!res.ok) {
+          setSessionError("Could not sign out. Try again.");
+          await refresh();
+          return;
+        }
       }
       setSessionError(null);
       setSessions([]);
@@ -501,7 +534,7 @@ export default function ChatBoxWidget({
     );
   }
 
-  if (authLoading) {
+  if (authLoading && !effectiveUser) {
     return (
       <WidgetChatLoader
         primaryHex={primaryHex}
@@ -510,7 +543,7 @@ export default function ChatBoxWidget({
     );
   }
 
-  if (!user) {
+  if (!effectiveUser) {
     return (
       <div className="flex flex-1 flex-col justify-center gap-4 rounded-xl border border-border/60 bg-muted-bg/20 px-3 py-5 text-sm text-muted">
         <p className="text-center text-foreground">
@@ -542,7 +575,24 @@ export default function ChatBoxWidget({
         {canShowGoogleSignIn && (
           <button
             type="button"
-            onClick={handleWidgetSignIn}
+            onClick={() => {
+              setSignInError("");
+              setPopupBlocked(false);
+              const url = buildWidgetAuthPopupUrl();
+              // New tab in the same browser window. Do NOT use noopener/noreferrer here:
+              // `/widget-auth` must keep `window.opener` so it can postMessage tokens back.
+              const w = window.open(url, "_blank");
+              if (!w) {
+                setPopupBlocked(true);
+                setSignInError(
+                  "Could not open sign-in tab. Allow pop-ups or try again."
+                );
+                return;
+              }
+              try {
+                w.focus();
+              } catch {}
+            }}
             disabled={signingIn}
             className={`mx-auto inline-flex w-full max-w-[240px] items-center justify-center rounded-xl px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-90 disabled:opacity-50 ${!primaryHex ? "bg-highlight" : ""}`}
             style={
