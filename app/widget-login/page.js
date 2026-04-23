@@ -12,8 +12,6 @@ import { Loader2 } from "lucide-react";
 import { getFirebaseAuth } from "@/app/lib/firebase/client";
 import { WIDGET_AUTH_POSTMESSAGE_SOURCE } from "@/app/lib/widget-session";
 
-/** First-party widget sign-in: opened via `window.open`, posts tokens to `opener`, then closes. */
-
 function jwtExpMs(idToken) {
   try {
     const b64 = idToken.split(".")[1].replace(/-/g, "+").replace(/_/g, "/");
@@ -48,10 +46,10 @@ function postBackAndClose(payload, targetOrigin) {
     if (window.opener && !window.opener.closed) {
       window.opener.postMessage(payload, origin);
     } else {
-      console.warn("[widget-auth] No window.opener — open via widget popup, not same-tab.");
+      console.warn("[widget-login] No window.opener.");
     }
   } catch (e) {
-    console.warn("[widget-auth] postMessage failed:", e?.message);
+    console.warn("[widget-login] postMessage failed:", e?.message);
   }
   setTimeout(() => {
     try {
@@ -66,7 +64,7 @@ const POPUP_BLOCKED_CODES = new Set([
   "auth/operation-not-supported-in-this-environment",
 ]);
 
-function WidgetAuthContent() {
+function WidgetLoginShell() {
   const searchParams = useSearchParams();
   const targetOrigin =
     searchParams.get("origin") ||
@@ -181,7 +179,7 @@ function WidgetAuthContent() {
   );
 }
 
-export default function WidgetAuthPage() {
+export default function WidgetLoginPage() {
   return (
     <Suspense
       fallback={
@@ -190,7 +188,7 @@ export default function WidgetAuthPage() {
         </main>
       }
     >
-      <WidgetAuthContent />
+      <WidgetLoginShell />
     </Suspense>
   );
 }

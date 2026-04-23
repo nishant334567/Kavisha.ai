@@ -29,11 +29,27 @@ import WidgetChatLoader, {
 
 const LEAD_JOURNEY_ROLE = "lead_journey";
 
-function buildWidgetAuthPopupUrl() {
-  if (typeof window === "undefined") return "/widget-auth";
-  const url = new URL("/widget-auth", window.location.origin);
-  url.searchParams.set("origin", window.location.origin);
-  return url.toString();
+/** `{brand}.kavisha.ai` (or localhost / staging) — where `/widget-login` opens. */
+function brandWidgetLoginBase(brandSlug) {
+  const s = String(brandSlug || "").trim().toLowerCase();
+  if (!s || !/^[a-z0-9-]+$/i.test(s)) return null;
+  if (typeof window === "undefined") return null;
+  const { hostname, port, protocol } = window.location;
+  if (hostname === "localhost" || hostname === "127.0.0.1") {
+    const p = port ? `:${port}` : "";
+    return `${protocol}//${hostname}${p}`;
+  }
+  if (hostname.includes(".staging.")) return `https://${s}.staging.kavisha.ai`;
+  return `https://${s}.kavisha.ai`;
+}
+
+function brandWidgetLoginUrl(brandSlug) {
+  if (typeof window === "undefined") return "/widget-login";
+  const iframeOrigin = window.location.origin;
+  const base = brandWidgetLoginBase(brandSlug) || iframeOrigin;
+  const u = new URL("/widget-login", base);
+  u.searchParams.set("origin", iframeOrigin);
+  return u.toString();
 }
 
 function widgetSessionTitle(s) {
@@ -119,12 +135,12 @@ export default function ChatBoxWidget({
     });
   }, []);
 
-  /** `/widget-auth` popup → tokens → persist + unlock widget UI. */
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const expectedOrigin = window.location.origin;
+    const iframeOrigin = window.location.origin;
+    const loginOrigin = brandWidgetLoginBase(brand);
     const onMessage = (e) => {
-      if (e.origin !== expectedOrigin) return;
+      if (e.origin !== iframeOrigin && e.origin !== loginOrigin) return;
       const d = e.data;
       if (
         !d ||
@@ -137,7 +153,7 @@ export default function ChatBoxWidget({
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, []);
+  }, [brand]);
 
   const loadSessions = useCallback(async () => {
     if (!effectiveUser || !brand) return;
@@ -578,9 +594,8 @@ export default function ChatBoxWidget({
             onClick={() => {
               setSignInError("");
               setPopupBlocked(false);
-              const url = buildWidgetAuthPopupUrl();
-              // New tab in the same browser window. Do NOT use noopener/noreferrer here:
-              // `/widget-auth` must keep `window.opener` so it can postMessage tokens back.
+              const url = brandWidgetLoginUrl(brand);
+              // Omit noopener so `window.opener` exists for postMessage back to this tab.
               const w = window.open(url, "_blank");
               if (!w) {
                 setPopupBlocked(true);

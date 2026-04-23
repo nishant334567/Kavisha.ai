@@ -24,7 +24,7 @@ const PUBLIC_PATHS = [
   "/api/links",
   "/api/widget/sso-introspect",
   "/api/public/brand-theme",
-  "/widget-auth",
+  "/widget-login",
 ];
 
 function getSubdomainFromRequest(hostname) {

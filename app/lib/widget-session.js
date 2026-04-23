@@ -2,7 +2,7 @@
 
 import { clientConfig } from "@/app/lib/firebase/client";
 
-/** Must match `source` in `/widget-auth` postMessage payload. */
+/** Must match `source` in `/widget-login` postMessage payload. */
 export const WIDGET_AUTH_POSTMESSAGE_SOURCE = "kavisha-widget-auth";
 
 const STORAGE_KEY = "kavisha:widget:auth/v1";
@@ -115,7 +115,7 @@ async function getValidIdToken() {
   return inflightRefresh;
 }
 
-/** Persist tokens from `/widget-auth` postMessage (shape from `buildAuthPayload` there). */
+/** Persist tokens from `/widget-login` postMessage. */
 export function commitWidgetAuth(payload) {
   if (!payload?.idToken || !payload?.refreshToken) return;
   setMemorySession({
