@@ -23,6 +23,20 @@ function jwtExpMs(idToken) {
   }
 }
 
+/** Create MongoDB user + session cookie; must run before postMessage to the embed (matches `sign-in.js`). */
+async function syncWidgetLoginSession(user) {
+  const idToken = await user.getIdToken();
+  const res = await fetch("/api/login", {
+    method: "GET",
+    headers: { Authorization: `Bearer ${idToken}` },
+    credentials: "include",
+  });
+  if (!res.ok) {
+    throw new Error("Could not finish sign-in. Please try again.");
+  }
+  await new Promise((resolve) => setTimeout(resolve, 100));
+}
+
 async function buildAuthPayload(user) {
   const idToken = await user.getIdToken();
   return {
@@ -84,8 +98,15 @@ function WidgetLoginShell() {
         const result = await getRedirectResult(auth);
         if (result?.user) {
           setPhase("done");
-          setStatusMsg("Signed in. Returning…");
-          postBackAndClose(await buildAuthPayload(result.user), targetOrigin);
+          setStatusMsg("Finishing sign-in…");
+          try {
+            await syncWidgetLoginSession(result.user);
+            setStatusMsg("Signed in. Returning…");
+            postBackAndClose(await buildAuthPayload(result.user), targetOrigin);
+          } catch (e) {
+            setError(e?.message || "Could not complete sign-in.");
+            setPhase("ready");
+          }
           return;
         }
         setPhase("ready");
@@ -108,6 +129,8 @@ function WidgetLoginShell() {
     try {
       const cred = await signInWithPopup(auth, provider);
       setPhase("done");
+      setStatusMsg("Finishing sign-in…");
+      await syncWidgetLoginSession(cred.user);
       setStatusMsg("Signed in. Returning…");
       postBackAndClose(await buildAuthPayload(cred.user), targetOrigin);
     } catch (e) {
