@@ -150,12 +150,39 @@ export default function Navbar() {
 
   const communityEnabled =
     !!brand?.enableFriendConnect || !!brand?.enableProfessionalConnect;
+  const isKavishaMainBrand = brand?.subdomain === "kavisha";
+  const showCommunityForBrand =
+    communityEnabled &&
+    !!brand?.subdomain &&
+    !isKavishaMainBrand;
+  const communityPath =
+    "/community" +
+    (brand?.subdomain
+      ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
+      : "");
   const blogPath =
     "/blogs" +
     (brand?.subdomain ? `?subdomain=${encodeURIComponent(brand.subdomain)}` : "");
   const enabledFeatureNavItems = [
-    ...(communityEnabled
-      ? [{ label: "BUILD MY AGENT", mobileLabel: "Build My Agent", path: "/widget-intro", icon: Users }]
+    ...(showCommunityForBrand
+      ? [
+          {
+            label: "COMMUNITY",
+            mobileLabel: brand?.communityName || "Community",
+            path: communityPath,
+            icon: Users,
+          },
+        ]
+      : []),
+    ...(isKavishaMainBrand
+      ? [
+          {
+            label: "BUILD MY AGENT",
+            mobileLabel: "Build My Agent",
+            path: "/widget-intro",
+            icon: Sparkles,
+          },
+        ]
       : []),
     ...(brand?.subdomain && brand?.enableLinks !== false
       ? [
