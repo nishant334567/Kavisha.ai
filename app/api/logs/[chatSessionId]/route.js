@@ -3,15 +3,13 @@ import { connectDB } from "@/app/lib/db";
 import Logs from "@/app/models/ChatLogs";
 import Session from "@/app/models/ChatSessions";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
-import { getUserFromDB } from "@/app/lib/firebase/get-user";
+import { createOrGetUser } from "@/app/lib/firebase/create-user";
 
 export async function GET(req, { params }) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
-      const user = await getUserFromDB(decodedToken.email);
-      if (!user) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-      }
+      const dbUser = await createOrGetUser(decodedToken);
+      const user = { id: dbUser._id.toString() };
       const { chatSessionId } = await params;
       if (!chatSessionId) {
         return NextResponse.json({ error: "Missing session id" }, { status: 400 });

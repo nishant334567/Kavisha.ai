@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
-import { getUserFromDB } from "@/app/lib/firebase/get-user";
+import { createOrGetUser } from "@/app/lib/firebase/create-user";
 import { client as sanity } from "@/app/lib/sanity";
 
 const fail = (message, status) =>
@@ -10,8 +10,7 @@ const fail = (message, status) =>
 export async function GET(request) {
   return withAuth(request, {
     onAuthenticated: async ({ decodedToken }) => {
-      const user = await getUserFromDB(decodedToken.email);
-      if (!user) return fail("User not found", 404);
+      await createOrGetUser(decodedToken);
 
       const brand = request.nextUrl.searchParams.get("brand")?.trim();
       if (!brand) return fail("brand is required", 400);

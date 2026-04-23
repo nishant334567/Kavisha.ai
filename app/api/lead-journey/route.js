@@ -4,7 +4,7 @@ import pc from "../../lib/pinecone.js";
 import Logs from "../../models/ChatLogs.js";
 import Session from "../../models/ChatSessions.js";
 import { withAuth } from "../../lib/firebase/auth-middleware";
-import { getUserFromDB } from "../../lib/firebase/get-user";
+import { createOrGetUser } from "../../lib/firebase/create-user";
 import { SYSTEM_PROMPT_LEAD } from "../../lib/systemPrompt.js";
 import { buildLeadRewritePrompt } from "../../lib/rewriteLeadQueryPrompt.js";
 import { getLeadPromptFromSanity } from "../../lib/getLeadPromptFromSanity.js";
@@ -197,10 +197,15 @@ export async function POST(req) {
     onAuthenticated: async ({ decodedToken }) => {
       try {
         const { userMessage, history, sessionId, summary } = await req.json();
-        const user = await getUserFromDB(decodedToken.email);
-        if (!user) {
-          return errorResponse(404, "User not found", "load-user");
-        }
+        const dbUser = await createOrGetUser(decodedToken);
+        const user = {
+          id: dbUser._id.toString(),
+          email: dbUser.email,
+          name: dbUser.name,
+          image: dbUser.image,
+          profileType: dbUser.profileType,
+          isAdmin: dbUser.isAdmin || false,
+        };
         if (!sessionId) {
           return errorResponse(400, "Missing sessionId", "validate-session");
         }

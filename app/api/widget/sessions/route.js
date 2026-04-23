@@ -2,16 +2,14 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
-import { getUserFromDB } from "@/app/lib/firebase/get-user";
+import { createOrGetUser } from "@/app/lib/firebase/create-user";
 
 /** Embed widget: only sessions started from the widget (`isWidget: true`) for this user + brand */
 export async function GET(request) {
   return withAuth(request, {
     onAuthenticated: async ({ decodedToken }) => {
-      const user = await getUserFromDB(decodedToken.email);
-      if (!user) {
-        return NextResponse.json({ error: "User not found" }, { status: 404 });
-      }
+      const dbUser = await createOrGetUser(decodedToken);
+      const user = { id: dbUser._id.toString() };
       const brand = request.nextUrl.searchParams.get("brand")?.trim();
       if (!brand) {
         return NextResponse.json({ error: "brand required" }, { status: 400 });

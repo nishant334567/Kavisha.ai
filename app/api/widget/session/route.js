@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
-import { getUserFromDB } from "@/app/lib/firebase/get-user";
+import { createOrGetUser } from "@/app/lib/firebase/create-user";
 import { createSessionWithDefaultLog } from "@/app/lib/createSessionWithDefaultLog";
 import { client as sanity } from "@/app/lib/sanity";
 
@@ -11,8 +11,8 @@ const fail = (message, status) =>
 export async function POST(request) {
   return withAuth(request, {
     onAuthenticated: async ({ decodedToken }) => {
-      const user = await getUserFromDB(decodedToken.email);
-      if (!user) return fail("User not found", 404);
+      const dbUser = await createOrGetUser(decodedToken);
+      const user = { id: dbUser._id.toString() };
 
       let body;
       try {
