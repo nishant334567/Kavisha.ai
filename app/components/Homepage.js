@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "../lib/firebase/sign-in";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
@@ -33,7 +34,7 @@ const cards = [
     variantMobile: "beige",
   },
   {
-    title: "Give your fans an experience like never before",
+    title: "Give your fans an unparalleled experience",
     body: "Your fans now get the gift of your conversations, knowing you're behind them. This is something they'd really appreciate, and never forget.",
     variant: "teal",
     variantMobile: "teal",
@@ -183,49 +184,24 @@ export default function Homepage() {
       <div className="gap-2 md:gap-4 flex flex-col md:flex-row flex-wrap justify-center items-center mb-8 px-4">
         <button
           onClick={() => {
-            if (user) {
-              setLoadingPath("/talk-to-avatar");
-              router.push("/talk-to-avatar");
-            } else if (!isBlocked) {
-              handleSignIn("/talk-to-avatar");
-            }
-          }}
-          disabled={signingIn || isBlocked || loadingPath !== null}
-          className="min-w-0 w-[80%] rounded-lg bg-muted-bg px-3 py-2 text-sm text-highlight shadow-md transition-colors hover:bg-card disabled:opacity-50 md:w-auto md:px-4 md:text-base"
-        >
-          {signingIn
-            ? "Signing in..."
-            : loadingPath === "/talk-to-avatar"
-              ? "Opening..."
-              : "Talk to Avataars"}
-        </button>
-        <button
-          onClick={() => {
             setLoadingPath("/make-avatar");
             router.push("/make-avatar");
           }}
           disabled={loadingPath !== null}
-          className="w-[80%] md:w-auto min-w-0 px-3 md:px-4 py-2 text-sm md:text-base rounded-lg bg-[#3D5E6B] text-white shadow-md hover:bg-[#2d4752] transition-colors disabled:opacity-50"
+          className="w-[80%] md:w-auto min-w-0 px-3 md:px-4 py-2 text-lg md:text-xl rounded-lg bg-gradient-to-b from-[#17484B] to-[#156568] hover:brightness-110 text-white shadow-md transition-colors disabled:opacity-50"
         >
           {loadingPath === "/make-avatar" ? "Opening..." : "Make my Avataar"}
         </button>
         <button
+          type="button"
           onClick={() => {
-            if (user) {
-              setLoadingPath("/community");
-              router.push("/community");
-            } else if (!isBlocked) {
-              handleSignIn("/community");
-            }
+            setLoadingPath("/widget-intro");
+            router.push("/widget-intro");
           }}
-          disabled={signingIn || isBlocked || loadingPath !== null}
-          className="min-w-0 w-[80%] rounded-lg bg-muted-bg px-4 py-2 text-sm text-highlight shadow-md transition-colors hover:bg-card disabled:opacity-50 md:w-auto md:text-base"
+          disabled={loadingPath !== null}
+          className="min-w-0 w-[80%] rounded-lg bg-gradient-to-b from-[#B9ECEC] to-[#CEFDFD] hover:brightness-105 px-4 py-2 text-lg md:text-xl text-highlight shadow-md transition-colors hover:bg-card disabled:opacity-50 md:w-auto"
         >
-          {signingIn
-            ? "Signing in..."
-            : loadingPath === "/community"
-              ? "Opening..."
-              : "Connect with people"}
+          {loadingPath === "/widget-intro" ? "Opening..." : "Explore AI Widgets"}
         </button>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-[85%] mx-auto my-16">
@@ -235,33 +211,98 @@ export default function Homepage() {
       </div>
       <div className="relative">
         {/* '=' badge: pinned to boundary between cream and teal so it stays vertically consistent on mobile */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[120px] md:top-[160px] -translate-y-1/2 z-10 bg-[#3D4A52] w-10 h-10 md:w-14 md:h-14 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1">
+        <div className="absolute left-1/2 -translate-x-1/2 top-[120px] md:top-[160px] -translate-y-1/2 z-10 bg-[#00646A] w-10 h-10 md:w-14 md:h-14 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1">
           <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
           <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
         </div>
-        {/* Top cream section */}
-        <div className="flex h-[120px] items-center justify-center bg-muted-bg px-4 text-foreground md:h-[160px]">
+        {/* Top cream section — same bg as light mode; explicit ink so dark theme foreground never lands on cream */}
+        <div className="flex h-[120px] items-center justify-center bg-gradient-to-b from-[#FFF7E0] to-[#F8F3E5] px-4 text-[#17484B] dark:text-[#17484B] md:h-[160px]">
           <p className="font-baloo text-xl sm:text-2xl md:text-4xl lg:text-5xl text-center">
             Your Digital Avataar on Kavisha
           </p>
         </div>
         {/* Bottom teal section */}
-        <div className="bg-[#4A6670] text-white h-auto min-h-[150px] md:h-[180px] flex flex-col justify-center items-center px-4 py-6 md:py-0">
+        <div className="bg-gradient-to-b from-[#17484B] to-[#156568] text-white h-auto min-h-[150px] md:h-[180px] flex flex-col justify-center items-center px-4 py-6 md:py-0">
           <p className="font-baloo text-lg sm:text-xl md:text-3xl lg:text-4xl mb-2 md:mb-3 text-center">
             Your (Knowledge <span className="text-[#E8B84A]">+</span> History{" "}
             <span className="text-[#E8B84A]">+</span> Personality{" "}
             <span className="text-[#E8B84A]">+</span> Style)
           </p>
           <p className="text-[#B8C5C9] text-sm md:text-lg text-center">
-            With Kavisha, you'll be able to give your fans delightful
+            With Kavisha, you&apos;ll be able to give your fans delightful
             interactions 24x7x365
           </p>
         </div>
       </div>
+
+      <div className="flex flex-col-reverse md:flex-row items-center gap-10 md:gap-16 max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-24">
+        <div className="flex-1 flex flex-col text-center md:text-left items-center md:items-start">
+          <h2 className="text-2xl md:text-4xl font-normal text-foreground leading-snug mb-4">
+            Your Digital Avataar on a <br className="hidden md:block" />
+            custom domain
+          </h2>
+          <p className="text-base md:text-lg text-muted leading-relaxed mb-6 max-w-lg">
+            You could host your Digital Avataar on yourname.kavisha.ai for free!
+            It&apos;ll be the place for conversations with your AI, your community,
+            your social links, and everything else.
+          </p>
+          <a
+            href="/make-avatar"
+            className="text-[#17638C] font-medium text-base md:text-lg hover:underline"
+          >
+            Read more &gt;&gt;
+          </a>
+        </div>
+
+        <div className="flex-1 flex justify-center md:justify-end">
+          <div className="w-full max-w-[260px] md:max-w-[310px]">
+            <img
+              src="/kavisha-avataar.png"
+              alt="Digital Avataar on a custom Kavisha domain"
+              className="block w-full h-auto object-cover"
+              loading="lazy"
+            />
+          </div>
+        </div>
+      </div>
+
+      <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16 max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-24">
+        <div className="flex-1 flex justify-center md:justify-start">
+          <Link
+            href="/widget-intro"
+            className="block w-full max-w-[260px] md:max-w-[300px] rounded-2xl transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          >
+            <img
+              src="/entrackr-widget.png"
+              alt="Kavisha AI widget on a website — Entrackr example"
+              className="block w-full h-auto object-cover"
+              loading="lazy"
+            />
+          </Link>
+        </div>
+
+        <div className="flex-1 flex flex-col text-center md:text-left items-center md:items-start">
+          <h2 className="text-2xl md:text-4xl font-normal text-foreground leading-snug mb-4">
+            An AI widget on your website itself, giving it Agentic abilities
+          </h2>
+          <p className="text-base md:text-lg text-muted leading-relaxed mb-6 max-w-lg">
+            If you have an existing website, you could give it a super AI Agent
+            in the form of a widget. That Agent will talk to your visitors and
+            turn casual observers into customers and fans.
+          </p>
+          <Link
+            href="/widget-intro"
+            className="text-[#17638C] font-medium text-base md:text-lg hover:underline self-center md:self-end"
+          >
+            Read more &gt;&gt;
+          </Link>
+        </div>
+      </div>
+
       {/* Avatar cards */}
       <div className="flex items-center gap-4 my-6 px-4 md:px-8">
         <p className="whitespace-nowrap text-lg text-[#264653] dark:text-foreground md:text-2xl">
-          Talk to Avataars
+          Existing Avataars
         </p>
         <div className="h-[1px] flex-1 bg-border"></div>
       </div>
@@ -344,44 +385,38 @@ export default function Homepage() {
         )}
       </div>
 
-      {/* Connect with people section */}
+      {/* An Agent that creates your community*/}
       <div className="mt-8 md:mt-12">
         {/* Header with line */}
         <div className="flex items-center gap-4 mb-6 px-4 md:px-8">
           <div className="h-[1px] flex-1 bg-border"></div>
           <p className="whitespace-nowrap text-lg text-[#264653] dark:text-foreground md:text-2xl">
-            Connect with people
+            An Agent that creates your community
           </p>
         </div>
 
         {/* Two column layout */}
         <div className="flex flex-col md:flex-row">
           {/* Left - Teal section: on mobile full-width paragraph + centered button */}
-          <div className="md:flex-[4] bg-[#35515b] text-white px-6 md:px-10 py-8 md:py-12 flex flex-col justify-center text-center md:text-left items-center md:items-start">
-            <p className="w-full max-w-full text-3xl md:text-5xl lg:text-6xl leading-snug mb-4 md:mb-6">
-              <span className="md:block">Your fans can </span>
+          <div className="md:flex-[4] bg-gradient-to-b from-[#17484B] to-[#156568] text-white px-6 md:px-10 py-8 md:py-12 flex flex-col justify-center text-center md:text-left items-center md:items-start">
+            <p className="w-full max-w-full text-xl md:text-2xl lg:text-4xl leading-snug mb-4 md:mb-6 font-medium tracking-wide">
               <span className="md:block">
-                <span className="text-[#f2d75e]">connect </span> with
+                Your fans can <span className="text-[#E8B84A]">connect</span> with
               </span>
-              <span className="md:block"> each other</span>
+              <span className="md:block">each other (and generate</span>
+              <span className="md:block">revenue for you)</span>
             </p>
             <button
-              onClick={() => {
-                if (user) {
-                  router.push("/community");
-                } else if (!isBlocked) {
-                  handleSignIn("/community");
-                }
-              }}
-              disabled={signingIn || isBlocked}
-              className="w-fit mx-auto md:mx-0 px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl hover:bg-white hover:text-[#35515b] transition-colors disabled:opacity-50"
+              type="button"
+              onClick={() => router.push("/widget-intro")}
+              className="w-fit mx-auto md:mx-0 px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl hover:bg-white hover:text-[#35515b] transition-colors"
             >
-              {signingIn ? "Signing in..." : "Connect with people"}
+              Get started
             </button>
           </div>
 
-          {/* Right - Cream section */}
-          <div className="flex items-center bg-card px-6 py-8 text-foreground md:flex-[6] md:px-10 md:py-12">
+          {/* Right — cream strip matches light mode; body copy uses ink, not theme foreground */}
+          <div className="flex items-center bg-gradient-to-b from-[#FFF7E0] to-[#F8F3E5] px-6 py-8 text-[#264653] dark:text-[#264653] md:flex-[6] md:px-10 md:py-12">
             <p className="text-lg leading-relaxed text-center md:text-left">
               Your Digital Avataar doesn't just enable conversations between you
               and your fans, it also gives your fans a chance to connect with
