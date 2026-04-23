@@ -26,6 +26,8 @@ import WidgetChatLoader, {
   WIDGET_LOADER_MESSAGES,
   widgetLoaderMessagesFromFlags,
 } from "./WidgetChatLoader";
+import { WIDGET_SSO_MESSAGE_TYPE } from "../constants";
+import { signInWithPartnerCustomToken } from "@/app/lib/firebase/sign-in-custom-token";
 
 const LEAD_JOURNEY_ROLE = "lead_journey";
 
@@ -81,6 +83,8 @@ export default function ChatBoxWidget({
 }) {
   const { user: firebaseUser, loading: authLoading, refresh } =
     useFirebaseSession();
+  const refreshRef = useRef(refresh);
+  refreshRef.current = refresh;
   const [widgetUser, setWidgetUser] = useState(() =>
     typeof window !== "undefined" ? getCurrentWidgetUser() : null
   );
@@ -137,19 +141,50 @@ export default function ChatBoxWidget({
 
   useEffect(() => {
     if (typeof window === "undefined") return;
-    const iframeOrigin = window.location.origin;
-    const loginOrigin = brandWidgetLoginBase(brand);
     const onMessage = (e) => {
-      if (e.origin !== iframeOrigin && e.origin !== loginOrigin) return;
       const d = e.data;
-      if (
-        !d ||
-        d.source !== WIDGET_AUTH_POSTMESSAGE_SOURCE ||
-        d.type !== "auth-success"
-      ) {
+      if (!d || d.source !== WIDGET_AUTH_POSTMESSAGE_SOURCE) return;
+
+      if (d.type === "auth-success") {
+        commitWidgetAuth(d);
+        void refreshRef.current();
         return;
       }
-      commitWidgetAuth(d);
+
+      if (d.type !== WIDGET_SSO_MESSAGE_TYPE) return;
+      const partnerToken = typeof d.token === "string" ? d.token.trim() : "";
+      if (!partnerToken) return;
+
+      void (async () => {
+        setSigningIn(true);
+        setSignInError("");
+        try {
+          const res = await fetch("/api/widget/sso-introspect", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ token: partnerToken }),
+            credentials: "omit",
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok || !data?.ok) {
+            throw new Error(
+              typeof data?.error === "string"
+                ? data.error
+                : "Partner sign-in failed"
+            );
+          }
+          if (!data.customToken) {
+            throw new Error("Partner sign-in did not return a session token");
+          }
+          const payload = await signInWithPartnerCustomToken(data.customToken);
+          commitWidgetAuth(payload);
+          void refreshRef.current();
+        } catch (err) {
+          setSignInError(err?.message || "Partner sign-in failed");
+        } finally {
+          setSigningIn(false);
+        }
+      })();
     };
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
