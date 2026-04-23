@@ -548,9 +548,9 @@ export default function ChatBoxWidget({
             style={
               primaryHex
                 ? {
-                    backgroundColor: primaryHex,
-                    boxShadow: `0 2px 8px ${hexToRgba(primaryHex, 0.28) || "rgba(0,0,0,0.08)"}`,
-                  }
+                  backgroundColor: primaryHex,
+                  boxShadow: `0 2px 8px ${hexToRgba(primaryHex, 0.28) || "rgba(0,0,0,0.08)"}`,
+                }
                 : undefined
             }
           >
@@ -638,11 +638,10 @@ export default function ChatBoxWidget({
                   role="option"
                   aria-selected={activeSessionId === s.id}
                   onClick={() => selectSessionById(s.id)}
-                  className={`flex w-full min-w-0 items-center px-3 py-2 text-left transition hover:bg-muted-bg ${
-                    activeSessionId === s.id
+                  className={`flex w-full min-w-0 items-center px-3 py-2 text-left transition hover:bg-muted-bg ${activeSessionId === s.id
                       ? "bg-muted-bg/80 font-medium text-foreground"
                       : "text-foreground"
-                  }`}
+                    }`}
                 >
                   <span className="min-w-0 truncate">{widgetSessionTitle(s)}</span>
                 </button>
@@ -663,17 +662,16 @@ export default function ChatBoxWidget({
               sessionsLoading ||
               signingOut
             }
-            className={`flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl px-2 py-1 text-[11px] font-medium shadow-sm transition hover:opacity-92 disabled:opacity-50 ${
-              primaryHex
+            className={`flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl px-2 py-1 text-[11px] font-medium shadow-sm transition hover:opacity-92 disabled:opacity-50 ${primaryHex
                 ? "border border-transparent text-white"
                 : "border border-border/50 bg-background text-foreground hover:bg-muted-bg"
-            }`}
+              }`}
             style={
               primaryHex
                 ? {
-                    backgroundColor: primaryHex,
-                    boxShadow: `0 2px 10px ${hexToRgba(primaryHex, 0.32) || "rgba(0,0,0,0.1)"}`,
-                  }
+                  backgroundColor: primaryHex,
+                  boxShadow: `0 2px 10px ${hexToRgba(primaryHex, 0.32) || "rgba(0,0,0,0.1)"}`,
+                }
                 : undefined
             }
           >
@@ -821,92 +819,91 @@ export default function ChatBoxWidget({
                 introTypewriterSessionId &&
                 introTypewriterSessionId === activeSessionId;
               return (
-              <div
-                key={m.id != null ? String(m.id) : `${m.role}-${i}`}
-                className={
-                  m.role === "user"
-                    ? `ml-auto max-w-[min(100%,22rem)] min-w-0 rounded-2xl rounded-br-md px-4 py-2.5 text-sm text-white ${!userBubbleHex ? "bg-highlight shadow-md" : ""}`
-                    : "mr-auto w-full max-w-full min-w-0 rounded-2xl rounded-bl-md bg-card px-4 py-2.5 text-sm text-foreground shadow-sm dark:bg-card/90"
-                }
-                style={
-                  m.role === "user" && userBubbleHex
-                    ? {
+                <div
+                  key={m.id != null ? String(m.id) : `${m.role}-${i}`}
+                  className={
+                    m.role === "user"
+                      ? `ml-auto max-w-[min(100%,22rem)] min-w-0 rounded-2xl rounded-br-md px-4 py-2.5 text-sm text-white ${!userBubbleHex ? "bg-highlight shadow-md" : ""}`
+                      : "mr-auto w-full max-w-full min-w-0 rounded-2xl rounded-bl-md bg-card px-4 py-2.5 text-sm text-foreground shadow-sm dark:bg-card/90"
+                  }
+                  style={
+                    m.role === "user" && userBubbleHex
+                      ? {
                         backgroundColor: userBubbleHex,
                         boxShadow: `0 4px 14px -3px ${hexToRgba(userBubbleHex, 0.42) || "rgba(0,0,0,0.12)"}, 0 0 0 1px ${hexToRgba(userBubbleHex, 0.18) || "transparent"}`,
                       }
-                    : undefined
-                }
-              >
-                {m.role === "assistant" ? (
-                  <div className="min-w-0 max-w-full">
-                    {introTypewriterActive ? (
-                      <WidgetIntroTypewriter
-                        text={m.message || ""}
-                        scrollRef={endRef}
-                        onComplete={() => setIntroTypewriterSessionId(null)}
-                      />
-                    ) : (
-                      <>
-                        <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
-                          <FormatText text={m.message || ""} />
-                        </div>
-                        {Array.isArray(m.sourceCards) &&
-                        m.sourceCards.length > 0 ? (
-                          <AssistantSourceCards
-                            items={m.sourceCards}
-                            primaryHex={primaryHex}
-                          />
-                        ) : Array.isArray(m.sourceUrls) &&
-                          m.sourceUrls.length > 0 ? (
-                          <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/25 pt-2 dark:border-border/30">
-                            <span className="text-xs text-muted">Links:</span>
-                            {m.sourceUrls.map((url, idx) => (
-                              <a
-                                key={idx}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className={`max-w-full break-all rounded-md px-2 py-0.5 text-xs transition-colors hover:underline ${
-                                  primaryHex
-                                    ? "font-medium"
-                                    : "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60"
-                                }`}
-                                style={
-                                  primaryHex
-                                    ? {
+                      : undefined
+                  }
+                >
+                  {m.role === "assistant" ? (
+                    <div className="min-w-0 max-w-full">
+                      {introTypewriterActive ? (
+                        <WidgetIntroTypewriter
+                          text={m.message || ""}
+                          scrollRef={endRef}
+                          onComplete={() => setIntroTypewriterSessionId(null)}
+                        />
+                      ) : (
+                        <>
+                          <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
+                            <FormatText text={m.message || ""} />
+                          </div>
+                          {Array.isArray(m.sourceCards) &&
+                            m.sourceCards.length > 0 ? (
+                            <AssistantSourceCards
+                              items={m.sourceCards}
+                              primaryHex={primaryHex}
+                            />
+                          ) : Array.isArray(m.sourceUrls) &&
+                            m.sourceUrls.length > 0 ? (
+                            <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/25 pt-2 dark:border-border/30">
+                              <span className="text-xs text-muted">Links:</span>
+                              {m.sourceUrls.map((url, idx) => (
+                                <a
+                                  key={idx}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className={`max-w-full break-all rounded-md px-2 py-0.5 text-xs transition-colors hover:underline ${primaryHex
+                                      ? "font-medium"
+                                      : "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60"
+                                    }`}
+                                  style={
+                                    primaryHex
+                                      ? {
                                         backgroundColor:
                                           hexToRgba(primaryHex, 0.12) ||
                                           undefined,
                                         color: primaryHex,
                                       }
-                                    : undefined
-                                }
-                              >
-                                {url.length > 36 ? `${url.slice(0, 36)}…` : url}
-                              </a>
-                            ))}
-                          </div>
-                        ) : null}
-                      </>
-                    )}
-                    {chatRole === LEAD_JOURNEY_ROLE && (
-                      <AssistantReplyCopyButton
-                        className="mt-2"
-                        message={m.message}
-                        sourceCards={m.sourceCards}
-                        sourceUrls={m.sourceUrls}
-                        readMoreUrl={readMoreCopyUrl}
-                        brandSubdomain={brand}
-                      />
-                    )}
-                  </div>
-                ) : (
-                  <p className="whitespace-pre-wrap [word-break:break-word] [overflow-wrap:anywhere]">
-                    {m.message}
-                  </p>
-                )}
-              </div>
-            );
+                                      : undefined
+                                  }
+                                >
+                                  {url.length > 36 ? `${url.slice(0, 36)}…` : url}
+                                </a>
+                              ))}
+                            </div>
+                          ) : null}
+                        </>
+                      )}
+                      {chatRole === LEAD_JOURNEY_ROLE && (
+                        <AssistantReplyCopyButton
+                          className="mt-2"
+                          message={m.message}
+                          sourceCards={m.sourceCards}
+                          sourceUrls={m.sourceUrls}
+                          readMoreUrl={readMoreCopyUrl}
+                          brandSubdomain={brand}
+                        />
+                      )}
+                    </div>
+                  ) : (
+                    <p className="whitespace-pre-wrap [word-break:break-word] [overflow-wrap:anywhere]">
+                      {m.message}
+                    </p>
+                  )}
+                </div>
+              );
             })}
             {sendLoading && (
               <ChatThinkingRow
@@ -949,9 +946,8 @@ export default function ChatBoxWidget({
               onChange={(e) => setInput(e.target.value)}
               placeholder="Message…"
               disabled={sendLoading}
-              className={`min-w-0 flex-1 rounded-xl border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-border focus:outline-none ${
-                primaryHex ? "focus:ring-2 focus:ring-offset-1" : "focus:ring-2 focus:ring-ring/25"
-              }`}
+              className={`min-w-0 flex-1 rounded-xl border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-border focus:outline-none ${primaryHex ? "focus:ring-2 focus:ring-offset-1" : "focus:ring-2 focus:ring-ring/25"
+                }`}
               onFocus={(e) => {
                 if (!primaryHex) return;
                 const ring = hexToRgba(primaryHex, 0.35);
@@ -968,9 +964,9 @@ export default function ChatBoxWidget({
               style={
                 primaryHex
                   ? {
-                      backgroundColor: primaryHex,
-                      boxShadow: `0 2px 8px ${hexToRgba(primaryHex, 0.3) || "rgba(0,0,0,0.1)"}`,
-                    }
+                    backgroundColor: primaryHex,
+                    boxShadow: `0 2px 8px ${hexToRgba(primaryHex, 0.3) || "rgba(0,0,0,0.1)"}`,
+                  }
                   : undefined
               }
               aria-label="Send"
@@ -983,19 +979,17 @@ export default function ChatBoxWidget({
             </button>
           </form>
           <p
-            className={`mt-2 shrink-0 text-center text-xs ${
-              primaryHex ? "" : "text-muted"
-            }`}
+            className={`mt-2 shrink-0 text-center text-xs ${primaryHex ? "" : "text-muted"
+              }`}
             style={primaryHex ? { color: primaryHex } : undefined}
           >
             Powered by{" "}
             <a
-              href="https://kavisha.ai"
+              href="https://kavisha.ai/widget-intro"
               target="_blank"
               rel="noopener noreferrer"
-              className={`font-semibold underline-offset-2 hover:underline ${
-                primaryHex ? "" : "text-highlight"
-              }`}
+              className={`font-semibold underline-offset-2 hover:underline ${primaryHex ? "" : "text-highlight"
+                }`}
             >
               Kavisha
             </a>

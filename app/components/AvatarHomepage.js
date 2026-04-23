@@ -56,11 +56,10 @@ export default function AvatarHomepage() {
       ? [{ label: "LINKS", path: `/links${linksQs}` }]
       : []),
   ];
-  const contentSpacingClass = user ? "pt-2 md:pt-0" : "pt-2 md:pt-4";
-
   return (
-    <div className="h-full flex flex-col bg-background">
-      <div className="flex-1 w-full overflow-y-auto space-y-4 pb-32 md:mx-auto md:max-w-[85%] md:px-8 md:pb-24 xl:max-w-[60%]">
+    <div className="flex min-h-0 flex-1 flex-col bg-background">
+      <div className="flex min-h-0 flex-1 flex-col overflow-y-auto">
+        <div className="mx-auto flex w-full min-h-full flex-col justify-center gap-4 px-4 py-8 pb-32 md:max-w-[85%] md:px-8 md:py-10 md:pb-24 xl:max-w-[60%]">
         {/* <div className="md:hidden flex gap-4 my-2 px-4">
           <img
             src={brand?.logoUrl}
@@ -75,11 +74,13 @@ export default function AvatarHomepage() {
         </div> */}
 
         {brand?.brandImageUrl && (
-          <img
-            src={brand.brandImageUrl}
-            alt={brand?.brandName?.toUpperCase() || "Brand"}
-            className="w-full h-full md:h-[250px] md:max-h-[50vh] md:rounded-lg"
-          />
+          <div className="flex w-full justify-center overflow-hidden bg-background md:rounded-lg min-h-[200px] h-[40vh] max-h-[50vh] md:h-[250px] md:max-h-[50vh]">
+            <img
+              src={brand.brandImageUrl}
+              alt={brand?.brandName?.toUpperCase() || "Brand"}
+              className="h-full w-full max-w-full object-contain"
+            />
+          </div>
         )}
 
         <div className="text-center mx-auto max-w-4xl px-4">
@@ -150,6 +151,7 @@ export default function AvatarHomepage() {
             </button>
           </div>
         )}
+        </div>
       </div>
     </div>
   );
