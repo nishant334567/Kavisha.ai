@@ -2,6 +2,7 @@
 
 import { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { widgetAwareFetch } from "@/app/lib/widget-session";
 
 const FirebaseSessionContext = createContext({
   user: null,
@@ -24,9 +25,9 @@ export function FirebaseSessionProvider({ children }) {
     isRefreshingRef.current = true;
     setLoading(true);
     try {
-      const res = await fetch("/api/user", {
-        credentials: "include",
-      });
+      // Embed: Bearer from widget localStorage (cookies often blocked cross-site).
+      // Main app: no widget token → cookie session via widgetAwareFetch fallback.
+      const res = await widgetAwareFetch("/api/user");
 
       if (!res.ok) {
         setUser(null);

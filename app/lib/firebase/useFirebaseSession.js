@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter, usePathname } from "next/navigation";
+import { widgetAwareFetch } from "@/app/lib/widget-session";
 
 export function useFirebaseSession() {
   const [user, setUser] = useState(null);
@@ -12,9 +13,7 @@ export function useFirebaseSession() {
   const refresh = async () => {
     setLoading(true);
     try {
-      const res = await fetch("/api/user", {
-        credentials: "include",
-      });
+      const res = await widgetAwareFetch("/api/user");
 
       if (!res.ok) {
         setUser(null);
