@@ -152,8 +152,27 @@ export default function ChatBoxWidget({
       }
 
       if (d.type !== WIDGET_SSO_MESSAGE_TYPE) return;
-      const partnerToken = typeof d.token === "string" ? d.token.trim() : "";
-      if (!partnerToken) return;
+
+      const SSO_LOG = "[kavisha-widget][sso]";
+      const rawPartnerToken = d.token;
+      const partnerToken =
+        typeof rawPartnerToken === "string" ? rawPartnerToken.trim() : "";
+      if (!partnerToken) {
+        console.warn(`${SSO_LOG} ignored: missing or empty token`, {
+          brand,
+          tokenType: typeof rawPartnerToken,
+          rawLength:
+            typeof rawPartnerToken === "string"
+              ? rawPartnerToken.length
+              : undefined,
+        });
+        return;
+      }
+
+      console.info(`${SSO_LOG} handoff received; calling introspect`, {
+        brand,
+        partnerJwtLength: partnerToken.length,
+      });
 
       void (async () => {
         setSigningIn(true);
@@ -166,6 +185,13 @@ export default function ChatBoxWidget({
             credentials: "omit",
           });
           const data = await res.json().catch(() => ({}));
+          console.info(`${SSO_LOG} introspect finished`, {
+            brand,
+            httpStatus: res.status,
+            ok: Boolean(data?.ok),
+            error:
+              typeof data?.error === "string" ? data.error : undefined,
+          });
           if (!res.ok || !data?.ok) {
             throw new Error(
               typeof data?.error === "string"
@@ -179,8 +205,11 @@ export default function ChatBoxWidget({
           const payload = await signInWithPartnerCustomToken(data.customToken);
           commitWidgetAuth(payload);
           void refreshRef.current();
+          console.info(`${SSO_LOG} firebase session committed`, { brand });
         } catch (err) {
-          setSignInError(err?.message || "Partner sign-in failed");
+          const message = err?.message || "Partner sign-in failed";
+          console.warn(`${SSO_LOG} failed`, { brand, message });
+          setSignInError(message);
         } finally {
           setSigningIn(false);
         }
