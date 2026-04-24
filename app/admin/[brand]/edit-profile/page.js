@@ -31,6 +31,7 @@ export default function EditProfile() {
   const [heroFocusY, setHeroFocusY] = useState(50);
   const [heroFocusX, setHeroFocusX] = useState(50);
   const [heroSaving, setHeroSaving] = useState(false);
+  const [mobileHeroAdjustOpen, setMobileHeroAdjustOpen] = useState(false);
   const inputClass =
     "flex-1 rounded-lg border border-border bg-input px-3 py-2 text-foreground";
   const iconButtonClass = "text-green-600 hover:text-green-700";
@@ -270,102 +271,187 @@ export default function EditProfile() {
         {/* Cover Photo — same 3:1 crop as public avatar homepage */}
         <div className="relative mb-8 w-full">
           {brand?.brandImageUrl ? (
-            <div className="group relative w-full overflow-hidden rounded-xl">
-              <BrandHeroImageFrame
-                imageUrl={brand.brandImageUrl}
-                alt={brand?.brandName || "Cover"}
-                zoom={heroZoom}
-                focusX={heroFocusX}
-                focusY={heroFocusY}
-                className="rounded-xl"
-              />
-              <div
-                aria-hidden
-                className="pointer-events-none absolute inset-0 z-[1] rounded-xl bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
-              />
-              {/* Hover: sliders (bottom-center) + upload/save (bottom-right) */}
-              <div className="pointer-events-none absolute inset-0 z-[2] rounded-xl opacity-0 transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
-                <div className="pointer-events-auto absolute bottom-2 left-1/2 z-10 w-[200px] max-w-[calc(100%-5.5rem)] -translate-x-1/2 space-y-2 rounded-lg border border-white/15 bg-black/55 px-2.5 py-2 shadow-lg backdrop-blur-md">
-                  <label className="block text-[10px] font-medium leading-tight text-white/95">
-                    <span className="flex justify-between gap-1">
-                      <span>Zoom</span>
-                      <span className="tabular-nums text-white/80">
-                        {heroZoom.toFixed(2)}×
+            <>
+              <div className="group relative w-full overflow-hidden rounded-xl">
+                <BrandHeroImageFrame
+                  imageUrl={brand.brandImageUrl}
+                  alt={brand?.brandName || "Cover"}
+                  zoom={heroZoom}
+                  focusX={heroFocusX}
+                  focusY={heroFocusY}
+                  className="rounded-xl"
+                />
+                <div
+                  aria-hidden
+                  className="pointer-events-none absolute inset-0 z-[1] rounded-xl bg-black/40 opacity-0 transition-opacity duration-200 group-hover:opacity-100 group-focus-within:opacity-100"
+                />
+                {/* Desktop (md+): dark translucent sliders in-frame + upload/save on hover */}
+                <div className="pointer-events-none absolute inset-0 z-[2] rounded-xl opacity-0 transition-opacity duration-200 group-hover:pointer-events-auto group-hover:opacity-100 group-focus-within:pointer-events-auto group-focus-within:opacity-100">
+                  <div className="pointer-events-auto absolute bottom-2 left-1/2 z-10 hidden w-[200px] max-w-[calc(100%-5.5rem)] -translate-x-1/2 space-y-2 rounded-lg border border-white/15 bg-black/55 px-2.5 py-2 shadow-lg backdrop-blur-md md:block">
+                    <label className="block text-[10px] font-medium leading-tight text-white/95">
+                      <span className="flex justify-between gap-1">
+                        <span>Zoom</span>
+                        <span className="tabular-nums text-white/80">
+                          {heroZoom.toFixed(2)}×
+                        </span>
                       </span>
-                    </span>
-                    <input
-                      type="range"
-                      min={1}
-                      max={3}
-                      step={0.02}
-                      value={heroZoom}
-                      onChange={(e) => setHeroZoom(Number(e.target.value))}
-                      disabled={!brand?.brandImageUrl}
-                      className="mt-0.5 h-1 w-full cursor-pointer accent-[#2d545e]"
-                      aria-label="Hero zoom"
-                    />
-                  </label>
-                  <label className="block text-[10px] font-medium leading-tight text-white/95">
-                    <span className="flex justify-between gap-1">
-                      <span>Vertical</span>
-                      <span className="tabular-nums text-white/80">{heroFocusY}%</span>
-                    </span>
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={heroFocusY}
-                      onChange={(e) => setHeroFocusY(Number(e.target.value))}
-                      disabled={!brand?.brandImageUrl}
-                      className="mt-0.5 h-1 w-full cursor-pointer accent-[#2d545e]"
-                      aria-label="Vertical focus, 0 top 100 bottom"
-                    />
-                  </label>
-                  <label className="block text-[10px] font-medium leading-tight text-white/95">
-                    <span className="flex justify-between gap-1">
-                      <span>Horizontal</span>
-                      <span className="tabular-nums text-white/80">{heroFocusX}%</span>
-                    </span>
-                    <input
-                      type="range"
-                      min={0}
-                      max={100}
-                      step={1}
-                      value={heroFocusX}
-                      onChange={(e) => setHeroFocusX(Number(e.target.value))}
-                      disabled={!brand?.brandImageUrl}
-                      className="mt-0.5 h-1 w-full cursor-pointer accent-[#2d545e]"
-                      aria-label="Horizontal focus, 0 left 100 right"
-                    />
-                  </label>
-                </div>
-                <div className="pointer-events-auto absolute bottom-2 right-2 z-10 flex flex-col items-end gap-2 sm:flex-row sm:items-center">
-                  <label className="cursor-pointer rounded-lg border border-white/20 bg-black/55 px-3 py-1.5 text-center text-xs font-medium text-white shadow-md backdrop-blur-md transition-colors hover:bg-black/65">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      onChange={(e) => {
-                        const file = e.target.files?.[0];
-                        if (file) handleImageUpload("brandImage", file);
-                        e.target.value = "";
-                      }}
-                      className="sr-only"
-                      disabled={uploading.brandImage || heroSaving}
-                    />
-                    {uploading.brandImage ? "Uploading…" : "Upload different image"}
-                  </label>
-                  <button
-                    type="button"
-                    onClick={() => handleSaveHeroFraming()}
-                    disabled={heroSaving || uploading.brandImage}
-                    className="rounded-lg bg-[#2D545E] px-3 py-1.5 text-xs font-medium text-white shadow-md transition-opacity hover:opacity-90 disabled:opacity-50"
-                  >
-                    {heroSaving ? "Saving…" : "Save"}
-                  </button>
+                      <input
+                        type="range"
+                        min={1}
+                        max={3}
+                        step={0.02}
+                        value={heroZoom}
+                        onChange={(e) => setHeroZoom(Number(e.target.value))}
+                        disabled={!brand?.brandImageUrl}
+                        className="mt-0.5 h-1 w-full cursor-pointer accent-[#2d545e]"
+                        aria-label="Hero zoom"
+                      />
+                    </label>
+                    <label className="block text-[10px] font-medium leading-tight text-white/95">
+                      <span className="flex justify-between gap-1">
+                        <span>Vertical</span>
+                        <span className="tabular-nums text-white/80">{heroFocusY}%</span>
+                      </span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={heroFocusY}
+                        onChange={(e) => setHeroFocusY(Number(e.target.value))}
+                        disabled={!brand?.brandImageUrl}
+                        className="mt-0.5 h-1 w-full cursor-pointer accent-[#2d545e]"
+                        aria-label="Vertical focus, 0 top 100 bottom"
+                      />
+                    </label>
+                    <label className="block text-[10px] font-medium leading-tight text-white/95">
+                      <span className="flex justify-between gap-1">
+                        <span>Horizontal</span>
+                        <span className="tabular-nums text-white/80">{heroFocusX}%</span>
+                      </span>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={1}
+                        value={heroFocusX}
+                        onChange={(e) => setHeroFocusX(Number(e.target.value))}
+                        disabled={!brand?.brandImageUrl}
+                        className="mt-0.5 h-1 w-full cursor-pointer accent-[#2d545e]"
+                        aria-label="Horizontal focus, 0 left 100 right"
+                      />
+                    </label>
+                  </div>
+                  <div className="pointer-events-auto absolute bottom-2 right-2 z-20 flex max-w-[calc(100%-0.75rem)] flex-row flex-wrap items-center justify-end gap-2">
+                    <label className="cursor-pointer whitespace-nowrap rounded-lg border border-white/20 bg-black/55 px-2.5 py-1.5 text-center text-[11px] font-medium text-white shadow-md backdrop-blur-md transition-colors hover:bg-black/65 sm:px-3 sm:text-xs">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files?.[0];
+                          if (file) handleImageUpload("brandImage", file);
+                          e.target.value = "";
+                        }}
+                        className="sr-only"
+                        disabled={uploading.brandImage || heroSaving}
+                      />
+                      {uploading.brandImage ? "Uploading…" : "Upload different image"}
+                    </label>
+                    <button
+                      type="button"
+                      onClick={() => handleSaveHeroFraming()}
+                      disabled={heroSaving || uploading.brandImage}
+                      className="whitespace-nowrap rounded-lg bg-[#2D545E] px-2.5 py-1.5 text-[11px] font-medium text-white shadow-md transition-opacity hover:opacity-90 disabled:opacity-50 sm:px-3 sm:text-xs"
+                    >
+                      {heroSaving ? "Saving…" : "Save"}
+                    </button>
+                  </div>
                 </div>
               </div>
-            </div>
+              {/* Mobile: "Adjust image" toggles slide-open panel (pushes content below) */}
+              <div className="flex flex-col items-center md:hidden">
+                <button
+                  type="button"
+                  id="hero-adjust-trigger"
+                  onClick={() => setMobileHeroAdjustOpen((o) => !o)}
+                  aria-expanded={mobileHeroAdjustOpen}
+                  aria-controls="hero-adjust-panel"
+                  className="mx-auto mt-2 flex w-max max-w-[min(10.5rem,82vw)] items-center justify-center rounded-lg border border-zinc-200 bg-white px-3.5 py-1.5 text-xs font-medium text-zinc-900 shadow-sm transition-colors hover:bg-zinc-50 active:bg-zinc-100 dark:border-zinc-600 dark:bg-zinc-800/90 dark:text-zinc-100 dark:shadow-md dark:ring-1 dark:ring-white/10 dark:hover:bg-zinc-700/95 dark:active:bg-zinc-700"
+                >
+                  {mobileHeroAdjustOpen ? "Done" : "Adjust image"}
+                </button>
+                <div
+                  id="hero-adjust-panel"
+                  role="region"
+                  aria-labelledby="hero-adjust-trigger"
+                  className={`grid w-full transition-[grid-template-rows] duration-300 ease-[cubic-bezier(0.22,1,0.36,1)] motion-reduce:transition-none ${
+                    mobileHeroAdjustOpen ? "grid-rows-[1fr]" : "grid-rows-[0fr]"
+                  }`}
+                >
+                  <div className="min-h-0 overflow-hidden">
+                    <div className="mx-auto mt-3 w-[min(50vw,220px)] space-y-1 rounded-xl border border-zinc-200 bg-white px-2 py-1.5 shadow-md dark:border-zinc-600 dark:bg-zinc-900/95 dark:shadow-lg dark:ring-1 dark:ring-white/5">
+                      <label className="block text-xs font-medium leading-none text-zinc-900 dark:text-zinc-100">
+                        <span className="flex justify-between gap-1.5">
+                          <span>Zoom</span>
+                          <span className="tabular-nums text-zinc-600 dark:text-zinc-400">
+                            {heroZoom.toFixed(2)}×
+                          </span>
+                        </span>
+                        <input
+                          type="range"
+                          min={1}
+                          max={3}
+                          step={0.02}
+                          value={heroZoom}
+                          onChange={(e) => setHeroZoom(Number(e.target.value))}
+                          disabled={!brand?.brandImageUrl}
+                          className="mt-1 h-1.5 w-full cursor-pointer accent-[#2d545e]"
+                          aria-label="Hero zoom"
+                        />
+                      </label>
+                      <label className="block text-xs font-medium leading-none text-zinc-900 dark:text-zinc-100">
+                        <span className="flex justify-between gap-1.5">
+                          <span>Vertical</span>
+                          <span className="tabular-nums text-zinc-600 dark:text-zinc-400">
+                            {heroFocusY}%
+                          </span>
+                        </span>
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={heroFocusY}
+                          onChange={(e) => setHeroFocusY(Number(e.target.value))}
+                          disabled={!brand?.brandImageUrl}
+                          className="mt-1 h-1.5 w-full cursor-pointer accent-[#2d545e]"
+                          aria-label="Vertical focus, 0 top 100 bottom"
+                        />
+                      </label>
+                      <label className="block text-xs font-medium leading-none text-zinc-900 dark:text-zinc-100">
+                        <span className="flex justify-between gap-1.5">
+                          <span>Horizontal</span>
+                          <span className="tabular-nums text-zinc-600 dark:text-zinc-400">
+                            {heroFocusX}%
+                          </span>
+                        </span>
+                        <input
+                          type="range"
+                          min={0}
+                          max={100}
+                          step={1}
+                          value={heroFocusX}
+                          onChange={(e) => setHeroFocusX(Number(e.target.value))}
+                          disabled={!brand?.brandImageUrl}
+                          className="mt-1 h-1.5 w-full cursor-pointer accent-[#2d545e]"
+                          aria-label="Horizontal focus, 0 left 100 right"
+                        />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </>
           ) : (
             <div className="group relative w-full overflow-hidden rounded-xl">
               <div className="flex aspect-[3/1] w-full items-center justify-center rounded-xl border border-dashed border-border bg-background px-4 text-center text-muted">

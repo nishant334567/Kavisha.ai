@@ -8,6 +8,8 @@ function clamp(n, min, max) {
 
 /**
  * Public avatar hero: fixed 3:1 frame, object-fit cover, optional zoom + focal point from Sanity.
+ * When zoom > 1, extra translate from focus unlocks pan even if object-position had no horizontal
+ * slack at 1× (cover + scale interaction).
  */
 export default function BrandHeroImageFrame({
   imageUrl,
@@ -25,8 +27,13 @@ export default function BrandHeroImageFrame({
   const fx = clamp(focusX, 0, 100);
   const fy = clamp(focusY, 0, 100);
   const ty = Number(translateYPercent);
-  const translate =
-    Number.isFinite(ty) && ty !== 0 ? ` translateY(${ty}%)` : "";
+  const extraY =
+    Number.isFinite(ty) && ty !== 0 ? ty : 0;
+
+  const panBoost = Math.max(0, z - 1);
+  const panCoeff = 32;
+  const panX = ((50 - fx) / 50) * panBoost * panCoeff;
+  const panY = ((50 - fy) / 50) * panBoost * panCoeff + extraY;
 
   return (
     <div
@@ -39,7 +46,7 @@ export default function BrandHeroImageFrame({
         className="absolute inset-0 block h-full w-full object-cover"
         style={{
           objectPosition: `${fx}% ${fy}%`,
-          transform: `scale(${z})${translate}`,
+          transform: `scale(${z}) translateX(${panX}%) translateY(${panY}%)`,
           transformOrigin: "center center",
         }}
       />
