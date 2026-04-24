@@ -4,6 +4,7 @@ import { Suspense, useEffect, useState } from "react";
 import { MessageCircle, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import ChatBoxWidget from "./components/ChatBoxWidget";
+import WidgetPostMessageAuth from "./components/WidgetPostMessageAuth";
 import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 
 /** First launcher spin waits this long after theme loads (attention animation only). */
@@ -141,6 +142,7 @@ function WidgetShell() {
     <div
       className={`fixed inset-0 box-border flex flex-col justify-end overflow-hidden bg-transparent p-2 ${isOpen ? "items-center md:items-end" : "items-end"}`}
     >
+      <WidgetPostMessageAuth brand={brandTrimmed} />
       {isOpen ? (
         <div className="flex h-full min-h-0 w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40">
           <div

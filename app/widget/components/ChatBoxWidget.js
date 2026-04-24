@@ -5,11 +5,9 @@ import { ChevronDown, Loader2, LogOut, Plus, Send, Users, X } from "lucide-react
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import {
   clearWidgetAuth,
-  commitWidgetAuth,
   getCurrentWidgetUser,
   subscribeWidgetSession,
   widgetAwareFetch,
-  WIDGET_AUTH_POSTMESSAGE_SOURCE,
 } from "@/app/lib/widget-session";
 import {
   detectInAppBrowser,
@@ -26,9 +24,6 @@ import WidgetChatLoader, {
   WIDGET_LOADER_MESSAGES,
   widgetLoaderMessagesFromFlags,
 } from "./WidgetChatLoader";
-import { WIDGET_SSO_MESSAGE_TYPE } from "../constants";
-import { signInWithPartnerCustomToken } from "@/app/lib/firebase/sign-in-custom-token";
-
 const LEAD_JOURNEY_ROLE = "lead_journey";
 
 /** `{brand}.kavisha.ai` (or localhost / staging) — where `/widget-login` opens. */
@@ -138,86 +133,6 @@ export default function ChatBoxWidget({
       setWidgetUser(session?.user || null);
     });
   }, []);
-
-  useEffect(() => {
-    if (typeof window === "undefined") return;
-    const onMessage = (e) => {
-      const d = e.data;
-      if (!d || d.source !== WIDGET_AUTH_POSTMESSAGE_SOURCE) return;
-
-      if (d.type === "auth-success") {
-        commitWidgetAuth(d);
-        void refreshRef.current();
-        return;
-      }
-
-      if (d.type !== WIDGET_SSO_MESSAGE_TYPE) return;
-
-      const SSO_LOG = "[kavisha-widget][sso]";
-      const rawPartnerToken = d.token;
-      const partnerToken =
-        typeof rawPartnerToken === "string" ? rawPartnerToken.trim() : "";
-      if (!partnerToken) {
-        console.warn(`${SSO_LOG} ignored: missing or empty token`, {
-          brand,
-          tokenType: typeof rawPartnerToken,
-          rawLength:
-            typeof rawPartnerToken === "string"
-              ? rawPartnerToken.length
-              : undefined,
-        });
-        return;
-      }
-
-      console.info(`${SSO_LOG} handoff received; calling introspect`, {
-        brand,
-        partnerJwtLength: partnerToken.length,
-      });
-
-      void (async () => {
-        setSigningIn(true);
-        setSignInError("");
-        try {
-          const res = await fetch("/api/widget/sso-introspect", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ token: partnerToken }),
-            credentials: "omit",
-          });
-          const data = await res.json().catch(() => ({}));
-          console.info(`${SSO_LOG} introspect finished`, {
-            brand,
-            httpStatus: res.status,
-            ok: Boolean(data?.ok),
-            error:
-              typeof data?.error === "string" ? data.error : undefined,
-          });
-          if (!res.ok || !data?.ok) {
-            throw new Error(
-              typeof data?.error === "string"
-                ? data.error
-                : "Partner sign-in failed"
-            );
-          }
-          if (!data.customToken) {
-            throw new Error("Partner sign-in did not return a session token");
-          }
-          const payload = await signInWithPartnerCustomToken(data.customToken);
-          commitWidgetAuth(payload);
-          void refreshRef.current();
-          console.info(`${SSO_LOG} firebase session committed`, { brand });
-        } catch (err) {
-          const message = err?.message || "Partner sign-in failed";
-          console.warn(`${SSO_LOG} failed`, { brand, message });
-          setSignInError(message);
-        } finally {
-          setSigningIn(false);
-        }
-      })();
-    };
-    window.addEventListener("message", onMessage);
-    return () => window.removeEventListener("message", onMessage);
-  }, [brand]);
 
   const loadSessions = useCallback(async () => {
     if (!effectiveUser || !brand) return;
