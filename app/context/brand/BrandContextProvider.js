@@ -4,6 +4,7 @@ import { useState, useEffect, useContext } from "react";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import BrandContext from "./BrandContext";
 import { client, urlFor } from "@/app/lib/sanity";
+import { normalizeLoginButtonText } from "@/app/lib/loginButtonText";
 import Loader from "@/app/components/Loader";
 
 export default function BrandContextProvider({ children }) {
@@ -36,14 +37,16 @@ export default function BrandContextProvider({ children }) {
     const brandDataFromSanity = async () => {
       try {
         const brand = await client.fetch(
-          `*[_type == "brand" && subdomain == "${subdomain}"]
-              {
+          `*[_type == "brand" && subdomain == $subdomain][0]{
                   _id,
                   brandName,
                   loginButtonText,
                   subdomain,
                   logo,
                   brandImage,
+                  brandHeroZoom,
+                  brandHeroFocusY,
+                  brandHeroFocusX,
                   paymentQr,
                   acceptPayment,
                   title,
@@ -67,7 +70,8 @@ export default function BrandContextProvider({ children }) {
                   widgetLauncher{
                     copyReadMoreUrl
                   }
-              }[0]`,
+              }`,
+          { subdomain },
         );
         if (brand) {
           // Generate URLs using urlFor helper with proper null checks
@@ -85,9 +89,24 @@ export default function BrandContextProvider({ children }) {
           const context = {
             brandId: brand._id,
             brandName: brand.brandName,
-            loginButtonText: brand.loginButtonText,
+            loginButtonText: normalizeLoginButtonText(brand.loginButtonText),
             logoUrl: logoUrl,
             brandImageUrl: brandImageUrl,
+            brandHeroZoom:
+              typeof brand.brandHeroZoom === "number" &&
+              Number.isFinite(brand.brandHeroZoom)
+                ? brand.brandHeroZoom
+                : 1,
+            brandHeroFocusY:
+              typeof brand.brandHeroFocusY === "number" &&
+              Number.isFinite(brand.brandHeroFocusY)
+                ? brand.brandHeroFocusY
+                : 50,
+            brandHeroFocusX:
+              typeof brand.brandHeroFocusX === "number" &&
+              Number.isFinite(brand.brandHeroFocusX)
+                ? brand.brandHeroFocusX
+                : 50,
             paymentQrUrl: paymentQrUrl,
             acceptPayment: brand.acceptPayment || false,
             title: brand.title,

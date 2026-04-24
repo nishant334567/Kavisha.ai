@@ -5,6 +5,7 @@ import { Resend } from "resend";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { connectDB } from "@/app/lib/db";
 import User from "@/app/models/Users";
+import { normalizeLoginButtonText } from "@/app/lib/loginButtonText";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -177,7 +178,7 @@ async function runCreateAvatar(request, creatorEmail) {
     const brandDoc = {
       _type: "brand",
       brandName: brandName || normalizedSubdomain,
-      loginButtonText: loginButtonText || "Talk to me now",
+      loginButtonText: normalizeLoginButtonText(loginButtonText),
       title: title || `Welcome to ${normalizedSubdomain}`,
       subtitle: subtitle || "",
       subdomain: normalizedSubdomain,

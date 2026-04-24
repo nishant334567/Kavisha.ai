@@ -3,6 +3,9 @@ import Footer from "../components/Footer";
 /** Static assets for this route only (`public/widget-intro/`). */
 const WI = "/widget-intro";
 
+/** Invert line-art in dark mode (matches `darkMode: "media"`). */
+const stepFigureClass = "dark:[filter:invert(1)_hue-rotate(180deg)]";
+
 const FEATURES = [
     {
         id: "engagement",
@@ -100,7 +103,7 @@ export default function WidgetIntroPage() {
                         <img
                             src={`${WI}/step-1.png`}
                             alt="Training AI"
-                            className="h-auto w-full max-w-md"
+                            className={`h-auto w-full max-w-md ${stepFigureClass}`}
                         />
                     </div>
                 </div>
@@ -110,7 +113,7 @@ export default function WidgetIntroPage() {
                         <img
                             src={`${WI}/step-2.png`}
                             alt="Widget code snippet"
-                            className="h-auto w-full max-w-[280px] md:max-w-[320px]"
+                            className={`h-auto w-full max-w-[280px] md:max-w-[320px] ${stepFigureClass}`}
                         />
                     </div>
                     <div className="flex-1 text-center md:text-left">
@@ -132,7 +135,7 @@ export default function WidgetIntroPage() {
                         <img
                             src={`${WI}/step-3.png`}
                             alt="Analytics"
-                            className="h-auto w-full max-w-md"
+                            className={`h-auto w-full max-w-md ${stepFigureClass}`}
                         />
                     </div>
                 </div>
@@ -172,7 +175,7 @@ export default function WidgetIntroPage() {
                 </div>
             </div>
 
-            <div className="bg-highlight px-4 py-20 text-center text-white">
+            <div className="bg-[#2d545e] px-4 py-20 text-center text-white">
                 <h2 className="mb-6 text-3xl font-normal leading-tight tracking-wide md:text-5xl lg:text-6xl">
                     Get a custom{" "}
                     <span className="widget-intro-moving-gradient font-medium">

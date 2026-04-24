@@ -174,7 +174,11 @@ export default function HomePage() {
         if (brandContext.subdomain === "kavisha") {
             return <Homepage />;
         }
-        return <AvatarHomepage />;
+        return (
+            <div className="flex min-h-[calc(100dvh-7rem)] flex-col md:min-h-[calc(100dvh-3.5rem)]">
+                <AvatarHomepage />
+            </div>
+        );
     }
 
     // Don't render chat interface for admins (they'll be redirected)
