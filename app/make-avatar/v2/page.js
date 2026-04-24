@@ -127,7 +127,7 @@ export default function MakeAvatar() {
       const formData = new FormData();
       formData.append("subdomain", subdomain);
       formData.append("brandName", avatarData.name.trim());
-      formData.append("loginButtonText", "Talk to me now");
+      formData.append("loginButtonText", "Talk to me");
       formData.append("title", avatarData.bio_title?.trim() || "");
       formData.append("subtitle", avatarData.bio_subtitle?.trim() || "");
       formData.append("email", avatarData.admin_email?.trim() || "");

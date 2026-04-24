@@ -17,7 +17,7 @@ export default {
       title: "Login Button Text",
       type: "string",
       description:
-        "The text for the login button (e.g., 'Talk to me now, Talk to us now')",
+        "The text for the login button (e.g., 'Talk to me', 'Talk to us now')",
       validation: (Rule) => Rule.required(),
     },
     {
@@ -37,6 +37,33 @@ export default {
       options: {
         hotspot: true,
       },
+    },
+    {
+      name: "brandHeroZoom",
+      title: "Hero zoom (homepage)",
+      type: "number",
+      description:
+        "1 = fill the hero frame (default). Higher zooms in (tighter crop). Used with the 3:1 hero on the public avatar page.",
+      initialValue: 1,
+      validation: (Rule) => Rule.min(1).max(3),
+    },
+    {
+      name: "brandHeroFocusY",
+      title: "Hero vertical focus (%)",
+      type: "number",
+      description:
+        "0 = top of photo, 50 = center, 100 = bottom. Shifts which part of the image stays visible when cropped.",
+      initialValue: 50,
+      validation: (Rule) => Rule.min(0).max(100).integer(),
+    },
+    {
+      name: "brandHeroFocusX",
+      title: "Hero horizontal focus (%)",
+      type: "number",
+      description:
+        "0 = left, 50 = center, 100 = right. Shifts horizontal crop for tall portraits.",
+      initialValue: 50,
+      validation: (Rule) => Rule.min(0).max(100).integer(),
     },
     {
       name: "acceptPayment",
