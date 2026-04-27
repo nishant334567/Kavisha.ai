@@ -85,6 +85,7 @@ export default function ChatBoxWidget({
   primaryColor = null,
   secondaryColor = null,
   readMoreCopyUrl = "",
+  adminMessagesEnabled = false,
 }) {
   const { user: firebaseUser, loading: authLoading, refresh } =
     useFirebaseSession();
@@ -177,7 +178,7 @@ export default function ChatBoxWidget({
 
   const fetchAdminUnread = useCallback(async () => {
     const sid = effectiveUser?.id || effectiveUser?.uid;
-    if (!sid || !brand) return;
+    if (!adminMessagesEnabled || !sid || !brand) return;
     try {
       const key = `kavisha:widget:adminInboxSince:${brand}:${sid}`;
       let since = sessionStorage.getItem(key);
@@ -195,19 +196,32 @@ export default function ChatBoxWidget({
     } catch {
       /* ignore */
     }
-  }, [effectiveUser?.id, effectiveUser?.uid, brand]);
+  }, [adminMessagesEnabled, effectiveUser?.id, effectiveUser?.uid, brand]);
 
   useEffect(() => {
     const sid = effectiveUser?.id || effectiveUser?.uid;
-    if (authLoading || !sid || !brand) return;
+    if (!adminMessagesEnabled || authLoading || !sid || !brand) return;
     void fetchAdminUnread();
     const t = setInterval(() => void fetchAdminUnread(), 45000);
     return () => clearInterval(t);
-  }, [authLoading, effectiveUser?.id, effectiveUser?.uid, brand, fetchAdminUnread]);
+  }, [
+    adminMessagesEnabled,
+    authLoading,
+    effectiveUser?.id,
+    effectiveUser?.uid,
+    brand,
+    fetchAdminUnread,
+  ]);
+
+  useEffect(() => {
+    if (adminMessagesEnabled) return;
+    setBrandInboxOpen(false);
+    setAdminUnreadCount(0);
+  }, [adminMessagesEnabled]);
 
   const openBrandInbox = useCallback(async () => {
     const sid = effectiveUser?.id || effectiveUser?.uid;
-    if (!sid || !brand) return;
+    if (!adminMessagesEnabled || !sid || !brand) return;
     setBrandInboxLoading(true);
     try {
       const res = await widgetAwareFetch(
@@ -235,7 +249,7 @@ export default function ChatBoxWidget({
     } finally {
       setBrandInboxLoading(false);
     }
-  }, [effectiveUser?.id, effectiveUser?.uid, brand]);
+  }, [adminMessagesEnabled, effectiveUser?.id, effectiveUser?.uid, brand]);
 
   useEffect(() => {
     if (!authLoading && effectiveUser && brand) loadSessions();
@@ -819,26 +833,28 @@ export default function ChatBoxWidget({
             <Users className="h-4 w-4 shrink-0" />
             <span className="min-w-0 truncate">Community</span>
           </button>
-          <button
-            type="button"
-            onClick={() => void openBrandInbox()}
-            disabled={brandInboxLoading || signingOut}
-            className="relative flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg disabled:opacity-50"
-            title="Messages from the brand team"
-          >
-            {brandInboxLoading ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-            ) : (
-              <Mail className="h-4 w-4 shrink-0" />
-            )}
-            <span className="min-w-0 truncate">Messages</span>
-            {adminUnreadCount > 0 ? (
-              <span
-                className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-card"
-                aria-label="Unread"
-              />
-            ) : null}
-          </button>
+          {adminMessagesEnabled ? (
+            <button
+              type="button"
+              onClick={() => void openBrandInbox()}
+              disabled={brandInboxLoading || signingOut}
+              className="relative flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg disabled:opacity-50"
+              title="Messages from the brand team"
+            >
+              {brandInboxLoading ? (
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+              ) : (
+                <Mail className="h-4 w-4 shrink-0" />
+              )}
+              <span className="min-w-0 truncate">Messages</span>
+              {adminUnreadCount > 0 ? (
+                <span
+                  className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-card"
+                  aria-label="Unread"
+                />
+              ) : null}
+            </button>
+          ) : null}
           <button
             type="button"
             onClick={handleWidgetSignOut}
@@ -1143,7 +1159,8 @@ export default function ChatBoxWidget({
         </>
       )}
     </div>
-    {brandInboxOpen &&
+    {adminMessagesEnabled &&
+      brandInboxOpen &&
       brandInboxUserA &&
       brandInboxUserB &&
       brandInboxConnectionId &&

@@ -338,6 +338,14 @@ export default {
     },
 
     {
+      name: "enableAdminMessages",
+      title: "Enable admin messages (embed widget)",
+      type: "boolean",
+      description:
+        "When on, signed-in users see the Messages button in the embed widget to DM your team (uses Admins emails below). When off, that entry point is hidden.",
+      initialValue: false,
+    },
+    {
       name: "admins",
       title: "Admins",
       type: "array",

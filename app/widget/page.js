@@ -42,6 +42,7 @@ function WidgetShell() {
   const [launcherAnimation, setLauncherAnimation] = useState(false);
   const [widgetChatbotHeader, setWidgetChatbotHeader] = useState(null);
   const [widgetCopyReadMoreUrl, setWidgetCopyReadMoreUrl] = useState("");
+  const [enableAdminMessages, setEnableAdminMessages] = useState(false);
   const [launcherNudgeReady, setLauncherNudgeReady] = useState(false);
   const brandTrimmed = brand.trim();
   const needsBrandTheme = brandTrimmed.length > 0;
@@ -64,6 +65,7 @@ function WidgetShell() {
       setLauncherAnimation(false);
       setWidgetChatbotHeader(null);
       setWidgetCopyReadMoreUrl("");
+      setEnableAdminMessages(false);
       return;
     }
     setThemeReady(false);
@@ -101,6 +103,7 @@ function WidgetShell() {
             ? data.widgetCopyReadMoreUrl.trim()
             : "";
         setWidgetCopyReadMoreUrl(rm);
+        setEnableAdminMessages(Boolean(data?.enableAdminMessages));
       })
       .catch(() => {
         if (!cancelled) {
@@ -110,6 +113,7 @@ function WidgetShell() {
           setLauncherAnimation(false);
           setWidgetChatbotHeader(null);
           setWidgetCopyReadMoreUrl("");
+          setEnableAdminMessages(false);
         }
       })
       .finally(() => {
@@ -214,6 +218,7 @@ function WidgetShell() {
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
               readMoreCopyUrl={widgetCopyReadMoreUrl}
+              adminMessagesEnabled={enableAdminMessages}
             />
           </div>
         </div>

@@ -23,6 +23,7 @@ export async function GET(req) {
       widgetLauncherAnimation: false,
       widgetChatbotHeader: null,
       widgetCopyReadMoreUrl: null,
+      enableAdminMessages: false,
     });
   }
 
@@ -31,6 +32,7 @@ export async function GET(req) {
       `*[_type == "brand" && subdomain == $brand][0]{
         primaryBrandColor,
         secondaryBrandColor,
+        enableAdminMessages,
         widgetLauncher{
           buttonImage,
           enableAttentionAnimation,
@@ -76,6 +78,7 @@ export async function GET(req) {
         widgetLauncherAnimation: Boolean(wl?.enableAttentionAnimation),
         widgetChatbotHeader,
         widgetCopyReadMoreUrl,
+        enableAdminMessages: Boolean(data?.enableAdminMessages),
       },
     );
   } catch (e) {
