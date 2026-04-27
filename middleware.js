@@ -18,6 +18,7 @@ const PUBLIC_PATHS = [
   "/make-avatar",
   "/widget-intro",
   "/community",
+  "/postings",
   "/unsubscribe",
   "/api/unsubscribe",
   "/api/unsubscribe/resolve",

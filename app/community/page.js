@@ -1,18 +1,16 @@
 "use client";
 
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { signIn } from "@/app/lib/firebase/sign-in";
 import {
-    detectInAppBrowser,
-    isMobileDevice,
-    openInChrome,
+  detectInAppBrowser,
+  isMobileDevice,
+  openInChrome,
 } from "@/app/lib/in-app-browser";
-import CommunityCard from "@/app/components/CommunityCard";
 import ChatSidebar from "@/app/components/ChatSidebar";
-import LiveChat from "@/app/components/LiveChat";
 import Loader from "@/app/components/Loader";
 import PoweredByKavisha from "@/app/components/PoweredByKavisha";
 import CommunityBrandStrip from "@/app/components/CommunityBrandStrip";
@@ -23,519 +21,297 @@ import {
   JOB_SEEKER_OPENING_MESSAGE,
 } from "@/app/lib/jobSeekerIntro";
 
-const ROLE_LABELS = {
-    job_seeker: "Jobs",
-    recruiter: "Employees",
-    friends: "Friends",
-};
-
-function formatDate(d) {
-    if (!d) return "—";
-    return new Date(d).toLocaleDateString("en-IN", {
-        day: "numeric",
-        month: "short",
-        year: "numeric",
-    });
-}
-
-function flattenRequirements(users) {
-    const list = [];
-    for (const u of users || []) {
-        for (const s of u.sessions || []) {
-            list.push({
-                id: s._id?.toString?.(),
-                userId: u.userId,
-                name: u.name,
-                description: s.chatSummary || s.title || "",
-                date: formatDate(s.createdAt),
-                role: s.role,
-                requirement: ROLE_LABELS[s.role] || s.role || "—",
-            });
-        }
-    }
-    return list;
-}
-
 export default function Community() {
-    const router = useRouter();
-    const brand = useBrandContext();
-    const { user, loading: authLoading, refresh } = useFirebaseSession();
-    const [creating, setCreating] = useState(null);
-    const [users, setUsers] = useState([]);
-    const [loading, setLoading] = useState(true);
-    const [error, setError] = useState(null);
-    const [allChats, setAllChats] = useState(null);
-    const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
-    const [openChat, setOpenChat] = useState(false);
-    const [chatUserA, setChatUserA] = useState(null);
-    const [chatUserB, setChatUserB] = useState(null);
-    const [connectionId, setConnectionId] = useState(null);
-    const [paidConnectionUserIds, setPaidConnectionUserIds] = useState([]);
-    const [connectingToUserId, setConnectingToUserId] = useState(null);
-    const [chatOtherDisplayName, setChatOtherDisplayName] = useState(null);
-    const [signingIn, setSigningIn] = useState(false);
-    const [popupBlockedHint, setPopupBlockedHint] = useState(false);
-    const [isInAppBrowser, setIsInAppBrowser] = useState(false);
-    const [isMobile, setIsMobile] = useState(false);
+  const router = useRouter();
+  const brand = useBrandContext();
+  const { user, loading: authLoading, refresh } = useFirebaseSession();
+  const [creating, setCreating] = useState(null);
+  const [allChats, setAllChats] = useState(null);
+  const [signingIn, setSigningIn] = useState(false);
+  const [popupBlockedHint, setPopupBlockedHint] = useState(false);
+  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
 
-    useEffect(() => {
-        setIsInAppBrowser(detectInAppBrowser());
-        setIsMobile(isMobileDevice());
-    }, []);
+  useEffect(() => {
+    setIsInAppBrowser(detectInAppBrowser());
+    setIsMobile(isMobileDevice());
+  }, []);
 
-    const isBlocked = isInAppBrowser && isMobile;
+  const isBlocked = isInAppBrowser && isMobile;
 
-    const handleSignInToCommunity = async () => {
-        if (isBlocked) {
-            openInChrome();
-            return;
-        }
-        setSigningIn(true);
-        setPopupBlockedHint(false);
-        try {
-            await signIn();
-            await refresh();
-            // User state updates, component re-renders and shows community content
-        } catch (e) {
-            if (e?.code === "auth/popup-blocked") {
-                setPopupBlockedHint(true);
-            }
-        } finally {
-            setSigningIn(false);
-        }
-    };
-
-    const openChatSession = (userA, userB, otherDisplayName = null) => {
-        setChatUserA(userA);
-        setChatUserB(userB);
-        setConnectionId([userA, userB].sort().join("_"));
-        setChatOtherDisplayName(otherDisplayName ?? null);
-        setOpenChat(true);
-    };
-
-    const createCommunityPost = async (type, title, message) => {
-        if (!user?.id || !brand?.subdomain) return;
-
-        const services = brand?.services || [];
-        const service = services.find((s) => s.name === type);
-        const serviceKey = service?._key ?? services[0]?._key;
-        if (!serviceKey) return;
-
-        setCreating(type);
-        try {
-            const res = await fetch("/api/newchatsession", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    role: type,
-                    brand: brand.subdomain,
-                    initialmessage: message,
-                    isCommunityChat: true,
-                    chatName: title,
-                    serviceKey,
-                }),
-            });
-            const data = await res.json();
-            if (data?.success && data?.sessionId) {
-                router.push(`/community/${data.sessionId}`);
-            }
-        } catch (e) {
-            console.error("Error creating community session:", e);
-        } finally {
-            setCreating(null);
-        }
-    };
-
-    useEffect(() => {
-        if (!user || !brand?.subdomain) return;
-        const endpoint =
-            brand.subdomain === "kavisha"
-                ? "/api/allchats?community=true"
-                : `/api/allchats/${brand.subdomain}?community=true`;
-        (async () => {
-            try {
-                const res = await fetch(endpoint);
-                const data = await res.json();
-                setAllChats(data);
-            } catch (e) {
-                setAllChats(null);
-            }
-        })();
-    }, [user, brand?.subdomain]);
-
-    useEffect(() => {
-        if (!user?.id) return;
-        (async () => {
-            try {
-                const res = await fetch("/api/community/paid-connections", {
-                    credentials: "include",
-                });
-                const data = await res.json();
-                setPaidConnectionUserIds(Array.isArray(data?.paidTargetUserIds) ? data.paidTargetUserIds : []);
-            } catch (e) {
-                setPaidConnectionUserIds([]);
-            }
-        })();
-    }, [user?.id]);
-    //retrigger
-    useEffect(() => {
-        const subdomain = brand?.subdomain;
-        if (!subdomain) {
-            setLoading(false);
-            return;
-        }
-        setLoading(true);
-        setError(null);
-        (async () => {
-            try {
-                const res = await fetch(
-                    `/api/community/sessions?brand=${encodeURIComponent(subdomain)}`
-                );
-                const data = await res.json();
-                if (data.success && Array.isArray(data.users)) setUsers(data.users);
-                else setUsers([]);
-            } catch (e) {
-                setError(e?.message || "Failed to load.");
-                setUsers([]);
-            } finally {
-                setLoading(false);
-            }
-        })();
-    }, [brand?.subdomain]);
-
-    const requirements = useMemo(() => flattenRequirements(users), [users]);
-    const visibleRequirements = useMemo(() => {
-        return requirements.filter((r) => {
-            if (r.role === "friends") return !!brand?.enableFriendConnect;
-            if (r.role === "job_seeker" || r.role === "recruiter") {
-                return !!brand?.enableProfessionalConnect;
-            }
-            return true;
-        });
-    }, [requirements, brand?.enableFriendConnect, brand?.enableProfessionalConnect]);
-
-    // Community connect: only paid connections can open chat without paying again. Other places can initiate messages separately.
-    const paidConnectedUserIds = useMemo(
-        () => new Set((paidConnectionUserIds || []).map((id) => String(id)).filter(Boolean)),
-        [paidConnectionUserIds]
-    );
-
-    const updateChatId = (newChatId) => {
-        if (newChatId) router.push(`/community/${newChatId}`);
-        else router.push("/community");
-    };
-
-    // One way to load Razorpay: when user clicks Connect we load the script (or use it if already loaded), then open checkout.
-    const ensureRazorpayLoaded = () => {
-        if (typeof window === "undefined" || window.Razorpay) return Promise.resolve();
-        return new Promise((resolve, reject) => {
-            const s = document.createElement("script");
-            s.src = "https://checkout.razorpay.com/v1/checkout.js";
-            s.onload = resolve;
-            s.onerror = () => reject(new Error("Could not load payment"));
-            document.body.appendChild(s);
-        });
-    };
-
-    const initiatePayment = async (thisUser, otherUser, onSuccess) => {
-        if (paidConnectedUserIds.has(String(otherUser))) {
-            openChatSession(thisUser, otherUser);
-            setConnectingToUserId(null);
-            return;
-        }
-        try {
-            // 1) Get order from our API
-            const res = await fetch("/api/razorpay/create-order", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                credentials: "include",
-                body: JSON.stringify({ userId: thisUser, targetUserId: otherUser }),
-            });
-            const data = await res.json();
-            if (!data?.orderId) throw new Error(data?.error || "Failed to create order");
-
-            // 2) Load Razorpay script (no-op if already there), then open payment window
-            await ensureRazorpayLoaded();
-            const options = {
-                key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID,
-                amount: data.amount,
-                currency: data.currency || "INR",
-                order_id: data.orderId,
-                name: "Kavisha",
-                description: "Community Connect",
-                prefill: { email: user?.email || "" },
-                modal: {
-                    ondismiss: () => setConnectingToUserId(null),
-                },
-                handler: async function (response) {
-                    const verifyRes = await fetch("/api/razorpay/verify-payment", {
-                        method: "POST",
-                        headers: { "Content-Type": "application/json" },
-                        credentials: "include",
-                        body: JSON.stringify({
-                            razorpay_order_id: response.razorpay_order_id,
-                            razorpay_payment_id: response.razorpay_payment_id,
-                            razorpay_signature: response.razorpay_signature,
-                            userId: thisUser,
-                            type: "community_connect",
-                            metadata: {
-                                targetUserId: otherUser,
-                                brand: brand?.subdomain || "",
-                            },
-                            amount: data.amount,
-                            currency: data.currency || "INR",
-                        }),
-                    });
-                    const verifyData = await verifyRes.json();
-                    if (verifyData?.success) onSuccess();
-                    else {
-                        setConnectingToUserId(null);
-                        alert("Payment verification failed.");
-                    }
-                },
-            };
-            const rzp = new window.Razorpay(options);
-            rzp.on("payment.failed", () => {
-                setConnectingToUserId(null);
-                alert("Payment failed. Please try again.");
-            });
-            rzp.open();
-        } catch (err) {
-            console.error(err);
-            setConnectingToUserId(null);
-            alert(err?.message || "Something went wrong.");
-        }
-    };
-
-    const refetchPaidConnections = async () => {
-        if (!user?.id) return;
-        try {
-            const res = await fetch("/api/community/paid-connections", { credentials: "include" });
-            const data = await res.json();
-            setPaidConnectionUserIds(Array.isArray(data?.paidTargetUserIds) ? data.paidTargetUserIds : []);
-        } catch {
-            setPaidConnectionUserIds([]);
-        }
-    };
-
-    const handleConnect = (userA, userB, otherDisplayName = null) => {
-        setConnectingToUserId(String(userB));
-        if (paidConnectedUserIds.has(String(userB))) {
-            openChatSession(userA, userB, otherDisplayName);
-            setConnectingToUserId(null);
-            return;
-        }
-        initiatePayment(userA, userB, () => {
-            refetchPaidConnections();
-            openChatSession(userA, userB, otherDisplayName);
-            setConnectingToUserId(null);
-        });
-    };
-
-    if (authLoading || !brand) {
-        return (
-            <Loader
-                loadingMessage="Loading..."
-                primaryHex={
-                    brand ? normalizeBrandHex(brand.primaryBrandColor) : null
-                }
-            />
-        );
+  const handleSignInToCommunity = async () => {
+    if (isBlocked) {
+      openInChrome();
+      return;
     }
-
-    const primaryHex = normalizeBrandHex(brand?.primaryBrandColor);
-    const secondaryHex = normalizeBrandHex(brand?.secondaryBrandColor);
-    const primaryCtaClass =
-        "rounded-full px-6 py-3 text-white transition-colors hover:opacity-90 disabled:opacity-50";
-
-    // Sign-in gate: show when not logged in (user lands on /community directly)
-    if (!user) {
-        return (
-            <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-foreground">
-                <div className="max-w-md w-full text-center">
-                    <h1
-                        className={`mb-4 text-2xl uppercase tracking-wide md:text-3xl ${!secondaryHex ? "text-highlight" : ""}`}
-                        style={secondaryHex ? { color: secondaryHex } : undefined}
-                    >
-                        Community
-                    </h1>
-                    <p className="mb-8 text-muted">
-                        Sign in to browse connection requests and connect with people.
-                    </p>
-                    {popupBlockedHint && !isBlocked && (
-                        <p className="text-amber-600 text-sm mb-4">Tap again to enable pop-up! Cheers! :)</p>
-                    )}
-                    {isBlocked ? (
-                        <button
-                            onClick={openInChrome}
-                            className={`${primaryCtaClass} ${!primaryHex ? "bg-highlight" : ""}`}
-                            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
-                        >
-                            Open in Chrome to sign in
-                        </button>
-                    ) : (
-                        <button
-                            onClick={handleSignInToCommunity}
-                            disabled={signingIn}
-                            className={`${primaryCtaClass} ${!primaryHex ? "bg-highlight" : ""} disabled:opacity-50`}
-                            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
-                        >
-                            {signingIn ? "Signing in..." : "Sign in to continue"}
-                        </button>
-                    )}
-                    <button
-                        onClick={() => router.push("/")}
-                        className={`mx-auto mt-6 flex items-center justify-center gap-2 hover:opacity-80 ${!primaryHex ? "text-highlight" : ""}`}
-                        style={primaryHex ? { color: primaryHex } : undefined}
-                    >
-                        <ArrowLeft className="w-4 h-4" />
-                        <span className="text-sm">Back to home</span>
-                    </button>
-                </div>
-            </div>
-        );
+    setSigningIn(true);
+    setPopupBlockedHint(false);
+    try {
+      await signIn();
+      await refresh();
+    } catch (e) {
+      if (e?.code === "auth/popup-blocked") {
+        setPopupBlockedHint(true);
+      }
+    } finally {
+      setSigningIn(false);
     }
+  };
 
-    const findJobsMsg = JOB_SEEKER_OPENING_MESSAGE;
-    const hireMsg =
-        "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)";
-    const friendsMsg =
-        "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)";
+  const createCommunityPost = async (type, title, message) => {
+    if (!user?.id || !brand?.subdomain) return;
 
+    const services = brand?.services || [];
+    const service = services.find((s) => s.name === type);
+    const serviceKey = service?._key ?? services[0]?._key;
+    if (!serviceKey) return;
+
+    setCreating(type);
+    try {
+      const res = await fetch("/api/newchatsession", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          role: type,
+          brand: brand.subdomain,
+          initialmessage: message,
+          isCommunityChat: true,
+          chatName: title,
+          serviceKey,
+        }),
+      });
+      const data = await res.json();
+      if (data?.success && data?.sessionId) {
+        router.push(`/community/${data.sessionId}`);
+      }
+    } catch (e) {
+      console.error("Error creating community session:", e);
+    } finally {
+      setCreating(null);
+    }
+  };
+
+  useEffect(() => {
+    if (!user || !brand?.subdomain) return;
+    const endpoint =
+      brand.subdomain === "kavisha"
+        ? "/api/allchats?community=true"
+        : `/api/allchats/${brand.subdomain}?community=true`;
+    (async () => {
+      try {
+        const res = await fetch(endpoint);
+        const data = await res.json();
+        setAllChats(data);
+      } catch {
+        setAllChats(null);
+      }
+    })();
+  }, [user, brand?.subdomain]);
+
+  const updateChatId = (newChatId) => {
+    if (newChatId) router.push(`/community/${newChatId}`);
+    else router.push("/community");
+  };
+
+  if (authLoading || !brand) {
     return (
-        <div className="h-[calc(100vh-64px)] flex flex-col overflow-hidden">
-            <CommunityBrandStrip
-                communityName={brand?.communityName || "Community"}
-                primaryHex={primaryHex}
-                secondaryHex={secondaryHex}
-                enableProfessionalConnect={!!brand?.enableProfessionalConnect}
-                enableFriendConnect={!!brand?.enableFriendConnect}
-                creating={creating}
-                onFindJobs={() =>
-                    createCommunityPost("job_seeker", JOB_SEEKER_CHAT_TITLE, findJobsMsg)
-                }
-                onHirePeople={() =>
-                    createCommunityPost("recruiter", "Looking at hiring", hireMsg)
-                }
-                onFindFriends={() =>
-                    createCommunityPost("friends", "Looking for a friend", friendsMsg)
-                }
-            />
-            <div className="flex flex-1 min-h-0 overflow-hidden">
-                <div>
-                    <ChatSidebar
-                        allChats={allChats}
-                        updateChatId={updateChatId}
-                        currentChatId={null}
-                        setCurrentChatType={() => { }}
-                        onCollapsedChange={setIsSidebarCollapsed}
-                        isCommunity={true}
-                        onNewCommunityChat={createCommunityPost}
-                        chatBasePath="/community"
-                        homePath="/community"
-                        defaultCollapsed={true}
-                    />
-                </div>
-                <div className="w-full flex flex-col flex-1 min-h-0 min-w-0">
-                    <div className="flex-1 min-h-0 overflow-auto">
-                        <div className="mt-4 ">
-                            {/* Back button - pl-12/pl-14 reserves space for collapsed sidebar toggle */}
-                            <button
-                                onClick={() => router.push("/")}
-                                className={`-mb-1 flex items-center gap-2 py-1 pl-4 transition-colors hover:opacity-80 ${!primaryHex ? "text-highlight" : ""}`}
-                                style={primaryHex ? { color: primaryHex } : undefined}
-                            >
-                                <ArrowLeft className="w-5 h-5 flex-shrink-0" />
-                                <span className="text-sm sm:text-base">Back</span>
-                            </button>
-
-                            {!brand?.enableProfessionalConnect && !brand?.enableFriendConnect ? (
-                                <div className="px-4 py-12 text-center text-lg text-muted opacity-60">
-                                    Community is not available right now.
-                                </div>
-                            ) : (
-                                <>
-                                    <div className="px-4 py-3">
-                                        <p className="text-sm font-extralight text-muted sm:text-base">
-                                            Browse through all connection requests and get connecting. Or create your own! :)
-                                        </p>
-                                    </div>
-                                    {loading ? (
-                                        <div className="flex justify-center p-4 sm:p-8">
-                                            <Loader
-                                                loadingMessage="Loading community..."
-                                                primaryHex={primaryHex}
-                                            />
-                                        </div>
-                                    ) : error ? (
-                                        <div className="p-4 sm:p-8 text-center text-red-600 text-sm sm:text-base">{error}</div>
-                                    ) : visibleRequirements.length === 0 ? (
-                                        <div className="flex min-h-[40vh] flex-col items-center justify-center px-4 py-8 text-center">
-                                            <p className="text-sm text-muted sm:text-base">
-                                                No community posts yet. Use the bar above to create your first post.
-                                            </p>
-                                        </div>
-                                    ) : (
-                                        <div className="grid grid-cols-1 gap-3 px-4 py-4 sm:grid-cols-2 sm:gap-4 sm:py-8 lg:grid-cols-3">
-                                            {visibleRequirements.map((r) => (
-                                                <CommunityCard
-                                                    key={r.id}
-                                                    name={r.name}
-                                                    date={r.date}
-                                                    description={r.description}
-                                                    requirement={r.requirement}
-                                                    onConnect={() => handleConnect(user.id, r.userId, r.name)}
-                                                    connectLabel={paidConnectedUserIds.has(String(r.userId)) ? "Message" : "Connect"}
-                                                    isOwnPost={String(r.userId) === String(user?.id)}
-                                                    primaryBrandColor={primaryHex}
-                                                    secondaryBrandColor={secondaryHex}
-                                                />
-                                            ))}
-                                        </div>
-                                    )}
-                                </>
-                            )}
-                        </div>
-                    </div>
-                    <PoweredByKavisha />
-                </div>
-            </div>
-            {/* Connecting overlay: from Connect click until chat opens */}
-            {connectingToUserId && (
-                <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40">
-                    <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-8 py-6 shadow-xl">
-                        <div className="relative">
-                            <div className="h-10 w-10 rounded-full border-4 border-border" />
-                            <div
-                                className={`absolute inset-0 h-10 w-10 animate-spin rounded-full border-4 border-transparent ${!primaryHex ? "border-t-highlight" : ""}`}
-                                style={primaryHex ? { borderTopColor: primaryHex } : undefined}
-                            />
-                        </div>
-                        <span
-                            className={`text-sm font-medium ${!primaryHex ? "text-highlight" : ""}`}
-                            style={primaryHex ? { color: primaryHex } : undefined}
-                        >
-                            Connecting...
-                        </span>
-                    </div>
-                </div>
-            )}
-            {/* 1-on-1 chat overlay when Connect is clicked */}
-            {openChat && chatUserA && chatUserB && (
-                <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center bg-black/30 p-0 sm:p-4">
-                    <div className="bg-background w-full sm:max-w-lg h-[85vh] sm:h-[80vh] max-h-[100vh] border border-border shadow-2xl flex flex-col overflow-hidden rounded-t-xl sm:rounded-xl">
-                        <LiveChat
-                            userA={chatUserA}
-                            userB={chatUserB}
-                            currentUserId={user?.id}
-                            onClose={() => setOpenChat(false)}
-                            connectionId={connectionId}
-                            isEmbedded={true}
-                            otherUserDisplayName={chatOtherDisplayName}
-                        />
-                    </div>
-                </div>
-            )}
-        </div>
+      <Loader
+        loadingMessage="Loading..."
+        primaryHex={
+          brand ? normalizeBrandHex(brand.primaryBrandColor) : null
+        }
+      />
     );
+  }
+
+  const primaryHex = normalizeBrandHex(brand?.primaryBrandColor);
+  const secondaryHex = normalizeBrandHex(brand?.secondaryBrandColor);
+  const rawBrandLabel =
+    brand?.brandName || brand?.title || brand?.communityName || brand?.subdomain || "";
+  const brandDisplayName = String(rawBrandLabel).trim() || "We";
+  const primaryCtaClass =
+    "rounded-full px-6 py-3 text-white transition-colors hover:opacity-90 disabled:opacity-50";
+
+  const showJobs = !!brand?.enableProfessionalConnect;
+  const showHire = !!brand?.enableProfessionalConnect;
+  const showFriends = !!brand?.enableFriendConnect;
+
+  const findJobsMsg = JOB_SEEKER_OPENING_MESSAGE;
+  const hireMsg =
+    "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)";
+  const friendsMsg =
+    "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)";
+
+  const hubButtonClass =
+    "w-full max-w-xs rounded-full px-5 py-3 text-center text-sm font-semibold uppercase tracking-wide text-white shadow-sm transition-opacity hover:opacity-90 disabled:opacity-45 sm:px-6 sm:py-3.5 sm:text-base " +
+    (!primaryHex ? "bg-highlight" : "");
+  const hubButtonStyle = primaryHex
+    ? { backgroundColor: primaryHex }
+    : undefined;
+
+  if (!user) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center bg-background px-4 text-foreground">
+        <div className="w-full max-w-md text-center">
+          <h1
+            className={`mb-4 text-2xl uppercase tracking-wide md:text-3xl ${!secondaryHex ? "text-highlight" : ""}`}
+            style={secondaryHex ? { color: secondaryHex } : undefined}
+          >
+            Community
+          </h1>
+          <p className="mb-8 text-muted">
+            Sign in to use the community and connect with people.
+          </p>
+          {popupBlockedHint && !isBlocked && (
+            <p className="mb-4 text-sm text-amber-600">
+              Tap again to enable pop-up! Cheers! :)
+            </p>
+          )}
+          {isBlocked ? (
+            <button
+              type="button"
+              onClick={openInChrome}
+              className={`${primaryCtaClass} ${!primaryHex ? "bg-highlight" : ""}`}
+              style={primaryHex ? { backgroundColor: primaryHex } : undefined}
+            >
+              Open in Chrome to sign in
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={handleSignInToCommunity}
+              disabled={signingIn}
+              className={`${primaryCtaClass} ${!primaryHex ? "bg-highlight" : ""} disabled:opacity-50`}
+              style={primaryHex ? { backgroundColor: primaryHex } : undefined}
+            >
+              {signingIn ? "Signing in..." : "Sign in to continue"}
+            </button>
+          )}
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className={`mx-auto mt-6 flex items-center justify-center gap-2 hover:opacity-80 ${!primaryHex ? "text-highlight" : ""}`}
+            style={primaryHex ? { color: primaryHex } : undefined}
+          >
+            <ArrowLeft className="w-4 h-4" />
+            <span className="text-sm">Back to home</span>
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="flex h-[calc(100vh-64px)] flex-col overflow-hidden">
+      <CommunityBrandStrip
+        communityName={brand?.communityName || "Community"}
+        primaryHex={primaryHex}
+      />
+      <div className="flex min-h-0 flex-1 overflow-hidden">
+        <div>
+          <ChatSidebar
+            allChats={allChats}
+            updateChatId={updateChatId}
+            currentChatId={null}
+            setCurrentChatType={() => {}}
+            onCollapsedChange={() => {}}
+            isCommunity={true}
+            onNewCommunityChat={createCommunityPost}
+            chatBasePath="/community"
+            homePath="/community"
+            defaultCollapsed={true}
+          />
+        </div>
+        <div className="flex min-h-0 min-w-0 flex-1 flex-col">
+          <div className="min-h-0 flex-1 overflow-auto">
+            <div className="mt-4">
+              <button
+                type="button"
+                onClick={() => router.push("/")}
+                className={`-mb-1 flex items-center gap-2 py-1 pl-4 transition-colors hover:opacity-80 ${!primaryHex ? "text-highlight" : ""}`}
+                style={primaryHex ? { color: primaryHex } : undefined}
+              >
+                <ArrowLeft className="h-5 w-5 flex-shrink-0" />
+                <span className="text-sm sm:text-base">Back</span>
+              </button>
+
+              {!brand?.enableProfessionalConnect && !brand?.enableFriendConnect ? (
+                <div className="px-4 py-12 text-center text-lg text-muted opacity-60">
+                  Community is not available right now.
+                </div>
+              ) : (
+                <div className="flex min-h-[calc(100vh-220px)] flex-col items-center justify-center gap-4 px-4 py-10 sm:gap-5 sm:py-16">
+                  <p className="max-w-md text-center text-sm font-extralight text-muted sm:text-base">
+                    <span className="font-medium text-foreground">
+                      {brandDisplayName}
+                    </span>{" "}
+                    is helping people find jobs, hire people, and even connect
+                    for friendly collaborations. Talk to our agent, and
+                    we&apos;ll help you out! :)
+                  </p>
+                  <nav
+                    className="flex w-full flex-col items-center gap-3 sm:gap-4"
+                    aria-label="Community entry"
+                  >
+                    {showJobs ? (
+                      <button
+                        type="button"
+                        className={hubButtonClass}
+                        style={hubButtonStyle}
+                        disabled={creating === "job_seeker"}
+                        onClick={() =>
+                          createCommunityPost(
+                            "job_seeker",
+                            JOB_SEEKER_CHAT_TITLE,
+                            findJobsMsg
+                          )
+                        }
+                      >
+                        {creating === "job_seeker" ? "Starting…" : "Find jobs"}
+                      </button>
+                    ) : null}
+                    {showHire ? (
+                      <button
+                        type="button"
+                        className={hubButtonClass}
+                        style={hubButtonStyle}
+                        disabled={creating === "recruiter"}
+                        onClick={() =>
+                          createCommunityPost(
+                            "recruiter",
+                            "Looking at hiring",
+                            hireMsg
+                          )
+                        }
+                      >
+                        {creating === "recruiter" ? "Starting…" : "Hire people"}
+                      </button>
+                    ) : null}
+                    {showFriends ? (
+                      <button
+                        type="button"
+                        className={hubButtonClass}
+                        style={hubButtonStyle}
+                        disabled={creating === "friends"}
+                        onClick={() =>
+                          createCommunityPost(
+                            "friends",
+                            "Looking for a friend",
+                            friendsMsg
+                          )
+                        }
+                      >
+                        {creating === "friends" ? "Starting…" : "Find friends"}
+                      </button>
+                    ) : null}
+                  </nav>
+                </div>
+              )}
+            </div>
+          </div>
+          <PoweredByKavisha />
+        </div>
+      </div>
+    </div>
+  );
 }

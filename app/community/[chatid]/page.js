@@ -10,10 +10,6 @@ import CommunityBrandStrip from "@/app/components/CommunityBrandStrip";
 import Loader from "@/app/components/Loader";
 import PoweredByKavisha from "@/app/components/PoweredByKavisha";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
-import {
-  JOB_SEEKER_CHAT_TITLE,
-  JOB_SEEKER_OPENING_MESSAGE,
-} from "@/app/lib/jobSeekerIntro";
 
 export default function CommunityChatPage() {
   const params = useParams();
@@ -23,8 +19,6 @@ export default function CommunityChatPage() {
   const brandContext = useBrandContext();
   const [allChats, setAllChats] = useState(null);
   const [currentChatType, setCurrentChatType] = useState(null);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
-  const [creating, setCreating] = useState(null);
 
   useEffect(() => {
     if (!user || !brandContext) return;
@@ -48,7 +42,6 @@ export default function CommunityChatPage() {
     const serviceKey = service?._key ?? services[0]?._key;
     if (!serviceKey) return;
 
-    setCreating(type);
     try {
       const res = await fetch("/api/newchatsession", {
         method: "POST",
@@ -68,8 +61,6 @@ export default function CommunityChatPage() {
       }
     } catch (e) {
       console.error("Error creating community session:", e);
-    } finally {
-      setCreating(null);
     }
   };
 
@@ -88,31 +79,12 @@ export default function CommunityChatPage() {
   if (!user) return null;
 
   const primaryHex = normalizeBrandHex(brandContext?.primaryBrandColor);
-  const secondaryHex = normalizeBrandHex(brandContext?.secondaryBrandColor);
-  const findJobsMsg = JOB_SEEKER_OPENING_MESSAGE;
-  const hireMsg =
-    "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)";
-  const friendsMsg =
-    "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)";
 
   return (
     <div className="min-h-[calc(100vh-64px)] h-[calc(100vh-64px)] flex flex-col overflow-hidden">
       <CommunityBrandStrip
         communityName={brandContext?.communityName || "Community"}
         primaryHex={primaryHex}
-        secondaryHex={secondaryHex}
-        enableProfessionalConnect={!!brandContext?.enableProfessionalConnect}
-        enableFriendConnect={!!brandContext?.enableFriendConnect}
-        creating={creating}
-        onFindJobs={() =>
-          createCommunityPost("job_seeker", JOB_SEEKER_CHAT_TITLE, findJobsMsg)
-        }
-        onHirePeople={() =>
-          createCommunityPost("recruiter", "Looking at hiring", hireMsg)
-        }
-        onFindFriends={() =>
-          createCommunityPost("friends", "Looking for a friend", friendsMsg)
-        }
       />
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div>
@@ -121,7 +93,7 @@ export default function CommunityChatPage() {
             updateChatId={updateChatId}
             currentChatId={currentChatId}
             setCurrentChatType={setCurrentChatType}
-            onCollapsedChange={setIsSidebarCollapsed}
+            onCollapsedChange={() => {}}
             isCommunity={true}
             onNewCommunityChat={createCommunityPost}
             chatBasePath="/community"
