@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { Maximize2, MessageCircle, Minimize2, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import ChatBoxWidget from "./components/ChatBoxWidget";
 import WidgetPostMessageAuth from "./components/WidgetPostMessageAuth";
@@ -12,6 +12,11 @@ const LAUNCHER_NUDGE_DELAY_MS = 3000;
 
 /** Closed widget embed / iframe size (matches AMP `embed-size` minimum height). */
 const WIDGET_CLOSED_SIZE = 100;
+
+/** Open panel height: normal vs taller (embed tells parent via postMessage). */
+const WIDGET_OPEN_HEIGHT = 640;
+/** Must not use `window.innerHeight` here — inside an iframe that is the iframe height (~640), so the parent would never see a larger request. Embed clamps to the real viewport. */
+const WIDGET_OPEN_HEIGHT_MAX = 1005;
 
 /** e.g. `entrackr` → `Entrackr's AI Chat`; empty → `AI Chat`. */
 function widgetHeadingFromBrand(brandSlug) {
@@ -30,6 +35,7 @@ function WidgetShell() {
     searchParams.get("brand") || searchParams.get("subdomain") || "";
 
   const [isOpen, setIsOpen] = useState(false);
+  const [widgetMaximized, setWidgetMaximized] = useState(false);
   const [primaryColor, setPrimaryColor] = useState(null);
   const [secondaryColor, setSecondaryColor] = useState(null);
   const [launcherImageUrl, setLauncherImageUrl] = useState(null);
@@ -78,20 +84,20 @@ function WidgetShell() {
         }
         const url =
           typeof data?.widgetLauncherImageUrl === "string" &&
-          data.widgetLauncherImageUrl.trim()
+            data.widgetLauncherImageUrl.trim()
             ? data.widgetLauncherImageUrl.trim()
             : null;
         setLauncherImageUrl(url);
         setLauncherAnimation(Boolean(data?.widgetLauncherAnimation));
         const h =
           typeof data?.widgetChatbotHeader === "string" &&
-          data.widgetChatbotHeader.trim()
+            data.widgetChatbotHeader.trim()
             ? data.widgetChatbotHeader.trim()
             : null;
         setWidgetChatbotHeader(h);
         const rm =
           typeof data?.widgetCopyReadMoreUrl === "string" &&
-          data.widgetCopyReadMoreUrl.trim()
+            data.widgetCopyReadMoreUrl.trim()
             ? data.widgetCopyReadMoreUrl.trim()
             : "";
         setWidgetCopyReadMoreUrl(rm);
@@ -127,16 +133,24 @@ function WidgetShell() {
   }, [launcherAnimation, themeReady]);
 
   useEffect(() => {
+    if (!isOpen) setWidgetMaximized(false);
+  }, [isOpen]);
+
+  useEffect(() => {
     if (typeof window === "undefined" || window.parent === window) return;
     const width = isOpen ? 400 : WIDGET_CLOSED_SIZE;
-    const height = isOpen ? 640 : WIDGET_CLOSED_SIZE;
+    const height = isOpen
+      ? widgetMaximized
+        ? WIDGET_OPEN_HEIGHT_MAX
+        : WIDGET_OPEN_HEIGHT
+      : WIDGET_CLOSED_SIZE;
     window.parent.postMessage({ source: "kavisha-widget", width, height }, "*");
     // AMP `amp-iframe` + `resizable`: https://amp.dev/documentation/components/amp-iframe/#iframe-resizing
     window.parent.postMessage(
       { sentinel: "amp", type: "embed-size", width, height },
       "*"
     );
-  }, [isOpen]);
+  }, [isOpen, widgetMaximized]);
 
   return (
     <div
@@ -162,18 +176,36 @@ function WidgetShell() {
             >
               {headerTitle}
             </span>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              aria-label="Close chat"
-              className={
-                primaryHex
-                  ? "absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-white/90 transition hover:bg-white/15 hover:text-white"
-                  : "absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted transition hover:bg-muted-bg hover:text-foreground"
-              }
-            >
-              <X className="h-5 w-5" strokeWidth={2} />
-            </button>
+            <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
+              <button
+                type="button"
+                onClick={() => setWidgetMaximized((m) => !m)}
+                aria-label={widgetMaximized ? "Restore chat size" : "Expand chat height"}
+                className={
+                  primaryHex
+                    ? "rounded-full p-1.5 text-white/90 transition hover:bg-white/15 hover:text-white"
+                    : "rounded-full p-1.5 text-muted transition hover:bg-muted-bg hover:text-foreground"
+                }
+              >
+                {widgetMaximized ? (
+                  <Minimize2 className="h-5 w-5" strokeWidth={2} />
+                ) : (
+                  <Maximize2 className="h-5 w-5" strokeWidth={2} />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsOpen(false)}
+                aria-label="Close chat"
+                className={
+                  primaryHex
+                    ? "rounded-full p-1.5 text-white/90 transition hover:bg-white/15 hover:text-white"
+                    : "rounded-full p-1.5 text-muted transition hover:bg-muted-bg hover:text-foreground"
+                }
+              >
+                <X className="h-5 w-5" strokeWidth={2} />
+              </button>
+            </div>
           </div>
           <div className="flex min-h-[240px] min-w-0 flex-1 flex-col overflow-hidden px-3 pb-3 pt-2">
             {/* Sign-in + bearer tokens: `ChatBoxWidget` + `app/lib/widget-session.js` (not this shell). */}
@@ -200,9 +232,9 @@ function WidgetShell() {
           style={
             primaryHex
               ? {
-                  backgroundColor: primaryHex,
-                  boxShadow: `0 10px 15px -3px rgb(0 0 0 / 0.12), 0 4px 6px -4px rgb(0 0 0 / 0.08), 0 0 0 2px ${hexToRgba(primaryHex, 0.38) || "transparent"}`,
-                }
+                backgroundColor: primaryHex,
+                boxShadow: `0 10px 15px -3px rgb(0 0 0 / 0.12), 0 4px 6px -4px rgb(0 0 0 / 0.08), 0 0 0 2px ${hexToRgba(primaryHex, 0.38) || "transparent"}`,
+              }
               : undefined
           }
         >

@@ -17,15 +17,26 @@ import GlobalMessages from "./GlobalMessages";
 import MobileBottomNav from "./MobileBottomNav";
 import { CartContextProvider } from "../context/cart/CartContextProvider";
 
+/** Widget iframe: socket for LiveChat DMs (must stay outside `ClientLayout` to avoid remounting). */
+function WidgetSocketShell({ children }) {
+  const { user } = useFirebaseSession();
+  return (
+    <SocketProvider userId={user?.id}>
+      <div className="h-full min-h-0 bg-transparent text-foreground">{children}</div>
+    </SocketProvider>
+  );
+}
+
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
   if (pathname === "/widget") {
     return (
       <FirebaseSessionProvider>
-        <div className="h-full min-h-0 bg-transparent text-foreground">{children}</div>
+        <WidgetSocketShell>{children}</WidgetSocketShell>
       </FirebaseSessionProvider>
     );
   }
+
   const isMaintenancePage = pathname === "/maintenance";
   const isAdmin = pathname?.startsWith("/admin");
 

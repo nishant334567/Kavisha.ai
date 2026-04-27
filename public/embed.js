@@ -24,7 +24,15 @@ function mount() {
   var lastRequestedW = 100;
   var lastRequestedH = 100;
 
-  /** Fit iframe to host window; open panel max 80vh tall. Open iframe: centered on narrow viewports, right-aligned from md (768px) up — matches widget layout. */
+  /** Default open height from widget; above this ⇒ maximized — allow up to MAX_OPEN_H. */
+  var DEFAULT_OPEN_H = 640;
+  var MAX_OPEN_H = 1005;
+
+  /**
+   * Fit iframe to host window. Closed: nearly full viewport minus inset.
+   * Open default: cap at ~80vh. Open maximized: honor requested height up to MAX_OPEN_H (still ≤ vh − inset).
+   * Open iframe: centered on narrow viewports, right-aligned from md (768px) up — matches widget layout.
+   */
   function applyIframeSize() {
     var inset = 28; // ~fixed bottom/right 24px + buffer
     var vw =
@@ -35,9 +43,18 @@ function mount() {
     var mdUp = vw >= 768;
 
     var maxW = Math.max(240, vw - inset);
-    var maxH = openPanel
-      ? Math.max(280, Math.min(Math.floor(vh * 0.8), vh - inset))
-      : Math.max(280, vh - inset);
+    var vhMinusInset = vh - inset;
+    var maxH;
+    if (!openPanel) {
+      maxH = Math.max(280, vhMinusInset);
+    } else if (lastRequestedH > DEFAULT_OPEN_H) {
+      maxH = Math.max(280, Math.min(MAX_OPEN_H, vhMinusInset));
+    } else {
+      maxH = Math.max(
+        280,
+        Math.min(Math.floor(vh * 0.8), vhMinusInset)
+      );
+    }
 
     iframe.style.width = Math.min(lastRequestedW, maxW) + "px";
     iframe.style.height = Math.min(lastRequestedH, maxH) + "px";

@@ -1,7 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
-import { ChevronDown, Loader2, LogOut, Plus, Send, Users, X } from "lucide-react";
+import {
+  ChevronDown,
+  Loader2,
+  LogOut,
+  Mail,
+  Plus,
+  Send,
+  Users,
+  X,
+} from "lucide-react";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import {
   clearWidgetAuth,
@@ -19,6 +28,7 @@ import AssistantSourceCards from "@/app/components/AssistantSourceCards";
 import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton";
 import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
+import LiveChat from "@/app/components/LiveChat";
 import WidgetIntroTypewriter from "./WidgetIntroTypewriter";
 import WidgetChatLoader, {
   WIDGET_LOADER_MESSAGES,
@@ -122,6 +132,15 @@ export default function ChatBoxWidget({
   const [signingOut, setSigningOut] = useState(false);
   const [historyMenuOpen, setHistoryMenuOpen] = useState(false);
   const historyMenuRef = useRef(null);
+  /** Admin → user DMs after `since` in sessionStorage (see fetchAdminUnread). */
+  const [adminUnreadCount, setAdminUnreadCount] = useState(0);
+  const [brandInboxOpen, setBrandInboxOpen] = useState(false);
+  const [brandInboxUserA, setBrandInboxUserA] = useState(null);
+  const [brandInboxUserB, setBrandInboxUserB] = useState(null);
+  const [brandInboxConnectionId, setBrandInboxConnectionId] = useState(null);
+  const [brandInboxViewerId, setBrandInboxViewerId] = useState(null);
+  const [brandInboxPeerName, setBrandInboxPeerName] = useState("");
+  const [brandInboxLoading, setBrandInboxLoading] = useState(false);
 
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
@@ -155,6 +174,68 @@ export default function ChatBoxWidget({
       setSessionsHydrated(true);
     }
   }, [effectiveUser, brand]);
+
+  const fetchAdminUnread = useCallback(async () => {
+    const sid = effectiveUser?.id || effectiveUser?.uid;
+    if (!sid || !brand) return;
+    try {
+      const key = `kavisha:widget:adminInboxSince:${brand}:${sid}`;
+      let since = sessionStorage.getItem(key);
+      if (!since) {
+        since = new Date().toISOString();
+        sessionStorage.setItem(key, since);
+      }
+      const res = await widgetAwareFetch(
+        `/api/widget/brand-admin-unread?brand=${encodeURIComponent(brand)}&since=${encodeURIComponent(since)}`
+      );
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && typeof data.unreadCount === "number") {
+        setAdminUnreadCount(data.unreadCount);
+      }
+    } catch {
+      /* ignore */
+    }
+  }, [effectiveUser?.id, effectiveUser?.uid, brand]);
+
+  useEffect(() => {
+    const sid = effectiveUser?.id || effectiveUser?.uid;
+    if (authLoading || !sid || !brand) return;
+    void fetchAdminUnread();
+    const t = setInterval(() => void fetchAdminUnread(), 45000);
+    return () => clearInterval(t);
+  }, [authLoading, effectiveUser?.id, effectiveUser?.uid, brand, fetchAdminUnread]);
+
+  const openBrandInbox = useCallback(async () => {
+    const sid = effectiveUser?.id || effectiveUser?.uid;
+    if (!sid || !brand) return;
+    setBrandInboxLoading(true);
+    try {
+      const res = await widgetAwareFetch(
+        `/api/widget/brand-admin-inbox-open?brand=${encodeURIComponent(brand)}`
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(
+          typeof data?.error === "string" ? data.error : "Could not open messages"
+        );
+      }
+      sessionStorage.setItem(
+        `kavisha:widget:adminInboxSince:${brand}:${sid}`,
+        new Date().toISOString()
+      );
+      setAdminUnreadCount(0);
+      setBrandInboxUserA(String(data.userA));
+      setBrandInboxUserB(String(data.userB));
+      setBrandInboxConnectionId(String(data.connectionId));
+      setBrandInboxViewerId(String(data.currentUserId));
+      setBrandInboxPeerName(String(data.peerName || "Brand"));
+      setBrandInboxOpen(true);
+    } catch (e) {
+      setSessionError(e?.message || "Could not open messages");
+    } finally {
+      setBrandInboxLoading(false);
+    }
+  }, [effectiveUser?.id, effectiveUser?.uid, brand]);
 
   useEffect(() => {
     if (!authLoading && effectiveUser && brand) loadSessions();
@@ -649,6 +730,7 @@ export default function ChatBoxWidget({
   }
 
   return (
+    <>
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
       <div className="flex flex-col gap-2">
         <div className="relative" ref={historyMenuRef}>
@@ -696,7 +778,7 @@ export default function ChatBoxWidget({
         {sessions.length === 0 && !sessionsLoading && (
           <p className="text-[11px] text-muted">No widget chats yet</p>
         )}
-        <div className="grid grid-cols-3 gap-2">
+        <div className="grid grid-cols-2 gap-2">
           <button
             type="button"
             onClick={openNewChatPicker}
@@ -736,6 +818,26 @@ export default function ChatBoxWidget({
           >
             <Users className="h-4 w-4 shrink-0" />
             <span className="min-w-0 truncate">Community</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => void openBrandInbox()}
+            disabled={brandInboxLoading || signingOut}
+            className="relative flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg disabled:opacity-50"
+            title="Messages from the brand team"
+          >
+            {brandInboxLoading ? (
+              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+            ) : (
+              <Mail className="h-4 w-4 shrink-0" />
+            )}
+            <span className="min-w-0 truncate">Messages</span>
+            {adminUnreadCount > 0 ? (
+              <span
+                className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-card"
+                aria-label="Unread"
+              />
+            ) : null}
           </button>
           <button
             type="button"
@@ -1041,5 +1143,26 @@ export default function ChatBoxWidget({
         </>
       )}
     </div>
+    {brandInboxOpen &&
+      brandInboxUserA &&
+      brandInboxUserB &&
+      brandInboxConnectionId &&
+      brandInboxViewerId && (
+        <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/35 p-0 sm:items-center sm:p-3">
+          <div className="flex h-[min(88dvh,560px)] w-full max-h-[92dvh] max-w-md flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-2xl sm:rounded-2xl">
+            <LiveChat
+              userA={brandInboxUserA}
+              userB={brandInboxUserB}
+              currentUserId={brandInboxViewerId}
+              connectionId={brandInboxConnectionId}
+              onClose={() => setBrandInboxOpen(false)}
+              isEmbedded={true}
+              otherUserDisplayName={brandInboxPeerName}
+              httpFetch={(url, init) => widgetAwareFetch(url, init ?? {})}
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }

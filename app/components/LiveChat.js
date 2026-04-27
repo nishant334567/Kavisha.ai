@@ -5,6 +5,11 @@ import useSocket from "../context/useSocket";
 import { X, Lock, Unlock } from "lucide-react";
 import { formatDate } from "../utils/dateUtils";
 
+/** Default: cookie session. Pass `widgetAwareFetch` from the embed for Bearer auth. */
+async function defaultHttpFetch(input, init) {
+  return fetch(input, { ...init, credentials: init?.credentials ?? "include" });
+}
+
 export default function Livechat({
   userA,
   userB,
@@ -16,6 +21,7 @@ export default function Livechat({
   /** When set with showMessagingControls, admin can close/reopen user messaging for this thread. */
   messagingBrand = "",
   showMessagingControls = false,
+  httpFetch = defaultHttpFetch,
 }) {
   const [message, setMessage] = useState("");
   const { user } = useFirebaseSession();
@@ -58,9 +64,8 @@ export default function Livechat({
   }, [messages]);
 
   const refreshConnectionMeta = useCallback(async () => {
-    const response = await fetch(`/api/check-connection`, {
+    const response = await httpFetch(`/api/check-connection`, {
       method: "POST",
-      credentials: "include",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         userA,
@@ -79,7 +84,7 @@ export default function Livechat({
         reopenRequestedAt: data.reopenRequestedAt ?? null,
       });
     }
-  }, [userA, userB, connectionId, currentUserId]);
+  }, [userA, userB, connectionId, currentUserId, httpFetch]);
 
   useEffect(() => {
     setConnectionLoading(true);
@@ -200,9 +205,8 @@ export default function Livechat({
     if (!showMessagingControls || !messagingBrand?.trim() || !cid) return;
     setMessagingActionLoading(true);
     try {
-      const res = await fetch("/api/admin/conversations/messaging", {
+      const res = await httpFetch("/api/admin/conversations/messaging", {
         method: "PATCH",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           connectionId: cid,
@@ -225,9 +229,8 @@ export default function Livechat({
     setReopenSubmitting(true);
     setReopenError("");
     try {
-      const res = await fetch("/api/conversation/reopen-request", {
+      const res = await httpFetch("/api/conversation/reopen-request", {
         method: "POST",
-        credentials: "include",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ connectionId: cid }),
       });
