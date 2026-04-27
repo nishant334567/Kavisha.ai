@@ -792,83 +792,85 @@ export default function ChatBoxWidget({
         {sessions.length === 0 && !sessionsLoading && (
           <p className="text-[11px] text-muted">No widget chats yet</p>
         )}
-        <div className="grid grid-cols-2 gap-2">
-          <button
-            type="button"
-            onClick={openNewChatPicker}
-            disabled={
-              newChatLoading ||
-              leadJourneysLoading ||
-              sessionsLoading ||
-              signingOut
-            }
-            className={`flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl px-2 py-1 text-[11px] font-medium shadow-sm transition hover:opacity-92 disabled:opacity-50 ${primaryHex
-                ? "border border-transparent text-white"
-                : "border border-border/50 bg-background text-foreground hover:bg-muted-bg"
-              }`}
-            style={
-              primaryHex
-                ? {
-                  backgroundColor: primaryHex,
-                  boxShadow: `0 2px 10px ${hexToRgba(primaryHex, 0.32) || "rgba(0,0,0,0.1)"}`,
-                }
-                : undefined
-            }
-          >
-            {newChatLoading || leadJourneysLoading ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-            ) : (
-              <Plus className="h-4 w-4 shrink-0" />
-            )}
-            <span className="min-w-0 truncate">New chat</span>
-          </button>
-          <button
-            type="button"
-            onClick={() =>
-              window.open(buildBrandCommunityUrl(brand), "_blank", "noopener,noreferrer")
-            }
-            className="flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg"
-            title="Open community in a new tab"
-          >
-            <Users className="h-4 w-4 shrink-0" />
-            <span className="min-w-0 truncate">Community</span>
-          </button>
-          {adminMessagesEnabled ? (
+        <div className="-mx-1 overflow-x-auto overflow-y-hidden scroll-smooth pb-1 scrollbar-thin">
+          <div className="flex min-w-full flex-nowrap items-stretch justify-between gap-2 px-1 sm:gap-2.5 sm:px-2">
             <button
               type="button"
-              onClick={() => void openBrandInbox()}
-              disabled={brandInboxLoading || signingOut}
-              className="relative flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2 py-1 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg disabled:opacity-50"
-              title="Messages from the brand team"
+              onClick={openNewChatPicker}
+              disabled={
+                newChatLoading ||
+                leadJourneysLoading ||
+                sessionsLoading ||
+                signingOut
+              }
+              className={`flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] font-medium shadow-sm transition hover:opacity-92 disabled:opacity-50 sm:min-w-[7.25rem] sm:px-3 ${primaryHex
+                  ? "border border-transparent text-white"
+                  : "border border-border/50 bg-background text-foreground hover:bg-muted-bg"
+                }`}
+              style={
+                primaryHex
+                  ? {
+                    backgroundColor: primaryHex,
+                    boxShadow: `0 2px 10px ${hexToRgba(primaryHex, 0.3) || "rgba(0,0,0,0.1)"}`,
+                  }
+                  : undefined
+              }
             >
-              {brandInboxLoading ? (
+              {newChatLoading || leadJourneysLoading ? (
                 <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
               ) : (
-                <Mail className="h-4 w-4 shrink-0" />
+                <Plus className="h-4 w-4 shrink-0" />
               )}
-              <span className="min-w-0 truncate">Messages</span>
-              {adminUnreadCount > 0 ? (
-                <span
-                  className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-card"
-                  aria-label="Unread"
-                />
-              ) : null}
+              <span className="whitespace-nowrap">New chat</span>
             </button>
-          ) : null}
-          <button
-            type="button"
-            onClick={handleWidgetSignOut}
-            disabled={signingOut}
-            className="flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2 py-1 text-[11px] font-medium text-muted shadow-sm transition hover:bg-muted-bg hover:text-foreground disabled:opacity-50"
-            title="Sign out"
-          >
-            {signingOut ? (
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-            ) : (
-              <LogOut className="h-4 w-4 shrink-0" />
-            )}
-            <span className="min-w-0 truncate">Sign out</span>
-          </button>
+            <button
+              type="button"
+              onClick={() =>
+                window.open(buildBrandCommunityUrl(brand), "_blank", "noopener,noreferrer")
+              }
+              className="flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2.5 py-1.5 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg sm:min-w-[7.25rem] sm:px-3"
+              title="Open community in a new tab"
+            >
+              <Users className="h-4 w-4 shrink-0" />
+              <span className="whitespace-nowrap">Community</span>
+            </button>
+            {adminMessagesEnabled ? (
+              <button
+                type="button"
+                onClick={() => void openBrandInbox()}
+                disabled={brandInboxLoading || signingOut}
+                className="relative flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2.5 py-1.5 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg disabled:opacity-50 sm:min-w-[7.25rem] sm:px-3"
+                title="Messages from the brand team"
+              >
+                {brandInboxLoading ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                ) : (
+                  <Mail className="h-4 w-4 shrink-0" />
+                )}
+                <span className="whitespace-nowrap">Messages</span>
+                {adminUnreadCount > 0 ? (
+                  <span
+                    className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-card"
+                    aria-label="Unread"
+                  />
+                ) : null}
+              </button>
+            ) : null}
+            <button
+              type="button"
+              onClick={handleWidgetSignOut}
+              disabled={signingOut}
+              className="flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2.5 py-1.5 text-[11px] font-medium text-muted shadow-sm transition hover:bg-muted-bg hover:text-foreground disabled:opacity-50 sm:min-w-[7.25rem] sm:px-3"
+              title="Sign out"
+            >
+              {signingOut ? (
+                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+              ) : (
+                <LogOut className="h-4 w-4 shrink-0" />
+              )}
+              <span className="whitespace-nowrap">Sign out</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -966,7 +968,7 @@ export default function ChatBoxWidget({
 
       {activeSessionId && chatRole === LEAD_JOURNEY_ROLE && !logsLoading && (
         <>
-          <div className="scrollbar-thin min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden border-t border-border/25 bg-muted-bg/20 p-3 dark:border-border/20 dark:bg-muted-bg/10">
+          <div className="scrollbar-thin min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden border-t border-border/25 bg-muted-bg/20 p-3 dark:border-border/20 dark:bg-muted-bg/10 md:rounded-b-xl">
             {messages.length === 0 && !logsLoading && (
               <p className="py-8 text-center text-xs text-muted">
                 {introQuestions.length > 0

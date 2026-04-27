@@ -23,18 +23,20 @@ function mount() {
   /** Last size the iframe asked for (open vs closed); re-clamped on host resize. */
   var lastRequestedW = 100;
   var lastRequestedH = 100;
+  var lastMaximized = false;
 
   /** Default open height from widget; above this ⇒ maximized — allow up to MAX_OPEN_H. */
   var DEFAULT_OPEN_H = 640;
   var MAX_OPEN_H = 1005;
 
   /**
-   * Fit iframe to host window. Closed: nearly full viewport minus inset.
-   * Open default: cap at ~80vh. Open maximized: honor requested height up to MAX_OPEN_H (still ≤ vh − inset).
-   * Open iframe: centered on narrow viewports, right-aligned from md (768px) up — matches widget layout.
+   * Fit iframe to host window.
+   * Closed: small launcher bottom-right (gutter).
+   * Open + mobile: full width, flush bottom. If maximized, full viewport height (100%).
+   * Open + desktop: width/height clamped as before, bottom-right with ~24px bottom gutter.
    */
   function applyIframeSize() {
-    var inset = 28; // ~fixed bottom/right 24px + buffer
+    var inset = 28;
     var vw =
       window.innerWidth || document.documentElement.clientWidth || lastRequestedW;
     var vh =
@@ -56,28 +58,48 @@ function mount() {
       );
     }
 
-    iframe.style.width = Math.min(lastRequestedW, maxW) + "px";
-    iframe.style.height = Math.min(lastRequestedH, maxH) + "px";
-
-    if (openPanel) {
-      iframe.style.top = "auto";
-      iframe.style.bottom = "24px";
-      if (mdUp) {
-        iframe.style.left = "auto";
-        iframe.style.right = "24px";
-        iframe.style.transform = "none";
-      } else {
-        iframe.style.left = "50%";
-        iframe.style.right = "auto";
-        iframe.style.transform = "translateX(-50%)";
-      }
-    } else {
+    if (!openPanel) {
+      iframe.style.width = Math.min(lastRequestedW, maxW) + "px";
+      iframe.style.height = Math.min(lastRequestedH, maxH) + "px";
       iframe.style.left = "auto";
       iframe.style.right = "24px";
       iframe.style.top = "auto";
       iframe.style.bottom = "24px";
       iframe.style.transform = "none";
+      iframe.style.borderRadius = "";
+      iframe.style.overflow = "";
+      return;
     }
+
+    if (!mdUp) {
+      iframe.style.width = vw + "px";
+      if (lastMaximized) {
+        iframe.style.height = vh + "px";
+        iframe.style.top = "0";
+        iframe.style.bottom = "auto";
+      } else {
+        iframe.style.height = Math.min(lastRequestedH, maxH) + "px";
+        iframe.style.top = "auto";
+        iframe.style.bottom = "0";
+      }
+      iframe.style.left = "0";
+      iframe.style.right = "auto";
+      iframe.style.transform = "none";
+      iframe.style.borderRadius = "";
+      iframe.style.overflow = "";
+      return;
+    }
+
+    iframe.style.width = Math.min(lastRequestedW, maxW) + "px";
+    iframe.style.height = Math.min(lastRequestedH, maxH) + "px";
+    iframe.style.top = "auto";
+    iframe.style.bottom = "24px";
+    iframe.style.left = "auto";
+    iframe.style.right = "24px";
+    iframe.style.transform = "none";
+    /** Match widget shell `md:rounded-2xl` so the host page sees a rounded card, not a square iframe. */
+    iframe.style.borderRadius = "1rem";
+    iframe.style.overflow = "hidden";
   }
 
   window.addEventListener("message", function (e) {
@@ -87,6 +109,7 @@ function mount() {
     if (typeof d.width === "number" && typeof d.height === "number") {
       lastRequestedW = d.width;
       lastRequestedH = d.height;
+      lastMaximized = Boolean(d.maximized);
       applyIframeSize();
     }
   });

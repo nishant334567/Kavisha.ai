@@ -148,26 +148,36 @@ function WidgetShell() {
         ? WIDGET_OPEN_HEIGHT_MAX
         : WIDGET_OPEN_HEIGHT
       : WIDGET_CLOSED_SIZE;
-    window.parent.postMessage({ source: "kavisha-widget", width, height }, "*");
+    const maximized = Boolean(isOpen && widgetMaximized);
+    window.parent.postMessage(
+      { source: "kavisha-widget", width, height, maximized },
+      "*"
+    );
     // AMP `amp-iframe` + `resizable`: https://amp.dev/documentation/components/amp-iframe/#iframe-resizing
     window.parent.postMessage(
-      { sentinel: "amp", type: "embed-size", width, height },
+      { sentinel: "amp", type: "embed-size", width, height, maximized },
       "*"
     );
   }, [isOpen, widgetMaximized]);
 
   return (
     <div
-      className={`fixed inset-0 box-border flex flex-col justify-end overflow-hidden bg-transparent p-2 ${isOpen ? "items-center md:items-end" : "items-end"}`}
+      className={`fixed inset-0 box-border flex flex-col overflow-hidden bg-transparent ${
+        isOpen
+          ? widgetMaximized
+            ? "max-md:p-0 max-md:items-stretch max-md:justify-stretch max-md:min-h-0 md:items-end md:justify-end md:p-2"
+            : "max-md:p-0 max-md:items-stretch max-md:justify-end md:items-end md:justify-end md:p-2"
+          : "items-end justify-end p-2"
+      }`}
     >
       <WidgetPostMessageAuth brand={brandTrimmed} />
       {isOpen ? (
-        <div className="flex h-full min-h-0 w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40">
+        <div className="flex h-full min-h-0 w-full max-w-none flex-col overflow-hidden border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40 max-md:min-h-0 max-md:flex-1 max-md:rounded-b-none max-md:rounded-t-2xl md:max-w-[400px] md:rounded-2xl">
           <div
             className={
               primaryHex
-                ? "relative flex w-full min-w-0 shrink-0 items-center rounded-t-2xl border-b border-black/15 px-1 py-3"
-                : "relative flex w-full min-w-0 shrink-0 items-center rounded-t-2xl border-b border-border/40 bg-muted-bg/20 px-1 py-3 dark:border-border/30 dark:bg-muted-bg/15"
+                ? "relative flex w-full min-w-0 shrink-0 items-center border-b border-black/15 px-1 py-3 max-md:rounded-t-2xl md:rounded-none"
+                : "relative flex w-full min-w-0 shrink-0 items-center border-b border-border/40 bg-muted-bg/20 px-1 py-3 dark:border-border/30 dark:bg-muted-bg/15 max-md:rounded-t-2xl md:rounded-none"
             }
             style={primaryHex ? { backgroundColor: primaryHex } : undefined}
           >
@@ -211,7 +221,7 @@ function WidgetShell() {
               </button>
             </div>
           </div>
-          <div className="flex min-h-[240px] min-w-0 flex-1 flex-col overflow-hidden px-3 pb-3 pt-2">
+          <div className="flex min-h-[240px] min-w-0 flex-1 flex-col overflow-hidden px-3 pb-0 pt-2 md:rounded-b-2xl md:pb-3">
             {/* Sign-in + bearer tokens: `ChatBoxWidget` + `app/lib/widget-session.js` (not this shell). */}
             <ChatBoxWidget
               brand={brand.trim()}
