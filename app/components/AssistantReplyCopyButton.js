@@ -144,6 +144,8 @@ export default function AssistantReplyCopyButton({
   /** Kavisha brand slug (e.g. entrackr) — used when readMoreUrl not set in CMS */
   brandSubdomain = "",
   className = "",
+  /** Widget-style: icon only (no “Copy” / “Copied” label). */
+  iconOnly = false,
 }) {
   const [copied, setCopied] = useState(false);
 
@@ -169,19 +171,35 @@ export default function AssistantReplyCopyButton({
     }
   }, [message, sourceCards, sourceUrls, readMoreUrl, brandSubdomain]);
 
+  const buttonClass = iconOnly
+    ? `peer inline-flex items-center gap-0 rounded-md border-0 bg-transparent p-1.5 text-xs font-medium shadow-none transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-neutral-400/40 focus-visible:ring-offset-1 dark:focus-visible:ring-neutral-500/35 ${
+        copied
+          ? "text-emerald-600 hover:bg-emerald-50/90 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-950/25 dark:hover:text-emerald-300"
+          : "text-neutral-500 hover:bg-neutral-200 hover:text-neutral-700 dark:text-neutral-400 dark:hover:bg-neutral-600 dark:hover:text-neutral-100"
+      }`.trim()
+    : `peer inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-background/90 px-2 py-1 text-xs font-medium text-muted transition-colors hover:border-border hover:bg-muted-bg hover:text-foreground dark:bg-card/80`.trim();
+
   return (
-    <button
-      type="button"
-      title="Copy this reply and its sources (links and titles) as plain text"
-      onClick={() => void handleCopy()}
-      className={`inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-background/90 px-2 py-1 text-xs font-medium text-muted transition-colors hover:border-border hover:bg-muted-bg hover:text-foreground dark:bg-card/80 ${className}`.trim()}
-    >
-      {copied ? (
-        <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" strokeWidth={2} />
-      ) : (
-        <Copy className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
-      )}
-      {copied ? "Copied" : "Copy"}
-    </button>
+    <span className={`relative inline-flex ${className}`.trim()}>
+      <button
+        type="button"
+        aria-label={copied ? "Copied to clipboard" : "Copy response"}
+        onClick={() => void handleCopy()}
+        className={buttonClass}
+      >
+        {copied ? (
+          <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" strokeWidth={2} />
+        ) : (
+          <Copy className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
+        )}
+        {!iconOnly && (copied ? "Copied" : "Copy")}
+      </button>
+      <span
+        className="pointer-events-none absolute left-0 top-full z-[60] mt-1.5 whitespace-nowrap rounded-full bg-neutral-950 px-3 py-1 text-left text-[11px] font-medium text-white antialiased opacity-0 shadow-md transition-opacity duration-150 peer-hover:opacity-100 peer-focus-visible:opacity-100 dark:bg-neutral-950"
+        aria-hidden
+      >
+        {copied ? "Copied" : "Copy response"}
+      </span>
+    </span>
   );
 }

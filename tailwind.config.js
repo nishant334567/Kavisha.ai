@@ -12,11 +12,50 @@ module.exports = {
           "0%, 80%, 100%": { opacity: "0.4" },
           "40%": { opacity: "1" },
         },
-        /** One full 360° spin, then idle until next loop (same class name as before) */
+        /**
+         * Spin, then bounces with gravity-like easing: ease-out on the way up (decelerate
+         * toward each peak), ease-in on the way down (accelerate toward the ground).
+         */
         "widget-launcher-nudge": {
-          "0%": { transform: "rotate(0deg)" },
-          "9%": { transform: "rotate(360deg)" },
-          "100%": { transform: "rotate(360deg)" },
+          "0%": {
+            transform: "rotate(0deg) translateY(0)",
+            "animation-timing-function": "linear",
+          },
+          "7%": {
+            transform: "rotate(360deg) translateY(0)",
+            "animation-timing-function":
+              "cubic-bezier(0.22, 0.61, 0.36, 1)",
+          },
+          "9%": {
+            transform: "rotate(360deg) translateY(-24px)",
+            "animation-timing-function":
+              "cubic-bezier(0.55, 0.085, 0.68, 0.53)",
+          },
+          "11%": {
+            transform: "rotate(360deg) translateY(0)",
+            "animation-timing-function":
+              "cubic-bezier(0.22, 0.61, 0.36, 1)",
+          },
+          "13%": {
+            transform: "rotate(360deg) translateY(-17px)",
+            "animation-timing-function":
+              "cubic-bezier(0.55, 0.085, 0.68, 0.53)",
+          },
+          "15%": {
+            transform: "rotate(360deg) translateY(0)",
+            "animation-timing-function":
+              "cubic-bezier(0.22, 0.61, 0.36, 1)",
+          },
+          "17%": {
+            transform: "rotate(360deg) translateY(-11px)",
+            "animation-timing-function":
+              "cubic-bezier(0.55, 0.085, 0.68, 0.53)",
+          },
+          "19%": {
+            transform: "rotate(360deg) translateY(0)",
+            "animation-timing-function": "linear",
+          },
+          "100%": { transform: "rotate(360deg) translateY(0)" },
         },
         "widget-welcome-bubble-in": {
           "0%": { opacity: "0", transform: "translateY(8px)" },
@@ -26,7 +65,7 @@ module.exports = {
       animation: {
         "loading-dots": "loading-dots 1.4s ease-in-out infinite both",
         "widget-launcher-nudge":
-          "widget-launcher-nudge 5s linear infinite",
+          "widget-launcher-nudge 8.5s infinite",
         "widget-welcome-bubble-in":
           "widget-welcome-bubble-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both",
       },

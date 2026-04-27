@@ -48,6 +48,7 @@ export default function ChatBoxWidget({
   primaryColor = null,
   secondaryColor = null,
   readMoreCopyUrl = "",
+  layoutMaximized = false,
 }) {
   const { user, loading: authLoading, refresh } = useFirebaseSession();
   const endRef = useRef(null);
@@ -604,10 +605,20 @@ export default function ChatBoxWidget({
     );
   }
 
+  /** Maximized widget: constrain strip to ~50% width, centered (matches action buttons). */
+  const maximizedStripClass = layoutMaximized
+    ? "mx-auto w-full max-w-[50%] min-w-0"
+    : "";
+
+  const isEntrackrBrand = brand.trim().toLowerCase() === "entrackr";
+
   return (
     <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
       <div className="flex flex-col gap-2">
-        <div className="relative" ref={historyMenuRef}>
+        <div
+          className={`relative ${maximizedStripClass}`.trim()}
+          ref={historyMenuRef}
+        >
           <button
             type="button"
             id="widget-chat-history-trigger"
@@ -639,8 +650,8 @@ export default function ChatBoxWidget({
                   aria-selected={activeSessionId === s.id}
                   onClick={() => selectSessionById(s.id)}
                   className={`flex w-full min-w-0 items-center px-3 py-2 text-left transition hover:bg-muted-bg ${activeSessionId === s.id
-                      ? "bg-muted-bg/80 font-medium text-foreground"
-                      : "text-foreground"
+                    ? "bg-muted-bg/80 font-medium text-foreground"
+                    : "text-foreground"
                     }`}
                 >
                   <span className="min-w-0 truncate">{widgetSessionTitle(s)}</span>
@@ -652,7 +663,9 @@ export default function ChatBoxWidget({
         {sessions.length === 0 && !sessionsLoading && (
           <p className="text-[11px] text-muted">No widget chats yet</p>
         )}
-        <div className="grid grid-cols-3 gap-2">
+        <div
+          className={`grid grid-cols-3 gap-2 ${maximizedStripClass}`.trim()}
+        >
           <button
             type="button"
             onClick={openNewChatPicker}
@@ -663,8 +676,8 @@ export default function ChatBoxWidget({
               signingOut
             }
             className={`flex min-h-9 min-w-0 flex-row items-center justify-center gap-1.5 rounded-xl px-2 py-1 text-[11px] font-medium shadow-sm transition hover:opacity-92 disabled:opacity-50 ${primaryHex
-                ? "border border-transparent text-white"
-                : "border border-border/50 bg-background text-foreground hover:bg-muted-bg"
+              ? "border border-transparent text-white"
+              : "border border-border/50 bg-background text-foreground hover:bg-muted-bg"
               }`}
             style={
               primaryHex
@@ -804,122 +817,140 @@ export default function ChatBoxWidget({
 
       {activeSessionId && chatRole === LEAD_JOURNEY_ROLE && !logsLoading && (
         <>
-          <div className="scrollbar-thin min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden border-t border-border/25 bg-muted-bg/20 p-3 dark:border-border/20 dark:bg-muted-bg/10">
-            {messages.length === 0 && !logsLoading && (
-              <p className="py-8 text-center text-xs text-muted">
-                {introQuestions.length > 0
-                  ? "Pick a starter question below or type a message."
-                  : "Say hi to start."}
-              </p>
-            )}
-            {messages.map((m, i) => {
-              const introTypewriterActive =
-                m.role === "assistant" &&
-                i === 0 &&
-                introTypewriterSessionId &&
-                introTypewriterSessionId === activeSessionId;
-              return (
-                <div
-                  key={m.id != null ? String(m.id) : `${m.role}-${i}`}
-                  className={
-                    m.role === "user"
-                      ? `ml-auto max-w-[min(100%,22rem)] min-w-0 rounded-2xl rounded-br-md px-4 py-2.5 text-sm text-white ${!userBubbleHex ? "bg-highlight shadow-md" : ""}`
-                      : "mr-auto w-full max-w-full min-w-0 rounded-2xl rounded-bl-md bg-card px-4 py-2.5 text-sm text-foreground shadow-sm dark:bg-card/90"
-                  }
-                  style={
-                    m.role === "user" && userBubbleHex
-                      ? {
-                        backgroundColor: userBubbleHex,
-                        boxShadow: `0 4px 14px -3px ${hexToRgba(userBubbleHex, 0.42) || "rgba(0,0,0,0.12)"}, 0 0 0 1px ${hexToRgba(userBubbleHex, 0.18) || "transparent"}`,
-                      }
-                      : undefined
-                  }
-                >
-                  {m.role === "assistant" ? (
-                    <div className="min-w-0 max-w-full">
-                      {introTypewriterActive ? (
-                        <WidgetIntroTypewriter
-                          text={m.message || ""}
-                          scrollRef={endRef}
-                          onComplete={() => setIntroTypewriterSessionId(null)}
-                        />
-                      ) : (
-                        <>
-                          <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
-                            <FormatText text={m.message || ""} />
-                          </div>
-                          {Array.isArray(m.sourceCards) &&
-                            m.sourceCards.length > 0 ? (
-                            <AssistantSourceCards
-                              items={m.sourceCards}
-                              primaryHex={primaryHex}
-                            />
-                          ) : Array.isArray(m.sourceUrls) &&
-                            m.sourceUrls.length > 0 ? (
-                            <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/25 pt-2 dark:border-border/30">
-                              <span className="text-xs text-muted">Links:</span>
-                              {m.sourceUrls.map((url, idx) => (
-                                <a
-                                  key={idx}
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`max-w-full break-all rounded-md px-2 py-0.5 text-xs transition-colors hover:underline ${primaryHex
+          <div
+            className={
+              layoutMaximized
+                ? "scrollbar-thin min-h-0 min-w-0 flex flex-1 flex-col items-center overflow-y-auto overflow-x-hidden bg-muted-bg/20 p-3 dark:bg-muted-bg/10"
+                : "scrollbar-thin min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden bg-muted-bg/20 p-3 dark:bg-muted-bg/10"
+            }
+          >
+            <div
+              className={
+                layoutMaximized
+                  ? `${maximizedStripClass} flex min-h-0 w-full flex-col gap-3`.trim()
+                  : "contents"
+              }
+            >
+              {messages.length === 0 && !logsLoading && (
+                <p className="py-8 text-center text-xs text-muted">
+                  {introQuestions.length > 0
+                    ? "Pick a starter question below or type a message."
+                    : "Say hi to start."}
+                </p>
+              )}
+              {messages.map((m, i) => {
+                const introTypewriterActive =
+                  m.role === "assistant" &&
+                  i === 0 &&
+                  introTypewriterSessionId &&
+                  introTypewriterSessionId === activeSessionId;
+                return (
+                  <div
+                    key={m.id != null ? String(m.id) : `${m.role}-${i}`}
+                    className={
+                      m.role === "user"
+                        ? `ml-auto w-fit max-w-[70%] min-w-0 self-end rounded-2xl rounded-br-md border-0 px-4 py-2.5 text-sm text-white ring-0 ${!userBubbleHex ? "bg-highlight" : ""}`
+                        : isEntrackrBrand
+                          ? "w-full min-w-0 rounded-2xl rounded-bl-md border border-b-[#f4f4f4] border-l-[#fefefe] border-r-[#fefefe] border-t-[#fefefe] bg-white px-4 py-2.5 text-sm text-[#000000] shadow-[0_1px_2px_rgba(15,23,42,0.03)] dark:border-b-neutral-600/70 dark:border-l-neutral-800/20 dark:border-r-neutral-800/20 dark:border-t-neutral-800/20 dark:bg-neutral-900 dark:text-neutral-100 dark:shadow-[0_1px_2px_rgba(0,0,0,0.16)]"
+                          : "w-fit max-w-[70%] min-w-0 self-start rounded-2xl rounded-bl-md border-0 bg-card px-4 py-2.5 text-sm text-foreground ring-0 dark:bg-card/90"
+                    }
+                    style={
+                      m.role === "user" && userBubbleHex
+                        ? { backgroundColor: userBubbleHex }
+                        : undefined
+                    }
+                  >
+                    {m.role === "assistant" ? (
+                      <div className="min-w-0 max-w-full">
+                        {introTypewriterActive ? (
+                          <WidgetIntroTypewriter
+                            text={m.message || ""}
+                            scrollRef={endRef}
+                            onComplete={() => setIntroTypewriterSessionId(null)}
+                            blackBody={isEntrackrBrand}
+                          />
+                        ) : (
+                          <>
+                            <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
+                              <FormatText
+                                text={m.message || ""}
+                                blackBody={isEntrackrBrand}
+                              />
+                            </div>
+                            {Array.isArray(m.sourceCards) &&
+                              m.sourceCards.length > 0 ? (
+                              <AssistantSourceCards
+                                items={m.sourceCards}
+                                primaryHex={primaryHex}
+                              />
+                            ) : Array.isArray(m.sourceUrls) &&
+                              m.sourceUrls.length > 0 ? (
+                              <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/25 pt-2 dark:border-border/30">
+                                <span className="text-xs text-muted">Links:</span>
+                                {m.sourceUrls.map((url, idx) => (
+                                  <a
+                                    key={idx}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`max-w-full break-all rounded-md px-2 py-0.5 text-xs transition-colors hover:underline ${primaryHex
                                       ? "font-medium"
                                       : "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60"
-                                    }`}
-                                  style={
-                                    primaryHex
-                                      ? {
-                                        backgroundColor:
-                                          hexToRgba(primaryHex, 0.12) ||
-                                          undefined,
-                                        color: primaryHex,
-                                      }
-                                      : undefined
-                                  }
-                                >
-                                  {url.length > 36 ? `${url.slice(0, 36)}…` : url}
-                                </a>
-                              ))}
-                            </div>
-                          ) : null}
-                        </>
-                      )}
-                      {chatRole === LEAD_JOURNEY_ROLE && (
-                        <AssistantReplyCopyButton
-                          className="mt-2"
-                          message={m.message}
-                          sourceCards={m.sourceCards}
-                          sourceUrls={m.sourceUrls}
-                          readMoreUrl={readMoreCopyUrl}
-                          brandSubdomain={brand}
-                        />
-                      )}
-                    </div>
-                  ) : (
-                    <p className="whitespace-pre-wrap [word-break:break-word] [overflow-wrap:anywhere]">
-                      {m.message}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-            {sendLoading && (
-              <ChatThinkingRow
-                className="mr-auto"
-                brandSlug={brand}
-                primaryColor={primaryColor}
-                variant="outline"
-              />
-            )}
-            <div ref={endRef} />
+                                      }`}
+                                    style={
+                                      primaryHex
+                                        ? {
+                                          backgroundColor:
+                                            hexToRgba(primaryHex, 0.12) ||
+                                            undefined,
+                                          color: primaryHex,
+                                        }
+                                        : undefined
+                                    }
+                                  >
+                                    {url.length > 36 ? `${url.slice(0, 36)}…` : url}
+                                  </a>
+                                ))}
+                              </div>
+                            ) : null}
+                          </>
+                        )}
+                        {chatRole === LEAD_JOURNEY_ROLE && (
+                          <AssistantReplyCopyButton
+                            className="mt-1"
+                            message={m.message}
+                            sourceCards={m.sourceCards}
+                            sourceUrls={m.sourceUrls}
+                            readMoreUrl={readMoreCopyUrl}
+                            brandSubdomain={brand}
+                            iconOnly
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap [word-break:break-word] [overflow-wrap:anywhere]">
+                        {m.message}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+              {sendLoading && (
+                <ChatThinkingRow
+                  className="mt-4 shrink-0 self-start"
+                  brandSlug={brand}
+                  primaryColor={primaryColor}
+                  variant="outline"
+                />
+              )}
+              <div ref={endRef} />
+            </div>
           </div>
 
           {introQuestions.length > 0 &&
             !messages.some((m) => m.role === "user") &&
             !sendLoading && (
-              <div className="shrink-0 border-t border-border/25 px-1 py-2 dark:border-border/20">
+              <div className="shrink-0 px-1 py-2">
                 <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
                   {introQuestions.map((q, i) => (
                     <button
@@ -938,45 +969,32 @@ export default function ChatBoxWidget({
 
           <form
             onSubmit={handleSubmit}
-            className="flex shrink-0 gap-2 border-t border-border/40 pt-3 dark:border-border/30"
+            className={`flex w-full min-w-0 shrink-0 flex-col pt-3 ${maximizedStripClass}`.trim()}
           >
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Message…"
-              disabled={sendLoading}
-              className={`min-w-0 flex-1 rounded-xl border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-border focus:outline-none ${primaryHex ? "focus:ring-2 focus:ring-offset-1" : "focus:ring-2 focus:ring-ring/25"
-                }`}
-              onFocus={(e) => {
-                if (!primaryHex) return;
-                const ring = hexToRgba(primaryHex, 0.35);
-                if (ring) e.target.style.boxShadow = `0 0 0 2px ${ring}`;
-              }}
-              onBlur={(e) => {
-                e.target.style.boxShadow = "";
-              }}
-            />
-            <button
-              type="submit"
-              disabled={sendLoading || !input.trim()}
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition hover:opacity-90 disabled:opacity-40 ${!primaryHex ? "bg-highlight" : ""}`}
-              style={
-                primaryHex
-                  ? {
-                    backgroundColor: primaryHex,
-                    boxShadow: `0 2px 8px ${hexToRgba(primaryHex, 0.3) || "rgba(0,0,0,0.1)"}`,
-                  }
-                  : undefined
-              }
-              aria-label="Send"
-            >
-              {sendLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </button>
+            <div className="flex w-full min-w-0 items-center gap-1 rounded-full border border-neutral-200/95 bg-background py-1 pl-3 pr-1 shadow-[0_2px_10px_rgba(0,0,0,0.06)] transition-[box-shadow,border-color] focus-within:border-neutral-300 focus-within:shadow-[0_3px_14px_rgba(0,0,0,0.08)] sm:pl-4 dark:border-border/55 dark:bg-card dark:focus-within:border-border">
+              <input
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="Message..."
+                disabled={sendLoading}
+                className="min-w-0 flex-1 border-0 bg-transparent py-2 text-sm text-foreground shadow-none placeholder:text-muted-foreground focus:outline-none focus:ring-0 sm:py-2.5"
+                aria-label="Message"
+              />
+              <button
+                type="submit"
+                disabled={sendLoading || !input.trim()}
+                className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-[#6b3d35] transition hover:bg-black/[0.04] disabled:opacity-35 dark:text-[#c4a69a] dark:hover:bg-white/[0.06] sm:h-10 sm:w-10"
+                style={primaryHex ? { color: primaryHex } : undefined}
+                aria-label="Send"
+              >
+                {sendLoading ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" strokeWidth={2} />
+                ) : (
+                  <Send className="h-4 w-4 shrink-0" strokeWidth={2} />
+                )}
+              </button>
+            </div>
           </form>
           <p
             className={`mt-2 shrink-0 text-center text-xs ${primaryHex ? "" : "text-muted"

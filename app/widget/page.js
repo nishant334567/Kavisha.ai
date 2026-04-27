@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { MessageCircle, X } from "lucide-react";
+import { Maximize2, MessageCircle, Minimize2, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import ChatBoxWidget from "./components/ChatBoxWidget";
 import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
@@ -11,6 +11,9 @@ const LAUNCHER_NUDGE_DELAY_MS = 3000;
 
 /** Closed widget embed / iframe size (matches AMP `embed-size` minimum height). */
 const WIDGET_CLOSED_SIZE = 100;
+
+/** Match Tailwind `md` and `public/embed.js` — maximize only at this breakpoint and up. */
+const WIDGET_MAXIMIZE_MIN_WIDTH_PX = 768;
 
 /** e.g. `entrackr` → `Entrackr's AI Chat`; empty → `AI Chat`. */
 function widgetHeadingFromBrand(brandSlug) {
@@ -29,6 +32,8 @@ function WidgetShell() {
     searchParams.get("brand") || searchParams.get("subdomain") || "";
 
   const [isOpen, setIsOpen] = useState(false);
+  /** Desktop / tablet only; cleared on close and when viewport is narrower than `md`. */
+  const [isMaximized, setIsMaximized] = useState(false);
   const [primaryColor, setPrimaryColor] = useState(null);
   const [secondaryColor, setSecondaryColor] = useState(null);
   const [launcherImageUrl, setLauncherImageUrl] = useState(null);
@@ -126,23 +131,97 @@ function WidgetShell() {
   }, [launcherAnimation, themeReady]);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+    const mq = window.matchMedia(
+      `(min-width: ${WIDGET_MAXIMIZE_MIN_WIDTH_PX}px)`
+    );
+    const clearMaxIfNarrow = () => {
+      if (!mq.matches) setIsMaximized(false);
+    };
+    clearMaxIfNarrow();
+    mq.addEventListener("change", clearMaxIfNarrow);
+    return () => mq.removeEventListener("change", clearMaxIfNarrow);
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onKeyDown = (e) => {
+      if (e.key !== "Escape" || !isOpen || !isMaximized) return;
+      const wide =
+        window.matchMedia(
+          `(min-width: ${WIDGET_MAXIMIZE_MIN_WIDTH_PX}px)`
+        ).matches;
+      if (!wide) return;
+      e.stopPropagation();
+      setIsMaximized(false);
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isOpen, isMaximized]);
+
+  useEffect(() => {
     if (typeof window === "undefined" || window.parent === window) return;
     const width = isOpen ? 400 : WIDGET_CLOSED_SIZE;
     const height = isOpen ? 640 : WIDGET_CLOSED_SIZE;
-    window.parent.postMessage({ source: "kavisha-widget", width, height }, "*");
+    const maximized = Boolean(
+      isOpen &&
+        isMaximized &&
+        typeof window !== "undefined" &&
+        window.matchMedia(`(min-width: ${WIDGET_MAXIMIZE_MIN_WIDTH_PX}px)`)
+          .matches
+    );
+    window.parent.postMessage(
+      { source: "kavisha-widget", width, height, maximized },
+      "*"
+    );
     // AMP `amp-iframe` + `resizable`: https://amp.dev/documentation/components/amp-iframe/#iframe-resizing
     window.parent.postMessage(
       { sentinel: "amp", type: "embed-size", width, height },
       "*"
     );
-  }, [isOpen]);
+  }, [isOpen, isMaximized]);
+
+  const handleCloseChat = () => {
+    setIsOpen(false);
+    setIsMaximized(false);
+  };
+
+  const toggleMaximize = () => {
+    if (
+      typeof window === "undefined" ||
+      !window.matchMedia(`(min-width: ${WIDGET_MAXIMIZE_MIN_WIDTH_PX}px)`)
+        .matches
+    ) {
+      return;
+    }
+    setIsMaximized((m) => !m);
+  };
+
+  const headerIconBtnClass = primaryHex
+    ? "rounded-full p-1.5 text-white/90 transition hover:bg-white/15 hover:text-white"
+    : "rounded-full p-1.5 text-muted transition hover:bg-muted-bg hover:text-foreground";
+
+  const outerShellClass = [
+    "fixed inset-0 box-border flex min-h-0 flex-col overflow-hidden bg-transparent",
+    isOpen
+      ? isMaximized
+        ? "items-stretch p-2 md:p-3"
+        : "items-center justify-end p-2 md:items-end"
+      : "items-end justify-end p-2",
+  ].join(" ");
+
+  const panelShellClass = isMaximized
+    ? "flex min-h-0 w-full max-w-full flex-1 flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40"
+    : "flex h-full min-h-0 w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40";
+
+  const titleClass = primaryHex
+    ? "w-full px-14 text-center text-sm font-semibold tracking-tight text-white md:px-20"
+    : "w-full px-14 text-center text-sm font-semibold tracking-tight text-foreground md:px-20";
 
   return (
-    <div
-      className={`fixed inset-0 box-border flex flex-col justify-end overflow-hidden bg-transparent p-2 ${isOpen ? "items-center md:items-end" : "items-end"}`}
-    >
+    <div className={outerShellClass}>
       {isOpen ? (
-        <div className="flex h-full min-h-0 w-full max-w-[400px] flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40">
+        <div className={panelShellClass}>
           <div
             className={
               primaryHex
@@ -151,27 +230,29 @@ function WidgetShell() {
             }
             style={primaryHex ? { backgroundColor: primaryHex } : undefined}
           >
-            <span
-              className={
-                primaryHex
-                  ? "w-full text-center text-sm font-semibold tracking-tight text-white"
-                  : "w-full text-center text-sm font-semibold tracking-tight text-foreground"
-              }
-            >
-              {headerTitle}
-            </span>
-            <button
-              type="button"
-              onClick={() => setIsOpen(false)}
-              aria-label="Close chat"
-              className={
-                primaryHex
-                  ? "absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-white/90 transition hover:bg-white/15 hover:text-white"
-                  : "absolute right-2 top-1/2 -translate-y-1/2 rounded-full p-1.5 text-muted transition hover:bg-muted-bg hover:text-foreground"
-              }
-            >
-              <X className="h-5 w-5" strokeWidth={2} />
-            </button>
+            <span className={titleClass}>{headerTitle}</span>
+            <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
+              <button
+                type="button"
+                onClick={toggleMaximize}
+                aria-label={isMaximized ? "Exit full screen" : "Maximize chat"}
+                className={`${headerIconBtnClass} hidden md:inline-flex`}
+              >
+                {isMaximized ? (
+                  <Minimize2 className="h-5 w-5" strokeWidth={2} />
+                ) : (
+                  <Maximize2 className="h-5 w-5" strokeWidth={2} />
+                )}
+              </button>
+              <button
+                type="button"
+                onClick={handleCloseChat}
+                aria-label="Close chat"
+                className={headerIconBtnClass}
+              >
+                <X className="h-5 w-5" strokeWidth={2} />
+              </button>
+            </div>
           </div>
           <div className="flex min-h-[240px] min-w-0 flex-1 flex-col overflow-hidden px-3 pb-3 pt-2">
             <ChatBoxWidget
@@ -179,6 +260,7 @@ function WidgetShell() {
               primaryColor={primaryColor}
               secondaryColor={secondaryColor}
               readMoreCopyUrl={widgetCopyReadMoreUrl}
+              layoutMaximized={isMaximized}
             />
           </div>
         </div>

@@ -10,7 +10,12 @@ const MS_PER_CHAR = 12;
  * Letter-by-letter intro for a newly created widget session only (parent gates when to mount).
  * Plain text while typing; swaps to FormatText when done.
  */
-export default function WidgetIntroTypewriter({ text, scrollRef, onComplete }) {
+export default function WidgetIntroTypewriter({
+  text,
+  scrollRef,
+  onComplete,
+  blackBody = false,
+}) {
   const full = String(text ?? "");
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
@@ -53,12 +58,22 @@ export default function WidgetIntroTypewriter({ text, scrollRef, onComplete }) {
   return (
     <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
       {done ? (
-        <FormatText text={full} />
+        <FormatText text={full} blackBody={blackBody} />
       ) : (
-        <span className="whitespace-pre-wrap text-foreground">
+        <span
+          className={
+            blackBody
+              ? "whitespace-pre-wrap text-[#000000]"
+              : "whitespace-pre-wrap text-foreground"
+          }
+        >
           {full.slice(0, n)}
           <span
-            className="ml-0.5 inline-block h-3.5 w-px animate-pulse bg-foreground/55 align-middle"
+            className={
+              blackBody
+                ? "ml-0.5 inline-block h-3.5 w-px animate-pulse bg-[#000000]/45 align-middle"
+                : "ml-0.5 inline-block h-3.5 w-px animate-pulse bg-foreground/55 align-middle"
+            }
             aria-hidden
           />
         </span>

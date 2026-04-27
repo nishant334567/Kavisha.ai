@@ -23,6 +23,8 @@ function mount() {
   /** Last size the iframe asked for (open vs closed); re-clamped on host resize. */
   var lastRequestedW = 100;
   var lastRequestedH = 100;
+  /** Desktop/tablet fullscreen overlay (768px+ host); ignored on narrow hosts. */
+  var lastMaximized = false;
 
   /** Fit iframe to host window; open panel max 80vh tall. Open iframe: centered on narrow viewports, right-aligned from md (768px) up — matches widget layout. */
   function applyIframeSize() {
@@ -33,6 +35,18 @@ function mount() {
       window.innerHeight || document.documentElement.clientHeight || lastRequestedH;
     var openPanel = lastRequestedW > 100 && lastRequestedH > 100;
     var mdUp = vw >= 768;
+
+    if (lastMaximized && openPanel && mdUp) {
+      var pad = 12;
+      iframe.style.top = pad + "px";
+      iframe.style.left = pad + "px";
+      iframe.style.right = pad + "px";
+      iframe.style.bottom = pad + "px";
+      iframe.style.width = "auto";
+      iframe.style.height = "auto";
+      iframe.style.transform = "none";
+      return;
+    }
 
     var maxW = Math.max(240, vw - inset);
     var maxH = openPanel
@@ -70,6 +84,7 @@ function mount() {
     if (typeof d.width === "number" && typeof d.height === "number") {
       lastRequestedW = d.width;
       lastRequestedH = d.height;
+      lastMaximized = d.maximized === true;
       applyIframeSize();
     }
   });
