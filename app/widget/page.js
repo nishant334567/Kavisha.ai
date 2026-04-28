@@ -163,10 +163,10 @@ function WidgetShell() {
   return (
     <div
       className={`fixed inset-0 box-border flex flex-col overflow-hidden bg-transparent ${isOpen
-          ? widgetMaximized
-            ? "max-md:p-0 max-md:items-stretch max-md:justify-stretch max-md:min-h-0 md:items-end md:justify-end md:p-2"
-            : "max-md:p-0 max-md:items-stretch max-md:justify-end md:items-end md:justify-end md:p-2"
-          : "items-end justify-end p-2"
+        ? widgetMaximized
+          ? "max-md:p-0 max-md:items-stretch max-md:justify-stretch max-md:min-h-0 md:items-end md:justify-end md:p-2"
+          : "max-md:p-0 max-md:items-stretch max-md:justify-end md:items-end md:justify-end md:p-2"
+        : "items-end justify-end p-2"
         }`}
     >
       <WidgetPostMessageAuth brand={brandTrimmed} />
@@ -204,14 +204,14 @@ function WidgetShell() {
                     aria-label="Open support"
                     className={
                       primaryHex
-                        ? "inline-flex items-center gap-1.5 rounded-full border border-white/85 px-2.5 py-1 text-xs font-semibold text-white/95 transition hover:bg-white/15 hover:text-white"
-                        : "inline-flex items-center gap-1.5 rounded-full border border-foreground/15 px-2.5 py-1 text-xs font-semibold text-foreground transition hover:bg-muted-bg"
+                        ? "inline-flex items-center gap-1 rounded-full border border-white/85 px-2.5 py-1 text-xs font-semibold text-white/95 transition hover:bg-white/15 hover:text-white"
+                        : "inline-flex items-center gap-1rounded-full border border-foreground/15 px-2.5 py-1 text-xs font-semibold text-foreground transition hover:bg-muted-bg"
                     }
                     title="Support"
                   >
 
                     <span>Support</span>
-                    <Headphones className="h-4 w-4" strokeWidth={2} />
+                    <Headphones className="h-2.5 w-3" strokeWidth={2} />
                   </button>
                 ) : null}
                 <button
