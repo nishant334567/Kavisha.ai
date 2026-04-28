@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { ArrowLeft, X, Mail } from "lucide-react";
+import { ArrowLeft, X, Mail, MessageCircleMore } from "lucide-react";
 import { useRouter } from "next/navigation";
 import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
@@ -14,6 +14,7 @@ import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import Livechat from "@/app/components/LiveChat";
 import Loader from "@/app/components/Loader";
 import { useChatRequests } from "./hooks/useChatRequests";
+import BrandInbox from "@/app/admin/components/BrandInbox";
 
 export default function ChatRequests() {
   const router = useRouter();
@@ -28,6 +29,7 @@ export default function ChatRequests() {
   const [userA, setUserA] = useState(null);
   const [userB, setUserB] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
+  const [brandInboxOpen, setBrandInboxOpen] = useState(false);
   const [showSelect, setShowSelect] = useState(false);
   const [emailList, setEmailList] = useState([]);
   const [pageTitle, setPageTitle] = useState("All Chat Requests");
@@ -78,8 +80,22 @@ export default function ChatRequests() {
   const openChatSession = (userA, userB) => {
     setUserA(userA);
     setUserB(userB);
-    setConnectionId([userA, userB].sort().join("_"));
+    const b = String(brandContext?.subdomain || "").trim().toLowerCase();
+    if (b) {
+      setConnectionId(`${b}_${String(userB)}`);
+    } else {
+      setConnectionId([userA, userB].sort().join("_"));
+    }
     setOpenChat((prev) => !prev);
+  };
+
+  const openBrandInboxThread = ({ endUserId, otherUser }) => {
+    if (!brandContext?.subdomain || !user?.id || !endUserId) return;
+    setUserA(user.id);
+    setUserB(String(endUserId));
+    setConnectionId(`${String(brandContext.subdomain).trim().toLowerCase()}_${String(endUserId)}`);
+    setOpenChat(true);
+    setBrandInboxOpen(false);
   };
 
   useEffect(() => {
@@ -466,6 +482,29 @@ export default function ChatRequests() {
             showMessagingControls
           />
         )}
+
+        {/* Brand Inbox — bottom-right only on this page */}
+        <div className="fixed bottom-4 right-4 z-40">
+          {brandInboxOpen ? (
+            <div className="h-[min(70vh,520px)] w-[min(92vw,360px)]">
+              <BrandInbox
+                brand={brandContext?.subdomain}
+                onOpenChat={openBrandInboxThread}
+                onClose={() => setBrandInboxOpen(false)}
+              />
+            </div>
+          ) : (
+            <button
+              type="button"
+              onClick={() => setBrandInboxOpen(true)}
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-highlight text-white shadow-xl transition hover:opacity-90"
+              aria-label="Open brand inbox"
+              title="Brand Inbox"
+            >
+              <MessageCircleMore className="h-6 w-6" />
+            </button>
+          )}
+        </div>
       </div>
     </div>
   );

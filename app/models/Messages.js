@@ -9,6 +9,16 @@ const MessageSchema = new mongoose.Schema(
       type: mongoose.Schema.Types.ObjectId,
       ref: "Users",
     },
+    /** Optional metadata: enables "Brand thread" UX while showing admin name per message. */
+    senderRole: {
+      type: String,
+      default: null,
+    },
+    senderName: {
+      type: String,
+      default: null,
+      trim: true,
+    },
     content: {
       type: String,
       required: true,

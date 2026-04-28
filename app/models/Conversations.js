@@ -1,6 +1,22 @@
 const mongoose = require("mongoose");
 const ConversationSchema = new mongoose.Schema(
   {
+    type: {
+      type: String,
+      required: true,
+      default: "peer_dm",
+    },
+    brand: {
+      type: String,
+      required: false,
+      default: null,
+    },
+    /** Brand inbox only: the end user this thread is with (1 thread per brand+endUser). */
+    endUserId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "User",
+      default: null,
+    },
     userA: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",

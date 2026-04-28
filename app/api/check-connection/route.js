@@ -6,7 +6,7 @@ import User from "@/app/models/Users";
 export async function POST(req) {
   try {
     const body = await req.json();
-    const { userA, userB, connectionId, currentUserId } = body;
+    const { userA, userB, connectionId, currentUserId, type, brand, endUserId } = body;
 
     if (!userA || !userB || !currentUserId) {
       return NextResponse.json(
@@ -29,6 +29,13 @@ export async function POST(req) {
           userA,
           userB,
           connectionId: canonicalConnectionId,
+          ...(typeof type === "string" && type.trim()
+            ? { type: type.trim() }
+            : {}),
+          ...(typeof brand === "string" && brand.trim()
+            ? { brand: brand.trim().toLowerCase() }
+            : {}),
+          ...(endUserId ? { endUserId } : {}),
         },
       },
       { upsert: true, new: true }

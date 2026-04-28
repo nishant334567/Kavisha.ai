@@ -19,6 +19,7 @@ export async function GET(request) {
       if (!sinceRaw) {
         return NextResponse.json({ error: "since required" }, { status: 400 });
       }
+      const brandKey = brand.trim().toLowerCase();
       const sinceDate = new Date(sinceRaw);
       if (Number.isNaN(sinceDate.getTime())) {
         return NextResponse.json({ error: "invalid since" }, { status: 400 });
@@ -27,52 +28,11 @@ export async function GET(request) {
       try {
         await connectDB();
         const dbUser = await createOrGetUser(decodedToken);
-        const viewerId = dbUser._id;
-
-        if (!sanity) {
-          return NextResponse.json({ unreadCount: 0 });
-        }
-
-        const brandDoc = await sanity.fetch(
-          `*[_type == "brand" && subdomain == $brand][0]{ "emails": admins }`,
-          { brand }
-        );
-        const emails = Array.isArray(brandDoc?.emails)
-          ? brandDoc.emails.map((e) => String(e || "").trim().toLowerCase()).filter(Boolean)
-          : [];
-        if (emails.length === 0) {
-          return NextResponse.json({ unreadCount: 0 });
-        }
-
-        const adminUsers = await User.find({
-          email: { $in: emails },
-        })
-          .select("_id")
-          .lean();
-        const adminIds = adminUsers.map((u) => u._id).filter(Boolean);
-        if (adminIds.length === 0) {
-          return NextResponse.json({ unreadCount: 0 });
-        }
-
-        const convs = await Conversations.find({
-          $or: [
-            { userA: viewerId, userB: { $in: adminIds } },
-            { userB: viewerId, userA: { $in: adminIds } },
-          ],
-        })
-          .select("connectionId")
-          .lean();
-
-        const connectionIds = convs
-          .map((c) => c.connectionId)
-          .filter((id) => typeof id === "string" && id.length > 0);
-        if (connectionIds.length === 0) {
-          return NextResponse.json({ unreadCount: 0 });
-        }
+        const viewerId = String(dbUser._id);
 
         const unreadCount = await Messages.countDocuments({
-          conversationId: { $in: connectionIds },
-          senderId: { $in: adminIds },
+          conversationId: `${brandKey}_${viewerId}`,
+          senderRole: "admin",
           createdAt: { $gt: sinceDate },
         });
 
