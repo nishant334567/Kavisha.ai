@@ -17,6 +17,7 @@ export async function GET(request) {
       if (!brand) {
         return NextResponse.json({ error: "brand required" }, { status: 400 });
       }
+      const brandKey = brand.trim().toLowerCase();
 
       try {
         await connectDB();
@@ -57,51 +58,29 @@ export async function GET(request) {
           );
         }
 
-        const existing = await Conversations.findOne({
-          $or: [
-            { userA: dbUser._id, userB: { $in: adminIds } },
-            { userB: dbUser._id, userA: { $in: adminIds } },
-          ],
-        })
-          .sort({ updatedAt: -1 })
-          .lean();
-
-        let peerId;
-        let peerName = "Brand";
-        let connectionId;
-
-        if (existing) {
-          connectionId = existing.connectionId;
-          const a = String(existing.userA);
-          const b = String(existing.userB);
-          peerId = a === viewerId ? b : a;
-          const peerDoc = adminUsers.find((u) => String(u._id) === peerId);
-          if (peerDoc?.name) peerName = peerDoc.name;
-        } else {
-          const peer = adminUsers[0];
-          peerId = String(peer._id);
-          peerName = peer.name || brand;
-          const sortedIds = [viewerId, peerId].sort();
-          connectionId = sortedIds.join("_");
-          const userAId = sortedIds[0] === viewerId ? dbUser._id : peer._id;
-          const userBId = sortedIds[0] === viewerId ? peer._id : dbUser._id;
-          await Conversations.findOneAndUpdate(
-            { connectionId },
-            {
-              $setOnInsert: {
-                userA: userAId,
-                userB: userBId,
-                connectionId,
-              },
+        // Brand inbox: one thread per brand + end user (independent of which admin replies).
+        const connectionId = `${brandKey}_${viewerId}`;
+        const peer = adminUsers[0];
+        const peerId = String(peer._id);
+        const peerName = peer?.name || brand;
+        await Conversations.findOneAndUpdate(
+          { connectionId },
+          {
+            $setOnInsert: {
+              type: "brand_inbox",
+              brand: brandKey,
+              endUserId: dbUser._id,
+              userA: dbUser._id,
+              userB: peer._id,
+              connectionId,
             },
-            { upsert: true, new: true }
-          );
-        }
+          },
+          { upsert: true, new: true }
+        );
 
-        const sortedPair = [viewerId, peerId].sort();
         return NextResponse.json({
-          userA: sortedPair[0],
-          userB: sortedPair[1],
+          userA: viewerId,
+          userB: peerId,
           connectionId,
           peerName,
           currentUserId: viewerId,

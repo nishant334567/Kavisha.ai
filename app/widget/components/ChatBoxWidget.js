@@ -1177,6 +1177,8 @@ export default function ChatBoxWidget({
               onClose={() => setBrandInboxOpen(false)}
               isEmbedded={true}
               otherUserDisplayName={brandInboxPeerName}
+              messagingBrand={brand}
+              primaryColor={primaryColor}
               httpFetch={(url, init) => widgetAwareFetch(url, init ?? {})}
             />
           </div>

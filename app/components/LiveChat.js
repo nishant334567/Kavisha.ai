@@ -4,6 +4,7 @@ import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import useSocket from "../context/useSocket";
 import { X, Lock, Unlock } from "lucide-react";
 import { formatDate } from "../utils/dateUtils";
+import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 
 /** Default: cookie session. Pass `widgetAwareFetch` from the embed for Bearer auth. */
 async function defaultHttpFetch(input, init) {
@@ -21,6 +22,8 @@ export default function Livechat({
   /** When set with showMessagingControls, admin can close/reopen user messaging for this thread. */
   messagingBrand = "",
   showMessagingControls = false,
+  /** Optional: brand primary used for widget brand inbox styling. */
+  primaryColor = null,
   httpFetch = defaultHttpFetch,
 }) {
   const [message, setMessage] = useState("");
@@ -47,6 +50,22 @@ export default function Livechat({
       ? otherUserDisplayName
       : chatInfo.otherUser || "";
 
+  const brandKey =
+    typeof messagingBrand === "string" && messagingBrand.trim()
+      ? messagingBrand.trim().toLowerCase()
+      : "";
+  const isBrandUserInboxHeader = !showMessagingControls && Boolean(brandKey);
+  const headerTitle = isBrandUserInboxHeader
+    ? `TEAM ${brandKey.toUpperCase()}`
+    : displayName;
+
+  const primaryHex = normalizeBrandHex(primaryColor);
+  const shouldUseBrandColors = isEmbedded && Boolean(primaryHex) && Boolean(brandKey);
+  const brandHeaderBg =
+    shouldUseBrandColors && (hexToRgba(primaryHex, 0.10) || hexToRgba(primaryHex, 0.08))
+      ? hexToRgba(primaryHex, 0.10) || hexToRgba(primaryHex, 0.08)
+      : null;
+
   const groupedMessages = useMemo(() => {
     const grouped = {};
     messages.forEach((msg) => {
@@ -64,6 +83,15 @@ export default function Livechat({
   }, [messages]);
 
   const refreshConnectionMeta = useCallback(async () => {
+    const brandKey =
+      typeof messagingBrand === "string" && messagingBrand.trim()
+        ? messagingBrand.trim().toLowerCase()
+        : "";
+    const endUserIdFromConnection =
+      brandKey && typeof connectionId === "string" && connectionId.startsWith(brandKey + "_")
+        ? connectionId.slice((brandKey + "_").length)
+        : null;
+
     const response = await httpFetch(`/api/check-connection`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
@@ -72,6 +100,17 @@ export default function Livechat({
         userB,
         connectionId: connectionId,
         currentUserId,
+        ...(showMessagingControls && messagingBrand
+          ? {
+              type: "brand_inbox",
+              brand: brandKey || messagingBrand,
+              // Canonical: connectionId is `${brand}_${endUserId}`.
+              // Avoid relying on userA/userB ordering.
+              endUserId:
+                endUserIdFromConnection ||
+                (showMessagingControls ? String(userB) : String(currentUserId)),
+            }
+          : {}),
       }),
     });
     const data = await response.json();
@@ -113,6 +152,8 @@ export default function Livechat({
         (history || []).map((m) => ({
           text: m.text ?? "",
           senderUserId: m.senderUserId,
+          senderRole: m.senderRole,
+          senderName: m.senderName,
           createdAt: m.createdAt,
         }))
       );
@@ -137,6 +178,8 @@ export default function Livechat({
           {
             text: data?.text ?? "",
             senderUserId: data?.senderUserId ?? data?.senderSessionId ?? "",
+            senderRole: data?.senderRole,
+            senderName: data?.senderName,
             createdAt: data?.createdAt || new Date().toISOString(),
           },
         ];
@@ -195,6 +238,8 @@ export default function Livechat({
       text: message,
       connectionId: chatInfo.connectionId,
       senderUserId: user?.id,
+      senderRole: showMessagingControls ? "admin" : "user",
+      senderName: user?.name || "",
     };
     socket.emit("send_message", payload);
     setMessage("");
@@ -256,14 +301,25 @@ export default function Livechat({
     <div
       className={`flex flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-lg ${isEmbedded ? "h-full w-full" : "h-full w-full md:h-[500px] md:max-w-sm"}`}
     >
-      <div className="sticky top-0 z-10 border-b border-border bg-muted-bg px-4 py-3">
+      <div
+        className="sticky top-0 z-10 border-b border-border bg-muted-bg px-4 py-3"
+        style={brandHeaderBg ? { backgroundColor: brandHeaderBg } : undefined}
+      >
         <div className="flex items-start justify-between gap-2">
           <div className="min-w-0 flex-1">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-highlight text-sm font-semibold text-white">
-              {(displayName || "U").charAt(0).toUpperCase()}
+            <div
+              className={`flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white ${shouldUseBrandColors ? "" : "bg-highlight"}`}
+              style={shouldUseBrandColors ? { backgroundColor: primaryHex } : undefined}
+            >
+              {(headerTitle || "U").charAt(0).toUpperCase()}
             </div>
-            <div className="py-2 text-lg font-semibold uppercase text-highlight font-baloo">
-              {displayName}
+            <div
+              className={`py-2 text-lg font-semibold font-baloo ${
+                isBrandUserInboxHeader ? "" : "uppercase"
+              }`}
+              style={shouldUseBrandColors ? { color: primaryHex } : undefined}
+            >
+              {headerTitle}
             </div>
             {showMessagingControls && conversationClosedForUser ? (
               <p className="text-xs text-muted">
@@ -302,7 +358,10 @@ export default function Livechat({
               className="flex h-7 w-7 items-center justify-center rounded-full transition-colors hover:bg-card"
               aria-label="Close Chat"
             >
-              <X className="h-4 w-4 text-highlight" />
+              <X
+                className={`h-4 w-4 ${shouldUseBrandColors ? "" : "text-highlight"}`}
+                style={shouldUseBrandColors ? { color: primaryHex } : undefined}
+              />
             </button>
           </div>
         </div>
@@ -331,17 +390,29 @@ export default function Livechat({
                 {msgs.map((m, i) => {
                   const isMe = m.senderUserId === user?.id;
                   const text = typeof m === "string" ? m : m.text;
-                  const senderName = isMe
+                  const senderNameBase = isMe
                     ? user?.name || "You"
-                    : displayName;
+                    : (m?.senderRole === "admin" && m?.senderName
+                        ? m.senderName
+                        : displayName);
+                  const senderName =
+                    !isMe && m?.senderRole === "admin" && senderNameBase
+                      ? `${senderNameBase} (Admin)`
+                      : senderNameBase;
                   return (
                     <div key={`${date}-${i}`}>
                       <div className="flex gap-2 px-4 py-2">
-                        <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-highlight text-xs font-semibold text-white">
+                        <div
+                          className={`flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full text-xs font-semibold text-white ${shouldUseBrandColors ? "" : "bg-highlight"}`}
+                          style={shouldUseBrandColors ? { backgroundColor: primaryHex } : undefined}
+                        >
                           {(senderName || "U").charAt(0).toUpperCase()}
                         </div>
                         <div>
-                          <p className="font-baloo text-sm font-medium text-highlight">
+                          <p
+                            className={`font-baloo text-sm font-medium ${shouldUseBrandColors ? "" : "text-highlight"}`}
+                            style={shouldUseBrandColors ? { color: primaryHex } : undefined}
+                          >
                             {senderName}
                           </p>
                           <p className="font-baloo text-xs text-muted">
@@ -381,7 +452,8 @@ export default function Livechat({
                 type="button"
                 disabled={reopenSubmitting || connectionLoading}
                 onClick={submitReopenRequest}
-                className="mt-4 w-full rounded-lg bg-highlight px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
+                className={`mt-4 w-full rounded-lg px-4 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60 ${shouldUseBrandColors ? "" : "bg-highlight"}`}
+                style={shouldUseBrandColors ? { backgroundColor: primaryHex } : undefined}
               >
                 {reopenSubmitting ? "Sending request…" : "Request to chat again"}
               </button>
@@ -422,7 +494,8 @@ export default function Livechat({
               disabled={
                 connectionLoading || !chatInfo.sendAllowed || !message.trim()
               }
-              className="rounded-lg bg-highlight px-8 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted-bg disabled:text-muted"
+              className={`rounded-lg px-8 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted-bg disabled:text-white ${shouldUseBrandColors ? "" : "bg-highlight"}`}
+              style={shouldUseBrandColors ? { backgroundColor: primaryHex } : undefined}
             >
               Send
             </button>

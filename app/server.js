@@ -65,7 +65,7 @@ app.prepare().then(() => {
 
     socket.on("send_message", async (data) => {
       try {
-        const { text, connectionId, senderUserId } = data;
+        const { text, connectionId, senderUserId, senderRole, senderName } = data;
 
         if (!text || !connectionId || !senderUserId) {
           return;
@@ -90,6 +90,8 @@ app.prepare().then(() => {
         const msg = await Messages.create({
           conversationId: connectionId,
           senderId: senderUserId,
+          senderRole: typeof senderRole === "string" ? senderRole : null,
+          senderName: typeof senderName === "string" ? senderName : null,
           content: text,
         });
 
@@ -97,6 +99,8 @@ app.prepare().then(() => {
         io.to(connectionId).emit("message_received", {
           text: text,
           senderUserId: senderUserId,
+          senderRole: msg.senderRole || undefined,
+          senderName: msg.senderName || undefined,
           connectionId: connectionId,
           createdAt: msg.createdAt
             ? typeof msg.createdAt === "string"
@@ -129,6 +133,8 @@ app.prepare().then(() => {
               id: m.senderId,
               text: m.content,
               senderUserId: m.senderId,
+              senderRole: m.senderRole || undefined,
+              senderName: m.senderName || undefined,
               createdAt: m.createdAt
                 ? typeof m.createdAt === "string"
                   ? m.createdAt
