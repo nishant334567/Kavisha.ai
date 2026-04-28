@@ -1,7 +1,7 @@
 "use client";
 
 import { Suspense, useEffect, useState } from "react";
-import { Maximize2, MessageCircle, Minimize2, X } from "lucide-react";
+import { Headphones, Maximize2, MessageCircle, Minimize2, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import ChatBoxWidget from "./components/ChatBoxWidget";
 import WidgetPostMessageAuth from "./components/WidgetPostMessageAuth";
@@ -162,13 +162,12 @@ function WidgetShell() {
 
   return (
     <div
-      className={`fixed inset-0 box-border flex flex-col overflow-hidden bg-transparent ${
-        isOpen
-          ? widgetMaximized
-            ? "max-md:p-0 max-md:items-stretch max-md:justify-stretch max-md:min-h-0 md:items-end md:justify-end md:p-2"
-            : "max-md:p-0 max-md:items-stretch max-md:justify-end md:items-end md:justify-end md:p-2"
-          : "items-end justify-end p-2"
-      }`}
+      className={`fixed inset-0 box-border flex flex-col overflow-hidden bg-transparent ${isOpen
+        ? widgetMaximized
+          ? "max-md:p-0 max-md:items-stretch max-md:justify-stretch max-md:min-h-0 md:items-end md:justify-end md:p-2"
+          : "max-md:p-0 max-md:items-stretch max-md:justify-end md:items-end md:justify-end md:p-2"
+        : "items-end justify-end p-2"
+        }`}
     >
       <WidgetPostMessageAuth brand={brandTrimmed} />
       {isOpen ? (
@@ -181,44 +180,69 @@ function WidgetShell() {
             }
             style={primaryHex ? { backgroundColor: primaryHex } : undefined}
           >
-            <span
-              className={
-                primaryHex
-                  ? "w-full text-center text-sm font-semibold tracking-tight text-white"
-                  : "w-full text-center text-sm font-semibold tracking-tight text-foreground"
-              }
-            >
-              {headerTitle}
-            </span>
-            <div className="absolute right-2 top-1/2 flex -translate-y-1/2 items-center gap-0.5">
-              <button
-                type="button"
-                onClick={() => setWidgetMaximized((m) => !m)}
-                aria-label={widgetMaximized ? "Restore chat size" : "Expand chat height"}
+            <div className="flex w-full min-w-0 items-center justify-between gap-2 px-2">
+              <span
                 className={
                   primaryHex
-                    ? "rounded-full p-1.5 text-white/90 transition hover:bg-white/15 hover:text-white"
-                    : "rounded-full p-1.5 text-muted transition hover:bg-muted-bg hover:text-foreground"
+                    ? "min-w-0 truncate text-sm font-semibold tracking-tight text-white"
+                    : "min-w-0 truncate text-sm font-semibold tracking-tight text-foreground"
                 }
               >
-                {widgetMaximized ? (
-                  <Minimize2 className="h-5 w-5" strokeWidth={2} />
-                ) : (
-                  <Maximize2 className="h-5 w-5" strokeWidth={2} />
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsOpen(false)}
-                aria-label="Close chat"
-                className={
-                  primaryHex
-                    ? "rounded-full p-1.5 text-white/90 transition hover:bg-white/15 hover:text-white"
-                    : "rounded-full p-1.5 text-muted transition hover:bg-muted-bg hover:text-foreground"
-                }
-              >
-                <X className="h-5 w-5" strokeWidth={2} />
-              </button>
+                {headerTitle}
+              </span>
+              <div className="flex shrink-0 items-center gap-0.5">
+                {enableAdminMessages ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      window.dispatchEvent(
+                        new CustomEvent("kavisha:widget:openSupport", {
+                          detail: { brand: brandTrimmed },
+                        })
+                      );
+                    }}
+                    aria-label="Open support"
+                    className={
+                      primaryHex
+                        ? "inline-flex items-center gap-1 rounded-full border border-white/85 px-2.5 py-1 text-xs font-semibold text-white/95 transition hover:bg-white/15 hover:text-white"
+                        : "inline-flex items-center gap-1rounded-full border border-foreground/15 px-2.5 py-1 text-xs font-semibold text-foreground transition hover:bg-muted-bg"
+                    }
+                    title="Support"
+                  >
+
+                    <span>Support</span>
+                    <Headphones className="h-2.5 w-3" strokeWidth={2} />
+                  </button>
+                ) : null}
+                <button
+                  type="button"
+                  onClick={() => setWidgetMaximized((m) => !m)}
+                  aria-label={widgetMaximized ? "Restore chat size" : "Expand chat height"}
+                  className={
+                    primaryHex
+                      ? "rounded-full p-1.5 text-white/90 transition hover:bg-white/15 hover:text-white"
+                      : "rounded-full p-1.5 text-muted transition hover:bg-muted-bg hover:text-foreground"
+                  }
+                >
+                  {widgetMaximized ? (
+                    <Minimize2 className="h-5 w-5" strokeWidth={2} />
+                  ) : (
+                    <Maximize2 className="h-5 w-5" strokeWidth={2} />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setIsOpen(false)}
+                  aria-label="Close chat"
+                  className={
+                    primaryHex
+                      ? "rounded-full p-1.5 text-white/90 transition hover:bg-white/15 hover:text-white"
+                      : "rounded-full p-1.5 text-muted transition hover:bg-muted-bg hover:text-foreground"
+                  }
+                >
+                  <X className="h-5 w-5" strokeWidth={2} />
+                </button>
+              </div>
             </div>
           </div>
           <div className="flex min-h-[240px] min-w-0 flex-1 flex-col overflow-hidden px-3 pb-0 pt-2 md:rounded-b-2xl md:pb-3">

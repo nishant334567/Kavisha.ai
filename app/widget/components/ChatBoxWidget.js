@@ -5,7 +5,6 @@ import {
   ChevronDown,
   Loader2,
   LogOut,
-  Mail,
   Plus,
   Send,
   Users,
@@ -250,6 +249,17 @@ export default function ChatBoxWidget({
       setBrandInboxLoading(false);
     }
   }, [adminMessagesEnabled, effectiveUser?.id, effectiveUser?.uid, brand]);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const onOpenSupport = () => {
+      void openBrandInbox();
+    };
+    window.addEventListener("kavisha:widget:openSupport", onOpenSupport);
+    return () => {
+      window.removeEventListener("kavisha:widget:openSupport", onOpenSupport);
+    };
+  }, [openBrandInbox]);
 
   useEffect(() => {
     if (!authLoading && effectiveUser && brand) loadSessions();
@@ -834,28 +844,7 @@ export default function ChatBoxWidget({
               <Users className="h-4 w-4 shrink-0" />
               <span className="whitespace-nowrap">Community</span>
             </button>
-            {adminMessagesEnabled ? (
-              <button
-                type="button"
-                onClick={() => void openBrandInbox()}
-                disabled={brandInboxLoading || signingOut}
-                className="relative flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2.5 py-1.5 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg disabled:opacity-50 sm:min-w-[7.25rem] sm:px-3"
-                title="Messages from the brand team"
-              >
-                {brandInboxLoading ? (
-                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-                ) : (
-                  <Mail className="h-4 w-4 shrink-0" />
-                )}
-                <span className="whitespace-nowrap">Messages</span>
-                {adminUnreadCount > 0 ? (
-                  <span
-                    className="absolute right-1 top-1 h-2 w-2 rounded-full bg-red-500 ring-2 ring-card"
-                    aria-label="Unread"
-                  />
-                ) : null}
-              </button>
-            ) : null}
+            {/* Support entry moved to top header in `app/widget/page.js` */}
             <button
               type="button"
               onClick={handleWidgetSignOut}
