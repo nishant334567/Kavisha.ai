@@ -1041,7 +1041,7 @@ export default function ChatBoxWidget({
                       )}
                       {chatRole === LEAD_JOURNEY_ROLE && (
                         <AssistantReplyCopyButton
-                          className="mt-2"
+                          className="mt-1"
                           message={m.message}
                           sourceCards={m.sourceCards}
                           sourceUrls={m.sourceUrls}
