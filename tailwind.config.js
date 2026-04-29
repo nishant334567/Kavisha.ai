@@ -12,11 +12,19 @@ module.exports = {
           "0%, 80%, 100%": { opacity: "0.4" },
           "40%": { opacity: "1" },
         },
-        /** One full 360° spin, then idle until next loop (same class name as before) */
+        /** One full spin, then a 4-step gravity-like bounce decay, then idle. */
         "widget-launcher-nudge": {
-          "0%": { transform: "rotate(0deg)" },
-          "9%": { transform: "rotate(360deg)" },
-          "100%": { transform: "rotate(360deg)" },
+          "0%": { transform: "rotate(0deg) translateY(0)" },
+          "10%": { transform: "rotate(360deg) translateY(0)" },
+          "17%": { transform: "rotate(360deg) translateY(-20px)" },
+          "20%": { transform: "rotate(360deg) translateY(0)" },
+          "24%": { transform: "rotate(360deg) translateY(-10px)" },
+          "27%": { transform: "rotate(360deg) translateY(0)" },
+          "30%": { transform: "rotate(360deg) translateY(-4px)" },
+          "32%": { transform: "rotate(360deg) translateY(0)" },
+          "34%": { transform: "rotate(360deg) translateY(-1px)" },
+          "35%": { transform: "rotate(360deg) translateY(0)" },
+          "100%": { transform: "rotate(360deg) translateY(0)" },
         },
         "widget-welcome-bubble-in": {
           "0%": { opacity: "0", transform: "translateY(8px)" },
@@ -26,7 +34,7 @@ module.exports = {
       animation: {
         "loading-dots": "loading-dots 1.4s ease-in-out infinite both",
         "widget-launcher-nudge":
-          "widget-launcher-nudge 5s linear infinite",
+          "widget-launcher-nudge 5s cubic-bezier(0.22, 0.61, 0.36, 1) infinite",
         "widget-welcome-bubble-in":
           "widget-welcome-bubble-in 0.42s cubic-bezier(0.22, 1, 0.36, 1) both",
       },
