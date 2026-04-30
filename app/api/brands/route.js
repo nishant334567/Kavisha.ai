@@ -51,6 +51,7 @@ export async function GET(req) {
         subdomain: brand.subdomain,
         image: imageUrl,
         link: link,
+        logo: logoUrl,
       };
     });
 

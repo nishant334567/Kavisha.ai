@@ -103,10 +103,10 @@ export default function WidgetIntroPage() {
                         <picture>
                             <source
                                 media="(prefers-color-scheme: dark)"
-                                srcSet="/Step%201%20photo%20thick%20lines%20dark%20mode.png"
+                                srcSet="/Step-1-photo-thick-lines-dark-mode.png"
                             />
                             <img
-                                src="/Step%201%20photo%20thick%20lines.png"
+                                src="/Step-1-photo-thick-lines.png"
                                 alt="Training AI"
                                 className="h-auto w-full max-w-md"
                             />
@@ -141,10 +141,10 @@ export default function WidgetIntroPage() {
                         <picture>
                             <source
                                 media="(prefers-color-scheme: dark)"
-                                srcSet="/Step%203%20photo%20thick%20lines%20dark%20mode.png"
+                                srcSet="/Step-3-photo-thick-lines-dark-mode.png"
                             />
                             <img
-                                src="/Step%203%20photo%20thick%20lines.png"
+                                src="/Step-3-photo-thick-lines.png"
                                 alt="Analytics"
                                 className="h-auto w-full max-w-md"
                             />

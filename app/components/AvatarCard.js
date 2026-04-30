@@ -29,7 +29,9 @@ export default function AvatarCard({
       </div>
       <div className="px-4 py-5 flex-1 flex flex-col min-h-0">
         <h3 className="mb-1 text-lg font-semibold text-foreground">{name}</h3>
-        {title && <p className="mb-2 text-sm text-muted">{title}</p>}
+        {title && (
+          <p className="mb-2 text-sm text-muted line-clamp-2">{title}</p>
+        )}
         {/* {subtitle && (
           <p className="text-sm text-gray-600 leading-relaxed line-clamp-4 overflow-hidden">
             {truncateText(subtitle, 30)}
