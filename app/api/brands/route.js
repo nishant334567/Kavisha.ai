@@ -52,6 +52,7 @@ export async function GET(req) {
         image: imageUrl,
         link: link,
         logo: logoUrl,
+        clientWidgetUrl: brand.clientWidgetUrl || "",
       };
     });
 
