@@ -13,6 +13,7 @@ import {
   SYSTEM_PROMPT,
 } from "@/app/lib/systemPrompt";
 import getGeminiModel from "@/app/lib/getAiModel";
+import { enqueueCloudTask } from "@/app/lib/cloudTasks";
 
 // Simple token estimation: words * 1.33
 function estimateTokens(text) {
@@ -247,6 +248,20 @@ export async function POST(request) {
               },
               { upsert: true }
             );
+
+            // Enqueue derived-profile enrichment only when we transition to "collected".
+            if (!isDataAlreadyCollected && allDataCollected === "true") {
+              const baseUrl = process.env.PUBLIC_BASE_URL || process.env.BASE_URL;
+              if (baseUrl) {
+                await enqueueCloudTask({
+                  url: `${baseUrl}/api/tasks/enrich-derived-profile`,
+                  payload: { sessionId },
+                  headers: process.env.TASKS_SECRET
+                    ? { "x-tasks-secret": process.env.TASKS_SECRET }
+                    : {},
+                });
+              }
+            }
           } catch (error) { }
         });
 
