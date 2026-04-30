@@ -331,28 +331,18 @@ export default function Homepage() {
                       width: `calc((100% - ${(visibleCount - 1) * 24}px) / ${visibleCount})`,
                     }}
                   >
-                    {avatar.link ? (
-                      <a
-                        href={avatar.link}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="flex justify-center w-full cursor-pointer hover:opacity-95 active:opacity-90 transition-opacity rounded-2xl focus:outline-none"
-                      >
-                        <AvatarCard
-                          name={avatar.name}
-                          title={avatar.title}
-                          subtitle={avatar.subtitle}
-                          image={avatar.image}
-                        />
-                      </a>
-                    ) : (
-                      <AvatarCard
-                        name={avatar.name}
-                        title={avatar.title}
-                        subtitle={avatar.subtitle}
-                        image={avatar.image}
-                      />
-                    )}
+                    <AvatarCard
+                      name={avatar.name}
+                      title={avatar.title}
+                      subtitle={avatar.subtitle}
+                      image={avatar.image}
+                      avatarLink={avatar.link}
+                      widgetLink={
+                        avatar.subdomain
+                          ? `/widget?brand=${encodeURIComponent(avatar.subdomain)}`
+                          : ""
+                      }
+                    />
                   </div>
                 ))}
               </div>

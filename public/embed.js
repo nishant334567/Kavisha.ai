@@ -12,6 +12,7 @@ function mount() {
 
   var iframe = document.createElement("iframe");
   iframe.setAttribute("title", "Chat");
+  iframe.setAttribute("data-kavisha-widget", "1");
   iframe.setAttribute("allow", "clipboard-write");
   iframe.src = base + "/widget" + (q.toString() ? "?" + q.toString() : "");
   iframe.style.cssText =
