@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect } from "react";
 import Link from "next/link";
 import SocketProvider from "../context/SocketProvider";
 import {
@@ -29,6 +30,14 @@ function WidgetSocketShell({ children }) {
 
 export default function ClientLayout({ children }) {
   const pathname = usePathname();
+
+  // If the user navigates to the full widget route, remove any floating embed iframe
+  // that might already be mounted (prevents "widget inside widget").
+  useEffect(() => {
+    if (pathname !== "/widget") return;
+    document.querySelector('iframe[data-kavisha-widget="1"]')?.remove();
+  }, [pathname]);
+
   if (pathname === "/widget") {
     return (
       <FirebaseSessionProvider>

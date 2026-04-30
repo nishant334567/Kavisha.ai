@@ -1,4 +1,11 @@
 function mount() {
+  // Do not mount the floating widget inside the widget page itself or admin pages.
+  // (Those routes render their own full UI; embedding would create a nested iframe.)
+  try {
+    var p = window.location && window.location.pathname ? window.location.pathname : "";
+    if (p === "/widget" || p.indexOf("/admin") === 0 || p === "/widget-login") return;
+  } catch (e) { }
+
   var script = document.querySelector('script[src*="embed.js"]');
   if (!script || !script.src) return;
 
@@ -9,6 +16,9 @@ function mount() {
     "";
   var q = new URLSearchParams();
   if (brand) q.set("brand", brand);
+
+  // Already mounted on this page.
+  if (document.querySelector('iframe[data-kavisha-widget="1"]')) return;
 
   var iframe = document.createElement("iframe");
   iframe.setAttribute("title", "Chat");
