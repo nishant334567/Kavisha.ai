@@ -3,6 +3,8 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   LogOut,
   Plus,
@@ -125,6 +127,7 @@ export default function ChatBoxWidget({
   const [introQuestions, setIntroQuestions] = useState([]);
   /** Set when POST /api/widget/session succeeds; enables one-time intro typewriter for that id. */
   const [introTypewriterSessionId, setIntroTypewriterSessionId] = useState(null);
+  const [introQuestionIndex, setIntroQuestionIndex] = useState(0);
 
   const [signingIn, setSigningIn] = useState(false);
   const [signInError, setSignInError] = useState("");
@@ -281,6 +284,10 @@ export default function ChatBoxWidget({
       setIntroTypewriterSessionId(null);
     }
   }, [activeSessionId, introTypewriterSessionId]);
+
+  useEffect(() => {
+    setIntroQuestionIndex(0);
+  }, [activeSessionId, introQuestions.length]);
 
   useEffect(() => {
     endRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -698,7 +705,7 @@ export default function ChatBoxWidget({
               }
               try {
                 w.focus();
-              } catch {}
+              } catch { }
             }}
             disabled={signingIn}
             className={`mx-auto inline-flex w-full max-w-[240px] items-center justify-center rounded-xl px-3 py-2.5 text-sm font-medium text-white shadow-sm transition hover:opacity-90 disabled:opacity-50 ${!primaryHex ? "bg-highlight" : ""}`}
@@ -744,6 +751,22 @@ export default function ChatBoxWidget({
       chatRole === LEAD_JOURNEY_ROLE &&
       logsLoading);
 
+  const introQuestionCount = introQuestions.length;
+  const safeIntroQuestionIndex =
+    introQuestionCount > 0
+      ? Math.max(0, Math.min(introQuestionIndex, introQuestionCount - 1))
+      : 0;
+  const activeIntroQuestion =
+    introQuestionCount > 0 ? introQuestions[safeIntroQuestionIndex] : "";
+  const prevIntroQuestion =
+    safeIntroQuestionIndex > 0
+      ? introQuestions[safeIntroQuestionIndex - 1]
+      : null;
+  const nextIntroQuestion =
+    safeIntroQuestionIndex < introQuestionCount - 1
+      ? introQuestions[safeIntroQuestionIndex + 1]
+      : null;
+
   if (showFullBleedLoader) {
     const { title, subtitle } = widgetLoaderMessagesFromFlags({
       sessionsLoading,
@@ -763,424 +786,495 @@ export default function ChatBoxWidget({
 
   return (
     <>
-    <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
-      <div className="flex flex-col gap-2">
-        <div className="relative" ref={historyMenuRef}>
-          <button
-            type="button"
-            id="widget-chat-history-trigger"
-            aria-expanded={historyMenuOpen}
-            aria-haspopup="listbox"
-            aria-controls="widget-chat-history-listbox"
-            disabled={sessionsLoading || sessions.length === 0}
-            onClick={() => setHistoryMenuOpen((open) => !open)}
-            className="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-border/50 bg-background px-3 py-2 text-left text-xs text-foreground shadow-sm transition hover:bg-muted-bg/60 focus:border-border focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            <span className="min-w-0 truncate font-medium">Chat history</span>
-            <ChevronDown
-              className={`h-4 w-4 shrink-0 text-muted transition-transform ${historyMenuOpen ? "rotate-180" : ""}`}
-              aria-hidden
-            />
-          </button>
-          {historyMenuOpen && sessions.length > 0 && (
-            <div
-              id="widget-chat-history-listbox"
-              role="listbox"
-              aria-labelledby="widget-chat-history-trigger"
-              className="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-auto rounded-xl border border-border/50 bg-background py-1 text-xs shadow-lg ring-1 ring-border/40"
+      <div className="flex min-h-0 min-w-0 flex-1 flex-col gap-2">
+        <div className="flex flex-col gap-2">
+          <div className="relative" ref={historyMenuRef}>
+            <button
+              type="button"
+              id="widget-chat-history-trigger"
+              aria-expanded={historyMenuOpen}
+              aria-haspopup="listbox"
+              aria-controls="widget-chat-history-listbox"
+              disabled={sessionsLoading || sessions.length === 0}
+              onClick={() => setHistoryMenuOpen((open) => !open)}
+              className="flex w-full min-w-0 items-center justify-between gap-2 rounded-xl border border-border/50 bg-background px-3 py-2 text-left text-xs text-foreground shadow-sm transition hover:bg-muted-bg/60 focus:border-border focus:outline-none focus:ring-2 focus:ring-ring/20 disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {sessions.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  role="option"
-                  aria-selected={activeSessionId === s.id}
-                  onClick={() => selectSessionById(s.id)}
-                  className={`flex w-full min-w-0 items-center px-3 py-2 text-left transition hover:bg-muted-bg ${activeSessionId === s.id
+              <span className="min-w-0 truncate font-medium">Chat history</span>
+              <ChevronDown
+                className={`h-4 w-4 shrink-0 text-muted transition-transform ${historyMenuOpen ? "rotate-180" : ""}`}
+                aria-hidden
+              />
+            </button>
+            {historyMenuOpen && sessions.length > 0 && (
+              <div
+                id="widget-chat-history-listbox"
+                role="listbox"
+                aria-labelledby="widget-chat-history-trigger"
+                className="absolute left-0 right-0 top-full z-50 mt-1 max-h-48 overflow-auto rounded-xl border border-border/50 bg-background py-1 text-xs shadow-lg ring-1 ring-border/40"
+              >
+                {sessions.map((s) => (
+                  <button
+                    key={s.id}
+                    type="button"
+                    role="option"
+                    aria-selected={activeSessionId === s.id}
+                    onClick={() => selectSessionById(s.id)}
+                    className={`flex w-full min-w-0 items-center px-3 py-2 text-left transition hover:bg-muted-bg ${activeSessionId === s.id
                       ? "bg-muted-bg/80 font-medium text-foreground"
                       : "text-foreground"
-                    }`}
-                >
-                  <span className="min-w-0 truncate">{widgetSessionTitle(s)}</span>
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-        {sessions.length === 0 && !sessionsLoading && (
-          <p className="text-[11px] text-muted">No widget chats yet</p>
-        )}
-        <div className="-mx-1 overflow-x-auto overflow-y-hidden scroll-smooth pb-1 scrollbar-thin">
-          <div className="flex min-w-full flex-nowrap items-stretch justify-between gap-2 px-1 sm:gap-2.5 sm:px-2">
-            <button
-              type="button"
-              onClick={openNewChatPicker}
-              disabled={
-                newChatLoading ||
-                leadJourneysLoading ||
-                sessionsLoading ||
-                signingOut
-              }
-              className={`flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] font-medium shadow-sm transition hover:opacity-92 disabled:opacity-50 sm:min-w-[7.25rem] sm:px-3 ${primaryHex
-                  ? "border border-transparent text-white"
-                  : "border border-border/50 bg-background text-foreground hover:bg-muted-bg"
-                }`}
-              style={
-                primaryHex
-                  ? {
-                    backgroundColor: primaryHex,
-                    boxShadow: `0 2px 10px ${hexToRgba(primaryHex, 0.3) || "rgba(0,0,0,0.1)"}`,
-                  }
-                  : undefined
-              }
-            >
-              {newChatLoading || leadJourneysLoading ? (
-                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-              ) : (
-                <Plus className="h-4 w-4 shrink-0" />
-              )}
-              <span className="whitespace-nowrap">New chat</span>
-            </button>
-            <button
-              type="button"
-              onClick={() =>
-                window.open(buildBrandCommunityUrl(brand), "_blank", "noopener,noreferrer")
-              }
-              className="flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2.5 py-1.5 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg sm:min-w-[7.25rem] sm:px-3"
-              title="Open community in a new tab"
-            >
-              <Users className="h-4 w-4 shrink-0" />
-              <span className="whitespace-nowrap">Community</span>
-            </button>
-            {/* Support entry moved to top header in `app/widget/page.js` */}
-            <button
-              type="button"
-              onClick={handleWidgetSignOut}
-              disabled={signingOut}
-              className="flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2.5 py-1.5 text-[11px] font-medium text-muted shadow-sm transition hover:bg-muted-bg hover:text-foreground disabled:opacity-50 sm:min-w-[7.25rem] sm:px-3"
-              title="Sign out"
-            >
-              {signingOut ? (
-                <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-              ) : (
-                <LogOut className="h-4 w-4 shrink-0" />
-              )}
-              <span className="whitespace-nowrap">Sign out</span>
-            </button>
-          </div>
-        </div>
-      </div>
-
-      {servicePickerOpen && (
-        <div
-          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-3 backdrop-blur-[2px] dark:bg-black/65 dark:backdrop-blur-sm"
-          role="presentation"
-          onClick={newChatLoading ? undefined : closeServicePicker}
-        >
-          <div
-            role="dialog"
-            aria-modal="true"
-            aria-labelledby="widget-picker-title"
-            className="flex max-h-[min(85vh,520px)] w-full max-w-sm min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-2xl ring-1 ring-border/60 dark:shadow-black/50 dark:ring-border/80"
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border/80 bg-card px-3 py-2.5 dark:bg-card">
-              <p
-                id="widget-picker-title"
-                className="text-xs font-semibold text-foreground"
-              >
-                Choose a conversation
-              </p>
-              <button
-                type="button"
-                onClick={closeServicePicker}
-                disabled={newChatLoading}
-                className="rounded-md p-1 text-muted transition hover:bg-muted-bg hover:text-foreground disabled:opacity-50"
-                aria-label="Close"
-              >
-                <X className="h-4 w-4" />
-              </button>
-            </div>
-            <div className="scrollbar-thin min-h-0 max-h-[min(72vh,440px)] overflow-y-auto px-3 py-3">
-              {leadJourneysLoading && (
-                <div
-                  className="flex flex-col items-center justify-center gap-3 py-10 text-center"
-                  role="status"
-                  aria-live="polite"
-                >
-                  <Loader2
-                    className="h-7 w-7 animate-spin text-muted-foreground"
-                    strokeWidth={2}
-                    aria-hidden
-                  />
-                  <p className="max-w-[14rem] text-xs leading-relaxed text-muted-foreground">
-                    Loading conversation types you can start here.
-                  </p>
-                </div>
-              )}
-              {pickerError && (
-                <p className="text-xs text-red-600 dark:text-red-400">
-                  {pickerError}
-                </p>
-              )}
-              {!leadJourneysLoading &&
-                !pickerError &&
-                leadJourneyOptions.length > 0 && (
-                  <ul className="flex flex-col gap-1.5">
-                    {leadJourneyOptions.map((opt) => (
-                      <li key={opt.serviceKey}>
-                        <button
-                          type="button"
-                          disabled={newChatLoading}
-                          onClick={() =>
-                            handleSelectLeadJourney(opt.serviceKey, opt.title)
-                          }
-                          className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-left text-xs font-medium text-foreground transition hover:bg-muted-bg focus:outline-none focus:ring-2 focus:ring-ring/40 disabled:opacity-50 dark:bg-muted-bg/30 dark:hover:bg-muted-bg"
-                        >
-                          {opt.title}
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {sessionError && (
-        <p className="text-xs text-red-600 dark:text-red-400">{sessionError}</p>
-      )}
-
-      {!activeSessionId && !sessionsLoading && !servicePickerOpen && (
-        <p className="text-xs text-muted">Create a chat with New chat.</p>
-      )}
-
-      {logsError &&
-        activeSessionId &&
-        chatRole === LEAD_JOURNEY_ROLE &&
-        !logsLoading && (
-          <p className="text-xs text-red-600 dark:text-red-400">{logsError}</p>
-        )}
-
-      {activeSessionId && chatRole === LEAD_JOURNEY_ROLE && !logsLoading && (
-        <>
-          <div className="scrollbar-thin min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden border-t border-border/25 bg-muted-bg/20 p-3 dark:border-border/20 dark:bg-muted-bg/10 md:rounded-b-xl">
-            {messages.length === 0 && !logsLoading && (
-              <p className="py-8 text-center text-xs text-muted">
-                {introQuestions.length > 0
-                  ? "Pick a starter question below or type a message."
-                  : "Say hi to start."}
-              </p>
-            )}
-            {messages.map((m, i) => {
-              const introTypewriterActive =
-                m.role === "assistant" &&
-                i === 0 &&
-                introTypewriterSessionId &&
-                introTypewriterSessionId === activeSessionId;
-              return (
-                <div
-                  key={m.id != null ? String(m.id) : `${m.role}-${i}`}
-                  className={
-                    m.role === "user"
-                      ? `ml-auto max-w-[min(100%,22rem)] min-w-0 rounded-2xl rounded-br-md px-4 py-2.5 text-sm text-white ${!userBubbleHex ? "bg-highlight shadow-md" : ""}`
-                      : "mr-auto w-full max-w-full min-w-0 rounded-2xl rounded-bl-md bg-card px-4 py-2.5 text-sm text-foreground shadow-sm dark:bg-card/90"
-                  }
-                  style={
-                    m.role === "user" && userBubbleHex
-                      ? {
-                        backgroundColor: userBubbleHex,
-                        boxShadow: `0 4px 14px -3px ${hexToRgba(userBubbleHex, 0.42) || "rgba(0,0,0,0.12)"}, 0 0 0 1px ${hexToRgba(userBubbleHex, 0.18) || "transparent"}`,
-                      }
-                      : undefined
-                  }
-                >
-                  {m.role === "assistant" ? (
-                    <div className="min-w-0 max-w-full">
-                      {introTypewriterActive ? (
-                        <WidgetIntroTypewriter
-                          text={m.message || ""}
-                          scrollRef={endRef}
-                          onComplete={() => setIntroTypewriterSessionId(null)}
-                        />
-                      ) : (
-                        <>
-                          <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
-                            <FormatText text={m.message || ""} />
-                          </div>
-                          {Array.isArray(m.sourceCards) &&
-                            m.sourceCards.length > 0 ? (
-                            <AssistantSourceCards
-                              items={m.sourceCards}
-                              primaryHex={primaryHex}
-                            />
-                          ) : Array.isArray(m.sourceUrls) &&
-                            m.sourceUrls.length > 0 ? (
-                            <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/25 pt-2 dark:border-border/30">
-                              <span className="text-xs text-muted">Links:</span>
-                              {m.sourceUrls.map((url, idx) => (
-                                <a
-                                  key={idx}
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className={`max-w-full break-all rounded-md px-2 py-0.5 text-xs transition-colors hover:underline ${primaryHex
-                                      ? "font-medium"
-                                      : "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60"
-                                    }`}
-                                  style={
-                                    primaryHex
-                                      ? {
-                                        backgroundColor:
-                                          hexToRgba(primaryHex, 0.12) ||
-                                          undefined,
-                                        color: primaryHex,
-                                      }
-                                      : undefined
-                                  }
-                                >
-                                  {url.length > 36 ? `${url.slice(0, 36)}…` : url}
-                                </a>
-                              ))}
-                            </div>
-                          ) : null}
-                        </>
-                      )}
-                      {chatRole === LEAD_JOURNEY_ROLE && (
-                        <AssistantReplyCopyButton
-                          className="mt-2"
-                          message={m.message}
-                          sourceCards={m.sourceCards}
-                          sourceUrls={m.sourceUrls}
-                          readMoreUrl={readMoreCopyUrl}
-                          brandSubdomain={brand}
-                        />
-                      )}
-                    </div>
-                  ) : (
-                    <p className="whitespace-pre-wrap [word-break:break-word] [overflow-wrap:anywhere]">
-                      {m.message}
-                    </p>
-                  )}
-                </div>
-              );
-            })}
-            {sendLoading && (
-              <ChatThinkingRow
-                className="mr-auto"
-                brandSlug={brand}
-                primaryColor={primaryColor}
-                variant="outline"
-              />
-            )}
-            <div ref={endRef} />
-          </div>
-
-          {introQuestions.length > 0 &&
-            !messages.some((m) => m.role === "user") &&
-            !sendLoading && (
-              <div className="shrink-0 border-t border-border/25 px-1 py-2 dark:border-border/20">
-                <div className="flex gap-2 overflow-x-auto pb-0.5 [scrollbar-width:thin]">
-                  {introQuestions.map((q, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => void sendUserMessage(q)}
-                      disabled={sendLoading}
-                      className="max-w-[min(280px,85vw)] shrink-0 rounded-xl border border-border/50 bg-background px-3 py-2 text-left text-xs font-medium text-foreground shadow-sm transition-colors hover:bg-muted-bg disabled:opacity-50 dark:border-border/40"
-                    >
-                      {q}
-                    </button>
-                  ))}
-                </div>
+                      }`}
+                  >
+                    <span className="min-w-0 truncate">{widgetSessionTitle(s)}</span>
+                  </button>
+                ))}
               </div>
             )}
-
-          <form
-            onSubmit={handleSubmit}
-            className="flex shrink-0 gap-2 border-t border-border/40 pt-3 dark:border-border/30"
-          >
-            <input
-              type="text"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder="Message…"
-              disabled={sendLoading}
-              className={`min-w-0 flex-1 rounded-xl border border-border/50 bg-background px-3.5 py-2.5 text-sm text-foreground shadow-sm placeholder:text-muted focus:border-border focus:outline-none ${primaryHex ? "focus:ring-2 focus:ring-offset-1" : "focus:ring-2 focus:ring-ring/25"
-                }`}
-              onFocus={(e) => {
-                if (!primaryHex) return;
-                const ring = hexToRgba(primaryHex, 0.35);
-                if (ring) e.target.style.boxShadow = `0 0 0 2px ${ring}`;
-              }}
-              onBlur={(e) => {
-                e.target.style.boxShadow = "";
-              }}
-            />
-            <button
-              type="submit"
-              disabled={sendLoading || !input.trim()}
-              className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-white shadow-sm transition hover:opacity-90 disabled:opacity-40 ${!primaryHex ? "bg-highlight" : ""}`}
-              style={
-                primaryHex
-                  ? {
-                    backgroundColor: primaryHex,
-                    boxShadow: `0 2px 8px ${hexToRgba(primaryHex, 0.3) || "rgba(0,0,0,0.1)"}`,
-                  }
-                  : undefined
-              }
-              aria-label="Send"
-            >
-              {sendLoading ? (
-                <Loader2 className="h-4 w-4 animate-spin" />
-              ) : (
-                <Send className="h-4 w-4" />
-              )}
-            </button>
-          </form>
-          <p
-            className={`mt-2 shrink-0 text-center text-xs ${primaryHex ? "" : "text-muted"
-              }`}
-            style={primaryHex ? { color: primaryHex } : undefined}
-          >
-            Powered by{" "}
-            <a
-              href="https://kavisha.ai/widget-intro"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={`font-semibold underline-offset-2 hover:underline ${primaryHex ? "" : "text-highlight"
-                }`}
-            >
-              Kavisha
-            </a>
-          </p>
-        </>
-      )}
-    </div>
-    {adminMessagesEnabled &&
-      brandInboxOpen &&
-      brandInboxUserA &&
-      brandInboxUserB &&
-      brandInboxConnectionId &&
-      brandInboxViewerId && (
-        <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/35 p-0 sm:items-center sm:p-3">
-          <div className="flex h-[min(88dvh,560px)] w-full max-h-[92dvh] max-w-md flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-2xl sm:rounded-2xl">
-            <LiveChat
-              userA={brandInboxUserA}
-              userB={brandInboxUserB}
-              currentUserId={brandInboxViewerId}
-              connectionId={brandInboxConnectionId}
-              onClose={() => setBrandInboxOpen(false)}
-              isEmbedded={true}
-              otherUserDisplayName={brandInboxPeerName}
-              messagingBrand={brand}
-              primaryColor={primaryColor}
-              httpFetch={(url, init) => widgetAwareFetch(url, init ?? {})}
-            />
+          </div>
+          {sessions.length === 0 && !sessionsLoading && (
+            <p className="text-[11px] text-muted">No widget chats yet</p>
+          )}
+          <div className="-mx-1 overflow-x-auto overflow-y-hidden scroll-smooth pb-1 scrollbar-thin">
+            <div className="flex min-w-full flex-nowrap items-stretch justify-between gap-2 px-1 sm:gap-2.5 sm:px-2">
+              <button
+                type="button"
+                onClick={openNewChatPicker}
+                disabled={
+                  newChatLoading ||
+                  leadJourneysLoading ||
+                  sessionsLoading ||
+                  signingOut
+                }
+                className={`flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl px-2.5 py-1.5 text-[11px] font-medium shadow-sm transition hover:opacity-92 disabled:opacity-50 sm:min-w-[7.25rem] sm:px-3 ${primaryHex
+                  ? "border border-transparent text-white"
+                  : "border border-border/50 bg-background text-foreground hover:bg-muted-bg"
+                  }`}
+                style={
+                  primaryHex
+                    ? {
+                      backgroundColor: primaryHex,
+                      boxShadow: `0 2px 10px ${hexToRgba(primaryHex, 0.3) || "rgba(0,0,0,0.1)"}`,
+                    }
+                    : undefined
+                }
+              >
+                {newChatLoading || leadJourneysLoading ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                ) : (
+                  <Plus className="h-4 w-4 shrink-0" />
+                )}
+                <span className="whitespace-nowrap">New chat</span>
+              </button>
+              <button
+                type="button"
+                onClick={() =>
+                  window.open(buildBrandCommunityUrl(brand), "_blank", "noopener,noreferrer")
+                }
+                className="flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2.5 py-1.5 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg sm:min-w-[7.25rem] sm:px-3"
+                title="Open community in a new tab"
+              >
+                <Users className="h-4 w-4 shrink-0" />
+                <span className="whitespace-nowrap">Community</span>
+              </button>
+              {/* Support entry moved to top header in `app/widget/page.js` */}
+              <button
+                type="button"
+                onClick={handleWidgetSignOut}
+                disabled={signingOut}
+                className="flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2.5 py-1.5 text-[11px] font-medium text-muted shadow-sm transition hover:bg-muted-bg hover:text-foreground disabled:opacity-50 sm:min-w-[7.25rem] sm:px-3"
+                title="Sign out"
+              >
+                {signingOut ? (
+                  <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
+                ) : (
+                  <LogOut className="h-4 w-4 shrink-0" />
+                )}
+                <span className="whitespace-nowrap">Sign out</span>
+              </button>
+            </div>
           </div>
         </div>
-      )}
+
+        {servicePickerOpen && (
+          <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/45 p-3 backdrop-blur-[2px] dark:bg-black/65 dark:backdrop-blur-sm"
+            role="presentation"
+            onClick={newChatLoading ? undefined : closeServicePicker}
+          >
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-labelledby="widget-picker-title"
+              className="flex max-h-[min(85vh,520px)] w-full max-w-sm min-h-0 flex-col overflow-hidden rounded-xl border border-border bg-card text-foreground shadow-2xl ring-1 ring-border/60 dark:shadow-black/50 dark:ring-border/80"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="flex shrink-0 items-center justify-between gap-2 border-b border-border/80 bg-card px-3 py-2.5 dark:bg-card">
+                <p
+                  id="widget-picker-title"
+                  className="text-xs font-semibold text-foreground"
+                >
+                  Choose a conversation
+                </p>
+                <button
+                  type="button"
+                  onClick={closeServicePicker}
+                  disabled={newChatLoading}
+                  className="rounded-md p-1 text-muted transition hover:bg-muted-bg hover:text-foreground disabled:opacity-50"
+                  aria-label="Close"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="scrollbar-thin min-h-0 max-h-[min(72vh,440px)] overflow-y-auto px-3 py-3">
+                {leadJourneysLoading && (
+                  <div
+                    className="flex flex-col items-center justify-center gap-3 py-10 text-center"
+                    role="status"
+                    aria-live="polite"
+                  >
+                    <Loader2
+                      className="h-7 w-7 animate-spin text-muted-foreground"
+                      strokeWidth={2}
+                      aria-hidden
+                    />
+                    <p className="max-w-[14rem] text-xs leading-relaxed text-muted-foreground">
+                      Loading conversation types you can start here.
+                    </p>
+                  </div>
+                )}
+                {pickerError && (
+                  <p className="text-xs text-red-600 dark:text-red-400">
+                    {pickerError}
+                  </p>
+                )}
+                {!leadJourneysLoading &&
+                  !pickerError &&
+                  leadJourneyOptions.length > 0 && (
+                    <ul className="flex flex-col gap-1.5">
+                      {leadJourneyOptions.map((opt) => (
+                        <li key={opt.serviceKey}>
+                          <button
+                            type="button"
+                            disabled={newChatLoading}
+                            onClick={() =>
+                              handleSelectLeadJourney(opt.serviceKey, opt.title)
+                            }
+                            className="w-full rounded-lg border border-border bg-background px-3 py-2.5 text-left text-xs font-medium text-foreground transition hover:bg-muted-bg focus:outline-none focus:ring-2 focus:ring-ring/40 disabled:opacity-50 dark:bg-muted-bg/30 dark:hover:bg-muted-bg"
+                          >
+                            {opt.title}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {sessionError && (
+          <p className="text-xs text-red-600 dark:text-red-400">{sessionError}</p>
+        )}
+
+        {!activeSessionId && !sessionsLoading && !servicePickerOpen && (
+          <p className="text-xs text-muted">Create a chat with New chat.</p>
+        )}
+
+        {logsError &&
+          activeSessionId &&
+          chatRole === LEAD_JOURNEY_ROLE &&
+          !logsLoading && (
+            <p className="text-xs text-red-600 dark:text-red-400">{logsError}</p>
+          )}
+
+        {activeSessionId && chatRole === LEAD_JOURNEY_ROLE && !logsLoading && (
+          <>
+            <div className="scrollbar-thin min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden bg-muted-bg/20 p-3 dark:bg-muted-bg/10 md:rounded-b-xl">
+              {messages.length === 0 && !logsLoading && (
+                <p className="py-8 text-center text-xs text-muted">
+                  {introQuestions.length > 0
+                    ? "Pick a starter question below or type a message."
+                    : "Say hi to start."}
+                </p>
+              )}
+              {messages.map((m, i) => {
+                const introTypewriterActive =
+                  m.role === "assistant" &&
+                  i === 0 &&
+                  introTypewriterSessionId &&
+                  introTypewriterSessionId === activeSessionId;
+                return (
+                  <div
+                    key={m.id != null ? String(m.id) : `${m.role}-${i}`}
+                    className={
+                      m.role === "user"
+                        ? `ml-auto max-w-[min(100%,22rem)] min-w-0 rounded-2xl rounded-br-md px-4 py-2.5 text-sm text-white ${!userBubbleHex ? "bg-highlight shadow-md" : ""}`
+                        : "mr-auto w-full max-w-full min-w-0 rounded-2xl rounded-bl-md bg-card px-4 py-2.5 text-sm text-foreground shadow-sm dark:bg-card/90"
+                    }
+                    style={
+                      m.role === "user" && userBubbleHex
+                        ? {
+                          backgroundColor: userBubbleHex,
+                          boxShadow: `0 4px 14px -3px ${hexToRgba(userBubbleHex, 0.42) || "rgba(0,0,0,0.12)"}, 0 0 0 1px ${hexToRgba(userBubbleHex, 0.18) || "transparent"}`,
+                        }
+                        : undefined
+                    }
+                  >
+                    {m.role === "assistant" ? (
+                      <div className="min-w-0 max-w-full">
+                        {introTypewriterActive ? (
+                          <WidgetIntroTypewriter
+                            text={m.message || ""}
+                            scrollRef={endRef}
+                            onComplete={() => setIntroTypewriterSessionId(null)}
+                          />
+                        ) : (
+                          <>
+                            <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
+                              <FormatText text={m.message || ""} />
+                            </div>
+                            {Array.isArray(m.sourceCards) &&
+                              m.sourceCards.length > 0 ? (
+                              <AssistantSourceCards
+                                items={m.sourceCards}
+                                primaryHex={primaryHex}
+                              />
+                            ) : Array.isArray(m.sourceUrls) &&
+                              m.sourceUrls.length > 0 ? (
+                              <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/25 pt-2 dark:border-border/30">
+                                <span className="text-xs text-muted">Links:</span>
+                                {m.sourceUrls.map((url, idx) => (
+                                  <a
+                                    key={idx}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className={`max-w-full break-all rounded-md px-2 py-0.5 text-xs transition-colors hover:underline ${primaryHex
+                                      ? "font-medium"
+                                      : "bg-blue-50 text-blue-700 hover:bg-blue-100 dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60"
+                                      }`}
+                                    style={
+                                      primaryHex
+                                        ? {
+                                          backgroundColor:
+                                            hexToRgba(primaryHex, 0.12) ||
+                                            undefined,
+                                          color: primaryHex,
+                                        }
+                                        : undefined
+                                    }
+                                  >
+                                    {url.length > 36 ? `${url.slice(0, 36)}…` : url}
+                                  </a>
+                                ))}
+                              </div>
+                            ) : null}
+                          </>
+                        )}
+                        {chatRole === LEAD_JOURNEY_ROLE && (
+                          <AssistantReplyCopyButton
+                            className="mt-1"
+                            message={m.message}
+                            sourceCards={m.sourceCards}
+                            sourceUrls={m.sourceUrls}
+                            readMoreUrl={readMoreCopyUrl}
+                            brandSubdomain={brand}
+                          />
+                        )}
+                      </div>
+                    ) : (
+                      <p className="whitespace-pre-wrap [word-break:break-word] [overflow-wrap:anywhere]">
+                        {m.message}
+                      </p>
+                    )}
+                  </div>
+                );
+              })}
+              {sendLoading && (
+                <ChatThinkingRow
+                  className="mr-auto"
+                  brandSlug={brand}
+                  primaryColor={primaryColor}
+                  variant="outline"
+                />
+              )}
+              <div ref={endRef} />
+            </div>
+
+            {introQuestions.length > 0 &&
+              !messages.some((m) => m.role === "user") &&
+              !sendLoading && (
+                <div className="shrink-0 px-1 py-1.5">
+                  <p className="mb-2 px-1 text-xs font-medium tracking-wide text-muted">
+                    Suggested questions
+                  </p>
+                  <div className="group relative">
+                    <div className="relative mx-auto w-full">
+                      <div className="grid grid-cols-[20%_60%_20%] items-center gap-2">
+                        <div className="min-w-0 pr-1">
+                          {prevIntroQuestion ? (
+                            <div className="pointer-events-none flex h-12 w-full items-center justify-center rounded-2xl border border-border/35 bg-background/65 px-3 [mask-image:linear-gradient(to_right,transparent,black_78%)]">
+                              <span className="h-2 w-14 rounded-full bg-foreground/25" />
+                            </div>
+                          ) : (
+                            <div aria-hidden className="h-12" />
+                          )}
+                        </div>
+                        <div className="relative z-10 overflow-hidden rounded-2xl border border-border/45 bg-background shadow-sm dark:border-border/40">
+                          <div
+                            className="grid grid-flow-col auto-cols-[100%] transition-transform duration-300 ease-out"
+                            style={{ transform: `translateX(-${safeIntroQuestionIndex * 100}%)` }}
+                          >
+                            {introQuestions.map((q, i) => (
+                              <button
+                                key={`intro-question-${i}`}
+                                type="button"
+                                onClick={() => void sendUserMessage(q)}
+                                disabled={sendLoading}
+                                className="flex h-12 w-full items-center px-4 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted-bg disabled:opacity-50"
+                              >
+                                {q}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                        <div className="min-w-0 pl-1">
+                          {nextIntroQuestion ? (
+                            <div className="pointer-events-none flex h-12 w-full items-center justify-center rounded-2xl border border-border/35 bg-background/65 px-3 [mask-image:linear-gradient(to_left,transparent,black_78%)]">
+                              <span className="h-2 w-14 rounded-full bg-foreground/25" />
+                            </div>
+                          ) : (
+                            <div aria-hidden className="h-12" />
+                          )}
+                        </div>
+                      </div>
+
+                      {prevIntroQuestion ? (
+                        <button
+                          type="button"
+                          aria-label="Previous suggested question"
+                          onClick={() =>
+                            setIntroQuestionIndex((idx) => Math.max(0, idx - 1))
+                          }
+                          className="absolute left-[10%] top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background/45 p-1.5 text-foreground/65 opacity-0 shadow-sm backdrop-blur-sm transition hover:bg-background/70 hover:text-foreground group-hover:opacity-100"
+                        >
+                          <ChevronLeft className="h-4 w-4" />
+                        </button>
+                      ) : null}
+                      {nextIntroQuestion ? (
+                        <button
+                          type="button"
+                          aria-label="Next suggested question"
+                          onClick={() =>
+                            setIntroQuestionIndex((idx) =>
+                              Math.min(introQuestionCount - 1, idx + 1)
+                            )
+                          }
+                          className="absolute right-[10%] top-1/2 z-20 translate-x-1/2 -translate-y-1/2 rounded-full bg-background/45 p-1.5 text-foreground/65 opacity-0 shadow-sm backdrop-blur-sm transition hover:bg-background/70 hover:text-foreground group-hover:opacity-100"
+                        >
+                          <ChevronRight className="h-4 w-4" />
+                        </button>
+                      ) : null}
+                    </div>
+
+                    <div className="mt-2 flex items-center justify-center">
+                      <div className="relative">
+                        <div className="flex items-center gap-1.5">
+                          {introQuestions.map((_, i) => (
+                            <button
+                              key={`intro-dot-${i}`}
+                              type="button"
+                              aria-label={`Go to suggested question ${i + 1}`}
+                              onClick={() => setIntroQuestionIndex(i)}
+                              className="h-2.5 w-2.5 rounded-full bg-[#d1d1d1] transition-colors hover:bg-[#bcbcbc]"
+                            />
+                          ))}
+                        </div>
+                        <span
+                          aria-hidden
+                          className="pointer-events-none absolute left-0 top-0 h-2.5 w-6 rounded-full bg-[#9d9d9d] transition-transform duration-300 ease-out"
+                          style={{ transform: `translateX(${safeIntroQuestionIndex * 16}px)` }}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+            <form
+              onSubmit={handleSubmit}
+              className="shrink-0 pt-2"
+            >
+              <div className="relative">
+                <input
+                  type="text"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  placeholder="Message…"
+                  disabled={sendLoading}
+                  className="w-full rounded-full border border-[#cfcfcf] bg-[#f7f7f7] px-4 py-2.5 pr-11 text-sm text-foreground shadow-sm placeholder:text-[#8f8f8f] focus:outline-none focus:ring-2 focus:ring-black/10"
+                  onFocus={(e) => {
+                    e.target.style.boxShadow = "0 0 0 2px rgba(0, 0, 0, 0.08)";
+                  }}
+                  onBlur={(e) => {
+                    e.target.style.boxShadow = "";
+                  }}
+                />
+                <button
+                  type="submit"
+                  disabled={sendLoading || !input.trim()}
+                  className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-[#000000] transition-opacity hover:opacity-75 disabled:opacity-35"
+                  aria-label="Send"
+                >
+                  {sendLoading ? (
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  ) : (
+                    <Send className="h-3.5 w-3.5" />
+                  )}
+                </button>
+              </div>
+            </form>
+            <p
+              className={`mt-2 shrink-0 text-center text-xs ${primaryHex ? "" : "text-muted"
+                }`}
+              style={primaryHex ? { color: primaryHex } : undefined}
+            >
+              Powered by{" "}
+              <a
+                href="https://kavisha.ai/widget-intro"
+                target="_blank"
+                rel="noopener noreferrer"
+                className={`font-semibold underline-offset-2 hover:underline ${primaryHex ? "" : "text-highlight"
+                  }`}
+              >
+                Kavisha
+              </a>
+            </p>
+          </>
+        )}
+      </div>
+      {adminMessagesEnabled &&
+        brandInboxOpen &&
+        brandInboxUserA &&
+        brandInboxUserB &&
+        brandInboxConnectionId &&
+        brandInboxViewerId && (
+          <div className="fixed inset-0 z-[90] flex items-end justify-center bg-black/35 p-0 sm:items-center sm:p-3">
+            <div className="flex h-[min(88dvh,560px)] w-full max-h-[92dvh] max-w-md flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-2xl sm:rounded-2xl">
+              <LiveChat
+                userA={brandInboxUserA}
+                userB={brandInboxUserB}
+                currentUserId={brandInboxViewerId}
+                connectionId={brandInboxConnectionId}
+                onClose={() => setBrandInboxOpen(false)}
+                isEmbedded={true}
+                otherUserDisplayName={brandInboxPeerName}
+                messagingBrand={brand}
+                primaryColor={primaryColor}
+                httpFetch={(url, init) => widgetAwareFetch(url, init ?? {})}
+              />
+            </div>
+          </div>
+        )}
     </>
   );
 }

@@ -81,8 +81,8 @@ export default function WidgetIntroPage() {
                                     className="h-20 w-20 object-contain md:h-24 md:w-24"
                                 />
                             </div>
-                            <p className="max-w-[150px] text-xs font-semibold leading-relaxed tracking-wider text-foreground/90 md:text-sm">
-                                {feature.text}
+                            <p className="max-w-[150px] whitespace-pre-line text-xs font-semibold leading-relaxed tracking-wider text-foreground/90 md:text-sm">
+                                {feature.text.replace(" ", "\n")}
                             </p>
                         </div>
                     ))}
@@ -101,9 +101,14 @@ export default function WidgetIntroPage() {
                     </div>
                     <div className="order-1 flex flex-1 justify-center md:order-2">
                         <img
-                            src={`${WI}/step-1.png`}
+                            src="/Step-1-photo-thick-lines.png"
                             alt="Training AI"
-                            className={`h-auto w-full max-w-md ${stepFigureClass}`}
+                            className="h-auto w-full max-w-md dark:hidden"
+                        />
+                        <img
+                            src="/Step-1-photo-thick-lines-dark-mode.png"
+                            alt="Training AI"
+                            className="hidden h-auto w-full max-w-md dark:block"
                         />
                     </div>
                 </div>
@@ -133,9 +138,14 @@ export default function WidgetIntroPage() {
                     </div>
                     <div className="order-1 flex flex-1 justify-center md:order-2">
                         <img
-                            src={`${WI}/step-3.png`}
+                            src="/Step-3-photo-thick-lines.png"
                             alt="Analytics"
-                            className={`h-auto w-full max-w-md ${stepFigureClass}`}
+                            className="h-auto w-full max-w-md dark:hidden"
+                        />
+                        <img
+                            src="/Step-3-photo-thick-lines-dark-mode.png"
+                            alt="Analytics"
+                            className="hidden h-auto w-full max-w-md dark:block"
                         />
                     </div>
                 </div>

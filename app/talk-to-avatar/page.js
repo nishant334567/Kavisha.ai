@@ -114,22 +114,25 @@ export default function TalkToAvatarPage() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-8 justify-items-center sm:justify-items-stretch px-8">
+            <div className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 md:gap-6 md:px-8 lg:grid-cols-4 lg:gap-7 xl:grid-cols-5 xl:gap-8 justify-items-center sm:justify-items-stretch min-w-0">
               {avatars.map((avatar) => (
-                <a
+                <div
                   key={avatar.id}
-                  href={avatar.link}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="block cursor-pointer hover:scale-[1.02] active:scale-[0.98] transition-transform duration-200 rounded-2xl focus:outline-none h-full w-full max-w-sm sm:max-w-none"
+                  className="block h-full w-full min-w-0 max-w-sm sm:max-w-none"
                 >
                   <AvatarCard
                     image={avatar.image}
                     name={avatar.name}
                     title={avatar.title}
                     subtitle={avatar.subtitle}
+                    avatarLink={avatar.link}
+                    widgetLink={
+                      avatar.clientWidgetUrl
+                        ? String(avatar.clientWidgetUrl).trim()
+                        : ""
+                    }
                   />
-                </a>
+                </div>
               ))}
             </div>
           </>
