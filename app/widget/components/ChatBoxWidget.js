@@ -95,6 +95,8 @@ export default function ChatBoxWidget({
   secondaryColor = null,
   readMoreCopyUrl = "",
   adminMessagesEnabled = false,
+  /** Notifies shell (e.g. Support button unread dot) when admin unread count changes. */
+  onAdminUnreadCount,
   /** Friend Connect and/or Professional Connect — gates Community links (matches Navbar / MobileBottomNav). */
   communityEnabled = false,
 }) {
@@ -154,6 +156,12 @@ export default function ChatBoxWidget({
   const [brandInboxViewerId, setBrandInboxViewerId] = useState(null);
   const [brandInboxPeerName, setBrandInboxPeerName] = useState("");
   const [brandInboxLoading, setBrandInboxLoading] = useState(false);
+
+  const onAdminUnreadCountRef = useRef(onAdminUnreadCount);
+  onAdminUnreadCountRef.current = onAdminUnreadCount;
+  useEffect(() => {
+    onAdminUnreadCountRef.current?.(adminUnreadCount);
+  }, [adminUnreadCount]);
 
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());

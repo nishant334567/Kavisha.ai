@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, useEffect, useState } from "react";
+import { Suspense, useCallback, useEffect, useState } from "react";
 import { Headphones, Maximize2, MessageCircle, Minimize2, X } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import ChatBoxWidget from "./components/ChatBoxWidget";
@@ -43,6 +43,7 @@ function WidgetShell() {
   const [widgetChatbotHeader, setWidgetChatbotHeader] = useState(null);
   const [widgetCopyReadMoreUrl, setWidgetCopyReadMoreUrl] = useState("");
   const [enableAdminMessages, setEnableAdminMessages] = useState(false);
+  const [supportHasUnreadAdmin, setSupportHasUnreadAdmin] = useState(false);
   const [communityEnabled, setCommunityEnabled] = useState(false);
   const [launcherNudgeReady, setLauncherNudgeReady] = useState(false);
   const brandTrimmed = brand.trim();
@@ -50,6 +51,10 @@ function WidgetShell() {
   /** Start false: with `?brand=` we show an empty slot until theme fetch finishes (no default teal flash). */
   const [themeReady, setThemeReady] = useState(false);
   const primaryHex = normalizeBrandHex(primaryColor);
+
+  const onAdminUnreadCount = useCallback((count) => {
+    setSupportHasUnreadAdmin(typeof count === "number" && count > 0);
+  }, []);
 
   const headerTitle =
     (typeof widgetChatbotHeader === "string" && widgetChatbotHeader.trim()
@@ -67,6 +72,7 @@ function WidgetShell() {
       setWidgetChatbotHeader(null);
       setWidgetCopyReadMoreUrl("");
       setEnableAdminMessages(false);
+      setSupportHasUnreadAdmin(false);
       setCommunityEnabled(false);
       return;
     }
@@ -105,7 +111,9 @@ function WidgetShell() {
             ? data.widgetCopyReadMoreUrl.trim()
             : "";
         setWidgetCopyReadMoreUrl(rm);
-        setEnableAdminMessages(Boolean(data?.enableAdminMessages));
+        const adminOn = Boolean(data?.enableAdminMessages);
+        setEnableAdminMessages(adminOn);
+        if (!adminOn) setSupportHasUnreadAdmin(false);
         setCommunityEnabled(
           Boolean(data?.enableFriendConnect) ||
             Boolean(data?.enableProfessionalConnect)
@@ -120,6 +128,7 @@ function WidgetShell() {
           setWidgetChatbotHeader(null);
           setWidgetCopyReadMoreUrl("");
           setEnableAdminMessages(false);
+          setSupportHasUnreadAdmin(false);
           setCommunityEnabled(false);
         }
       })
@@ -208,15 +217,24 @@ function WidgetShell() {
                         })
                       );
                     }}
-                    aria-label="Open support"
+                    aria-label={
+                      supportHasUnreadAdmin
+                        ? "Open support, unread messages"
+                        : "Open support"
+                    }
                     className={
                       primaryHex
-                        ? "inline-flex items-center gap-1 rounded-full border border-white/85 px-2.5 py-1 text-xs font-semibold text-white/95 transition hover:bg-white/15 hover:text-white"
-                        : "inline-flex items-center gap-1rounded-full border border-foreground/15 px-2.5 py-1 text-xs font-semibold text-foreground transition hover:bg-muted-bg"
+                        ? "relative inline-flex items-center gap-1 rounded-full border border-white/85 px-2.5 py-1 text-xs font-semibold text-white/95 transition hover:bg-white/15 hover:text-white"
+                        : "relative inline-flex items-center gap-1 rounded-full border border-foreground/15 px-2.5 py-1 text-xs font-semibold text-foreground transition hover:bg-muted-bg"
                     }
                     title="Support"
                   >
-
+                    {supportHasUnreadAdmin ? (
+                      <span
+                        className={`absolute -right-0.5 -top-0.5 h-2 w-2 rounded-full bg-red-500 ring-2 ${primaryHex ? "ring-white" : "ring-background"}`}
+                        aria-hidden
+                      />
+                    ) : null}
                     <span>Support</span>
                     <Headphones className="h-2.5 w-3" strokeWidth={2} />
                   </button>
@@ -260,6 +278,7 @@ function WidgetShell() {
               secondaryColor={secondaryColor}
               readMoreCopyUrl={widgetCopyReadMoreUrl}
               adminMessagesEnabled={enableAdminMessages}
+              onAdminUnreadCount={onAdminUnreadCount}
               communityEnabled={communityEnabled}
             />
           </div>
