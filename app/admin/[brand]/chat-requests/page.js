@@ -77,16 +77,14 @@ export default function ChatRequests() {
     }));
   }, [filters.datePreset, filters.dateFrom, filters.dateTo, filters.minMessages, filters.minSessions, filters.minEmailsSent, filters.lastEmailPreset, filters.lastEmailFrom, filters.lastEmailTo]);
 
-  const openChatSession = (userA, userB) => {
-    setUserA(userA);
-    setUserB(userB);
+  /** Brand ↔ peer DM only (same connection shape as Brand Inbox / widget support). */
+  const openChatSession = (_adminId, endUserId) => {
     const b = String(brandContext?.subdomain || "").trim().toLowerCase();
-    if (b) {
-      setConnectionId(`${b}_${String(userB)}`);
-    } else {
-      setConnectionId([userA, userB].sort().join("_"));
-    }
-    setOpenChat((prev) => !prev);
+    if (!b || !user?.id || endUserId == null || String(endUserId).trim() === "") return;
+    setUserA(user.id);
+    setUserB(String(endUserId));
+    setConnectionId(`${b}_${String(endUserId)}`);
+    setOpenChat(true);
   };
 
   const openBrandInboxThread = ({ endUserId, otherUser }) => {

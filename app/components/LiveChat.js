@@ -42,7 +42,7 @@ export default function Livechat({
     reopenRequestedAt: null,
   });
 
-  const { socket, isOnline } = useSocket();
+  const { socket } = useSocket();
 
   // Masked name only when opened from community Connect/Message (parent passes otherUserDisplayName)
   const displayName =
@@ -102,14 +102,14 @@ export default function Livechat({
         currentUserId,
         ...(showMessagingControls && messagingBrand
           ? {
-              type: "brand_inbox",
-              brand: brandKey || messagingBrand,
-              // Canonical: connectionId is `${brand}_${endUserId}`.
-              // Avoid relying on userA/userB ordering.
-              endUserId:
-                endUserIdFromConnection ||
-                (showMessagingControls ? String(userB) : String(currentUserId)),
-            }
+            type: "brand_inbox",
+            brand: brandKey || messagingBrand,
+            // Canonical: connectionId is `${brand}_${endUserId}`.
+            // Avoid relying on userA/userB ordering.
+            endUserId:
+              endUserIdFromConnection ||
+              (showMessagingControls ? String(userB) : String(currentUserId)),
+          }
           : {}),
       }),
     });
@@ -314,10 +314,8 @@ export default function Livechat({
               {(headerTitle || "U").charAt(0).toUpperCase()}
             </div>
             <div
-              className={`py-2 text-lg font-semibold font-baloo ${
-                isBrandUserInboxHeader ? "" : "uppercase"
-              }`}
-              style={shouldUseBrandColors ? { color: primaryHex } : undefined}
+              className={`py-2 text-lg font-semibold font-baloo ${isBrandUserInboxHeader ? "" : "uppercase"} ${shouldUseBrandColors ? "text-foreground" : "text-highlight"
+                }`}
             >
               {headerTitle}
             </div>
@@ -359,8 +357,8 @@ export default function Livechat({
               aria-label="Close Chat"
             >
               <X
-                className={`h-4 w-4 ${shouldUseBrandColors ? "" : "text-highlight"}`}
-                style={shouldUseBrandColors ? { color: primaryHex } : undefined}
+                className={`h-4 w-4 ${shouldUseBrandColors ? "text-foreground/80 hover:text-foreground" : "text-highlight"
+                  }`}
               />
             </button>
           </div>
@@ -393,8 +391,8 @@ export default function Livechat({
                   const senderNameBase = isMe
                     ? user?.name || "You"
                     : (m?.senderRole === "admin" && m?.senderName
-                        ? m.senderName
-                        : displayName);
+                      ? m.senderName
+                      : displayName);
                   const senderName =
                     !isMe && m?.senderRole === "admin" && senderNameBase
                       ? `${senderNameBase} (Admin)`
@@ -410,8 +408,8 @@ export default function Livechat({
                         </div>
                         <div>
                           <p
-                            className={`font-baloo text-sm font-medium ${shouldUseBrandColors ? "" : "text-highlight"}`}
-                            style={shouldUseBrandColors ? { color: primaryHex } : undefined}
+                            className={`font-baloo text-sm font-medium ${shouldUseBrandColors ? "text-foreground" : "text-highlight"
+                              }`}
                           >
                             {senderName}
                           </p>
@@ -442,7 +440,9 @@ export default function Livechat({
             they&apos;re ready.
           </p>
           {hasReopenRequest ? (
-            <p className="mt-3 text-xs font-medium text-highlight">
+            <p
+              className={`mt-3 text-xs font-medium ${shouldUseBrandColors ? "text-foreground" : "text-highlight"}`}
+            >
               Your request was sent. You&apos;ll be able to message again once the
               admin reopens the conversation.
             </p>
@@ -458,7 +458,7 @@ export default function Livechat({
                 {reopenSubmitting ? "Sending request…" : "Request to chat again"}
               </button>
               {reopenError ? (
-                <p className="mt-2 text-xs text-red-600" role="alert">
+                <p className="mt-2 text-xs text-red-600 dark:text-red-400" role="alert">
                   {reopenError}
                 </p>
               ) : null}
@@ -494,7 +494,7 @@ export default function Livechat({
               disabled={
                 connectionLoading || !chatInfo.sendAllowed || !message.trim()
               }
-              className={`rounded-lg px-8 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted-bg disabled:text-white ${shouldUseBrandColors ? "" : "bg-highlight"}`}
+              className={`rounded-lg px-8 py-2 text-sm font-medium text-white shadow-sm transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:bg-muted-bg disabled:text-muted-foreground ${shouldUseBrandColors ? "" : "bg-highlight"}`}
               style={shouldUseBrandColors ? { backgroundColor: primaryHex } : undefined}
             >
               Send
