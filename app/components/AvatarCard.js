@@ -1,5 +1,11 @@
 import { ExternalLink, Sparkles } from "lucide-react";
 
+const AVATAR_BTN =
+  "group relative flex w-full min-w-0 items-center justify-center overflow-hidden rounded-full bg-white px-3 py-2.5 text-sm font-medium text-[#17484B] ring-1 ring-black/15 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 before:absolute before:inset-0 before:-translate-x-full before:bg-[linear-gradient(90deg,transparent,rgba(206,253,253,0.55),transparent)] before:opacity-0 before:transition before:duration-700 before:ease-out hover:before:translate-x-full hover:before:opacity-100";
+
+const AVATAR_BTN_INNER =
+  "relative z-10 flex min-w-0 flex-wrap items-center justify-center gap-2 text-center leading-snug";
+
 export default function AvatarCard({
   image,
   name,
@@ -37,23 +43,17 @@ export default function AvatarCard({
             {truncateText(subtitle, 30)}
           </p>
         )} */}
-        <div className="mt-auto flex flex-col gap-2 pt-3">
+        <div className="mt-auto flex w-full min-w-0 flex-col gap-2 pt-3">
           <a
             href={avatarLink || "#"}
             target={avatarLink ? "_blank" : undefined}
             rel={avatarLink ? "noopener noreferrer" : undefined}
             aria-disabled={!avatarLink}
-            className={`group relative inline-flex w-[220px] items-center justify-center self-center overflow-hidden rounded-full bg-white px-4 py-2 text-sm font-medium text-[#17484B] ring-1 ring-black/15 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 before:absolute before:inset-0 before:-translate-x-full before:bg-[linear-gradient(90deg,transparent,rgba(206,253,253,0.55),transparent)] before:opacity-0 before:transition before:duration-700 before:ease-out hover:before:translate-x-full hover:before:opacity-100 ${
-              avatarLink
-                ? ""
-                : "cursor-not-allowed opacity-50"
-            }`}
+            className={`${AVATAR_BTN} ${avatarLink ? "" : "cursor-not-allowed opacity-50"}`}
           >
-            <span className="relative z-10 inline-flex items-center justify-center gap-2">
+            <span className={AVATAR_BTN_INNER}>
               <Sparkles
-                className={`h-4 w-4 transition-transform duration-200 ${
-                  avatarLink ? "group-hover:rotate-12 group-hover:scale-110" : ""
-                }`}
+                className={`h-4 w-4 shrink-0 transition-transform duration-200 ${avatarLink ? "group-hover:rotate-12 group-hover:scale-110" : ""}`}
               />
               Visit Avataar
             </span>
@@ -63,10 +63,10 @@ export default function AvatarCard({
               href={widgetLink}
               target="_blank"
               rel="noopener noreferrer"
-              className="group relative inline-flex w-[220px] items-center justify-center self-center overflow-hidden rounded-full bg-white px-4 py-2 text-sm font-medium text-[#17484B] ring-1 ring-black/15 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 before:absolute before:inset-0 before:-translate-x-full before:bg-[linear-gradient(90deg,transparent,rgba(206,253,253,0.55),transparent)] before:opacity-0 before:transition before:duration-700 before:ease-out hover:before:translate-x-full hover:before:opacity-100"
+              className={AVATAR_BTN}
             >
-              <span className="relative z-10 inline-flex items-center justify-center gap-2">
-                <ExternalLink className="h-4 w-4 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
+              <span className={AVATAR_BTN_INNER}>
+                <ExternalLink className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
                 View widget on website
               </span>
             </a>
