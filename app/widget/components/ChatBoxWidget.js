@@ -85,6 +85,8 @@ export default function ChatBoxWidget({
   secondaryColor = null,
   readMoreCopyUrl = "",
   adminMessagesEnabled = false,
+  /** Notifies shell (e.g. Support button unread dot) when admin unread count changes. */
+  onAdminUnreadCount,
 }) {
   const { user: firebaseUser, loading: authLoading, refresh } =
     useFirebaseSession();
@@ -141,6 +143,12 @@ export default function ChatBoxWidget({
   const [brandInboxViewerId, setBrandInboxViewerId] = useState(null);
   const [brandInboxPeerName, setBrandInboxPeerName] = useState("");
   const [brandInboxLoading, setBrandInboxLoading] = useState(false);
+
+  const onAdminUnreadCountRef = useRef(onAdminUnreadCount);
+  onAdminUnreadCountRef.current = onAdminUnreadCount;
+  useEffect(() => {
+    onAdminUnreadCountRef.current?.(adminUnreadCount);
+  }, [adminUnreadCount]);
 
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
