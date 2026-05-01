@@ -37,7 +37,7 @@ import WidgetChatLoader, {
 } from "./WidgetChatLoader";
 const LEAD_JOURNEY_ROLE = "lead_journey";
 
-/** `{brand}.kavisha.ai` (or localhost / staging) — where `/widget-login` opens. */
+/** Apex `kavisha.ai` for main brand; `{brand}.kavisha.ai` for others; localhost unchanged — base for `/widget-login`. */
 function brandWidgetLoginBase(brandSlug) {
   const s = String(brandSlug || "").trim().toLowerCase();
   if (!s || !/^[a-z0-9-]+$/i.test(s)) return null;
@@ -46,6 +46,10 @@ function brandWidgetLoginBase(brandSlug) {
   if (hostname === "localhost" || hostname === "127.0.0.1") {
     const p = port ? `:${port}` : "";
     return `${protocol}//${hostname}${p}`;
+  }
+  if (s === "kavisha") {
+    if (hostname.includes(".staging.")) return "https://kavisha.staging.kavisha.ai";
+    return "https://kavisha.ai";
   }
   if (hostname.includes(".staging.")) return `https://${s}.staging.kavisha.ai`;
   return `https://${s}.kavisha.ai`;
@@ -75,6 +79,10 @@ function buildBrandCommunityUrl(subdomain) {
     const p = port ? `:${port}` : "";
     return `${protocol}//${hostname}${p}/community?subdomain=${encodeURIComponent(s)}`;
   }
+  if (s === "kavisha") {
+    if (hostname.includes(".staging.")) return "https://kavisha.staging.kavisha.ai/community";
+    return "https://kavisha.ai/community";
+  }
   if (hostname.includes(".staging.")) {
     return `https://${s}.staging.kavisha.ai/community`;
   }
@@ -89,6 +97,8 @@ export default function ChatBoxWidget({
   adminMessagesEnabled = false,
   /** Notifies shell (e.g. Support button unread dot) when admin unread count changes. */
   onAdminUnreadCount,
+  /** Friend Connect and/or Professional Connect — gates Community links (matches Navbar / MobileBottomNav). */
+  communityEnabled = false,
 }) {
   const { user: firebaseUser, loading: authLoading, refresh } =
     useFirebaseSession();
@@ -728,16 +738,18 @@ export default function ChatBoxWidget({
             )}
           </button>
         )}
-        <button
-          type="button"
-          onClick={() =>
-            window.open(buildBrandCommunityUrl(brand), "_blank", "noopener,noreferrer")
-          }
-          className="mx-auto inline-flex w-full max-w-[240px] items-center justify-center gap-2 rounded-xl border border-border/50 bg-background px-3 py-2.5 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted-bg"
-        >
-          <Users className="h-4 w-4 shrink-0" />
-          Community
-        </button>
+        {communityEnabled ? (
+          <button
+            type="button"
+            onClick={() =>
+              window.open(buildBrandCommunityUrl(brand), "_blank", "noopener,noreferrer")
+            }
+            className="mx-auto inline-flex w-full max-w-[240px] items-center justify-center gap-2 rounded-xl border border-border/50 bg-background px-3 py-2.5 text-sm font-medium text-foreground shadow-sm transition hover:bg-muted-bg"
+          >
+            <Users className="h-4 w-4 shrink-0" />
+            Community
+          </button>
+        ) : null}
       </div>
     );
   }
@@ -864,17 +876,19 @@ export default function ChatBoxWidget({
                 )}
                 <span className="whitespace-nowrap">New chat</span>
               </button>
-              <button
-                type="button"
-                onClick={() =>
-                  window.open(buildBrandCommunityUrl(brand), "_blank", "noopener,noreferrer")
-                }
-                className="flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2.5 py-1.5 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg sm:min-w-[7.25rem] sm:px-3"
-                title="Open community in a new tab"
-              >
-                <Users className="h-4 w-4 shrink-0" />
-                <span className="whitespace-nowrap">Community</span>
-              </button>
+              {communityEnabled ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    window.open(buildBrandCommunityUrl(brand), "_blank", "noopener,noreferrer")
+                  }
+                  className="flex min-h-9 min-w-[6.75rem] shrink-0 flex-1 basis-0 flex-row items-center justify-center gap-1.5 rounded-xl border border-border/50 bg-background px-2.5 py-1.5 text-[11px] font-medium text-foreground shadow-sm transition hover:bg-muted-bg sm:min-w-[7.25rem] sm:px-3"
+                  title="Open community in a new tab"
+                >
+                  <Users className="h-4 w-4 shrink-0" />
+                  <span className="whitespace-nowrap">Community</span>
+                </button>
+              ) : null}
               {/* Support entry moved to top header in `app/widget/page.js` */}
               <button
                 type="button"
@@ -1211,18 +1225,12 @@ export default function ChatBoxWidget({
                   onChange={(e) => setInput(e.target.value)}
                   placeholder="Message…"
                   disabled={sendLoading}
-                  className="w-full rounded-full border border-[#cfcfcf] bg-[#f7f7f7] px-4 py-2.5 pr-11 text-sm text-foreground shadow-sm placeholder:text-[#8f8f8f] focus:outline-none focus:ring-2 focus:ring-black/10"
-                  onFocus={(e) => {
-                    e.target.style.boxShadow = "0 0 0 2px rgba(0, 0, 0, 0.08)";
-                  }}
-                  onBlur={(e) => {
-                    e.target.style.boxShadow = "";
-                  }}
+                  className="w-full rounded-full border border-border bg-background px-4 py-2.5 pr-11 text-sm text-foreground shadow-sm placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-ring/40"
                 />
                 <button
                   type="submit"
                   disabled={sendLoading || !input.trim()}
-                  className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-[#000000] transition-opacity hover:opacity-75 disabled:opacity-35"
+                  className="absolute right-3 top-1/2 flex h-6 w-6 -translate-y-1/2 items-center justify-center rounded-full text-foreground transition-opacity hover:opacity-75 disabled:opacity-35"
                   aria-label="Send"
                 >
                   {sendLoading ? (

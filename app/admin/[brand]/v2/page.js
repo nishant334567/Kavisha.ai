@@ -1,11 +1,7 @@
 "use client";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
-import { ChevronDown, MessageCircleMore } from "lucide-react";
-import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import { useState, useEffect } from "react";
-import Inbox from "@/app/components/Inbox";
-import Livechat from "@/app/components/LiveChat";
 
 const LoadingDots = () => (
   <span className="inline-flex gap-0.5 items-center">
@@ -18,17 +14,11 @@ const LoadingDots = () => (
 export default function AdminHome() {
   const router = useRouter();
   const brand = useBrandContext();
-  const [openChat, setOpenChat] = useState(false);
-  const [showInbox, setShowInbox] = useState(false);
-  const [userA, setUserA] = useState(null);
-  const [userB, setUserB] = useState(null);
-  const [connectionId, setConnectionId] = useState(null);
   const [chatRequestCount, setChatRequestCount] = useState(0);
   const [communityCount, setCommunityCount] = useState(0);
   const [quizSurveyAttemptCount, setQuizSurveyAttemptCount] = useState(0);
   const [countsLoading, setCountsLoading] = useState(true);
   const go = (path) => router.push(path);
-  const { user } = useFirebaseSession();
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -55,16 +45,6 @@ export default function AdminHome() {
     };
     fetchCounts();
   }, [brand?.subdomain]);
-  const openChatSession = (userA, userB) => {
-    setUserA(userA);
-    setUserB(userB);
-    setConnectionId([userA, userB].sort().join("_"));
-    setOpenChat(true);
-    // On mobile, close inbox when opening chat. On desktop, keep both open.
-    if (typeof window !== "undefined" && window.innerWidth < 768) {
-      setShowInbox(false);
-    }
-  };
   const primaryButtons = [
     {
       label: "Chat Requests",
@@ -189,70 +169,6 @@ export default function AdminHome() {
           Powered by KAVISHA
         </div>
       </div>
-      {/* Desktop Messaging Button */}
-      <div
-        className="hidden sm:flex absolute bottom-0 right-0 justify-between shadow-lg px-4 py-2 mb-4 mr-4"
-        onClick={() => {
-          setShowInbox(true);
-        }}
-      >
-        <div className="flex justify-between items-center pr-2">
-          <img
-            src="/avatar.png"
-            alt="Avatar"
-            className="w-6 h-6 rounded-full"
-          />
-        </div>
-        <p className="pl-2 pr-12 font-baloo">Messaging</p>
-        <ChevronDown />
-      </div>
-
-      {/* Mobile Messaging Button */}
-      <button
-        className="fixed bottom-4 right-4 z-40 rounded-full bg-card p-3 text-foreground shadow-lg transition-colors hover:bg-muted-bg sm:hidden"
-        onClick={() => {
-          setShowInbox(true);
-        }}
-      >
-        <MessageCircleMore className="w-6 h-6" />
-      </button>
-
-      {showInbox && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/30 md:items-end md:justify-end md:bg-transparent">
-          {/* Desktop: Show chat to the left of inbox if open */}
-          {openChat && userA && userB && (
-            <div className="hidden md:flex md:mr-4 md:mb-6">
-              <div className="flex h-[80vh] w-[500px] flex-col overflow-hidden border border-border bg-card shadow-2xl">
-                <Livechat
-                  userA={userA}
-                  userB={userB}
-                  currentUserId={user?.id}
-                  onClose={() => setOpenChat(false)}
-                  connectionId={connectionId}
-                  isEmbedded={true}
-                />
-              </div>
-            </div>
-          )}
-          {/* Inbox - always at bottom right on desktop */}
-          <div className="flex h-full w-full flex-col overflow-hidden border border-border bg-card shadow-2xl md:mx-0 md:mb-6 md:mr-6 md:h-auto md:max-h-[60vh] md:w-80">
-            <Inbox
-              onOpenChat={openChatSession}
-              onClose={() => setShowInbox(false)}
-            />
-          </div>
-        </div>
-      )}
-      {/* Mobile: Show chat full screen when open and inbox is closed */}
-      {openChat && userA && userB && !showInbox && (
-        <Livechat
-          userA={userA}
-          userB={userB}
-          currentUserId={user?.id}
-          onClose={() => setOpenChat(false)}
-          connectionId={connectionId}
-        />
-      )}
     </div>
   );
 }

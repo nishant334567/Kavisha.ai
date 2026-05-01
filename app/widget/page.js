@@ -44,6 +44,7 @@ function WidgetShell() {
   const [widgetCopyReadMoreUrl, setWidgetCopyReadMoreUrl] = useState("");
   const [enableAdminMessages, setEnableAdminMessages] = useState(false);
   const [supportHasUnreadAdmin, setSupportHasUnreadAdmin] = useState(false);
+  const [communityEnabled, setCommunityEnabled] = useState(false);
   const [launcherNudgeReady, setLauncherNudgeReady] = useState(false);
   const brandTrimmed = brand.trim();
   const needsBrandTheme = brandTrimmed.length > 0;
@@ -72,6 +73,7 @@ function WidgetShell() {
       setWidgetCopyReadMoreUrl("");
       setEnableAdminMessages(false);
       setSupportHasUnreadAdmin(false);
+      setCommunityEnabled(false);
       return;
     }
     setThemeReady(false);
@@ -112,6 +114,10 @@ function WidgetShell() {
         const adminOn = Boolean(data?.enableAdminMessages);
         setEnableAdminMessages(adminOn);
         if (!adminOn) setSupportHasUnreadAdmin(false);
+        setCommunityEnabled(
+          Boolean(data?.enableFriendConnect) ||
+            Boolean(data?.enableProfessionalConnect)
+        );
       })
       .catch(() => {
         if (!cancelled) {
@@ -123,6 +129,7 @@ function WidgetShell() {
           setWidgetCopyReadMoreUrl("");
           setEnableAdminMessages(false);
           setSupportHasUnreadAdmin(false);
+          setCommunityEnabled(false);
         }
       })
       .finally(() => {
@@ -272,6 +279,7 @@ function WidgetShell() {
               readMoreCopyUrl={widgetCopyReadMoreUrl}
               adminMessagesEnabled={enableAdminMessages}
               onAdminUnreadCount={onAdminUnreadCount}
+              communityEnabled={communityEnabled}
             />
           </div>
         </div>

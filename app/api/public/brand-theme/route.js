@@ -24,6 +24,8 @@ export async function GET(req) {
       widgetChatbotHeader: null,
       widgetCopyReadMoreUrl: null,
       enableAdminMessages: false,
+      enableFriendConnect: false,
+      enableProfessionalConnect: false,
     });
   }
 
@@ -33,6 +35,8 @@ export async function GET(req) {
         primaryBrandColor,
         secondaryBrandColor,
         enableAdminMessages,
+        enableFriendConnect,
+        enableProfessionalConnect,
         widgetLauncher{
           buttonImage,
           enableAttentionAnimation,
@@ -79,6 +83,8 @@ export async function GET(req) {
         widgetChatbotHeader,
         widgetCopyReadMoreUrl,
         enableAdminMessages: Boolean(data?.enableAdminMessages),
+        enableFriendConnect: Boolean(data?.enableFriendConnect),
+        enableProfessionalConnect: Boolean(data?.enableProfessionalConnect),
       },
     );
   } catch (e) {
