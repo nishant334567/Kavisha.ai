@@ -39,6 +39,11 @@ export default function GlobalMessages() {
     return null;
   }
 
+  // Main Kavisha brand (marketing hub): no messages FAB / inbox entry point
+  if (String(brand?.subdomain || "").toLowerCase() === "kavisha") {
+    return null;
+  }
+
   const openChatSession = (chatUserA, chatUserB) => {
     setUserA(chatUserA);
     setUserB(chatUserB);

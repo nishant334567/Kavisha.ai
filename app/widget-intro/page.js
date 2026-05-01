@@ -100,17 +100,16 @@ export default function WidgetIntroPage() {
                         </p>
                     </div>
                     <div className="order-1 flex flex-1 justify-center md:order-2">
-                        <picture>
-                            <source
-                                media="(prefers-color-scheme: dark)"
-                                srcSet="/Step-1-photo-thick-lines-dark-mode.png"
-                            />
-                            <img
-                                src="/Step-1-photo-thick-lines.png"
-                                alt="Training AI"
-                                className="h-auto w-full max-w-md"
-                            />
-                        </picture>
+                        <img
+                            src="/Step-1-photo-thick-lines.png"
+                            alt="Training AI"
+                            className="h-auto w-full max-w-md dark:hidden"
+                        />
+                        <img
+                            src="/Step-1-photo-thick-lines-dark-mode.png"
+                            alt="Training AI"
+                            className="hidden h-auto w-full max-w-md dark:block"
+                        />
                     </div>
                 </div>
 
@@ -138,17 +137,16 @@ export default function WidgetIntroPage() {
                         </p>
                     </div>
                     <div className="order-1 flex flex-1 justify-center md:order-2">
-                        <picture>
-                            <source
-                                media="(prefers-color-scheme: dark)"
-                                srcSet="/Step-3-photo-thick-lines-dark-mode.png"
-                            />
-                            <img
-                                src="/Step-3-photo-thick-lines.png"
-                                alt="Analytics"
-                                className="h-auto w-full max-w-md"
-                            />
-                        </picture>
+                        <img
+                            src="/Step-3-photo-thick-lines.png"
+                            alt="Analytics"
+                            className="h-auto w-full max-w-md dark:hidden"
+                        />
+                        <img
+                            src="/Step-3-photo-thick-lines-dark-mode.png"
+                            alt="Analytics"
+                            className="hidden h-auto w-full max-w-md dark:block"
+                        />
                     </div>
                 </div>
             </div>

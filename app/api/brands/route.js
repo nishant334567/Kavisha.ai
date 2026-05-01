@@ -27,7 +27,8 @@ export async function GET(req) {
         subtitle,
         subdomain,
         logo,
-        brandImage
+        brandImage,
+        clientWidgetUrl
       } | order(brandName asc)`
     );
 

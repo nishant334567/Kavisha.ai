@@ -30,6 +30,12 @@ function mount() {
   document.body.appendChild(iframe);
 
   var trusted = new URL(iframe.src).origin;
+  /** Extra bottom inset on small screens only when the page is our app (same origin as the widget) — e.g. clears `MobileBottomNav`. Cross-site embeds keep a normal gutter. */
+  var hostOrigin = "";
+  try {
+    hostOrigin = window.location.origin || "";
+  } catch (e) { }
+  var hostAndWidgetSameOrigin = hostOrigin && trusted && hostOrigin === trusted;
 
   /** Last size the iframe asked for (open vs closed); re-clamped on host resize. */
   var lastRequestedW = 100;
@@ -39,6 +45,10 @@ function mount() {
   /** Default open height from widget; above this ⇒ maximized — allow up to MAX_OPEN_H. */
   var DEFAULT_OPEN_H = 640;
   var MAX_OPEN_H = 1005;
+
+  /** Same-origin only: sit above in-app mobile bottom nav. */
+  var CLOSED_BOTTOM_MOBILE_SAME_ORIGIN = "4.5rem";
+  var CLOSED_BOTTOM_DEFAULT = "24px";
 
   /**
    * Fit iframe to host window.
@@ -73,9 +83,15 @@ function mount() {
       iframe.style.width = Math.min(lastRequestedW, maxW) + "px";
       iframe.style.height = Math.min(lastRequestedH, maxH) + "px";
       iframe.style.left = "auto";
-      iframe.style.right = "24px";
+      iframe.style.right = "12px";
       iframe.style.top = "auto";
-      iframe.style.bottom = "24px";
+      var closedBottom =
+        mdUp
+          ? CLOSED_BOTTOM_DEFAULT
+          : hostAndWidgetSameOrigin
+            ? CLOSED_BOTTOM_MOBILE_SAME_ORIGIN
+            : CLOSED_BOTTOM_DEFAULT;
+      iframe.style.bottom = closedBottom;
       iframe.style.transform = "none";
       iframe.style.borderRadius = "";
       iframe.style.overflow = "";
@@ -126,6 +142,7 @@ function mount() {
   });
 
   window.addEventListener("resize", applyIframeSize);
+  applyIframeSize();
 }
 
 (function () {

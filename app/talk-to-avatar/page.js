@@ -127,8 +127,8 @@ export default function TalkToAvatarPage() {
                     subtitle={avatar.subtitle}
                     avatarLink={avatar.link}
                     widgetLink={
-                      avatar.subdomain
-                        ? `/widget?brand=${encodeURIComponent(avatar.subdomain)}`
+                      avatar.clientWidgetUrl
+                        ? String(avatar.clientWidgetUrl).trim()
                         : ""
                     }
                   />

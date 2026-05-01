@@ -338,8 +338,8 @@ export default function Homepage() {
                       image={avatar.image}
                       avatarLink={avatar.link}
                       widgetLink={
-                        avatar.subdomain
-                          ? `/widget?brand=${encodeURIComponent(avatar.subdomain)}`
+                        avatar.clientWidgetUrl
+                          ? String(avatar.clientWidgetUrl).trim()
                           : ""
                       }
                     />
