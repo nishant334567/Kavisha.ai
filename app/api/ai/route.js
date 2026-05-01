@@ -61,6 +61,7 @@ export async function POST(request) {
   return withAuth(request, {
     onAuthenticated: async ({ decodedToken }) => {
       try {
+        const requestOrigin = new URL(request.url).origin;
         const model = getGeminiModel("gemini-2.5-flash");
 
         if (!model) {
@@ -206,6 +207,9 @@ export async function POST(request) {
           onboardingPercent = 100;
         }
 
+        const enrichmentQueued =
+          !isDataAlreadyCollected && allDataCollected === "true";
+
         let matchesLatest = [];
         if (allDataCollected === "true" && type !== "pitch_to_investor") {
           try {
@@ -250,9 +254,12 @@ export async function POST(request) {
             );
 
             // Enqueue derived-profile enrichment only when we transition to "collected".
-            if (!isDataAlreadyCollected && allDataCollected === "true") {
-              const baseUrl = process.env.PUBLIC_BASE_URL || process.env.BASE_URL;
-              if (baseUrl) {
+            if (enrichmentQueued) {
+              try {
+                const baseUrl =
+                  process.env.PUBLIC_BASE_URL ||
+                  process.env.BASE_URL ||
+                  requestOrigin;
                 await enqueueCloudTask({
                   url: `${baseUrl}/api/tasks/enrich-derived-profile`,
                   payload: { sessionId },
@@ -260,6 +267,8 @@ export async function POST(request) {
                     ? { "x-tasks-secret": process.env.TASKS_SECRET }
                     : {},
                 });
+              } catch (e) {
+                // Best-effort enqueue; chat response should never fail due to tasks.
               }
             }
           } catch (error) { }
@@ -270,6 +279,7 @@ export async function POST(request) {
           summary,
           title,
           allDataCollected,
+          enrichmentQueued,
           matchesWithObjectIds: matchesLatest,
           inputTokens: inputToken,
           outputTokens: outputToken,
