@@ -80,7 +80,12 @@ export async function generateMetadata() {
   };
 }
 
-export default function RootLayout({ children }) {
+export default async function RootLayout({ children }) {
+  const h = ((await headers()).get("host") || "")
+    .toLowerCase()
+    .split(":")[0]
+    .replace(/^www\./, "");
+
   return (
     <html lang="en" className={fontVariables} suppressHydrationWarning>
       <head />
@@ -90,11 +95,13 @@ export default function RootLayout({ children }) {
         suppressContentEditableWarning={true}
       >
         <ClientLayout>{children}</ClientLayout>
-        <Script
-          src="/embed.js"
-          strategy="afterInteractive"
-          data-brand="kavisha"
-        />
+        {h === "kavisha.ai" && (
+          <Script
+            src="/embed.js"
+            strategy="afterInteractive"
+            data-brand="kavisha"
+          />
+        )}
       </body>
     </html>
   );
