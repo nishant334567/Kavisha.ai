@@ -170,18 +170,25 @@ export default function AssistantReplyCopyButton({
   }, [message, sourceCards, sourceUrls, readMoreUrl, brandSubdomain]);
 
   return (
-    <button
-      type="button"
-      title="Copy this reply and its sources (links and titles) as plain text"
-      onClick={() => void handleCopy()}
-      className={`inline-flex items-center gap-1.5 rounded-md border border-border/50 bg-background/90 px-2 py-1 text-xs font-medium text-muted transition-colors hover:border-border hover:bg-muted-bg hover:text-foreground dark:bg-card/80 ${className}`.trim()}
-    >
-      {copied ? (
-        <Check className="h-3.5 w-3.5 shrink-0 text-emerald-600 dark:text-emerald-400" strokeWidth={2} />
-      ) : (
-        <Copy className="h-3.5 w-3.5 shrink-0" strokeWidth={2} />
-      )}
-      {copied ? "Copied" : "Copy"}
-    </button>
+    <div className="group relative inline-flex">
+      <button
+        type="button"
+        aria-label="Copy response"
+        onClick={() => void handleCopy()}
+        className={`inline-flex items-center justify-center rounded-md bg-transparent p-2 text-[#000000] transition-colors hover:bg-[#e5e5e5] ${className}`.trim()}
+      >
+        {copied ? (
+          <Check className="h-4 w-4 shrink-0 text-[#000000]" strokeWidth={2} />
+        ) : (
+          <Copy className="h-4 w-4 shrink-0 text-[#000000]" strokeWidth={2} />
+        )}
+      </button>
+      <span
+        role="tooltip"
+        className="pointer-events-none absolute top-[calc(100%+8px)] left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/90 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-sm transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+      >
+        Copy response
+      </span>
+    </div>
   );
 }

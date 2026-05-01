@@ -3,6 +3,7 @@ import { fontVariables } from "./lib/fonts";
 import { headers } from "next/headers";
 import { client, urlFor } from "./lib/sanity";
 import ClientLayout from "./components/ClientLayout";
+import Script from "next/script";
 
 function trimText(str = "", max = 100) {
   if (!str?.trim()) return "";
@@ -89,6 +90,11 @@ export default function RootLayout({ children }) {
         suppressContentEditableWarning={true}
       >
         <ClientLayout>{children}</ClientLayout>
+        <Script
+          src="/embed.js"
+          strategy="afterInteractive"
+          data-brand="kavisha"
+        />
       </body>
     </html>
   );

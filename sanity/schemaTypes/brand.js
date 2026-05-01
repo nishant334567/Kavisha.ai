@@ -39,6 +39,13 @@ export default {
       },
     },
     {
+      name: "clientWidgetUrl",
+      title: "Website URL for Widget",
+      type: "url",
+      description: "Paste the website URL where the widget will be embedded.",
+      validation: (Rule) => Rule.uri({ scheme: ["http", "https"] }),
+    },
+    {
       name: "brandHeroZoom",
       title: "Hero zoom (homepage)",
       type: "number",

@@ -1,4 +1,11 @@
 function mount() {
+  // Do not mount the floating widget inside the widget page itself or admin pages.
+  // (Those routes render their own full UI; embedding would create a nested iframe.)
+  try {
+    var p = window.location && window.location.pathname ? window.location.pathname : "";
+    if (p === "/widget" || p.indexOf("/admin") === 0 || p === "/widget-login") return;
+  } catch (e) { }
+
   var script = document.querySelector('script[src*="embed.js"]');
   if (!script || !script.src) return;
 
@@ -10,8 +17,12 @@ function mount() {
   var q = new URLSearchParams();
   if (brand) q.set("brand", brand);
 
+  // Already mounted on this page.
+  if (document.querySelector('iframe[data-kavisha-widget="1"]')) return;
+
   var iframe = document.createElement("iframe");
   iframe.setAttribute("title", "Chat");
+  iframe.setAttribute("data-kavisha-widget", "1");
   iframe.setAttribute("allow", "clipboard-write");
   iframe.src = base + "/widget" + (q.toString() ? "?" + q.toString() : "");
   iframe.style.cssText =
@@ -19,6 +30,12 @@ function mount() {
   document.body.appendChild(iframe);
 
   var trusted = new URL(iframe.src).origin;
+  /** Extra bottom inset on small screens only when the page is our app (same origin as the widget) — e.g. clears `MobileBottomNav`. Cross-site embeds keep a normal gutter. */
+  var hostOrigin = "";
+  try {
+    hostOrigin = window.location.origin || "";
+  } catch (e) { }
+  var hostAndWidgetSameOrigin = hostOrigin && trusted && hostOrigin === trusted;
 
   /** Last size the iframe asked for (open vs closed); re-clamped on host resize. */
   var lastRequestedW = 100;
@@ -28,6 +45,10 @@ function mount() {
   /** Default open height from widget; above this ⇒ maximized — allow up to MAX_OPEN_H. */
   var DEFAULT_OPEN_H = 640;
   var MAX_OPEN_H = 1005;
+
+  /** Same-origin only: sit above in-app mobile bottom nav. */
+  var CLOSED_BOTTOM_MOBILE_SAME_ORIGIN = "4.5rem";
+  var CLOSED_BOTTOM_DEFAULT = "24px";
 
   /**
    * Fit iframe to host window.
@@ -62,9 +83,15 @@ function mount() {
       iframe.style.width = Math.min(lastRequestedW, maxW) + "px";
       iframe.style.height = Math.min(lastRequestedH, maxH) + "px";
       iframe.style.left = "auto";
-      iframe.style.right = "24px";
+      iframe.style.right = "12px";
       iframe.style.top = "auto";
-      iframe.style.bottom = "24px";
+      var closedBottom =
+        mdUp
+          ? CLOSED_BOTTOM_DEFAULT
+          : hostAndWidgetSameOrigin
+            ? CLOSED_BOTTOM_MOBILE_SAME_ORIGIN
+            : CLOSED_BOTTOM_DEFAULT;
+      iframe.style.bottom = closedBottom;
       iframe.style.transform = "none";
       iframe.style.borderRadius = "";
       iframe.style.overflow = "";
@@ -115,6 +142,7 @@ function mount() {
   });
 
   window.addEventListener("resize", applyIframeSize);
+  applyIframeSize();
 }
 
 (function () {

@@ -26,15 +26,20 @@ export async function GET(req) {
         title,
         subtitle,
         subdomain,
-        brandImage
+        logo,
+        brandImage,
+        clientWidgetUrl
       } | order(brandName asc)`
     );
 
     // Transform brands with image URLs and generate links
     const transformedBrands = brands.map((brand) => {
-      const imageUrl = brand.brandImage?.asset?._ref
+      // Prefer DP-style image (logo). Fallback to hero image if logo not set.
+      const logoUrl = brand.logo?.asset?._ref ? urlFor(brand.logo).url() : null;
+      const heroUrl = brand.brandImage?.asset?._ref
         ? urlFor(brand.brandImage).url()
         : null;
+      const imageUrl = logoUrl || heroUrl || null;
 
       // Generate link to avatar home page
       const link = `https://${brand.subdomain}.${ROOT_HOST}`;
@@ -47,6 +52,8 @@ export async function GET(req) {
         subdomain: brand.subdomain,
         image: imageUrl,
         link: link,
+        logo: logoUrl,
+        clientWidgetUrl: brand.clientWidgetUrl || "",
       };
     });
 
