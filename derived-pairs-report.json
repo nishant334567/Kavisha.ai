@@ -1,0 +1,2296 @@
+{
+  "meta": {
+    "generatedAt": "2026-05-03T06:48:12.864Z",
+    "pipeline": "same as app/api/tasks/compute-matches/route.js",
+    "similaritySource": "mongodb_atlas_vector_search via searchDerivedProfilesByEmbedding",
+    "atlasIndex": "derivedprofiles_vector_index",
+    "anchorProfilesLoaded": 18,
+    "atlasAggregationRuns": 17,
+    "skipCounts": {
+      "session_not_found": 0,
+      "not_community": 1,
+      "not_counterpart_role": 0,
+      "no_embedding": 0
+    },
+    "maxProfilesCap": 80,
+    "derivedProfileSourceFilter": null,
+    "vectorPoolLimit": 200,
+    "numCandidates": 500,
+    "neighborsPerAnchor": 25,
+    "note": "Each anchor uses Session candidate query + counterpart type filter in vector $match, then hard filters. "
+  },
+  "topAnchors": [
+    {
+      "anchorSessionId": "6975d2154d6f686caa8e336d",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "level1": 9,
+      "vectorN": 9,
+      "eligible": 9,
+      "topNeighbor": "697c8c8a5ea7be2882267af9",
+      "topEligible": true
+    },
+    {
+      "anchorSessionId": "6979d5b9a03c700ac6249b05",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "level1": 7,
+      "vectorN": 7,
+      "eligible": 7,
+      "topNeighbor": "69cb907a5582f5f9e9e875ca",
+      "topEligible": true
+    },
+    {
+      "anchorSessionId": "697c792656de748dbafe7432",
+      "sessionRole": "recruiter",
+      "pairRole": "job_seeker",
+      "level1": 3,
+      "vectorN": 3,
+      "eligible": 0,
+      "topNeighbor": "6984266113a99c4eb25e795d",
+      "topEligible": false
+    },
+    {
+      "anchorSessionId": "697c8c8a5ea7be2882267af9",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "level1": 7,
+      "vectorN": 7,
+      "eligible": 7,
+      "topNeighbor": "6975d2154d6f686caa8e336d",
+      "topEligible": true
+    },
+    {
+      "anchorSessionId": "698333117f58053a3bf5996f",
+      "sessionRole": "recruiter",
+      "pairRole": "job_seeker",
+      "level1": 4,
+      "vectorN": 4,
+      "eligible": 0,
+      "topNeighbor": "6984266113a99c4eb25e795d",
+      "topEligible": false
+    },
+    {
+      "anchorSessionId": "6984266113a99c4eb25e795d",
+      "sessionRole": "job_seeker",
+      "pairRole": "recruiter",
+      "level1": 3,
+      "vectorN": 3,
+      "eligible": 0,
+      "topNeighbor": "69ca4240ac632fdf584f527a",
+      "topEligible": false
+    },
+    {
+      "anchorSessionId": "69876e350851d8205158858d",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "level1": 9,
+      "vectorN": 9,
+      "eligible": 9,
+      "topNeighbor": "6975d2154d6f686caa8e336d",
+      "topEligible": true
+    },
+    {
+      "anchorSessionId": "698b3b26be95c54923e03ae0",
+      "sessionRole": "job_seeker",
+      "pairRole": "recruiter",
+      "level1": 3,
+      "vectorN": 3,
+      "eligible": 0,
+      "topNeighbor": "69ca4240ac632fdf584f527a",
+      "topEligible": false
+    },
+    {
+      "anchorSessionId": "6992b8c3b45c49069a480770",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "level1": 9,
+      "vectorN": 9,
+      "eligible": 9,
+      "topNeighbor": "69876e350851d8205158858d",
+      "topEligible": true
+    },
+    {
+      "anchorSessionId": "69a27a8c89485d820e63809a",
+      "sessionRole": "job_seeker",
+      "pairRole": "recruiter",
+      "level1": 3,
+      "vectorN": 3,
+      "eligible": 0,
+      "topNeighbor": "698333117f58053a3bf5996f",
+      "topEligible": false
+    },
+    {
+      "anchorSessionId": "69ca4240ac632fdf584f527a",
+      "sessionRole": "recruiter",
+      "pairRole": "job_seeker",
+      "level1": 4,
+      "vectorN": 4,
+      "eligible": 1,
+      "topNeighbor": "6984266113a99c4eb25e795d",
+      "topEligible": false
+    },
+    {
+      "anchorSessionId": "69ca8572ac632fdf584f5925",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "level1": 8,
+      "vectorN": 8,
+      "eligible": 8,
+      "topNeighbor": "69cb907a5582f5f9e9e875ca",
+      "topEligible": true
+    }
+  ],
+  "perAnchor": [
+    {
+      "anchorSessionId": "6975d2154d6f686caa8e336d",
+      "anchorUserId": "6975c84a4d6f686caa8e3335",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "srcKind": "friends",
+      "anchorSummaryPreview": "24-year-old female consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors who appreciate varied creative interests (writing, art, Kathak) and deep conversations, open to all locations.",
+      "sourceSummary": "24-year-old female consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors who appreciate varied creative interests (writing, art, Kathak) and deep conversations, open to all locations.",
+      "level1CandidateCount": 9,
+      "vectorSearchCount": 9,
+      "eligibleCandidateCount": 9,
+      "sessionCandidateCount": 33,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "697c8c8a5ea7be2882267af9",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 24/M consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors for deep conversations, appreciating varied creative interests (writing, art, Kathak). Preferences are Delhi or virtual. S…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "6979d5b9a03c700ac6249b05",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "25 male seeking serious female peer friends and mentors in India. Values honesty, truth, friendliness, intelligence, deep connections, and enjoys creative pursuits (guitar, writing), travel, hiking, and music discussions…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "69876e350851d8205158858d",
+          "userId": "69876c6f0851d820515884be",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "29F, mother of 2, spontaneous, adaptable, seeks online intellectual partnership with calm, composed individual who values loyalty/transparency, for discussions on women empowerment, long talks, collaboration. Deal-breake…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 4,
+          "sessionId": "69ca8572ac632fdf584f5925",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, heavy metal fan, seeks female friend for weekend coffee/drives. Values honesty, enjoys deep talks. All data collected.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 5,
+          "sessionId": "69cb907a5582f5f9e9e875ca",
+          "userId": "6942987151f1f156656cdccb",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, extrovert, values honesty (deal-breaker: liars), seeks friendship for planned, offline weekend coffee/drives/live music/deep talks; enjoys heavy metal and guitar.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 6,
+          "sessionId": "69d4b17404798fdb0c419141",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is 32, Male, introvert, prefers one or two people, looking for a close confidant. Enjoys indoor games like Dobble. Deal-breaker: not a criminal. Seeks offline connections in Delhi.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 7,
+          "sessionId": "69cce40f641d637404c9619b",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32-year-old male, introverted, passionate, working on a startup, seeking a casual bassist for a rock band in Delhi. Values reliability and strong work ethic in long-term collaborations, bonding primarily through music. H…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 8,
+          "sessionId": "69d49682059088e4137ed940",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 26-year-old male classical Bharatnatyam dancer from Ranchi, Jharkhand, with 4 years of experience. He is calm-headed, prefers 1-on-1 collaboration and smaller social circles. He is looking for a female dance pa…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 9,
+          "sessionId": "6992b8c3b45c49069a480770",
+          "userId": "697f53425fa213436db89b79",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "Monalisa (47, female, Bengaluru), an HR leader, seeks a serious, long-term partner based on emotional connection, mutual respect, and shared depth, prioritizing presence over proximity. She values authenticity, mindful l…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "6979d5b9a03c700ac6249b05",
+      "anchorUserId": "68de070fcdf1c67be1b1343c",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "srcKind": "friends",
+      "anchorSummaryPreview": "25 male seeking serious female peer friends and mentors in India. Values honesty, truth, friendliness, intelligence, deep connections, and enjoys creative pursuits (guitar, writing), travel, hiking, and music discussions…",
+      "sourceSummary": "25 male seeking serious female peer friends and mentors in India. Values honesty, truth, friendliness, intelligence, deep connections, and enjoys creative pursuits (guitar, writing), travel, hiking, and music discussions in intimate settings. Romantic history not relevant to this search.",
+      "level1CandidateCount": 7,
+      "vectorSearchCount": 7,
+      "eligibleCandidateCount": 7,
+      "sessionCandidateCount": 25,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "69cb907a5582f5f9e9e875ca",
+          "userId": "6942987151f1f156656cdccb",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, extrovert, values honesty (deal-breaker: liars), seeks friendship for planned, offline weekend coffee/drives/live music/deep talks; enjoys heavy metal and guitar.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "69ca8572ac632fdf584f5925",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, heavy metal fan, seeks female friend for weekend coffee/drives. Values honesty, enjoys deep talks. All data collected.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "6975d2154d6f686caa8e336d",
+          "userId": "6975c84a4d6f686caa8e3335",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "24-year-old female consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors who appreciate varied creative interests (writing, art, Kathak) and deep conversations, open to all locations.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 4,
+          "sessionId": "69876e350851d8205158858d",
+          "userId": "69876c6f0851d820515884be",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "29F, mother of 2, spontaneous, adaptable, seeks online intellectual partnership with calm, composed individual who values loyalty/transparency, for discussions on women empowerment, long talks, collaboration. Deal-breake…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 5,
+          "sessionId": "69d4b17404798fdb0c419141",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is 32, Male, introvert, prefers one or two people, looking for a close confidant. Enjoys indoor games like Dobble. Deal-breaker: not a criminal. Seeks offline connections in Delhi.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 6,
+          "sessionId": "69cce40f641d637404c9619b",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32-year-old male, introverted, passionate, working on a startup, seeking a casual bassist for a rock band in Delhi. Values reliability and strong work ethic in long-term collaborations, bonding primarily through music. H…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 7,
+          "sessionId": "6992b8c3b45c49069a480770",
+          "userId": "697f53425fa213436db89b79",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "Monalisa (47, female, Bengaluru), an HR leader, seeks a serious, long-term partner based on emotional connection, mutual respect, and shared depth, prioritizing presence over proximity. She values authenticity, mindful l…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "697c792656de748dbafe7432",
+      "anchorUserId": "68de070fcdf1c67be1b1343c",
+      "sessionRole": "recruiter",
+      "pairRole": "job_seeker",
+      "srcKind": "recruiter",
+      "anchorSummaryPreview": "SDE2 required: 4 YoE, Next.js, GCP, Frontend focus. Offering 2 Lakhs/month, full WFH.",
+      "sourceSummary": "SDE2 required: 4 YoE, Next.js, GCP, Frontend focus. Offering 2 Lakhs/month, full WFH.",
+      "level1CandidateCount": 3,
+      "vectorSearchCount": 3,
+      "eligibleCandidateCount": 0,
+      "sessionCandidateCount": 38,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "6984266113a99c4eb25e795d",
+          "userId": "698424e613a99c4eb25e792a",
+          "type": "job_seeker",
+          "normalizedType": "job_seeker",
+          "summaryPreview": "Product Manager, 1 year experience (3 years SE), MBA from IIM Ahmedabad, 25/30 LPA, Bangalore preferred (open to relocate), 60-day notice, seeks independent work, flexible on work mode.",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=recruiter B=seeker",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "salary_vs_budget",
+                "detail": "seeker.expectedSalaryInr (3000000) > recruiter.salaryInr * 1.22 (2928000)"
+              }
+            ],
+            "summary": "failed 1 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "698b3b26be95c54923e03ae0",
+          "userId": "698b3a37be95c54923e03ab8",
+          "type": "job_seeker",
+          "normalizedType": "job_seeker",
+          "summaryPreview": "Asst. Professor in HR Management near Ropar. Doctorate from GD Goenka University, 10 years Industrial HR experience, currently Asst. Prof at GNA University earning 48k. Expected salary 45k, 2-month notice period (end of …",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=recruiter B=seeker",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "work_mode",
+                "detail": "seeker.workMode (onsite) incompatible with recruiter.workMode (remote)"
+              }
+            ],
+            "summary": "failed 1 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "69a27a8c89485d820e63809a",
+          "userId": "69a27a7389485d820e63807d",
+          "type": "job_seeker",
+          "normalizedType": "job_seeker",
+          "summaryPreview": "Avi Karan is seeking research-focused academic roles in marketing communications, specifically interested in AI/persuasive appeals and consumer loneliness/AI. Has 5 years PhD research experience, current salary 64k/month…",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=recruiter B=seeker",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "work_mode",
+                "detail": "seeker.workMode (hybrid) incompatible with recruiter.workMode (remote)"
+              }
+            ],
+            "summary": "failed 1 rule(s)"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "697c8c8a5ea7be2882267af9",
+      "anchorUserId": "68de070fcdf1c67be1b1343c",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "srcKind": "friends",
+      "anchorSummaryPreview": "User is a 24/M consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors for deep conversations, appreciating varied creative interests (writing, art, Kathak). Preferences are Delhi or virtual. S…",
+      "sourceSummary": "User is a 24/M consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors for deep conversations, appreciating varied creative interests (writing, art, Kathak). Preferences are Delhi or virtual. Strategy for finding connections in creative communities suggested.",
+      "level1CandidateCount": 7,
+      "vectorSearchCount": 7,
+      "eligibleCandidateCount": 7,
+      "sessionCandidateCount": 25,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "6975d2154d6f686caa8e336d",
+          "userId": "6975c84a4d6f686caa8e3335",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "24-year-old female consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors who appreciate varied creative interests (writing, art, Kathak) and deep conversations, open to all locations.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "69cb907a5582f5f9e9e875ca",
+          "userId": "6942987151f1f156656cdccb",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, extrovert, values honesty (deal-breaker: liars), seeks friendship for planned, offline weekend coffee/drives/live music/deep talks; enjoys heavy metal and guitar.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "69d4b17404798fdb0c419141",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is 32, Male, introvert, prefers one or two people, looking for a close confidant. Enjoys indoor games like Dobble. Deal-breaker: not a criminal. Seeks offline connections in Delhi.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 4,
+          "sessionId": "69ca8572ac632fdf584f5925",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, heavy metal fan, seeks female friend for weekend coffee/drives. Values honesty, enjoys deep talks. All data collected.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 5,
+          "sessionId": "69cce40f641d637404c9619b",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32-year-old male, introverted, passionate, working on a startup, seeking a casual bassist for a rock band in Delhi. Values reliability and strong work ethic in long-term collaborations, bonding primarily through music. H…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 6,
+          "sessionId": "69876e350851d8205158858d",
+          "userId": "69876c6f0851d820515884be",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "29F, mother of 2, spontaneous, adaptable, seeks online intellectual partnership with calm, composed individual who values loyalty/transparency, for discussions on women empowerment, long talks, collaboration. Deal-breake…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 7,
+          "sessionId": "6992b8c3b45c49069a480770",
+          "userId": "697f53425fa213436db89b79",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "Monalisa (47, female, Bengaluru), an HR leader, seeks a serious, long-term partner based on emotional connection, mutual respect, and shared depth, prioritizing presence over proximity. She values authenticity, mindful l…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "698333117f58053a3bf5996f",
+      "anchorUserId": "68875c7a73eba845593c6ae5",
+      "sessionRole": "recruiter",
+      "pairRole": "job_seeker",
+      "srcKind": "recruiter",
+      "anchorSummaryPreview": "Intern (Research & Communication) for a startup, 2 openings. Freshers, remote/hybrid (Delhi office option), stipend of 30,000/month. Must be creative, research AI trends, and create presentations for strategy. Urgent nee…",
+      "sourceSummary": "Intern (Research & Communication) for a startup, 2 openings. Freshers, remote/hybrid (Delhi office option), stipend of 30,000/month. Must be creative, research AI trends, and create presentations for strategy. Urgent need, no freelancers.",
+      "level1CandidateCount": 4,
+      "vectorSearchCount": 4,
+      "eligibleCandidateCount": 0,
+      "sessionCandidateCount": 45,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "6984266113a99c4eb25e795d",
+          "userId": "698424e613a99c4eb25e792a",
+          "type": "job_seeker",
+          "normalizedType": "job_seeker",
+          "summaryPreview": "Product Manager, 1 year experience (3 years SE), MBA from IIM Ahmedabad, 25/30 LPA, Bangalore preferred (open to relocate), 60-day notice, seeks independent work, flexible on work mode.",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=recruiter B=seeker",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "salary_vs_budget",
+                "detail": "seeker.expectedSalaryInr (3000000) > recruiter.salaryInr * 1.22 (439200)"
+              },
+              {
+                "rule": "experience_above_max",
+                "detail": "seeker.experienceYears (4) > recruiter.experienceMaxYears (0)"
+              },
+              {
+                "rule": "internship_vs_experience",
+                "detail": "recruiter employmentType internship but seeker.experienceYears (4) >= 2"
+              }
+            ],
+            "summary": "failed 3 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "69d508ebfc4fafc657cbfdf2",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "job_seeker",
+          "normalizedType": "job_seeker",
+          "summaryPreview": "Current role: Senior SDE at Tata Digital, Mumbai. Looking for SDE 2 role. Experience: 4+ years. Education: Not provided. Current salary: 16 LPA. Expected salary: 24 LPA. Notice period: Immediate joiner. Location: Delhi (…",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=recruiter B=seeker",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "salary_vs_budget",
+                "detail": "seeker.expectedSalaryInr (2400000) > recruiter.salaryInr * 1.22 (439200)"
+              },
+              {
+                "rule": "experience_above_max",
+                "detail": "seeker.experienceYears (4) > recruiter.experienceMaxYears (0)"
+              },
+              {
+                "rule": "internship_vs_experience",
+                "detail": "recruiter employmentType internship but seeker.experienceYears (4) >= 2"
+              }
+            ],
+            "summary": "failed 3 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "69a27a8c89485d820e63809a",
+          "userId": "69a27a7389485d820e63807d",
+          "type": "job_seeker",
+          "normalizedType": "job_seeker",
+          "summaryPreview": "Avi Karan is seeking research-focused academic roles in marketing communications, specifically interested in AI/persuasive appeals and consumer loneliness/AI. Has 5 years PhD research experience, current salary 64k/month…",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=recruiter B=seeker",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "salary_vs_budget",
+                "detail": "seeker.expectedSalaryInr (1200000) > recruiter.salaryInr * 1.22 (439200)"
+              },
+              {
+                "rule": "experience_above_max",
+                "detail": "seeker.experienceYears (5) > recruiter.experienceMaxYears (0)"
+              },
+              {
+                "rule": "internship_vs_experience",
+                "detail": "recruiter employmentType internship but seeker.experienceYears (5) >= 2"
+              }
+            ],
+            "summary": "failed 3 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 4,
+          "sessionId": "698b3b26be95c54923e03ae0",
+          "userId": "698b3a37be95c54923e03ab8",
+          "type": "job_seeker",
+          "normalizedType": "job_seeker",
+          "summaryPreview": "Asst. Professor in HR Management near Ropar. Doctorate from GD Goenka University, 10 years Industrial HR experience, currently Asst. Prof at GNA University earning 48k. Expected salary 45k, 2-month notice period (end of …",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=recruiter B=seeker",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "salary_vs_budget",
+                "detail": "seeker.expectedSalaryInr (540000) > recruiter.salaryInr * 1.22 (439200)"
+              },
+              {
+                "rule": "experience_above_max",
+                "detail": "seeker.experienceYears (10) > recruiter.experienceMaxYears (0)"
+              },
+              {
+                "rule": "work_mode",
+                "detail": "seeker.workMode (onsite) incompatible with recruiter.workMode (hybrid)"
+              },
+              {
+                "rule": "internship_vs_experience",
+                "detail": "recruiter employmentType internship but seeker.experienceYears (10) >= 2"
+              }
+            ],
+            "summary": "failed 4 rule(s)"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "6984266113a99c4eb25e795d",
+      "anchorUserId": "698424e613a99c4eb25e792a",
+      "sessionRole": "job_seeker",
+      "pairRole": "recruiter",
+      "srcKind": "job_seeker",
+      "anchorSummaryPreview": "Product Manager, 1 year experience (3 years SE), MBA from IIM Ahmedabad, 25/30 LPA, Bangalore preferred (open to relocate), 60-day notice, seeks independent work, flexible on work mode.",
+      "sourceSummary": "Product Manager, 1 year experience (3 years SE), MBA from IIM Ahmedabad, 25/30 LPA, Bangalore preferred (open to relocate), 60-day notice, seeks independent work, flexible on work mode.",
+      "level1CandidateCount": 3,
+      "vectorSearchCount": 3,
+      "eligibleCandidateCount": 0,
+      "sessionCandidateCount": 19,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "69ca4240ac632fdf584f527a",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "recruiter",
+          "normalizedType": "recruiter",
+          "summaryPreview": "Corporate Strategy Analyst, 2-4 yrs experience, 1 opening, 24 LPA, Mumbai (Hybrid), Urgent (1 month), New role, Team player, No freelance, Perm. role with key skills.",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=seeker B=recruiter",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "salary_vs_budget",
+                "detail": "seeker.expectedSalaryInr (3000000) > recruiter.salaryInr * 1.22 (2928000)"
+              },
+              {
+                "rule": "notice_vs_urgent",
+                "detail": "seeker.noticePeriodDays (60) > recruiter.urgentJoinInDays (30)"
+              }
+            ],
+            "summary": "failed 2 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "697c792656de748dbafe7432",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "recruiter",
+          "normalizedType": "recruiter",
+          "summaryPreview": "SDE2 required: 4 YoE, Next.js, GCP, Frontend focus. Offering 2 Lakhs/month, full WFH.",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=seeker B=recruiter",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "salary_vs_budget",
+                "detail": "seeker.expectedSalaryInr (3000000) > recruiter.salaryInr * 1.22 (2928000)"
+              }
+            ],
+            "summary": "failed 1 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "698333117f58053a3bf5996f",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "recruiter",
+          "normalizedType": "recruiter",
+          "summaryPreview": "Intern (Research & Communication) for a startup, 2 openings. Freshers, remote/hybrid (Delhi office option), stipend of 30,000/month. Must be creative, research AI trends, and create presentations for strategy. Urgent nee…",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=seeker B=recruiter",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "salary_vs_budget",
+                "detail": "seeker.expectedSalaryInr (3000000) > recruiter.salaryInr * 1.22 (439200)"
+              },
+              {
+                "rule": "experience_above_max",
+                "detail": "seeker.experienceYears (4) > recruiter.experienceMaxYears (0)"
+              },
+              {
+                "rule": "internship_vs_experience",
+                "detail": "recruiter employmentType internship but seeker.experienceYears (4) >= 2"
+              }
+            ],
+            "summary": "failed 3 rule(s)"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "69876e350851d8205158858d",
+      "anchorUserId": "69876c6f0851d820515884be",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "srcKind": "friends",
+      "anchorSummaryPreview": "29F, mother of 2, spontaneous, adaptable, seeks online intellectual partnership with calm, composed individual who values loyalty/transparency, for discussions on women empowerment, long talks, collaboration. Deal-breake…",
+      "sourceSummary": "29F, mother of 2, spontaneous, adaptable, seeks online intellectual partnership with calm, composed individual who values loyalty/transparency, for discussions on women empowerment, long talks, collaboration. Deal-breakers: liars, narrow-minded.",
+      "level1CandidateCount": 9,
+      "vectorSearchCount": 9,
+      "eligibleCandidateCount": 9,
+      "sessionCandidateCount": 33,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "6975d2154d6f686caa8e336d",
+          "userId": "6975c84a4d6f686caa8e3335",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "24-year-old female consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors who appreciate varied creative interests (writing, art, Kathak) and deep conversations, open to all locations.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "6979d5b9a03c700ac6249b05",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "25 male seeking serious female peer friends and mentors in India. Values honesty, truth, friendliness, intelligence, deep connections, and enjoys creative pursuits (guitar, writing), travel, hiking, and music discussions…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "69ca8572ac632fdf584f5925",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, heavy metal fan, seeks female friend for weekend coffee/drives. Values honesty, enjoys deep talks. All data collected.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 4,
+          "sessionId": "69cb907a5582f5f9e9e875ca",
+          "userId": "6942987151f1f156656cdccb",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, extrovert, values honesty (deal-breaker: liars), seeks friendship for planned, offline weekend coffee/drives/live music/deep talks; enjoys heavy metal and guitar.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 5,
+          "sessionId": "697c8c8a5ea7be2882267af9",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 24/M consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors for deep conversations, appreciating varied creative interests (writing, art, Kathak). Preferences are Delhi or virtual. S…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 6,
+          "sessionId": "69d4b17404798fdb0c419141",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is 32, Male, introvert, prefers one or two people, looking for a close confidant. Enjoys indoor games like Dobble. Deal-breaker: not a criminal. Seeks offline connections in Delhi.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 7,
+          "sessionId": "6992b8c3b45c49069a480770",
+          "userId": "697f53425fa213436db89b79",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "Monalisa (47, female, Bengaluru), an HR leader, seeks a serious, long-term partner based on emotional connection, mutual respect, and shared depth, prioritizing presence over proximity. She values authenticity, mindful l…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 8,
+          "sessionId": "69cce40f641d637404c9619b",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32-year-old male, introverted, passionate, working on a startup, seeking a casual bassist for a rock band in Delhi. Values reliability and strong work ethic in long-term collaborations, bonding primarily through music. H…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 9,
+          "sessionId": "69d49682059088e4137ed940",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 26-year-old male classical Bharatnatyam dancer from Ranchi, Jharkhand, with 4 years of experience. He is calm-headed, prefers 1-on-1 collaboration and smaller social circles. He is looking for a female dance pa…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "698b3b26be95c54923e03ae0",
+      "anchorUserId": "698b3a37be95c54923e03ab8",
+      "sessionRole": "job_seeker",
+      "pairRole": "recruiter",
+      "srcKind": "job_seeker",
+      "anchorSummaryPreview": "Asst. Professor in HR Management near Ropar. Doctorate from GD Goenka University, 10 years Industrial HR experience, currently Asst. Prof at GNA University earning 48k. Expected salary 45k, 2-month notice period (end of …",
+      "sourceSummary": "Asst. Professor in HR Management near Ropar. Doctorate from GD Goenka University, 10 years Industrial HR experience, currently Asst. Prof at GNA University earning 48k. Expected salary 45k, 2-month notice period (end of session), prefers independence/autonomy, on-campus work.",
+      "level1CandidateCount": 3,
+      "vectorSearchCount": 3,
+      "eligibleCandidateCount": 0,
+      "sessionCandidateCount": 19,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "69ca4240ac632fdf584f527a",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "recruiter",
+          "normalizedType": "recruiter",
+          "summaryPreview": "Corporate Strategy Analyst, 2-4 yrs experience, 1 opening, 24 LPA, Mumbai (Hybrid), Urgent (1 month), New role, Team player, No freelance, Perm. role with key skills.",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=seeker B=recruiter",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "experience_above_max",
+                "detail": "seeker.experienceYears (10) > recruiter.experienceMaxYears (4)"
+              },
+              {
+                "rule": "notice_vs_urgent",
+                "detail": "seeker.noticePeriodDays (60) > recruiter.urgentJoinInDays (30)"
+              },
+              {
+                "rule": "work_mode",
+                "detail": "seeker.workMode (onsite) incompatible with recruiter.workMode (hybrid)"
+              }
+            ],
+            "summary": "failed 3 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "698333117f58053a3bf5996f",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "recruiter",
+          "normalizedType": "recruiter",
+          "summaryPreview": "Intern (Research & Communication) for a startup, 2 openings. Freshers, remote/hybrid (Delhi office option), stipend of 30,000/month. Must be creative, research AI trends, and create presentations for strategy. Urgent nee…",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=seeker B=recruiter",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "salary_vs_budget",
+                "detail": "seeker.expectedSalaryInr (540000) > recruiter.salaryInr * 1.22 (439200)"
+              },
+              {
+                "rule": "experience_above_max",
+                "detail": "seeker.experienceYears (10) > recruiter.experienceMaxYears (0)"
+              },
+              {
+                "rule": "work_mode",
+                "detail": "seeker.workMode (onsite) incompatible with recruiter.workMode (hybrid)"
+              },
+              {
+                "rule": "internship_vs_experience",
+                "detail": "recruiter employmentType internship but seeker.experienceYears (10) >= 2"
+              }
+            ],
+            "summary": "failed 4 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "697c792656de748dbafe7432",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "recruiter",
+          "normalizedType": "recruiter",
+          "summaryPreview": "SDE2 required: 4 YoE, Next.js, GCP, Frontend focus. Offering 2 Lakhs/month, full WFH.",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=seeker B=recruiter",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "work_mode",
+                "detail": "seeker.workMode (onsite) incompatible with recruiter.workMode (remote)"
+              }
+            ],
+            "summary": "failed 1 rule(s)"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "6992b8c3b45c49069a480770",
+      "anchorUserId": "697f53425fa213436db89b79",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "srcKind": "friends",
+      "anchorSummaryPreview": "Monalisa (47, female, Bengaluru), an HR leader, seeks a serious, long-term partner based on emotional connection, mutual respect, and shared depth, prioritizing presence over proximity. She values authenticity, mindful l…",
+      "sourceSummary": "Monalisa (47, female, Bengaluru), an HR leader, seeks a serious, long-term partner based on emotional connection, mutual respect, and shared depth, prioritizing presence over proximity. She values authenticity, mindful leadership, enjoys reading, music, drives, swimming, and envisions shared activities like travel and learning, with deal-breakers being emotional unavailability and dishonesty.",
+      "level1CandidateCount": 9,
+      "vectorSearchCount": 9,
+      "eligibleCandidateCount": 9,
+      "sessionCandidateCount": 32,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "69876e350851d8205158858d",
+          "userId": "69876c6f0851d820515884be",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "29F, mother of 2, spontaneous, adaptable, seeks online intellectual partnership with calm, composed individual who values loyalty/transparency, for discussions on women empowerment, long talks, collaboration. Deal-breake…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "6979d5b9a03c700ac6249b05",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "25 male seeking serious female peer friends and mentors in India. Values honesty, truth, friendliness, intelligence, deep connections, and enjoys creative pursuits (guitar, writing), travel, hiking, and music discussions…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "69ca8572ac632fdf584f5925",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, heavy metal fan, seeks female friend for weekend coffee/drives. Values honesty, enjoys deep talks. All data collected.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 4,
+          "sessionId": "69cb907a5582f5f9e9e875ca",
+          "userId": "6942987151f1f156656cdccb",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, extrovert, values honesty (deal-breaker: liars), seeks friendship for planned, offline weekend coffee/drives/live music/deep talks; enjoys heavy metal and guitar.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 5,
+          "sessionId": "69d4b17404798fdb0c419141",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is 32, Male, introvert, prefers one or two people, looking for a close confidant. Enjoys indoor games like Dobble. Deal-breaker: not a criminal. Seeks offline connections in Delhi.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 6,
+          "sessionId": "6975d2154d6f686caa8e336d",
+          "userId": "6975c84a4d6f686caa8e3335",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "24-year-old female consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors who appreciate varied creative interests (writing, art, Kathak) and deep conversations, open to all locations.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 7,
+          "sessionId": "697c8c8a5ea7be2882267af9",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 24/M consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors for deep conversations, appreciating varied creative interests (writing, art, Kathak). Preferences are Delhi or virtual. S…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 8,
+          "sessionId": "69cce40f641d637404c9619b",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32-year-old male, introverted, passionate, working on a startup, seeking a casual bassist for a rock band in Delhi. Values reliability and strong work ethic in long-term collaborations, bonding primarily through music. H…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 9,
+          "sessionId": "69d49682059088e4137ed940",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 26-year-old male classical Bharatnatyam dancer from Ranchi, Jharkhand, with 4 years of experience. He is calm-headed, prefers 1-on-1 collaboration and smaller social circles. He is looking for a female dance pa…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "69a27a8c89485d820e63809a",
+      "anchorUserId": "69a27a7389485d820e63807d",
+      "sessionRole": "job_seeker",
+      "pairRole": "recruiter",
+      "srcKind": "job_seeker",
+      "anchorSummaryPreview": "Avi Karan is seeking research-focused academic roles in marketing communications, specifically interested in AI/persuasive appeals and consumer loneliness/AI. Has 5 years PhD research experience, current salary 64k/month…",
+      "sourceSummary": "Avi Karan is seeking research-focused academic roles in marketing communications, specifically interested in AI/persuasive appeals and consumer loneliness/AI. Has 5 years PhD research experience, current salary 64k/month, expects 1L+/month, open to relocating, 90-day notice, prefers autonomy with mentor support, open to hybrid.",
+      "level1CandidateCount": 3,
+      "vectorSearchCount": 3,
+      "eligibleCandidateCount": 0,
+      "sessionCandidateCount": 19,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "698333117f58053a3bf5996f",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "recruiter",
+          "normalizedType": "recruiter",
+          "summaryPreview": "Intern (Research & Communication) for a startup, 2 openings. Freshers, remote/hybrid (Delhi office option), stipend of 30,000/month. Must be creative, research AI trends, and create presentations for strategy. Urgent nee…",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=seeker B=recruiter",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "salary_vs_budget",
+                "detail": "seeker.expectedSalaryInr (1200000) > recruiter.salaryInr * 1.22 (439200)"
+              },
+              {
+                "rule": "experience_above_max",
+                "detail": "seeker.experienceYears (5) > recruiter.experienceMaxYears (0)"
+              },
+              {
+                "rule": "internship_vs_experience",
+                "detail": "recruiter employmentType internship but seeker.experienceYears (5) >= 2"
+              }
+            ],
+            "summary": "failed 3 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "69ca4240ac632fdf584f527a",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "recruiter",
+          "normalizedType": "recruiter",
+          "summaryPreview": "Corporate Strategy Analyst, 2-4 yrs experience, 1 opening, 24 LPA, Mumbai (Hybrid), Urgent (1 month), New role, Team player, No freelance, Perm. role with key skills.",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=seeker B=recruiter",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "experience_above_max",
+                "detail": "seeker.experienceYears (5) > recruiter.experienceMaxYears (4)"
+              },
+              {
+                "rule": "notice_vs_urgent",
+                "detail": "seeker.noticePeriodDays (90) > recruiter.urgentJoinInDays (30)"
+              }
+            ],
+            "summary": "failed 2 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "697c792656de748dbafe7432",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "recruiter",
+          "normalizedType": "recruiter",
+          "summaryPreview": "SDE2 required: 4 YoE, Next.js, GCP, Frontend focus. Offering 2 Lakhs/month, full WFH.",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=seeker B=recruiter",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "work_mode",
+                "detail": "seeker.workMode (hybrid) incompatible with recruiter.workMode (remote)"
+              }
+            ],
+            "summary": "failed 1 rule(s)"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "69ca4240ac632fdf584f527a",
+      "anchorUserId": "6937d6d71a1b5957a67a733b",
+      "sessionRole": "recruiter",
+      "pairRole": "job_seeker",
+      "srcKind": "recruiter",
+      "anchorSummaryPreview": "Corporate Strategy Analyst, 2-4 yrs experience, 1 opening, 24 LPA, Mumbai (Hybrid), Urgent (1 month), New role, Team player, No freelance, Perm. role with key skills.",
+      "sourceSummary": "Corporate Strategy Analyst, 2-4 yrs experience, 1 opening, 24 LPA, Mumbai (Hybrid), Urgent (1 month), New role, Team player, No freelance, Perm. role with key skills.",
+      "level1CandidateCount": 4,
+      "vectorSearchCount": 4,
+      "eligibleCandidateCount": 1,
+      "sessionCandidateCount": 41,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "6984266113a99c4eb25e795d",
+          "userId": "698424e613a99c4eb25e792a",
+          "type": "job_seeker",
+          "normalizedType": "job_seeker",
+          "summaryPreview": "Product Manager, 1 year experience (3 years SE), MBA from IIM Ahmedabad, 25/30 LPA, Bangalore preferred (open to relocate), 60-day notice, seeks independent work, flexible on work mode.",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=recruiter B=seeker",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "salary_vs_budget",
+                "detail": "seeker.expectedSalaryInr (3000000) > recruiter.salaryInr * 1.22 (2928000)"
+              },
+              {
+                "rule": "notice_vs_urgent",
+                "detail": "seeker.noticePeriodDays (60) > recruiter.urgentJoinInDays (30)"
+              }
+            ],
+            "summary": "failed 2 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "69d508ebfc4fafc657cbfdf2",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "job_seeker",
+          "normalizedType": "job_seeker",
+          "summaryPreview": "Current role: Senior SDE at Tata Digital, Mumbai. Looking for SDE 2 role. Experience: 4+ years. Education: Not provided. Current salary: 16 LPA. Expected salary: 24 LPA. Notice period: Immediate joiner. Location: Delhi (…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=recruiter B=seeker",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "summary": "passes hard filters"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "698b3b26be95c54923e03ae0",
+          "userId": "698b3a37be95c54923e03ab8",
+          "type": "job_seeker",
+          "normalizedType": "job_seeker",
+          "summaryPreview": "Asst. Professor in HR Management near Ropar. Doctorate from GD Goenka University, 10 years Industrial HR experience, currently Asst. Prof at GNA University earning 48k. Expected salary 45k, 2-month notice period (end of …",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=recruiter B=seeker",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "experience_above_max",
+                "detail": "seeker.experienceYears (10) > recruiter.experienceMaxYears (4)"
+              },
+              {
+                "rule": "notice_vs_urgent",
+                "detail": "seeker.noticePeriodDays (60) > recruiter.urgentJoinInDays (30)"
+              },
+              {
+                "rule": "work_mode",
+                "detail": "seeker.workMode (onsite) incompatible with recruiter.workMode (hybrid)"
+              }
+            ],
+            "summary": "failed 3 rule(s)"
+          }
+        },
+        {
+          "atlasRank": 4,
+          "sessionId": "69a27a8c89485d820e63809a",
+          "userId": "69a27a7389485d820e63807d",
+          "type": "job_seeker",
+          "normalizedType": "job_seeker",
+          "summaryPreview": "Avi Karan is seeking research-focused academic roles in marketing communications, specifically interested in AI/persuasive appeals and consumer loneliness/AI. Has 5 years PhD research experience, current salary 64k/month…",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=recruiter B=seeker",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "experience_above_max",
+                "detail": "seeker.experienceYears (5) > recruiter.experienceMaxYears (4)"
+              },
+              {
+                "rule": "notice_vs_urgent",
+                "detail": "seeker.noticePeriodDays (90) > recruiter.urgentJoinInDays (30)"
+              }
+            ],
+            "summary": "failed 2 rule(s)"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "69ca8572ac632fdf584f5925",
+      "anchorUserId": "6937d6d71a1b5957a67a733b",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "srcKind": "friends",
+      "anchorSummaryPreview": "32/M/Delhi, calm, heavy metal fan, seeks female friend for weekend coffee/drives. Values honesty, enjoys deep talks. All data collected.",
+      "sourceSummary": "32/M/Delhi, calm, heavy metal fan, seeks female friend for weekend coffee/drives. Values honesty, enjoys deep talks. All data collected.",
+      "level1CandidateCount": 8,
+      "vectorSearchCount": 8,
+      "eligibleCandidateCount": 8,
+      "sessionCandidateCount": 32,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "69cb907a5582f5f9e9e875ca",
+          "userId": "6942987151f1f156656cdccb",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, extrovert, values honesty (deal-breaker: liars), seeks friendship for planned, offline weekend coffee/drives/live music/deep talks; enjoys heavy metal and guitar.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "6979d5b9a03c700ac6249b05",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "25 male seeking serious female peer friends and mentors in India. Values honesty, truth, friendliness, intelligence, deep connections, and enjoys creative pursuits (guitar, writing), travel, hiking, and music discussions…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "69cce40f641d637404c9619b",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32-year-old male, introverted, passionate, working on a startup, seeking a casual bassist for a rock band in Delhi. Values reliability and strong work ethic in long-term collaborations, bonding primarily through music. H…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 4,
+          "sessionId": "697c8c8a5ea7be2882267af9",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 24/M consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors for deep conversations, appreciating varied creative interests (writing, art, Kathak). Preferences are Delhi or virtual. S…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 5,
+          "sessionId": "6975d2154d6f686caa8e336d",
+          "userId": "6975c84a4d6f686caa8e3335",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "24-year-old female consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors who appreciate varied creative interests (writing, art, Kathak) and deep conversations, open to all locations.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 6,
+          "sessionId": "69876e350851d8205158858d",
+          "userId": "69876c6f0851d820515884be",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "29F, mother of 2, spontaneous, adaptable, seeks online intellectual partnership with calm, composed individual who values loyalty/transparency, for discussions on women empowerment, long talks, collaboration. Deal-breake…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 7,
+          "sessionId": "6992b8c3b45c49069a480770",
+          "userId": "697f53425fa213436db89b79",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "Monalisa (47, female, Bengaluru), an HR leader, seeks a serious, long-term partner based on emotional connection, mutual respect, and shared depth, prioritizing presence over proximity. She values authenticity, mindful l…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 8,
+          "sessionId": "69d49682059088e4137ed940",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 26-year-old male classical Bharatnatyam dancer from Ranchi, Jharkhand, with 4 years of experience. He is calm-headed, prefers 1-on-1 collaboration and smaller social circles. He is looking for a female dance pa…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "69cb907a5582f5f9e9e875ca",
+      "anchorUserId": "6942987151f1f156656cdccb",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "srcKind": "friends",
+      "anchorSummaryPreview": "32/M/Delhi, calm, extrovert, values honesty (deal-breaker: liars), seeks friendship for planned, offline weekend coffee/drives/live music/deep talks; enjoys heavy metal and guitar.",
+      "sourceSummary": "32/M/Delhi, calm, extrovert, values honesty (deal-breaker: liars), seeks friendship for planned, offline weekend coffee/drives/live music/deep talks; enjoys heavy metal and guitar.",
+      "level1CandidateCount": 9,
+      "vectorSearchCount": 9,
+      "eligibleCandidateCount": 9,
+      "sessionCandidateCount": 33,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "69ca8572ac632fdf584f5925",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, heavy metal fan, seeks female friend for weekend coffee/drives. Values honesty, enjoys deep talks. All data collected.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "6979d5b9a03c700ac6249b05",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "25 male seeking serious female peer friends and mentors in India. Values honesty, truth, friendliness, intelligence, deep connections, and enjoys creative pursuits (guitar, writing), travel, hiking, and music discussions…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "69d4b17404798fdb0c419141",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is 32, Male, introvert, prefers one or two people, looking for a close confidant. Enjoys indoor games like Dobble. Deal-breaker: not a criminal. Seeks offline connections in Delhi.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 4,
+          "sessionId": "69cce40f641d637404c9619b",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32-year-old male, introverted, passionate, working on a startup, seeking a casual bassist for a rock band in Delhi. Values reliability and strong work ethic in long-term collaborations, bonding primarily through music. H…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 5,
+          "sessionId": "697c8c8a5ea7be2882267af9",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 24/M consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors for deep conversations, appreciating varied creative interests (writing, art, Kathak). Preferences are Delhi or virtual. S…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 6,
+          "sessionId": "6975d2154d6f686caa8e336d",
+          "userId": "6975c84a4d6f686caa8e3335",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "24-year-old female consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors who appreciate varied creative interests (writing, art, Kathak) and deep conversations, open to all locations.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 7,
+          "sessionId": "69876e350851d8205158858d",
+          "userId": "69876c6f0851d820515884be",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "29F, mother of 2, spontaneous, adaptable, seeks online intellectual partnership with calm, composed individual who values loyalty/transparency, for discussions on women empowerment, long talks, collaboration. Deal-breake…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 8,
+          "sessionId": "6992b8c3b45c49069a480770",
+          "userId": "697f53425fa213436db89b79",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "Monalisa (47, female, Bengaluru), an HR leader, seeks a serious, long-term partner based on emotional connection, mutual respect, and shared depth, prioritizing presence over proximity. She values authenticity, mindful l…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 9,
+          "sessionId": "69d49682059088e4137ed940",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 26-year-old male classical Bharatnatyam dancer from Ranchi, Jharkhand, with 4 years of experience. He is calm-headed, prefers 1-on-1 collaboration and smaller social circles. He is looking for a female dance pa…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "69cce40f641d637404c9619b",
+      "anchorUserId": "68875c7a73eba845593c6ae5",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "srcKind": "friends",
+      "anchorSummaryPreview": "32-year-old male, introverted, passionate, working on a startup, seeking a casual bassist for a rock band in Delhi. Values reliability and strong work ethic in long-term collaborations, bonding primarily through music. H…",
+      "sourceSummary": "32-year-old male, introverted, passionate, working on a startup, seeking a casual bassist for a rock band in Delhi. Values reliability and strong work ethic in long-term collaborations, bonding primarily through music. Has close and long-lasting family and romantic relationships.",
+      "level1CandidateCount": 9,
+      "vectorSearchCount": 9,
+      "eligibleCandidateCount": 9,
+      "sessionCandidateCount": 31,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "69cb907a5582f5f9e9e875ca",
+          "userId": "6942987151f1f156656cdccb",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, extrovert, values honesty (deal-breaker: liars), seeks friendship for planned, offline weekend coffee/drives/live music/deep talks; enjoys heavy metal and guitar.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "69ca8572ac632fdf584f5925",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, heavy metal fan, seeks female friend for weekend coffee/drives. Values honesty, enjoys deep talks. All data collected.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "6979d5b9a03c700ac6249b05",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "25 male seeking serious female peer friends and mentors in India. Values honesty, truth, friendliness, intelligence, deep connections, and enjoys creative pursuits (guitar, writing), travel, hiking, and music discussions…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 4,
+          "sessionId": "697c8c8a5ea7be2882267af9",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 24/M consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors for deep conversations, appreciating varied creative interests (writing, art, Kathak). Preferences are Delhi or virtual. S…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 5,
+          "sessionId": "69d4b17404798fdb0c419141",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is 32, Male, introvert, prefers one or two people, looking for a close confidant. Enjoys indoor games like Dobble. Deal-breaker: not a criminal. Seeks offline connections in Delhi.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 6,
+          "sessionId": "6975d2154d6f686caa8e336d",
+          "userId": "6975c84a4d6f686caa8e3335",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "24-year-old female consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors who appreciate varied creative interests (writing, art, Kathak) and deep conversations, open to all locations.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 7,
+          "sessionId": "69d49682059088e4137ed940",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 26-year-old male classical Bharatnatyam dancer from Ranchi, Jharkhand, with 4 years of experience. He is calm-headed, prefers 1-on-1 collaboration and smaller social circles. He is looking for a female dance pa…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 8,
+          "sessionId": "69876e350851d8205158858d",
+          "userId": "69876c6f0851d820515884be",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "29F, mother of 2, spontaneous, adaptable, seeks online intellectual partnership with calm, composed individual who values loyalty/transparency, for discussions on women empowerment, long talks, collaboration. Deal-breake…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 9,
+          "sessionId": "6992b8c3b45c49069a480770",
+          "userId": "697f53425fa213436db89b79",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "Monalisa (47, female, Bengaluru), an HR leader, seeks a serious, long-term partner based on emotional connection, mutual respect, and shared depth, prioritizing presence over proximity. She values authenticity, mindful l…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "69d49682059088e4137ed940",
+      "anchorUserId": "68de070fcdf1c67be1b1343c",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "srcKind": "friends",
+      "anchorSummaryPreview": "User is a 26-year-old male classical Bharatnatyam dancer from Ranchi, Jharkhand, with 4 years of experience. He is calm-headed, prefers 1-on-1 collaboration and smaller social circles. He is looking for a female dance pa…",
+      "sourceSummary": "User is a 26-year-old male classical Bharatnatyam dancer from Ranchi, Jharkhand, with 4 years of experience. He is calm-headed, prefers 1-on-1 collaboration and smaller social circles. He is looking for a female dance partner with similar experience and skills for a show this weekend.",
+      "level1CandidateCount": 7,
+      "vectorSearchCount": 7,
+      "eligibleCandidateCount": 7,
+      "sessionCandidateCount": 25,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "69cce40f641d637404c9619b",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32-year-old male, introverted, passionate, working on a startup, seeking a casual bassist for a rock band in Delhi. Values reliability and strong work ethic in long-term collaborations, bonding primarily through music. H…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "69ca8572ac632fdf584f5925",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, heavy metal fan, seeks female friend for weekend coffee/drives. Values honesty, enjoys deep talks. All data collected.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "6975d2154d6f686caa8e336d",
+          "userId": "6975c84a4d6f686caa8e3335",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "24-year-old female consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors who appreciate varied creative interests (writing, art, Kathak) and deep conversations, open to all locations.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 4,
+          "sessionId": "69cb907a5582f5f9e9e875ca",
+          "userId": "6942987151f1f156656cdccb",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, extrovert, values honesty (deal-breaker: liars), seeks friendship for planned, offline weekend coffee/drives/live music/deep talks; enjoys heavy metal and guitar.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 5,
+          "sessionId": "69d4b17404798fdb0c419141",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is 32, Male, introvert, prefers one or two people, looking for a close confidant. Enjoys indoor games like Dobble. Deal-breaker: not a criminal. Seeks offline connections in Delhi.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 6,
+          "sessionId": "69876e350851d8205158858d",
+          "userId": "69876c6f0851d820515884be",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "29F, mother of 2, spontaneous, adaptable, seeks online intellectual partnership with calm, composed individual who values loyalty/transparency, for discussions on women empowerment, long talks, collaboration. Deal-breake…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 7,
+          "sessionId": "6992b8c3b45c49069a480770",
+          "userId": "697f53425fa213436db89b79",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "Monalisa (47, female, Bengaluru), an HR leader, seeks a serious, long-term partner based on emotional connection, mutual respect, and shared depth, prioritizing presence over proximity. She values authenticity, mindful l…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "69d4b17404798fdb0c419141",
+      "anchorUserId": "6937d6d71a1b5957a67a733b",
+      "sessionRole": "friends",
+      "pairRole": "friends",
+      "srcKind": "friends",
+      "anchorSummaryPreview": "User is 32, Male, introvert, prefers one or two people, looking for a close confidant. Enjoys indoor games like Dobble. Deal-breaker: not a criminal. Seeks offline connections in Delhi.",
+      "sourceSummary": "User is 32, Male, introvert, prefers one or two people, looking for a close confidant. Enjoys indoor games like Dobble. Deal-breaker: not a criminal. Seeks offline connections in Delhi.",
+      "level1CandidateCount": 8,
+      "vectorSearchCount": 8,
+      "eligibleCandidateCount": 8,
+      "sessionCandidateCount": 32,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "69cb907a5582f5f9e9e875ca",
+          "userId": "6942987151f1f156656cdccb",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32/M/Delhi, calm, extrovert, values honesty (deal-breaker: liars), seeks friendship for planned, offline weekend coffee/drives/live music/deep talks; enjoys heavy metal and guitar.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "697c8c8a5ea7be2882267af9",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 24/M consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors for deep conversations, appreciating varied creative interests (writing, art, Kathak). Preferences are Delhi or virtual. S…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 3,
+          "sessionId": "6979d5b9a03c700ac6249b05",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "25 male seeking serious female peer friends and mentors in India. Values honesty, truth, friendliness, intelligence, deep connections, and enjoys creative pursuits (guitar, writing), travel, hiking, and music discussions…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 4,
+          "sessionId": "6975d2154d6f686caa8e336d",
+          "userId": "6975c84a4d6f686caa8e3335",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "24-year-old female consultant in Delhi, adventurous introvert, seeking long-term peer friends/mentors who appreciate varied creative interests (writing, art, Kathak) and deep conversations, open to all locations.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 5,
+          "sessionId": "69cce40f641d637404c9619b",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "32-year-old male, introverted, passionate, working on a startup, seeking a casual bassist for a rock band in Delhi. Values reliability and strong work ethic in long-term collaborations, bonding primarily through music. H…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 6,
+          "sessionId": "69876e350851d8205158858d",
+          "userId": "69876c6f0851d820515884be",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "29F, mother of 2, spontaneous, adaptable, seeks online intellectual partnership with calm, composed individual who values loyalty/transparency, for discussions on women empowerment, long talks, collaboration. Deal-breake…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 7,
+          "sessionId": "6992b8c3b45c49069a480770",
+          "userId": "697f53425fa213436db89b79",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "Monalisa (47, female, Bengaluru), an HR leader, seeks a serious, long-term partner based on emotional connection, mutual respect, and shared depth, prioritizing presence over proximity. She values authenticity, mindful l…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        },
+        {
+          "atlasRank": 8,
+          "sessionId": "69d49682059088e4137ed940",
+          "userId": "68de070fcdf1c67be1b1343c",
+          "type": "friends",
+          "normalizedType": "friends",
+          "summaryPreview": "User is a 26-year-old male classical Bharatnatyam dancer from Ranchi, Jharkhand, with 4 years of experience. He is calm-headed, prefers 1-on-1 collaboration and smaller social circles. He is looking for a female dance pa…",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "friends_friends",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "note": "friends ↔ friends: no numeric gates in product code"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "69d508ebfc4fafc657cbfdf2",
+      "anchorUserId": "68de070fcdf1c67be1b1343c",
+      "sessionRole": "job_seeker",
+      "pairRole": "recruiter",
+      "srcKind": "job_seeker",
+      "anchorSummaryPreview": "Current role: Senior SDE at Tata Digital, Mumbai. Looking for SDE 2 role. Experience: 4+ years. Education: Not provided. Current salary: 16 LPA. Expected salary: 24 LPA. Notice period: Immediate joiner. Location: Delhi (…",
+      "sourceSummary": "Current role: Senior SDE at Tata Digital, Mumbai. Looking for SDE 2 role. Experience: 4+ years. Education: Not provided. Current salary: 16 LPA. Expected salary: 24 LPA. Notice period: Immediate joiner. Location: Delhi (hybrid). Work mode: Hybrid.",
+      "level1CandidateCount": 2,
+      "vectorSearchCount": 2,
+      "eligibleCandidateCount": 1,
+      "sessionCandidateCount": 18,
+      "neighbors": [
+        {
+          "atlasRank": 1,
+          "sessionId": "69ca4240ac632fdf584f527a",
+          "userId": "6937d6d71a1b5957a67a733b",
+          "type": "recruiter",
+          "normalizedType": "recruiter",
+          "summaryPreview": "Corporate Strategy Analyst, 2-4 yrs experience, 1 opening, 24 LPA, Mumbai (Hybrid), Urgent (1 month), New role, Team player, No freelance, Perm. role with key skills.",
+          "eligible": true,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=seeker B=recruiter",
+            "passesHardFilters": true,
+            "failureDetails": [],
+            "summary": "passes hard filters"
+          }
+        },
+        {
+          "atlasRank": 2,
+          "sessionId": "698333117f58053a3bf5996f",
+          "userId": "68875c7a73eba845593c6ae5",
+          "type": "recruiter",
+          "normalizedType": "recruiter",
+          "summaryPreview": "Intern (Research & Communication) for a startup, 2 openings. Freshers, remote/hybrid (Delhi office option), stipend of 30,000/month. Must be creative, research AI trends, and create presentations for strategy. Urgent nee…",
+          "eligible": false,
+          "hardFilterAnalysis": {
+            "applicable": true,
+            "pairKind": "job_seeker_vs_recruiter",
+            "orientation": "A=seeker B=recruiter",
+            "passesHardFilters": false,
+            "failureDetails": [
+              {
+                "rule": "salary_vs_budget",
+                "detail": "seeker.expectedSalaryInr (2400000) > recruiter.salaryInr * 1.22 (439200)"
+              },
+              {
+                "rule": "experience_above_max",
+                "detail": "seeker.experienceYears (4) > recruiter.experienceMaxYears (0)"
+              },
+              {
+                "rule": "internship_vs_experience",
+                "detail": "recruiter employmentType internship but seeker.experienceYears (4) >= 2"
+              }
+            ],
+            "summary": "failed 3 rule(s)"
+          }
+        }
+      ]
+    },
+    {
+      "anchorSessionId": "69dddb20411ab399b2ed3f77",
+      "skipped": true,
+      "skipReason": "not_community"
+    }
+  ]
+}

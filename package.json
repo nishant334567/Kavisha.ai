@@ -9,6 +9,8 @@
     "start": "node app/server.js",
     "lint": "next lint",
     "blog:sync-and-ingest": "node scripts/blog-feed-sync-and-ingest.js",
+    "seed:prd-match": "node scripts/seed-prd-community-match.js",
+    "analyze:derived-pairs": "node scripts/analyze-derived-profile-pairs.js",
     "deploy:firebase-auth-hosting": "cd firebase-auth-hosting && npx --yes firebase-tools@latest deploy --only hosting"
   },
   "dependencies": {

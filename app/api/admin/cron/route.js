@@ -5,13 +5,13 @@ import Logs from "@/app/models/ChatLogs";
 import Matches from "@/app/models/Matches";
 import Connection from "@/app/models/Connection";
 import { sendCronReport } from "@/app/lib/cronReportEmail";
+import {
+  normalizeSessionRole,
+  sessionRoleMatch,
+} from "@/app/lib/communitySessionRole";
 
 const BATCH_LIMIT = parseInt(process.env.CRON_BATCH_LIMIT || "500", 10);
 const SEP = "\x00";
-
-function escapeRegExp(s) {
-    return String(s).replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
 
 function normRole(r) {
     return String(r || "").toLowerCase().trim();
@@ -25,7 +25,7 @@ function notCommunityClause() {
  * Retention buckets (per userId + brand) - only these six shapes get retention:
  * (1) non-community + lead_journey + isWidget true
  * (2) non-community + lead_journey + isWidget not true
- * (3–5) community + role job_seeker | recruiter | friend (case-insensitive)
+ * (3–5) community + role job_seeker | recruiter | friends (aliases: friend, dating; case-insensitive)
  * (6) non-community + job_seeker (mutually exclusive with (3) via isCommunityChat)
  * Returns null → single-log candidates are deleted in full (no retention).
  *
@@ -41,14 +41,15 @@ function explicitRetentionBucket(session) {
     const widget = session.isWidget === true;
 
     if (community) {
-        if (!["job_seeker", "recruiter", "friend"].includes(role)) return null;
+        const c = normalizeSessionRole(session.role);
+        if (!c) return null;
         return {
-            key: `${userId}${SEP}${brand}${SEP}c${SEP}${role}`,
+            key: `${userId}${SEP}${brand}${SEP}c${SEP}${c}`,
             filter: {
                 userId,
                 brand,
                 isCommunityChat: true,
-                role: new RegExp(`^${escapeRegExp(role)}$`, "i"),
+                role: sessionRoleMatch(c),
             },
         };
     }
@@ -160,7 +161,7 @@ async function sendCleanupCronReport(payload) {
         <li>Non-community + <code>lead_journey</code> + widget not true (site)</li>
         <li>Community + <code>job_seeker</code></li>
         <li>Community + <code>recruiter</code></li>
-        <li>Community + <code>friend</code></li>
+        <li>Community + <code>friends</code> (incl. legacy <code>friend</code>)</li>
         <li>Non-community + <code>job_seeker</code> (excludes community job_seeker)</li>
       </ol>
       <p style="margin:0 0 12px">Candidates outside these six shapes are deleted when they have a single log (no keep-one).</p>

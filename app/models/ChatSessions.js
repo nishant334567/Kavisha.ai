@@ -7,6 +7,7 @@ const ChatSessionsSchema = new mongoose.Schema(
       ref: "User",
       required: true,
     },
+    /** Community UI uses `job_seeker`, `recruiter`, `friends` — see app/lib/communitySessionRole.js */
     role: {
       type: String,
       required: true,
