@@ -6,7 +6,7 @@ import { connectDB } from "@/app/lib/db";
 import { v4 as uuidv4 } from "uuid";
 
 const MIN_CHUNK_WORDS = 500;
-const MAX_TRAINING_CHUNKS = 10;
+const MAX_TRAINING_CHUNKS = 20;
 
 function buildChunkId(docid, index, embeddingVersion = 0) {
   return embeddingVersion > 0
