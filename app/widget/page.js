@@ -13,6 +13,11 @@ const LAUNCHER_NUDGE_DELAY_MS = 3000;
 /** Closed widget embed / iframe size (matches AMP `embed-size` minimum height). */
 const WIDGET_CLOSED_SIZE = 100;
 
+/** Open panel width: normal vs expanded on desktop (embed parent clamps to viewport). */
+const WIDGET_OPEN_WIDTH = 400;
+/** Desktop width when maximized (taller + 600px wide). */
+const WIDGET_OPEN_WIDTH_MAX = 600;
+
 /** Open panel height: normal vs taller (embed tells parent via postMessage). */
 const WIDGET_OPEN_HEIGHT = 640;
 /** Must not use `window.innerHeight` here — inside an iframe that is the iframe height (~640), so the parent would never see a larger request. Embed clamps to the real viewport. */
@@ -116,7 +121,7 @@ function WidgetShell() {
         if (!adminOn) setSupportHasUnreadAdmin(false);
         setCommunityEnabled(
           Boolean(data?.enableFriendConnect) ||
-            Boolean(data?.enableProfessionalConnect)
+          Boolean(data?.enableProfessionalConnect)
         );
       })
       .catch(() => {
@@ -158,7 +163,11 @@ function WidgetShell() {
 
   useEffect(() => {
     if (typeof window === "undefined" || window.parent === window) return;
-    const width = isOpen ? 400 : WIDGET_CLOSED_SIZE;
+    const width = isOpen
+      ? widgetMaximized
+        ? WIDGET_OPEN_WIDTH_MAX
+        : WIDGET_OPEN_WIDTH
+      : WIDGET_CLOSED_SIZE;
     const height = isOpen
       ? widgetMaximized
         ? WIDGET_OPEN_HEIGHT_MAX
@@ -187,7 +196,9 @@ function WidgetShell() {
     >
       <WidgetPostMessageAuth brand={brandTrimmed} />
       {isOpen ? (
-        <div className="flex h-full min-h-0 w-full max-w-none flex-col overflow-hidden border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40 max-md:min-h-0 max-md:flex-1 max-md:rounded-b-none max-md:rounded-t-2xl md:max-w-[400px] md:rounded-2xl">
+        <div
+          className={`flex h-full min-h-0 w-full max-w-none flex-col overflow-hidden border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40 max-md:min-h-0 max-md:flex-1 max-md:rounded-b-none max-md:rounded-t-2xl md:rounded-2xl ${widgetMaximized ? "md:max-w-[600px]" : "md:max-w-[400px]"}`}
+        >
           <div
             className={
               primaryHex
@@ -242,7 +253,7 @@ function WidgetShell() {
                 <button
                   type="button"
                   onClick={() => setWidgetMaximized((m) => !m)}
-                  aria-label={widgetMaximized ? "Restore chat size" : "Expand chat height"}
+                  aria-label={widgetMaximized ? "Restore chat size" : "Expand chat"}
                   className={
                     primaryHex
                       ? "rounded-full p-1.5 text-white/90 transition hover:bg-white/15 hover:text-white"
