@@ -95,7 +95,7 @@ export default function ChatBox({
           setIsJobsRequirementPost(Boolean(data.isJobsRequirementPost));
           const pct =
             typeof data.onboardingPercent === "number" &&
-            !Number.isNaN(data.onboardingPercent)
+              !Number.isNaN(data.onboardingPercent)
               ? Math.max(0, Math.min(100, data.onboardingPercent))
               : 0;
           setOnboardingPercent(data.allDataCollected ? 100 : pct);
@@ -150,7 +150,7 @@ export default function ChatBox({
           filename: data.resumeFilename,
           resumeSummary: data.resumeSummary,
         });
-      } catch (error) {}
+      } catch (error) { }
     };
     fetchResumeData();
   }, [currentChatId, currentChatType]);
@@ -170,7 +170,7 @@ export default function ChatBox({
         const response = await fetch(`/api/all-data-fetched/${currentChatId}`);
         const data = await response.json();
         setHasDatacollected(data.allDataCollected);
-      } catch (error) {}
+      } catch (error) { }
     };
     fetchDataCollectionStatus();
   }, [currentChatId, currentChatType]);
@@ -511,9 +511,8 @@ export default function ChatBox({
           <div className="relative">
             <div className="h-6 w-6 rounded-full border-2 border-border"></div>
             <div
-              className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${
-                !primaryBrandHex ? "border-t-[#59646F]" : ""
-              }`}
+              className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${!primaryBrandHex ? "border-t-[#59646F]" : ""
+                }`}
               style={
                 primaryBrandHex
                   ? { borderTopColor: primaryBrandHex }
@@ -534,9 +533,8 @@ export default function ChatBox({
           <div className="relative">
             <div className="h-6 w-6 rounded-full border-2 border-border"></div>
             <div
-              className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${
-                !primaryBrandHex ? "border-t-[#59646F]" : ""
-              }`}
+              className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${!primaryBrandHex ? "border-t-[#59646F]" : ""
+                }`}
               style={
                 primaryBrandHex
                   ? { borderTopColor: primaryBrandHex }
@@ -621,28 +619,28 @@ export default function ChatBox({
           </div>
 
           {showOnboardingProgress && (
-              <div className="mb-2 flex w-full shrink-0 justify-start px-1 md:mb-3 md:px-2">
-                <div
-                  className="inline-flex items-baseline gap-0.5 rounded-md border border-border/45 bg-muted/35 px-2.5 py-1 text-[13px] italic tabular-nums shadow-sm backdrop-blur-[2px] dark:border-border/35 dark:bg-muted/25"
-                  style={
-                    primaryBrandHex
-                      ? {
-                          borderLeftWidth: 3,
-                          borderLeftColor: primaryBrandHex,
-                        }
-                      : undefined
-                  }
-                >
-                  <span className="font-semibold not-italic tracking-tight text-foreground">
-                    {Math.round(
-                      Math.min(100, Math.max(0, displayOnboardingPct))
-                    )}
-                    %
-                  </span>
-                  <span className="text-muted-foreground">completed</span>
-                </div>
+            <div className="mb-2 flex w-full shrink-0 justify-start px-1 md:mb-3 md:px-2">
+              <div
+                className="inline-flex items-baseline gap-0.5 rounded-md border border-border/45 bg-muted/35 px-2.5 py-1 text-[13px] italic tabular-nums shadow-sm backdrop-blur-[2px] dark:border-border/35 dark:bg-muted/25"
+                style={
+                  primaryBrandHex
+                    ? {
+                      borderLeftWidth: 3,
+                      borderLeftColor: primaryBrandHex,
+                    }
+                    : undefined
+                }
+              >
+                <span className="font-semibold not-italic tracking-tight text-foreground">
+                  {Math.round(
+                    Math.min(100, Math.max(0, displayOnboardingPct))
+                  )}
+                  %
+                </span>
+                <span className="text-muted-foreground">completed</span>
               </div>
-            )}
+            </div>
+          )}
 
           {/* Messages Section - flex-2, scrollable */}
           <div className="flex-[4] min-h-0 overflow-y-scroll overflow-x-hidden scrollbar-none">
@@ -652,11 +650,10 @@ export default function ChatBox({
               messages.map((m, i) => (
                 <div
                   key={i}
-                  className={`mb-4 w-full min-w-0 ${
-                    m.role === "user"
+                  className={`mb-4 w-full min-w-0 ${m.role === "user"
                       ? "flex flex-col items-end"
                       : "flex flex-col items-start"
-                  }`}
+                    }`}
                 >
                   {i === retryIndex && retry && (
                     <button
@@ -943,11 +940,10 @@ export default function ChatBox({
                 <button
                   type="submit"
                   disabled={!input.trim() || messageLoading}
-                  className={`inline-flex items-center justify-center p-2 rounded-lg ${
-                    !input.trim() || messageLoading
+                  className={`inline-flex items-center justify-center p-2 rounded-lg ${!input.trim() || messageLoading
                       ? "bg-muted-bg text-muted cursor-not-allowed"
                       : "bg-[#59646F] text-[#FFEED8] hover:bg-[#4a5568] active:scale-95"
-                  } transition-all`}
+                    } transition-all`}
                   title="Send message"
                 >
                   <Send className="w-5 h-5" />

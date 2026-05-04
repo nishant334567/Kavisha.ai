@@ -187,7 +187,7 @@ function WidgetShell() {
     >
       <WidgetPostMessageAuth brand={brandTrimmed} />
       {isOpen ? (
-        <div className="flex h-full min-h-0 w-full max-w-none flex-col overflow-hidden border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40 max-md:min-h-0 max-md:flex-1 max-md:rounded-b-none max-md:rounded-t-2xl md:max-w-[400px] md:rounded-2xl">
+        <div className="flex h-full min-h-0 w-full max-w-none flex-col overflow-hidden rounded-2xl border border-border/50 bg-card shadow-xl dark:border-border/40 dark:shadow-black/40 max-md:min-h-0 max-md:flex-1 md:max-w-[400px]">
           <div
             className={
               primaryHex
@@ -270,7 +270,7 @@ function WidgetShell() {
               </div>
             </div>
           </div>
-          <div className="flex min-h-[240px] min-w-0 flex-1 flex-col overflow-hidden px-3 pb-0 pt-2 md:rounded-b-2xl md:pb-3">
+          <div className="flex min-h-[240px] min-w-0 flex-1 flex-col overflow-hidden rounded-b-2xl px-3 pb-4 pt-2">
             {/* Sign-in + bearer tokens: `ChatBoxWidget` + `app/lib/widget-session.js` (not this shell). */}
             <ChatBoxWidget
               brand={brand.trim()}
