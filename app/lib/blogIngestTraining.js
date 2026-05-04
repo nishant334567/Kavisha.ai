@@ -8,7 +8,7 @@ const { connectDB } = require("./db");
 const BlogIngestUrl = require("../models/BlogIngestUrl");
 
 const MIN_CHUNK_WORDS = 500;
-const MAX_TRAINING_CHUNKS = 20;
+const MAX_TRAINING_CHUNKS = 10;
 const DENSE_INDEX = "intelligent-kavisha";
 const SPARSE_INDEX = "kavisha-sparse";
 
@@ -100,7 +100,7 @@ function buildEmbeddingArtifacts(chunks, embeddingResults, metadata) {
     metadata.publishedAtMs != null && Number.isFinite(Number(metadata.publishedAtMs))
       ? Math.trunc(Number(metadata.publishedAtMs))
       : metadata.publishedAt instanceof Date &&
-        !Number.isNaN(metadata.publishedAt.getTime())
+          !Number.isNaN(metadata.publishedAt.getTime())
         ? metadata.publishedAt.getTime()
         : null;
 

@@ -332,15 +332,15 @@ export default function ChatBox({
         ]);
         setMessageLoading(false);
 
-        if (data?.allDataCollected === "true") {
+        if (
+          data?.matchesWithObjectIds?.length > 0 &&
+          data?.allDataCollected === "true"
+        ) {
+          setMatches(data?.matchesWithObjectIds);
           setHasDatacollected(true);
-          try {
-            const res = await fetch(`/api/fetch-matches/${currentChatId}`);
-            const md = await res.json();
-            setMatches(Array.isArray(md.matches) ? md.matches : []);
-          } catch {
-            setMatches([]);
-          }
+        } else if (data?.allDataCollected === "true") {
+          setMatches([]);
+          setHasDatacollected(true);
         } else {
           setMatches([]);
           setHasDatacollected(false);
@@ -460,15 +460,15 @@ export default function ChatBox({
       setRetryIndex(undefined);
     }
 
-    if (data?.allDataCollected === "true") {
+    if (
+      data?.matchesWithObjectIds?.length > 0 &&
+      data?.allDataCollected === "true"
+    ) {
+      setMatches(data?.matchesWithObjectIds);
       setHasDatacollected(true);
-      try {
-        const res = await fetch(`/api/fetch-matches/${sessionId}`);
-        const md = await res.json();
-        setMatches(Array.isArray(md.matches) ? md.matches : []);
-      } catch {
-        setMatches([]);
-      }
+    } else if (data?.allDataCollected === "true") {
+      setMatches([]);
+      setHasDatacollected(true);
     } else if (data?.allDataCollected === "false") {
       setHasDatacollected(false);
     }

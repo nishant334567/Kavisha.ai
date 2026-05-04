@@ -5,7 +5,6 @@ import DerivedProfile from "@/app/models/DerivedProfile";
 import getGeminiModel from "@/app/lib/getAiModel";
 import { generateEmbedding } from "@/app/lib/embeddings";
 import { enqueueCloudTask } from "@/app/lib/cloudTasks";
-import { normalizeSessionRole } from "@/app/lib/communitySessionRole";
 
 function getSourceFromSession(session) {
   if (session?.isCommunityChat) return "community";
@@ -32,8 +31,8 @@ function extractFirstJsonObject(text) {
 }
 
 function schemaForType(type) {
-  const c = normalizeSessionRole(type);
-  if (c === "job_seeker") {
+  const t = String(type || "").toLowerCase();
+  if (t === "job_seeker" || t === "jobseeker") {
     return {
       locationCountry: null,
       locationCity: null,
@@ -48,7 +47,7 @@ function schemaForType(type) {
       skills: [],
     };
   }
-  if (c === "recruiter") {
+  if (t === "recruiter") {
     return {
       roleTitle: null,
       openings: null,
@@ -63,7 +62,7 @@ function schemaForType(type) {
       requiredSkills: [],
     };
   }
-  // friends (and unknown → same schema)
+  // friends / dating / fallback
   return {
     locationCountry: null,
     locationCity: null,
@@ -123,18 +122,17 @@ export async function POST(request) {
     }
 
     const summary = session.chatSummary || "";
-    const type =
-      normalizeSessionRole(session.role) ?? String(session.role || "").trim();
+    const type = session.role || "";
     const source = getSourceFromSession(session);
 
-    const schema = schemaForType(session.role);
+    const schema = schemaForType(type);
     const schemaJson = JSON.stringify({ payload: schema }, null, 2);
 
     const prompt = [
       "You extract structured fields from a user profile summary.",
       "Return ONLY valid JSON. No markdown, no backticks, no extra text.",
       "",
-      `Type: ${type || session.role || ""}`,
+      `Type: ${type}`,
       "",
       "Fill the JSON exactly matching this schema (same keys).",
       "- Use null when unknown.",

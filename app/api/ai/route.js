@@ -4,6 +4,7 @@ import Logs from "@/app/models/ChatLogs";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { getUserFromDB } from "@/app/lib/firebase/get-user";
 import Session from "@/app/models/ChatSessions";
+import { getMatches } from "../matches/[sessionId]/route";
 import { generateResumeContext } from "@/app/utils/resumeContextGenerator";
 import {
   JOB_SEEKER_PROMPT,
@@ -209,6 +210,15 @@ export async function POST(request) {
         const enrichmentQueued =
           !isDataAlreadyCollected && allDataCollected === "true";
 
+        let matchesLatest = [];
+        if (allDataCollected === "true" && type !== "pitch_to_investor") {
+          try {
+            matchesLatest = await getMatches(userId, sessionId, type);
+          } catch (error) {
+            matchesLatest = [];
+          }
+        }
+
         // Move DB operations to background
         setImmediate(async () => {
           try {
@@ -270,7 +280,7 @@ export async function POST(request) {
           title,
           allDataCollected,
           enrichmentQueued,
-          matchesWithObjectIds: [],
+          matchesWithObjectIds: matchesLatest,
           inputTokens: inputToken,
           outputTokens: outputToken,
           totalTokens: inputToken + outputToken,
