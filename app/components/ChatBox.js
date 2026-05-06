@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 
 import Resume from "./Resume";
@@ -18,6 +18,8 @@ import { normalizeBrandHex } from "@/app/lib/brandTheme";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
 import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
+import LiveChat from "@/app/components/LiveChat";
+import { useCommunityConnect } from "@/app/hooks/useCommunityConnect";
 
 export default function ChatBox({
   currentChatId,
@@ -34,8 +36,11 @@ export default function ChatBox({
   const brandContext = useBrandContext();
   const { user } = useFirebaseSession();
   const [matches, setMatches] = useState([]);
+  const [matchesLastSyncedAt, setMatchesLastSyncedAt] = useState(null);
+  const [matchesRefreshing, setMatchesRefreshing] = useState(false);
   const [resumeData, setResumedata] = useState({});
   const [hasDatacollected, setHasDatacollected] = useState();
+  const [eligibleForMatches, setEligibleForMatches] = useState(false);
   const [retry, setRetry] = useState(false);
   const [retryIndex, setRetryIndex] = useState(undefined);
   const [selectedFile, setSelectedFile] = useState(null);
@@ -43,6 +48,8 @@ export default function ChatBox({
   const [userA, setUserA] = useState(null);
   const [userB, setUserB] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
+  const [liveChatOtherDisplayName, setLiveChatOtherDisplayName] =
+    useState(null);
   const [isRecording, setIsRecording] = useState(false);
   const timerRef = useRef(null);
   const [seconds, setSeconds] = useState(0);
@@ -95,15 +102,12 @@ export default function ChatBox({
           setIsJobsRequirementPost(Boolean(data.isJobsRequirementPost));
           const pct =
             typeof data.onboardingPercent === "number" &&
-            !Number.isNaN(data.onboardingPercent)
+              !Number.isNaN(data.onboardingPercent)
               ? Math.max(0, Math.min(100, data.onboardingPercent))
               : 0;
           setOnboardingPercent(data.allDataCollected ? 100 : pct);
-          if (data.allDataCollected) {
-            setHasDatacollected(true);
-          } else {
-            setHasDatacollected(false);
-          }
+          setHasDatacollected(Boolean(data.allDataCollected));
+          setEligibleForMatches(Boolean(data.allDataCollected) || pct >= 40);
         }
       } catch (error) {
         console.error("Error fetching chat type:", error);
@@ -150,7 +154,7 @@ export default function ChatBox({
           filename: data.resumeFilename,
           resumeSummary: data.resumeSummary,
         });
-      } catch (error) {}
+      } catch (error) { }
     };
     fetchResumeData();
   }, [currentChatId, currentChatType]);
@@ -169,16 +173,34 @@ export default function ChatBox({
       try {
         const response = await fetch(`/api/all-data-fetched/${currentChatId}`);
         const data = await response.json();
-        setHasDatacollected(data.allDataCollected);
-      } catch (error) {}
+        // if (typeof data?.allDataCollected === "boolean") {
+        //   setHasDatacollected(data.allDataCollected);
+        // }
+        if (typeof data?.eligibleForMatches === "boolean") {
+          setEligibleForMatches(data.eligibleForMatches);
+        } else if (typeof data?.onboardingPercent === "number") {
+          const pct = Math.max(0, Math.min(100, Number(data.onboardingPercent) || 0));
+          setEligibleForMatches(Boolean(data?.allDataCollected) || pct >= 40);
+        }
+      } catch (error) { }
     };
     fetchDataCollectionStatus();
   }, [currentChatId, currentChatType]);
 
   useEffect(() => {
-    // Fetch matches from DB for any chat
+    setMatches([]);
+    setMatchesLastSyncedAt(null);
+  }, [currentChatId]);
+
+  useEffect(() => {
     if (!currentChatId) {
       setMatches([]);
+      return;
+    }
+    if (sessionDetailsLoading || eligibleForMatches !== true) {
+      if (eligibleForMatches === false) {
+        setMatches([]);
+      }
       return;
     }
 
@@ -187,11 +209,22 @@ export default function ChatBox({
         const response = await fetch(`/api/fetch-matches/${currentChatId}`);
         const data = await response.json();
 
-        setHasDatacollected(data.allDataCollected);
-        if (Array.isArray(data.matches) && data.matches.length > 0) {
+        if (typeof data?.allDataCollected === "boolean") {
+          setHasDatacollected(data.allDataCollected);
+        }
+        if (typeof data?.eligibleForMatches === "boolean") {
+          setEligibleForMatches(data.eligibleForMatches);
+        } else if (typeof data?.onboardingPercent === "number") {
+          const pct = Math.max(0, Math.min(100, Number(data.onboardingPercent) || 0));
+          setEligibleForMatches(Boolean(data?.allDataCollected) || pct >= 40);
+        }
+        if (Array.isArray(data.matches)) {
           setMatches(data.matches);
         } else {
           setMatches([]);
+        }
+        if (data.allDataCollected) {
+          setMatchesLastSyncedAt(Date.now());
         }
       } catch (error) {
         console.error(`[Matches] Error fetching matches:`, error);
@@ -200,7 +233,64 @@ export default function ChatBox({
     };
 
     fetchMatches();
-  }, [currentChatId]);
+  }, [currentChatId, eligibleForMatches, sessionDetailsLoading]);
+
+  const openChatSession = useCallback((userA, userB, otherDisplayName = null) => {
+    setUserA(userA);
+    setUserB(userB);
+    setConnectionId([userA, userB].sort().join("_"));
+    setLiveChatOtherDisplayName(
+      otherDisplayName != null && String(otherDisplayName).trim() !== ""
+        ? String(otherDisplayName).trim()
+        : null,
+    );
+    setOpenChat(true);
+  }, []);
+
+  const {
+    paidConnectedUserIds,
+    handleConnect,
+    connectingToUserId,
+    refetchPaidConnections,
+  } = useCommunityConnect({
+    user,
+    brandSubdomain: brandContext?.subdomain ?? "",
+    openChatSession,
+  });
+
+  const handleRefreshMatches = useCallback(async () => {
+    if (!currentChatId || eligibleForMatches !== true) return;
+    setMatchesRefreshing(true);
+    try {
+      const res = await fetch(`/api/matches/${currentChatId}/refresh`, {
+        method: "POST",
+        credentials: "same-origin",
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        console.error("[Matches refresh]", data?.error || res.status);
+        return;
+      }
+      if (Array.isArray(data.matches)) {
+        setMatches(data.matches);
+      }
+      const t = data.refreshedAt ? Date.parse(data.refreshedAt) : Date.now();
+      if (!Number.isNaN(t)) {
+        setMatchesLastSyncedAt(t);
+      }
+      if (typeof data.allDataCollected === "boolean") {
+        setHasDatacollected(data.allDataCollected);
+      }
+      if (typeof data?.eligibleForMatches === "boolean") {
+        setEligibleForMatches(data.eligibleForMatches);
+      }
+      await refetchPaidConnections();
+    } catch (e) {
+      console.error("[Matches refresh]", e);
+    } finally {
+      setMatchesRefreshing(false);
+    }
+  }, [currentChatId, eligibleForMatches, refetchPaidConnections]);
   useEffect(() => {
     const timeout = setTimeout(() => {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
@@ -275,18 +365,6 @@ export default function ChatBox({
   const updateResume = (filename, summary) => {
     setResumedata({ filename: filename, resumeSummary: summary });
   };
-  const openChatSession = (userA, userB) => {
-    setUserA(userA);
-    setUserB(userB);
-    setConnectionId([userA, userB].sort().join("_"));
-    setOpenChat((prev) => !prev);
-
-    // Close inbox on mobile when opening a chat
-    // if (typeof window !== "undefined" && window.innerWidth < 768) {
-    //   setShowInbox(false);
-    // }
-  };
-
   const onResumeUpload = (newResumeData) => {
     if (newResumeData) {
       let resumeSubText = "I have uploaded the document. Have a look at it";
@@ -338,9 +416,11 @@ export default function ChatBox({
         ) {
           setMatches(data?.matchesWithObjectIds);
           setHasDatacollected(true);
+          setMatchesLastSyncedAt(Date.now());
         } else if (data?.allDataCollected === "true") {
           setMatches([]);
           setHasDatacollected(true);
+          setMatchesLastSyncedAt(Date.now());
         } else {
           setMatches([]);
           setHasDatacollected(false);
@@ -466,9 +546,11 @@ export default function ChatBox({
     ) {
       setMatches(data?.matchesWithObjectIds);
       setHasDatacollected(true);
+      setMatchesLastSyncedAt(Date.now());
     } else if (data?.allDataCollected === "true") {
       setMatches([]);
       setHasDatacollected(true);
+      setMatchesLastSyncedAt(Date.now());
     } else if (data?.allDataCollected === "false") {
       setHasDatacollected(false);
     }
@@ -511,9 +593,8 @@ export default function ChatBox({
           <div className="relative">
             <div className="h-6 w-6 rounded-full border-2 border-border"></div>
             <div
-              className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${
-                !primaryBrandHex ? "border-t-[#59646F]" : ""
-              }`}
+              className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${!primaryBrandHex ? "border-t-[#59646F]" : ""
+                }`}
               style={
                 primaryBrandHex
                   ? { borderTopColor: primaryBrandHex }
@@ -534,9 +615,8 @@ export default function ChatBox({
           <div className="relative">
             <div className="h-6 w-6 rounded-full border-2 border-border"></div>
             <div
-              className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${
-                !primaryBrandHex ? "border-t-[#59646F]" : ""
-              }`}
+              className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${!primaryBrandHex ? "border-t-[#59646F]" : ""
+                }`}
               style={
                 primaryBrandHex
                   ? { borderTopColor: primaryBrandHex }
@@ -590,46 +670,47 @@ export default function ChatBox({
       : currentChatType?.split("_").join(" ").toUpperCase() || "";
 
   return (
-    <div className="font-baloo mx-auto flex h-full min-h-0 w-full max-w-full overflow-hidden rounded-xl bg-background p-2 md:w-3/5 md:p-4">
-      <div className="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
-        <div className="rounded-xl w-full p-1 md:p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
-          {/* Logo + role badges only (brand name is in the navbar on /chats and /community). */}
-          <div className="flex-2 my-4 flex min-h-0 flex-col items-center justify-center md:mb-8 md:mt-4 md:flex-row md:items-center md:gap-4 md:px-2">
-            <img
-              src={brandContext?.logoUrl}
-              alt=""
-              className="h-[65px] w-[65px] flex-shrink-0 rounded-full object-cover"
-            />
-            <div className="flex flex-col items-center md:items-start">
-              <div className="my-2 flex border border-border font-baloo">
-                <button
-                  type="button"
-                  className="cursor-default bg-foreground px-1.5 py-0.5 text-background"
-                  disabled
-                >
-                  {firstHeaderBadge}
-                </button>
-                <button
-                  type="button"
-                  className="cursor-default border border-border bg-background px-1.5 py-0.5 text-foreground"
-                  disabled
-                >
-                  {secondHeaderBadge}
-                </button>
+    <>
+      <div className="font-baloo mx-auto flex h-full min-h-0 w-full max-w-full overflow-hidden rounded-xl bg-background p-2 md:w-3/5 md:p-4">
+        <div className="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div className="rounded-xl w-full p-1 md:p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
+            {/* Logo + role badges only (brand name is in the navbar on /chats and /community). */}
+            <div className="flex-2 my-4 flex min-h-0 flex-col items-center justify-center md:mb-8 md:mt-4 md:flex-row md:items-center md:gap-4 md:px-2">
+              <img
+                src={brandContext?.logoUrl}
+                alt=""
+                className="h-[65px] w-[65px] flex-shrink-0 rounded-full object-cover"
+              />
+              <div className="flex flex-col items-center md:items-start">
+                <div className="my-2 flex border border-border font-baloo">
+                  <button
+                    type="button"
+                    className="cursor-default bg-foreground px-1.5 py-0.5 text-background"
+                    disabled
+                  >
+                    {firstHeaderBadge}
+                  </button>
+                  <button
+                    type="button"
+                    className="cursor-default border border-border bg-background px-1.5 py-0.5 text-foreground"
+                    disabled
+                  >
+                    {secondHeaderBadge}
+                  </button>
+                </div>
               </div>
             </div>
-          </div>
 
-          {showOnboardingProgress && (
+            {showOnboardingProgress && (
               <div className="mb-2 flex w-full shrink-0 justify-start px-1 md:mb-3 md:px-2">
                 <div
                   className="inline-flex items-baseline gap-0.5 rounded-md border border-border/45 bg-muted/35 px-2.5 py-1 text-[13px] italic tabular-nums shadow-sm backdrop-blur-[2px] dark:border-border/35 dark:bg-muted/25"
                   style={
                     primaryBrandHex
                       ? {
-                          borderLeftWidth: 3,
-                          borderLeftColor: primaryBrandHex,
-                        }
+                        borderLeftWidth: 3,
+                        borderLeftColor: primaryBrandHex,
+                      }
                       : undefined
                   }
                 >
@@ -644,329 +725,374 @@ export default function ChatBox({
               </div>
             )}
 
-          {/* Messages Section - flex-2, scrollable */}
-          <div className="flex-[4] min-h-0 overflow-y-scroll overflow-x-hidden scrollbar-none">
-            {/* <div className="flex flex-col gap-2 min-h-full justify-end"> */}
-            {currentChatId &&
-              messages.length > 0 &&
-              messages.map((m, i) => (
-                <div
-                  key={i}
-                  className={`mb-4 w-full min-w-0 ${
-                    m.role === "user"
+            {/* Messages Section - flex-2, scrollable */}
+            <div className="flex-[4] min-h-0 overflow-y-scroll overflow-x-hidden scrollbar-none">
+              {/* <div className="flex flex-col gap-2 min-h-full justify-end"> */}
+              {currentChatId &&
+                messages.length > 0 &&
+                messages.map((m, i) => (
+                  <div
+                    key={i}
+                    className={`mb-4 w-full min-w-0 ${m.role === "user"
                       ? "flex flex-col items-end"
                       : "flex flex-col items-start"
-                  }`}
-                >
-                  {i === retryIndex && retry && (
-                    <button
-                      onClick={() => handleSubmit(null, true)}
-                      className="text-xs text-red-500 hover:text-red-700 underline mb-1"
-                    >
-                      Retry
-                    </button>
-                  )}
-                  {m.role === "user" ? (
-                    <div className="flex justify-end w-full min-w-0">
-                      <div
-                        className="text-sm text-white font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%]"
-                        style={{
-                          backgroundColor:
-                            primaryBrandHex || "#004A4E",
-                        }}
+                      }`}
+                  >
+                    {i === retryIndex && retry && (
+                      <button
+                        onClick={() => handleSubmit(null, true)}
+                        className="text-xs text-red-500 hover:text-red-700 underline mb-1"
                       >
-                        {m.message}
+                        Retry
+                      </button>
+                    )}
+                    {m.role === "user" ? (
+                      <div className="flex justify-end w-full min-w-0">
+                        <div
+                          className="text-sm text-white font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%]"
+                          style={{
+                            backgroundColor:
+                              primaryBrandHex || "#004A4E",
+                          }}
+                        >
+                          {m.message}
+                        </div>
                       </div>
-                    </div>
-                  ) : (
-                    <div className="flex gap-1.5 md:gap-2 items-end w-full min-w-0">
-                      <div className="flex flex-col justify-end flex-shrink-0">
-                        <img
-                          src={brandContext?.logoUrl}
-                          className="rounded-full w-[32px] h-[32px] md:w-[40px] md:h-[40px] min-w-[32px] min-h-[32px] md:min-w-[40px] md:min-h-[40px] object-cover shadow-sm flex-shrink-0"
-                        />
+                    ) : (
+                      <div className="flex gap-1.5 md:gap-2 items-end w-full min-w-0">
+                        <div className="flex flex-col justify-end flex-shrink-0">
+                          <img
+                            src={brandContext?.logoUrl}
+                            className="rounded-full w-[32px] h-[32px] md:w-[40px] md:h-[40px] min-w-[32px] min-h-[32px] md:min-w-[40px] md:min-h-[40px] object-cover shadow-sm flex-shrink-0"
+                          />
+                        </div>
+                        <div className="text-sm font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-muted-bg min-w-0">
+                          <FormatText text={m.message} />
+                        </div>
                       </div>
-                      <div className="text-sm font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-muted-bg min-w-0">
-                        <FormatText text={m.message} />
-                      </div>
-                    </div>
-                  )}
+                    )}
 
-                  {/* Show requery for user messages */}
-                  {/* {m.role === "user" && m.requery && (
+                    {/* Show requery for user messages */}
+                    {/* {m.role === "user" && m.requery && (
                     <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0">
                       <p className="text-xs text-muted italic break-words">
                         🔍 {m.requery}
                       </p>
                     </div>
                   )} */}
-                  {/* Show sources for assistant messages */}
-                  {m.role === "assistant" &&
-                    (m.sourceCards?.length > 0 || m.sourceUrls?.length > 0) && (
-                      <div className="mt-1.5 w-full min-w-0">
-                        {m.sourceCards?.length > 0 ? (
-                          <AssistantSourceCards
-                            items={m.sourceCards}
-                            primaryHex={primaryBrandHex}
+                    {/* Show sources for assistant messages */}
+                    {m.role === "assistant" &&
+                      (m.sourceCards?.length > 0 || m.sourceUrls?.length > 0) && (
+                        <div className="mt-1.5 w-full min-w-0">
+                          {m.sourceCards?.length > 0 ? (
+                            <AssistantSourceCards
+                              items={m.sourceCards}
+                              primaryHex={primaryBrandHex}
+                            />
+                          ) : (
+                            <div className="flex flex-wrap gap-1.5">
+                              <span className="text-xs text-muted">
+                                📚 Links:
+                              </span>
+                              {m.sourceUrls.map((url, idx) => (
+                                <a
+                                  key={idx}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-800 hover:underline"
+                                >
+                                  {url.length > 30
+                                    ? `${url.slice(0, 30)}...`
+                                    : url}
+                                </a>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    {m.role === "assistant" &&
+                      currentChatType?.toLowerCase() === "lead_journey" && (
+                        <div className="mt-1.5 w-full min-w-0 max-w-[90%] sm:max-w-[60%]">
+                          <AssistantReplyCopyButton
+                            message={m.message}
+                            sourceCards={m.sourceCards}
+                            sourceUrls={m.sourceUrls}
+                            readMoreUrl={brandContext?.assistantCopyReadMoreUrl}
+                            brandSubdomain={brandContext?.subdomain}
                           />
-                        ) : (
-                          <div className="flex flex-wrap gap-1.5">
-                            <span className="text-xs text-muted">
-                              📚 Links:
-                            </span>
-                            {m.sourceUrls.map((url, idx) => (
-                              <a
-                                key={idx}
-                                href={url}
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-800 hover:underline"
-                              >
-                                {url.length > 30
-                                  ? `${url.slice(0, 30)}...`
-                                  : url}
-                              </a>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                    )}
-                  {m.role === "assistant" &&
-                    currentChatType?.toLowerCase() === "lead_journey" && (
-                      <div className="mt-1.5 w-full min-w-0 max-w-[90%] sm:max-w-[60%]">
-                        <AssistantReplyCopyButton
-                          message={m.message}
-                          sourceCards={m.sourceCards}
-                          sourceUrls={m.sourceUrls}
-                          readMoreUrl={brandContext?.assistantCopyReadMoreUrl}
-                          brandSubdomain={brandContext?.subdomain}
-                        />
-                      </div>
-                    )}
-                  {/* Show payment QR code for personal_call intent */}
-                  {m.role === "assistant" &&
-                    m.intent === "personal_call" &&
-                    brandContext?.acceptPayment &&
-                    brandContext?.paymentQrUrl && (
-                      <div className="mt-3 max-w-[90%] sm:max-w-[60%] min-w-0">
-                        <img
-                          src={brandContext.paymentQrUrl}
-                          alt="Payment QR Code"
-                          className="w-48 h-48 object-contain border border-border rounded-lg shadow-sm bg-card p-2"
-                        />
-                      </div>
-                    )}
-                </div>
-              ))}
-            {messageLoading && (
-              <ChatThinkingRow
-                className="mb-4"
-                displayName={brandContext?.brandName}
-                primaryColor={brandContext?.primaryBrandColor}
-              />
-            )}
-
-            {hasDatacollected && (
-              <Matches
-                currentChatId={currentChatId}
-                matches={matches}
-                openChatSession={openChatSession}
-              />
-            )}
-            <div ref={endOfMessagesRef}></div>
-            {/* </div> */}
-          </div>
-          {/* Initial questions: ONLY for lead_journey */}
-          {currentChatType?.toLowerCase() === "lead_journey" &&
-            messages.length <= 1 &&
-            (() => {
-              const service = brandContext?.services?.find(
-                (s) => s._key === serviceKey,
-              );
-              const questions = (service?.introquestions || [])
-                .slice(0, 5)
-                .filter(Boolean);
-              if (questions.length === 0) return null;
-              const scrollStep = 240;
-              const scrollLeft = () =>
-                suggestedQuestionsScrollRef.current?.scrollBy({ left: -scrollStep, behavior: "smooth" });
-              const scrollRight = () =>
-                suggestedQuestionsScrollRef.current?.scrollBy({ left: scrollStep, behavior: "smooth" });
-              return (
-                <div className="flex items-center gap-1 py-2">
-                  <button
-                    type="button"
-                    onClick={scrollLeft}
-                    aria-label="Scroll suggested questions left"
-                    className="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full border border-border bg-muted-bg hover:bg-border/30 text-foreground transition-colors"
-                  >
-                    <ChevronLeft className="w-5 h-5" />
-                  </button>
-                  <div
-                    ref={suggestedQuestionsScrollRef}
-                    className="flex overflow-x-auto gap-2 flex-1 min-w-0 flex-nowrap overflow-y-hidden scrollbar-thin scroll-smooth"
-                  >
-                    {questions.map((q, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => handleSubmit(String(q).trim())}
-                        className="text-left px-3 py-2 rounded-xl border border-border bg-muted-bg hover:bg-border/30 text-foreground text-xs transition-colors flex-shrink-0 min-w-0 max-w-[85vw] md:max-w-[320px] whitespace-normal"
-                      >
-                        {q}
-                      </button>
-                    ))}
+                        </div>
+                      )}
+                    {/* Show payment QR code for personal_call intent */}
+                    {m.role === "assistant" &&
+                      m.intent === "personal_call" &&
+                      brandContext?.acceptPayment &&
+                      brandContext?.paymentQrUrl && (
+                        <div className="mt-3 max-w-[90%] sm:max-w-[60%] min-w-0">
+                          <img
+                            src={brandContext.paymentQrUrl}
+                            alt="Payment QR Code"
+                            className="w-48 h-48 object-contain border border-border rounded-lg shadow-sm bg-card p-2"
+                          />
+                        </div>
+                      )}
                   </div>
-                  <button
-                    type="button"
-                    onClick={scrollRight}
-                    aria-label="Scroll suggested questions right"
-                    className="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full border border-border bg-muted-bg hover:bg-border/30 text-foreground transition-colors"
-                  >
-                    <ChevronRight className="w-5 h-5" />
-                  </button>
-                </div>
-              );
-            })()}
-          {/* Textarea Section - flex-1 */}
-          <div className="flex-1 min-h-0 flex flex-col border-border pt-2">
-            <form
-              className="relative w-full flex-1 flex flex-col min-h-0"
-              onSubmit={(e) => {
-                e.preventDefault();
-                handleSubmit();
-              }}
-            >
-              <textarea
-                className="px-12 py-3 w-full flex-1 border border-border rounded-xl focus:outline-none focus:ring-0 focus:border-ring transition bg-input text-foreground leading-6 resize-none placeholder-transparent min-h-0"
-                value={input}
-                onChange={(e) => setInput(e.target.value)}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && !e.shiftKey) {
-                    e.preventDefault();
-                    handleSubmit();
-                  }
-                }}
-                placeholder={`Message ${brandContext?.brandName}…`}
-                disabled={messageLoading}
-              />
-
-              {(!input || input.trim().length === 0) && (
-                <div className="pointer-events-none absolute inset-y-0 left-12 right-20 flex items-center text-muted text-sm">
-                  Message {brandContext?.brandName}…
-                </div>
+                ))}
+              {messageLoading && (
+                <ChatThinkingRow
+                  className="mb-4"
+                  displayName={brandContext?.brandName}
+                  primaryColor={brandContext?.primaryBrandColor}
+                />
               )}
 
-              <label className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted hover:text-foreground transition-colors">
-                <input
-                  type="file"
-                  accept=".pdf,.docx"
-                  onChange={(e) => setSelectedFile(e.target.files[0])}
-                  className="hidden"
+              {eligibleForMatches && (
+                <Matches
+                  currentChatId={currentChatId}
+                  matches={matches}
+                  handleConnect={handleConnect}
+                  paidConnectedUserIds={paidConnectedUserIds}
+                  onRefresh={handleRefreshMatches}
+                  lastSyncedAt={matchesLastSyncedAt}
+                  refreshing={matchesRefreshing}
                 />
-                <span
-                  className="hover:scale-110 transition-transform"
-                  title={
-                    resumeData?.filename
-                      ? "Reselect"
-                      : brandContext?.isBrandAdmin
-                        ? "Share JD"
-                        : "Upload Resume"
-                  }
-                >
-                  <Paperclip className="w-5 h-5" />
-                </span>
-              </label>
-
-              <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                <div className="relative">
-                  {isTranscribing && (
-                    <div className="absolute bottom-full mb-2 right-0 z-10">
-                      <div className="relative bg-card border border-border rounded-md shadow px-3 py-1.5 text-xs text-foreground">
-                        Transcribing…
-                        <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-border rotate-45"></div>
-                      </div>
+              )}
+              <div ref={endOfMessagesRef}></div>
+              {/* </div> */}
+            </div>
+            {/* Initial questions: ONLY for lead_journey */}
+            {currentChatType?.toLowerCase() === "lead_journey" &&
+              messages.length <= 1 &&
+              (() => {
+                const service = brandContext?.services?.find(
+                  (s) => s._key === serviceKey,
+                );
+                const questions = (service?.introquestions || [])
+                  .slice(0, 5)
+                  .filter(Boolean);
+                if (questions.length === 0) return null;
+                const scrollStep = 240;
+                const scrollLeft = () =>
+                  suggestedQuestionsScrollRef.current?.scrollBy({ left: -scrollStep, behavior: "smooth" });
+                const scrollRight = () =>
+                  suggestedQuestionsScrollRef.current?.scrollBy({ left: scrollStep, behavior: "smooth" });
+                return (
+                  <div className="flex items-center gap-1 py-2">
+                    <button
+                      type="button"
+                      onClick={scrollLeft}
+                      aria-label="Scroll suggested questions left"
+                      className="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full border border-border bg-muted-bg hover:bg-border/30 text-foreground transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <div
+                      ref={suggestedQuestionsScrollRef}
+                      className="flex overflow-x-auto gap-2 flex-1 min-w-0 flex-nowrap overflow-y-hidden scrollbar-thin scroll-smooth"
+                    >
+                      {questions.map((q, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => handleSubmit(String(q).trim())}
+                          className="text-left px-3 py-2 rounded-xl border border-border bg-muted-bg hover:bg-border/30 text-foreground text-xs transition-colors flex-shrink-0 min-w-0 max-w-[85vw] md:max-w-[320px] whitespace-normal"
+                        >
+                          {q}
+                        </button>
+                      ))}
                     </div>
-                  )}
-                  {transcribeError && (
-                    <div className="absolute bottom-full mb-2 right-0 z-10">
-                      <div className="relative bg-card border border-red-300 rounded-md shadow px-3 py-1.5 text-xs text-red-600">
-                        {transcribeError}
-                        <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-red-300 rotate-45"></div>
-                      </div>
-                    </div>
-                  )}
-                  {transcriptText && (
-                    <div className="absolute bottom-full mb-2 right-0 z-10 w-[min(80vw,28rem)]">
-                      <div className="relative bg-card border border-border rounded-lg p-3 shadow">
-                        <div className="text-xs text-muted mb-1">
-                          Voice transcript
-                        </div>
-                        <div className="text-foreground text-sm whitespace-pre-wrap break-words max-h-40 overflow-auto">
-                          {transcriptText}
-                        </div>
-                        <div className="mt-2 flex gap-2 justify-end">
-                          <button
-                            onClick={() => handleSubmit(transcriptText)}
-                            className="px-3 py-1.5 rounded-md bg-orange-600 text-white hover:bg-orange-700 text-xs"
-                            type="button"
-                          >
-                            Send
-                          </button>
-                          <button
-                            onClick={() => setTranscriptText("")}
-                            className="px-3 py-1.5 rounded-md border border-border text-foreground hover:bg-muted-bg text-xs"
-                            type="button"
-                          >
-                            Discard
-                          </button>
-                        </div>
-                        <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-border rotate-45"></div>
-                      </div>
-                    </div>
-                  )}
-                  <button
-                    type="button"
-                    onClick={() =>
-                      isRecording ? stopRecording() : startRecording()
+                    <button
+                      type="button"
+                      onClick={scrollRight}
+                      aria-label="Scroll suggested questions right"
+                      className="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full border border-border bg-muted-bg hover:bg-border/30 text-foreground transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                );
+              })()}
+            {/* Textarea Section - flex-1 */}
+            <div className="flex-1 min-h-0 flex flex-col border-border pt-2">
+              <form
+                className="relative w-full flex-1 flex flex-col min-h-0"
+                onSubmit={(e) => {
+                  e.preventDefault();
+                  handleSubmit();
+                }}
+              >
+                <textarea
+                  className="px-12 py-3 w-full flex-1 border border-border rounded-xl focus:outline-none focus:ring-0 focus:border-ring transition bg-input text-foreground leading-6 resize-none placeholder-transparent min-h-0"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit();
                     }
-                    className="p-2 rounded-lg hover:bg-muted-bg transition-colors"
-                    title={isRecording ? "Stop recording" : "Start recording"}
+                  }}
+                  placeholder={`Message ${brandContext?.brandName}…`}
+                  disabled={messageLoading}
+                />
+
+                {(!input || input.trim().length === 0) && (
+                  <div className="pointer-events-none absolute inset-y-0 left-12 right-20 flex items-center text-muted text-sm">
+                    Message {brandContext?.brandName}…
+                  </div>
+                )}
+
+                <label className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted hover:text-foreground transition-colors">
+                  <input
+                    type="file"
+                    accept=".pdf,.docx"
+                    onChange={(e) => setSelectedFile(e.target.files[0])}
+                    className="hidden"
+                  />
+                  <span
+                    className="hover:scale-110 transition-transform"
+                    title={
+                      resumeData?.filename
+                        ? "Reselect"
+                        : brandContext?.isBrandAdmin
+                          ? "Share JD"
+                          : "Upload Resume"
+                    }
                   >
-                    {isRecording ? (
-                      <Mic className="w-5 h-5 text-red-600" />
-                    ) : (
-                      <MicOff className="w-5 h-5 text-muted" />
+                    <Paperclip className="w-5 h-5" />
+                  </span>
+                </label>
+
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  <div className="relative">
+                    {isTranscribing && (
+                      <div className="absolute bottom-full mb-2 right-0 z-10">
+                        <div className="relative bg-card border border-border rounded-md shadow px-3 py-1.5 text-xs text-foreground">
+                          Transcribing…
+                          <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-border rotate-45"></div>
+                        </div>
+                      </div>
                     )}
-                  </button>
-                </div>
-                <button
-                  type="submit"
-                  disabled={!input.trim() || messageLoading}
-                  className={`inline-flex items-center justify-center p-2 rounded-lg ${
-                    !input.trim() || messageLoading
+                    {transcribeError && (
+                      <div className="absolute bottom-full mb-2 right-0 z-10">
+                        <div className="relative bg-card border border-red-300 rounded-md shadow px-3 py-1.5 text-xs text-red-600">
+                          {transcribeError}
+                          <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-red-300 rotate-45"></div>
+                        </div>
+                      </div>
+                    )}
+                    {transcriptText && (
+                      <div className="absolute bottom-full mb-2 right-0 z-10 w-[min(80vw,28rem)]">
+                        <div className="relative bg-card border border-border rounded-lg p-3 shadow">
+                          <div className="text-xs text-muted mb-1">
+                            Voice transcript
+                          </div>
+                          <div className="text-foreground text-sm whitespace-pre-wrap break-words max-h-40 overflow-auto">
+                            {transcriptText}
+                          </div>
+                          <div className="mt-2 flex gap-2 justify-end">
+                            <button
+                              onClick={() => handleSubmit(transcriptText)}
+                              className="px-3 py-1.5 rounded-md bg-orange-600 text-white hover:bg-orange-700 text-xs"
+                              type="button"
+                            >
+                              Send
+                            </button>
+                            <button
+                              onClick={() => setTranscriptText("")}
+                              className="px-3 py-1.5 rounded-md border border-border text-foreground hover:bg-muted-bg text-xs"
+                              type="button"
+                            >
+                              Discard
+                            </button>
+                          </div>
+                          <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-border rotate-45"></div>
+                        </div>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        isRecording ? stopRecording() : startRecording()
+                      }
+                      className="p-2 rounded-lg hover:bg-muted-bg transition-colors"
+                      title={isRecording ? "Stop recording" : "Start recording"}
+                    >
+                      {isRecording ? (
+                        <Mic className="w-5 h-5 text-red-600" />
+                      ) : (
+                        <MicOff className="w-5 h-5 text-muted" />
+                      )}
+                    </button>
+                  </div>
+                  <button
+                    type="submit"
+                    disabled={!input.trim() || messageLoading}
+                    className={`inline-flex items-center justify-center p-2 rounded-lg ${!input.trim() || messageLoading
                       ? "bg-muted-bg text-muted cursor-not-allowed"
                       : "bg-[#59646F] text-[#FFEED8] hover:bg-[#4a5568] active:scale-95"
-                  } transition-all`}
-                  title="Send message"
-                >
-                  <Send className="w-5 h-5" />
-                </button>
-              </div>
-            </form>
+                      } transition-all`}
+                    title="Send message"
+                  >
+                    <Send className="w-5 h-5" />
+                  </button>
+                </div>
+              </form>
+            </div>
+            {/* Keep Resume component for file display and processing, but hidden file input */}
+            <Resume
+              resumeData={resumeData}
+              updateResume={updateResume}
+              currentChatId={currentChatId}
+              onResumeUpload={onResumeUpload}
+              hideFileInput={true}
+              selectedFile={selectedFile}
+              setSelectedFile={setSelectedFile}
+            />
           </div>
-          {/* Keep Resume component for file display and processing, but hidden file input */}
-          <Resume
-            resumeData={resumeData}
-            updateResume={updateResume}
-            currentChatId={currentChatId}
-            onResumeUpload={onResumeUpload}
-            hideFileInput={true}
-            selectedFile={selectedFile}
-            setSelectedFile={setSelectedFile}
-          />
         </div>
       </div>
-    </div>
+      {connectingToUserId && (
+        <div className="fixed inset-0 z-[65] flex items-center justify-center bg-black/40">
+          <div className="flex flex-col items-center gap-3 rounded-xl border border-border bg-card px-8 py-6 shadow-xl">
+            <div className="relative">
+              <div className="h-10 w-10 rounded-full border-4 border-border" />
+              <div
+                className={`absolute inset-0 h-10 w-10 animate-spin rounded-full border-4 border-transparent ${!primaryBrandHex ? "border-t-highlight" : ""
+                  }`}
+                style={
+                  primaryBrandHex
+                    ? { borderTopColor: primaryBrandHex }
+                    : undefined
+                }
+              />
+            </div>
+            <span
+              className={`text-sm font-medium ${!primaryBrandHex ? "text-highlight" : ""}`}
+              style={primaryBrandHex ? { color: primaryBrandHex } : undefined}
+            >
+              Connecting...
+            </span>
+          </div>
+        </div>
+      )}
+      {openChat && userA && userB && (
+        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/30 p-0 sm:items-center sm:p-4">
+          <div className="flex h-[85vh] max-h-[100vh] w-full flex-col overflow-hidden rounded-t-xl border border-border bg-background shadow-2xl sm:h-[80vh] sm:max-w-lg sm:rounded-xl">
+            <LiveChat
+              userA={userA}
+              userB={userB}
+              currentUserId={user?.id}
+              onClose={() => {
+                setOpenChat(false);
+                setLiveChatOtherDisplayName(null);
+              }}
+              connectionId={connectionId}
+              isEmbedded={true}
+              otherUserDisplayName={liveChatOtherDisplayName}
+            />
+          </div>
+        </div>
+      )}
+    </>
   );
 }
