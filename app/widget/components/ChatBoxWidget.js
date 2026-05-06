@@ -109,6 +109,8 @@ export default function ChatBoxWidget({
   );
   const effectiveUser = firebaseUser || widgetUser;
   const endRef = useRef(null);
+  const messagesScrollRef = useRef(null);
+  const shouldStickToBottomRef = useRef(true);
   const primaryHex = normalizeBrandHex(primaryColor);
   /** User message bubbles use brand primary when set. */
   const userBubbleHex = primaryHex;
@@ -299,8 +301,25 @@ export default function ChatBoxWidget({
     setIntroQuestionIndex(0);
   }, [activeSessionId, introQuestions.length]);
 
+  const updateStickyFromScroll = useCallback(() => {
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    const distanceFromBottom = el.scrollHeight - (el.scrollTop + el.clientHeight);
+    shouldStickToBottomRef.current = distanceFromBottom < 120;
+  }, []);
+
   useEffect(() => {
-    endRef.current?.scrollIntoView({ behavior: "smooth" });
+    if (!shouldStickToBottomRef.current) return;
+    const el = messagesScrollRef.current;
+    if (!el) {
+      // Fallback if ref isn't ready yet.
+      endRef.current?.scrollIntoView({ behavior: "auto" });
+      return;
+    }
+    // Instant "stick-to-bottom" avoids smooth-scroll-triggered viewport resize jitter.
+    requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+    });
   }, [messages]);
 
   useEffect(() => {
@@ -547,6 +566,14 @@ export default function ChatBoxWidget({
     const userMsg = { role: "user", message: text, requery: null, id: null };
     const historyToUse = [...messages, userMsg];
     setMessages(historyToUse);
+    // If the user is sending a message, always jump to bottom (even if they had scrolled up).
+    shouldStickToBottomRef.current = true;
+    const el = messagesScrollRef.current;
+    if (el) {
+      requestAnimationFrame(() => {
+        el.scrollTop = el.scrollHeight;
+      });
+    }
     setSendLoading(true);
 
     const rollbackFailedSend = () => {
@@ -1002,7 +1029,13 @@ export default function ChatBoxWidget({
 
         {activeSessionId && chatRole === LEAD_JOURNEY_ROLE && !logsLoading && (
           <>
-            <div className="scrollbar-thin min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden bg-muted-bg/20 p-3 dark:bg-muted-bg/10 md:rounded-b-xl">
+            <div
+              ref={messagesScrollRef}
+              onScroll={updateStickyFromScroll}
+              onWheel={updateStickyFromScroll}
+              onTouchMove={updateStickyFromScroll}
+              className="scrollbar-thin min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden bg-muted-bg/20 p-3 dark:bg-muted-bg/10 md:rounded-b-xl"
+            >
               {messages.length === 0 && !logsLoading && (
                 <p className="py-8 text-center text-xs text-muted">
                   {introQuestions.length > 0
