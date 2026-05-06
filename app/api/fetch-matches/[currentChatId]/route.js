@@ -29,11 +29,19 @@ export async function GET(req, { params }) {
         String(m.matchedUserId || "") !== uid &&
         (m.matchedUserEmail || "").toLowerCase() !== email
     );
-    let allDataCollected = false;
-    if (chatSession) {
-      allDataCollected = chatSession.allDataCollected;
-    }
-    return NextResponse.json({ matches, allDataCollected });
+    const MATCH_ELIGIBLE_ONBOARDING_PERCENT = 40;
+    const allDataCollected = chatSession?.allDataCollected === true;
+    const onboardingPercent = allDataCollected
+      ? 100
+      : Math.max(0, Math.min(100, Number(chatSession?.onboardingPercent) || 0));
+    const eligibleForMatches =
+      allDataCollected || onboardingPercent >= MATCH_ELIGIBLE_ONBOARDING_PERCENT;
+    return NextResponse.json({
+      matches,
+      allDataCollected,
+      onboardingPercent,
+      eligibleForMatches,
+    });
   } catch (error) {
     return NextResponse.json({ error: error.message }, { status: 500 });
   }

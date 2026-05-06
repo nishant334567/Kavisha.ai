@@ -16,7 +16,19 @@ export async function GET(req, { params }) {
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
-    return NextResponse.json({ allDataCollected: !!session.allDataCollected });
+    const MATCH_ELIGIBLE_ONBOARDING_PERCENT = 40;
+    const onboardingPercent =
+      session.allDataCollected === true
+        ? 100
+        : Math.max(0, Math.min(100, Number(session.onboardingPercent) || 0));
+    const eligibleForMatches =
+      session.allDataCollected === true ||
+      onboardingPercent >= MATCH_ELIGIBLE_ONBOARDING_PERCENT;
+    return NextResponse.json({
+      allDataCollected: !!session.allDataCollected,
+      onboardingPercent,
+      eligibleForMatches,
+    });
   } catch (error) {
     return NextResponse.json(
       { error: "Internal server error" },

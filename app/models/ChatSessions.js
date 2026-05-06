@@ -87,6 +87,11 @@ const ChatSessionsSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    /** Daily community match digest: last time an email was successfully sent */
+    communityMatchDigestLastSentAt: {
+      type: Date,
+      required: false,
+    },
   },
   {
     timestamps: true, // This automatically adds createdAt and updatedAt fields

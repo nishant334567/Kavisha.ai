@@ -15,6 +15,7 @@ export default function CommunityCard({
     isOwnPost = false,
     primaryBrandColor = null,
     secondaryBrandColor = null,
+    showLookingForPill = true,
 }) {
     const [showDialog, setShowDialog] = useState(false);
     const [showConfirmModal, setShowConfirmModal] = useState(false);
@@ -49,44 +50,48 @@ export default function CommunityCard({
                     >
                         {name}
                     </p>
-                    <div className="inline-flex items-center gap-2 shrink-0 self-start">
-                        {isOwnPost && (
-                            <span
-                                className={
-                                    secondaryBrandColor
-                                        ? "rounded-full border px-2 sm:px-2.5 py-1 text-xs sm:text-sm"
-                                        : "rounded-full border border-emerald-200 bg-emerald-50 px-2 sm:px-2.5 py-1 text-xs sm:text-sm text-emerald-700"
-                                }
-                                style={
-                                    secondaryBrandColor
-                                        ? {
-                                              borderColor: hexToRgba(secondaryBrandColor, 0.45),
-                                              backgroundColor: hexToRgba(secondaryBrandColor, 0.12),
-                                              color: secondaryBrandColor,
-                                          }
-                                        : undefined
-                                }
-                            >
-                                You posted
-                            </span>
-                        )}
-                        <div className="inline-flex rounded-full border border-border bg-muted-bg overflow-hidden">
-                            <span className="px-2 sm:px-2.5 py-1 text-xs sm:text-sm text-foreground">Looking for</span>
-                            <span
-                                className={`px-2 sm:px-2.5 py-1 text-xs sm:text-sm bg-background ${!secondaryBrandColor ? "text-foreground" : ""}`}
-                                style={
-                                    secondaryBrandColor
-                                        ? {
-                                              color: secondaryBrandColor,
-                                              backgroundColor: hexToRgba(secondaryBrandColor, 0.14),
-                                          }
-                                        : undefined
-                                }
-                            >
-                                {requirement || "—"}
-                            </span>
+                    {(isOwnPost || showLookingForPill) && (
+                        <div className="inline-flex items-center gap-2 shrink-0 self-start">
+                            {isOwnPost && (
+                                <span
+                                    className={
+                                        secondaryBrandColor
+                                            ? "rounded-full border px-2 sm:px-2.5 py-1 text-xs sm:text-sm"
+                                            : "rounded-full border border-emerald-200 bg-emerald-50 px-2 sm:px-2.5 py-1 text-xs sm:text-sm text-emerald-700"
+                                    }
+                                    style={
+                                        secondaryBrandColor
+                                            ? {
+                                                  borderColor: hexToRgba(secondaryBrandColor, 0.45),
+                                                  backgroundColor: hexToRgba(secondaryBrandColor, 0.12),
+                                                  color: secondaryBrandColor,
+                                              }
+                                            : undefined
+                                    }
+                                >
+                                    You posted
+                                </span>
+                            )}
+                            {showLookingForPill && (
+                                <div className="inline-flex rounded-full border border-border bg-muted-bg overflow-hidden">
+                                    <span className="px-2 sm:px-2.5 py-1 text-xs sm:text-sm text-foreground">Looking for</span>
+                                    <span
+                                        className={`px-2 sm:px-2.5 py-1 text-xs sm:text-sm bg-background ${!secondaryBrandColor ? "text-foreground" : ""}`}
+                                        style={
+                                            secondaryBrandColor
+                                                ? {
+                                                      color: secondaryBrandColor,
+                                                      backgroundColor: hexToRgba(secondaryBrandColor, 0.14),
+                                                  }
+                                                : undefined
+                                        }
+                                    >
+                                        {requirement || "—"}
+                                    </span>
+                                </div>
+                            )}
                         </div>
-                    </div>
+                    )}
                 </div>
                 <p className="text-xs text-muted font-extralight mb-4 flex-1 min-h-0 line-clamp-3">{description || ""}</p>
                 <div className="flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-2 mt-auto">

@@ -3,6 +3,7 @@ import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { getUserFromDB } from "@/app/lib/firebase/get-user";
+import { maskCommunityPeerName } from "@/app/lib/communityPeerDisplayName";
 
 export async function GET(request) {
   return withAuth(request, {
@@ -39,19 +40,15 @@ export async function GET(request) {
           .sort({ createdAt: -1 })
           .lean();
 
-        const maskName = (name) => {
-          const raw = String(name || "").trim();
-          if (!raw) return "A";
-          return raw.charAt(0).toUpperCase();
-        };
-
         const usersMap = new Map();
 
         sessions.forEach((session) => {
           if (!session?.userId?._id) return;
           const userId = session.userId._id.toString();
           const isOwnPost = userId === user.id;
-          const displayName = isOwnPost ? (session.userId?.name || "You") : maskName(session.userId?.name);
+          const displayName = isOwnPost
+            ? session.userId?.name || "You"
+            : maskCommunityPeerName(session.userId?.name);
 
           if (!usersMap.has(userId)) {
             usersMap.set(userId, {
