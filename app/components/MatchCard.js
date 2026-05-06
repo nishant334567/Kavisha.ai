@@ -1,7 +1,8 @@
 "use client";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
-import React, { useEffect, useState } from "react";
 import { MessageSquare } from "lucide-react";
+import { useBrandContext } from "../context/brand/BrandContextProvider";
+import { normalizeBrandHex, hexToRgba } from "../lib/brandTheme";
 
 export default function MatchCard({
   type = 0,
@@ -22,16 +23,38 @@ export default function MatchCard({
   openChatSession,
 }) {
   const { user } = useFirebaseSession();
+  const brandContext = useBrandContext();
+  const primaryHex = normalizeBrandHex(brandContext?.primaryBrandColor);
+  const secondaryHex = normalizeBrandHex(brandContext?.secondaryBrandColor);
+  const accentText = secondaryHex || primaryHex;
+
+  const cardSurfaceStyle =
+    primaryHex != null
+      ? {
+          borderLeftWidth: 4,
+          borderLeftColor: primaryHex,
+          backgroundColor: hexToRgba(primaryHex, 0.08),
+        }
+      : undefined;
 
   return (
-    <div className="relative bg-card border border-border rounded-lg p-4 flex flex-col gap-2 min-h-[120px] w-full">
+    <div
+      className="relative rounded-lg border border-border bg-card p-4 flex flex-col gap-2 min-h-[120px] w-full"
+      style={cardSurfaceStyle}
+    >
       <div className="flex items-center justify-between">
-        <span className="font-semibold text-foreground text-sm">
+        <span
+          className="font-semibold text-sm text-foreground"
+          style={primaryHex ? { color: primaryHex } : undefined}
+        >
           Match: {matchPercentage || "-"}
         </span>
       </div>
       {matchedUserName && (
-        <div className="text-xs text-blue-600 font-medium">
+        <div
+          className={`text-xs font-medium ${!accentText ? "text-highlight" : ""}`}
+          style={accentText ? { color: accentText } : undefined}
+        >
           👤 {matchedUserName}
         </div>
       )}
@@ -39,17 +62,25 @@ export default function MatchCard({
         <div className="text-xs text-muted">📧 {matchedUserEmail}</div>
       )}
       {matchTitle && (
-        <div className="text-xs text-green-700 font-medium">{matchTitle}</div>
+        <div
+          className={`text-xs font-medium ${!accentText ? "text-highlight" : ""}`}
+          style={accentText ? { color: accentText } : undefined}
+        >
+          {matchTitle}
+        </div>
       )}
       {matchingReason && (
-        <div className="text-xs text-green-700 font-medium">
+        <div
+          className={`text-xs font-medium ${!accentText ? "text-highlight" : ""}`}
+          style={accentText ? { color: accentText } : undefined}
+        >
           {matchingReason.length > 150 && type != 1
             ? matchingReason.slice(0, 150) + "..."
             : matchingReason}
         </div>
       )}
       {mismatchReason && (
-        <div className="text-xs text-red-600">
+        <div className="text-xs text-red-600 dark:text-red-400">
           Mismatch:{" "}
           {mismatchReason.length > 150 && type != 1
             ? mismatchReason.slice(0, 150) + "..."
@@ -64,12 +95,15 @@ export default function MatchCard({
       <div className="flex text-xs gap-2">
         <div className="w-full relative">
           <button
+            type="button"
             onClick={() => openChatSession(user?.id, matchedUserId)}
-            className="w-full px-2 py-1 rounded-md flex items-center justify-center 
-            bg-orange-600 hover:bg-orange-700 transition-colors"
+            style={primaryHex ? { backgroundColor: primaryHex } : undefined}
+            className={`w-full px-2 py-1 rounded-md flex items-center justify-center text-white text-sm transition-opacity hover:opacity-90 disabled:opacity-50 ${
+              !primaryHex ? "bg-highlight" : ""
+            }`}
           >
-            <span className="text-white text-sm mr-2">Chat Now</span>
-            <MessageSquare className="w-4 h-4" />
+            <span className="mr-2">Chat Now</span>
+            <MessageSquare className="w-4 h-4 shrink-0" aria-hidden />
           </button>
         </div>
         {/* {type != 1 && (

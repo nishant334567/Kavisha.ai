@@ -17,24 +17,16 @@ POTENTIAL MATCHES [B]:
 ${allProvidersList}
 ---
 
-MATCHING CRITERIA (ALL MUST BE MET):
-1. **STRICT ROLE COMPATIBILITY**: Job titles must be in the SAME or DIRECTLY RELATED field/industry
-   - Musicians should only match with music/entertainment roles
-   - Tech roles should only match with tech positions
-   - Finance roles should only match with finance/business positions
-   - NO cross-industry matches (e.g., musician ≠ research intern, developer ≠ marketing intern)
-2. **SKILL ALIGNMENT**: Core skills and experience must overlap significantly (70%+)
-3. **INDUSTRY RELEVANCE**: Must be in the SAME industry or directly complementary
-4. **EXPERIENCE LEVEL**: Must be appropriate seniority match (no interns for senior roles, no senior roles for interns)
-5. **CAREER PROGRESSION**: Role should make sense for the person's career path
-6. **Location Preference**: Geographic compatibility (if mentioned)
-7. **Salary Expectations**: Reasonable alignment (if mentioned)
+MATCHING CRITERIA (PRIORITIZE REQUIREMENT SATISFACTION):
+1. **ROLE FIT (flexible)**: Prefer same or closely related roles, but ALLOW directly transferable roles when the requirements can realistically be met (e.g., teaching/training ↔ content writing/editing, customer success ↔ account management, operations ↔ program management). Avoid absurd mismatches.
+2. **SKILL ALIGNMENT**: Core skills/experience should overlap meaningfully (50%+). Focus on what the recruiter actually needs (domain knowledge, writing ability, communication, tools, etc.).
+3. **EXPERIENCE LEVEL**: Seniority must be plausible (no interns for senior roles; avoid extreme mismatches).
+4. **CONSTRAINTS**: Respect hard constraints if explicitly mentioned (location, salary/budget, language, years of experience).
+5. **CAREER LOGIC**: The move should make sense for the candidate (same domain, adjacent domain, or a clear transferable step).
 
-STRICT FILTERING RULES:
-- REJECT any match where roles are in completely different industries
-- REJECT any match where experience levels are vastly different (intern vs senior)
-- REJECT any match where the role doesn't align with the person's career trajectory
-- ONLY consider matches where there's genuine professional relevance
+FILTERING RULES:
+- REJECT only clearly irrelevant matches (e.g., surgeon ↔ frontend developer).
+- Be inclusive of adjacent roles when evidence supports a good fit.
 
 SCORING GUIDELINES:
 - 90-100%: Perfect match across all criteria with same industry
@@ -71,10 +63,9 @@ SAMPLE OUTPUT:
 ]
 
 CRITICAL IMPORTANT RULES:
-- ONLY return matches with 60%+ compatibility AND same industry
-- REJECT cross-industry matches completely (musician ≠ research intern, developer ≠ marketing intern)
+- ONLY return matches with 60%+ compatibility
 - REJECT inappropriate experience level matches (intern ≠ senior role)
-- Be extremely strict about role relevance - better to return fewer high-quality matches
+- Do not be overly strict on job titles; prioritize realistic fit based on requirements
 - Be specific and detailed in your reasoning
 - Address the user as "you" in explanations
 - Focus on concrete, actionable insights

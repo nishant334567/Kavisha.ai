@@ -21,9 +21,14 @@ export async function getMatches(userId, sessionId, role) {
         ? "recruiter"
         : "job_seeker";
 
+  const MATCH_ELIGIBLE_ONBOARDING_PERCENT = 40;
+
   const allProviders = await Session.find({
     role: oppositeRole,
-    allDataCollected: true,
+    $or: [
+      { allDataCollected: true },
+      { onboardingPercent: { $gte: MATCH_ELIGIBLE_ONBOARDING_PERCENT } },
+    ],
     chatSummary: { $exists: true, $ne: "" },
     _id: { $ne: sessionId },
     userId: { $ne: userId },
@@ -131,9 +136,4 @@ export async function getMatches(userId, sessionId, role) {
   }
 }
 
-// export async function GET(req, { params }) {
-//   const { sessionId } = await params;
-//   const response = await getMatches(sessionId);
 
-//   return NextResponse.json({ matches: response });
-// }
