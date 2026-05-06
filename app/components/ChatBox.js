@@ -173,13 +173,16 @@ export default function ChatBox({
       try {
         const response = await fetch(`/api/all-data-fetched/${currentChatId}`);
         const data = await response.json();
-        // if (typeof data?.allDataCollected === "boolean") {
-        //   setHasDatacollected(data.allDataCollected);
-        // }
+        if (typeof data?.allDataCollected === "boolean") {
+          setHasDatacollected(data.allDataCollected);
+        }
         if (typeof data?.eligibleForMatches === "boolean") {
           setEligibleForMatches(data.eligibleForMatches);
         } else if (typeof data?.onboardingPercent === "number") {
-          const pct = Math.max(0, Math.min(100, Number(data.onboardingPercent) || 0));
+          const pct = Math.max(
+            0,
+            Math.min(100, Number(data.onboardingPercent) || 0)
+          );
           setEligibleForMatches(Boolean(data?.allDataCollected) || pct >= 40);
         }
       } catch (error) { }

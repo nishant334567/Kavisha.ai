@@ -175,17 +175,17 @@ export default function AssistantReplyCopyButton({
         type="button"
         aria-label="Copy response"
         onClick={() => void handleCopy()}
-        className={`inline-flex items-center justify-center rounded-md bg-transparent p-2 text-[#000000] transition-colors hover:bg-[#e5e5e5] ${className}`.trim()}
+        className={`inline-flex items-center justify-center rounded-md bg-transparent p-2 text-foreground transition-colors hover:bg-black/[0.06] dark:hover:bg-white/[0.08] ${className}`.trim()}
       >
         {copied ? (
-          <Check className="h-4 w-4 shrink-0 text-[#000000]" strokeWidth={2} />
+          <Check className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2} />
         ) : (
-          <Copy className="h-4 w-4 shrink-0 text-[#000000]" strokeWidth={2} />
+          <Copy className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2} />
         )}
       </button>
       <span
         role="tooltip"
-        className="pointer-events-none absolute top-[calc(100%+8px)] left-1/2 z-30 -translate-x-1/2 whitespace-nowrap rounded-md bg-black/90 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-sm transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
+        className="pointer-events-none absolute left-1/2 top-[calc(100%+8px)] z-30 -translate-x-1/2 translate-x-3 whitespace-nowrap rounded-md bg-black/90 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-sm transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
       >
         Copy response
       </span>

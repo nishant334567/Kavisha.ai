@@ -140,6 +140,8 @@ export default function ChatBoxWidget({
   /** Set when POST /api/widget/session succeeds; enables one-time intro typewriter for that id. */
   const [introTypewriterSessionId, setIntroTypewriterSessionId] = useState(null);
   const [introQuestionIndex, setIntroQuestionIndex] = useState(0);
+  /** Horizontal swipe on suggested-question carousel (mobile); chevrons hidden below md. */
+  const introCarouselTouchStartRef = useRef(null);
 
   const [signingIn, setSigningIn] = useState(false);
   const [signInError, setSignInError] = useState("");
@@ -174,6 +176,39 @@ export default function ChatBoxWidget({
     return subscribeWidgetSession((session) => {
       setWidgetUser(session?.user || null);
     });
+  }, []);
+
+  const handleIntroCarouselTouchStart = useCallback((e) => {
+    const touch = e.touches[0];
+    introCarouselTouchStartRef.current = {
+      x: touch.clientX,
+      y: touch.clientY,
+    };
+  }, []);
+
+  const handleIntroCarouselTouchEnd = useCallback(
+    (e) => {
+      const start = introCarouselTouchStartRef.current;
+      introCarouselTouchStartRef.current = null;
+      if (!start) return;
+      const touch = e.changedTouches[0];
+      const dx = touch.clientX - start.x;
+      const dy = touch.clientY - start.y;
+      const count = introQuestions.length;
+      if (count <= 1) return;
+      if (Math.abs(dx) < 40 || Math.abs(dx) < Math.abs(dy)) return;
+      setIntroQuestionIndex((idx) => {
+        if (dx < 0) {
+          return Math.min(count - 1, idx + 1);
+        }
+        return Math.max(0, idx - 1);
+      });
+    },
+    [introQuestions.length]
+  );
+
+  const handleIntroCarouselTouchCancel = useCallback(() => {
+    introCarouselTouchStartRef.current = null;
   }, []);
 
   const loadSessions = useCallback(async () => {
@@ -1034,7 +1069,7 @@ export default function ChatBoxWidget({
               onScroll={updateStickyFromScroll}
               onWheel={updateStickyFromScroll}
               onTouchMove={updateStickyFromScroll}
-              className="scrollbar-thin min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden bg-muted-bg/20 p-3 dark:bg-muted-bg/10 md:rounded-b-xl"
+              className="scrollbar-thin min-h-0 min-w-0 flex-1 space-y-3 overflow-y-auto overflow-x-hidden rounded-b-xl bg-muted-bg/20 p-3 dark:bg-muted-bg/10"
             >
               {messages.length === 0 && !logsLoading && (
                 <p className="py-8 text-center text-xs text-muted">
@@ -1154,76 +1189,72 @@ export default function ChatBoxWidget({
                   <p className="mb-2 px-1 text-xs font-medium tracking-wide text-muted">
                     Suggested questions
                   </p>
-                  <div className="group relative">
-                    <div className="relative mx-auto w-full">
-                      <div className="grid grid-cols-[20%_60%_20%] items-center gap-2">
-                        <div className="min-w-0 pr-1">
-                          {prevIntroQuestion ? (
-                            <div className="pointer-events-none flex h-12 w-full items-center justify-center rounded-2xl border border-border/35 bg-background/65 px-3 [mask-image:linear-gradient(to_right,transparent,black_78%)]">
-                              <span className="h-2 w-14 rounded-full bg-foreground/25" />
-                            </div>
-                          ) : (
-                            <div aria-hidden className="h-12" />
-                          )}
-                        </div>
-                        <div className="relative z-10 overflow-hidden rounded-2xl border border-border/45 bg-background shadow-sm dark:border-border/40">
-                          <div
-                            className="grid grid-flow-col auto-cols-[100%] transition-transform duration-300 ease-out"
-                            style={{ transform: `translateX(-${safeIntroQuestionIndex * 100}%)` }}
+                  <div className="flex flex-col gap-3">
+                    <div className="mx-auto flex w-full max-w-full items-center gap-2 sm:gap-2.5">
+                      <div className="hidden w-11 shrink-0 items-center justify-center md:flex sm:w-12">
+                        {prevIntroQuestion ? (
+                          <button
+                            type="button"
+                            aria-label="Previous suggested question"
+                            onClick={() =>
+                              setIntroQuestionIndex((idx) => Math.max(0, idx - 1))
+                            }
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background text-foreground shadow-sm ring-1 ring-black/[0.04] transition-all duration-200 hover:border-border hover:bg-muted-bg hover:text-foreground hover:shadow-md hover:ring-highlight/25 dark:border-border/55 dark:bg-card dark:ring-white/[0.06] dark:hover:ring-highlight/35"
                           >
-                            {introQuestions.map((q, i) => (
-                              <button
-                                key={`intro-question-${i}`}
-                                type="button"
-                                onClick={() => void sendUserMessage(q)}
-                                disabled={sendLoading}
-                                className="flex h-12 w-full items-center px-4 text-left text-sm font-medium text-foreground transition-colors hover:bg-muted-bg disabled:opacity-50"
-                              >
-                                {q}
-                              </button>
-                            ))}
-                          </div>
-                        </div>
-                        <div className="min-w-0 pl-1">
-                          {nextIntroQuestion ? (
-                            <div className="pointer-events-none flex h-12 w-full items-center justify-center rounded-2xl border border-border/35 bg-background/65 px-3 [mask-image:linear-gradient(to_left,transparent,black_78%)]">
-                              <span className="h-2 w-14 rounded-full bg-foreground/25" />
-                            </div>
-                          ) : (
-                            <div aria-hidden className="h-12" />
-                          )}
+                            <ChevronLeft className="h-5 w-5" strokeWidth={2.25} />
+                          </button>
+                        ) : (
+                          <div className="h-11 w-11 shrink-0" aria-hidden />
+                        )}
+                      </div>
+
+                      <div
+                        className="relative z-10 min-h-12 min-w-0 flex-1 touch-pan-y overflow-hidden rounded-2xl border border-border/45 bg-background shadow-sm dark:border-border/40"
+                        onTouchStart={handleIntroCarouselTouchStart}
+                        onTouchEnd={handleIntroCarouselTouchEnd}
+                        onTouchCancel={handleIntroCarouselTouchCancel}
+                      >
+                        <div
+                          className="grid grid-flow-col auto-cols-[100%] transition-transform duration-300 ease-out"
+                          style={{
+                            transform: `translateX(-${safeIntroQuestionIndex * 100}%)`,
+                          }}
+                        >
+                          {introQuestions.map((q, i) => (
+                            <button
+                              key={`intro-question-${i}`}
+                              type="button"
+                              onClick={() => void sendUserMessage(q)}
+                              disabled={sendLoading}
+                              className="flex min-h-12 w-full items-start px-4 py-2.5 text-left text-sm font-medium leading-snug text-foreground transition-colors hover:bg-muted-bg disabled:opacity-50"
+                            >
+                              {q}
+                            </button>
+                          ))}
                         </div>
                       </div>
 
-                      {prevIntroQuestion ? (
-                        <button
-                          type="button"
-                          aria-label="Previous suggested question"
-                          onClick={() =>
-                            setIntroQuestionIndex((idx) => Math.max(0, idx - 1))
-                          }
-                          className="absolute left-[10%] top-1/2 z-20 -translate-x-1/2 -translate-y-1/2 rounded-full bg-background/45 p-1.5 text-foreground/65 opacity-0 shadow-sm backdrop-blur-sm transition hover:bg-background/70 hover:text-foreground group-hover:opacity-100"
-                        >
-                          <ChevronLeft className="h-4 w-4" />
-                        </button>
-                      ) : null}
-                      {nextIntroQuestion ? (
-                        <button
-                          type="button"
-                          aria-label="Next suggested question"
-                          onClick={() =>
-                            setIntroQuestionIndex((idx) =>
-                              Math.min(introQuestionCount - 1, idx + 1)
-                            )
-                          }
-                          className="absolute right-[10%] top-1/2 z-20 translate-x-1/2 -translate-y-1/2 rounded-full bg-background/45 p-1.5 text-foreground/65 opacity-0 shadow-sm backdrop-blur-sm transition hover:bg-background/70 hover:text-foreground group-hover:opacity-100"
-                        >
-                          <ChevronRight className="h-4 w-4" />
-                        </button>
-                      ) : null}
+                      <div className="hidden w-11 shrink-0 items-center justify-center md:flex sm:w-12">
+                        {nextIntroQuestion ? (
+                          <button
+                            type="button"
+                            aria-label="Next suggested question"
+                            onClick={() =>
+                              setIntroQuestionIndex((idx) =>
+                                Math.min(introQuestionCount - 1, idx + 1)
+                              )
+                            }
+                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background text-foreground shadow-sm ring-1 ring-black/[0.04] transition-all duration-200 hover:border-border hover:bg-muted-bg hover:text-foreground hover:shadow-md hover:ring-highlight/25 dark:border-border/55 dark:bg-card dark:ring-white/[0.06] dark:hover:ring-highlight/35"
+                          >
+                            <ChevronRight className="h-5 w-5" strokeWidth={2.25} />
+                          </button>
+                        ) : (
+                          <div className="h-11 w-11 shrink-0" aria-hidden />
+                        )}
+                      </div>
                     </div>
 
-                    <div className="mt-2 flex items-center justify-center">
+                    <div className="flex items-center justify-center">
                       <div className="relative">
                         <div className="flex items-center gap-1.5">
                           {introQuestions.map((_, i) => (
@@ -1249,7 +1280,7 @@ export default function ChatBoxWidget({
 
             <form
               onSubmit={handleSubmit}
-              className="shrink-0 pt-2"
+              className="shrink-0 pt-1"
             >
               <div className="relative">
                 <input
@@ -1275,7 +1306,7 @@ export default function ChatBoxWidget({
               </div>
             </form>
             <p
-              className={`mt-2 shrink-0 text-center text-xs ${primaryHex ? "" : "text-muted"
+              className={`mt-2 shrink-0 pb-0.5 text-center text-xs ${primaryHex ? "" : "text-muted"
                 }`}
               style={primaryHex ? { color: primaryHex } : undefined}
             >
