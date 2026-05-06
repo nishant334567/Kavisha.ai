@@ -1,76 +1,119 @@
 import { ExternalLink, Sparkles } from "lucide-react";
 
-const AVATAR_BTN =
-  "group relative flex w-full min-w-0 items-center justify-center overflow-hidden rounded-full bg-white px-3 py-2.5 text-sm font-medium text-[#17484B] ring-1 ring-black/15 transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md active:translate-y-0 before:absolute before:inset-0 before:-translate-x-full before:bg-[linear-gradient(90deg,transparent,rgba(206,253,253,0.55),transparent)] before:opacity-0 before:transition before:duration-700 before:ease-out hover:before:translate-x-full hover:before:opacity-100";
+const LEADING_ARTICLES = new Set(["the", "a", "an"]);
 
-const AVATAR_BTN_INNER =
-  "relative z-10 flex min-w-0 flex-wrap items-center justify-center gap-2 text-center leading-snug";
+/** First letter of the first non-article word (e.g. "The Professional" → P, "Stuph Studio" → S). */
+function getAvatarNameInitial(name) {
+  const raw = String(name ?? "").trim();
+  if (!raw) return "?";
+  const words = raw.split(/\s+/).filter(Boolean);
+  for (const word of words) {
+    const lettersOnly = word.replace(/[^\p{L}\p{N}]/giu, "");
+    if (!lettersOnly) continue;
+    if (LEADING_ARTICLES.has(lettersOnly.toLowerCase()) && words.length > 1) {
+      continue;
+    }
+    const letter = word.match(/\p{L}/u)?.[0] ?? word.match(/\p{N}/u)?.[0];
+    if (letter) return letter.toUpperCase();
+  }
+  return "?";
+}
+
+/** Circular control on the right; label expands left on hover with shared pill background. */
+function ImagePillLink({ href, label, icon: Icon }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="group/btn inline-flex h-11 max-w-[min(100%,18rem)] items-stretch overflow-hidden rounded-full border border-white/25 bg-black/65 text-white shadow-lg outline-none ring-white/20 backdrop-blur-sm transition-[border-color,background-color,box-shadow] duration-500 hover:border-white/40 hover:bg-black/80 hover:shadow-xl focus-visible:ring-2"
+      aria-label={label}
+    >
+      <span className="flex min-h-11 min-w-0 max-w-0 shrink-0 items-center justify-end overflow-hidden transition-[max-width] duration-700 ease-in-out group-hover/btn:max-w-[min(15rem,calc(100vw-5rem))]">
+        <span className="block whitespace-nowrap pl-3 pr-0.5 text-left text-[13px] font-medium leading-none tracking-tight opacity-0 transition-[transform,opacity] duration-700 ease-in-out translate-x-3 group-hover/btn:translate-x-0 group-hover/btn:opacity-100">
+          {label}
+        </span>
+      </span>
+      <span className="relative flex w-11 shrink-0 items-center justify-center rounded-full border-l border-white/15 bg-black/35">
+        <Icon className="h-5 w-5" strokeWidth={2.25} />
+      </span>
+    </a>
+  );
+}
 
 export default function AvatarCard({
   image,
   name,
   title,
-  subtitle,
+  subtitle: _subtitle,
   avatarLink = "",
   widgetLink = "",
 }) {
-  // Truncate subtitle to max 30 words with ellipsis
-  const truncateText = (text, maxWords = 30) => {
-    if (!text) return "";
-    const words = text.split(" ");
-    if (words.length <= maxWords) return text;
-    return words.slice(0, maxWords).join(" ") + "...";
-  };
+  const hasAvatarLink = Boolean(String(avatarLink || "").trim());
+  const hasWidgetLink = Boolean(String(widgetLink || "").trim());
+  const initial = getAvatarNameInitial(name);
+  const showImage = Boolean(String(image || "").trim());
+
+  const cardClass =
+    "group/card flex w-full max-w-xs shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card text-center shadow-md transition-shadow duration-300 ease-out hover:shadow-xl hover:shadow-black/[0.09] focus-visible:outline-none cursor-default " +
+    (!hasAvatarLink && !hasWidgetLink
+      ? "opacity-75 pointer-events-none"
+      : "");
 
   return (
-    <div className="flex h-[460px] w-full max-w-xs flex-col overflow-hidden rounded-2xl border border-border bg-card text-center shadow-md">
-      <div className="w-full h-[250px] flex-shrink-0">
-        {image ? (
-          <img src={image} alt={name} className="w-full h-full object-cover" />
+    <div className={cardClass}>
+      <div
+        className="relative h-[250px] w-full flex-shrink-0 overflow-hidden [container-type:size] has-[a:hover]:[&_.avatar-card-media]:blur-[3px]"
+      >
+        {showImage ? (
+          <img
+            src={image}
+            alt=""
+            className="avatar-card-media h-full w-full object-cover transition-[filter,transform] duration-300 ease-out group-hover/card:scale-[1.02] group-hover/card:brightness-[0.72]"
+            aria-hidden
+          />
         ) : (
-          <div className="flex h-full w-full items-center justify-center text-muted">
-            No image
+          <div
+            className="avatar-card-media flex h-full w-full select-none items-center justify-center overflow-hidden bg-neutral-200 text-[min(70cqh,70cqw)] font-semibold leading-none tracking-tighter text-muted-foreground/85 transition-[filter,transform] duration-300 ease-out group-hover/card:scale-[1.02] group-hover/card:brightness-[0.72] dark:bg-neutral-600"
+            aria-hidden
+          >
+            {initial}
+          </div>
+        )}
+
+        <div
+          className="pointer-events-none absolute inset-0 bg-black/0 transition-colors duration-300 group-hover/card:bg-black/25"
+          aria-hidden
+        />
+
+        {(hasAvatarLink || hasWidgetLink) && (
+          <div className="pointer-events-auto absolute bottom-3 right-3 z-10 flex flex-col items-end gap-2">
+            {hasAvatarLink ? (
+              <ImagePillLink
+                href={avatarLink}
+                label="Visit Avataar"
+                icon={Sparkles}
+              />
+            ) : null}
+            {hasWidgetLink ? (
+              <ImagePillLink
+                href={widgetLink}
+                label="View widget on website"
+                icon={ExternalLink}
+              />
+            ) : null}
           </div>
         )}
       </div>
-      <div className="px-4 py-5 flex-1 flex flex-col min-h-0">
-        <h3 className="mb-1 text-lg font-semibold text-foreground">{name}</h3>
-        {title && (
-          <p className="mb-2 text-sm text-muted line-clamp-2">{title}</p>
-        )}
-        {/* {subtitle && (
-          <p className="text-sm text-gray-600 leading-relaxed line-clamp-4 overflow-hidden">
-            {truncateText(subtitle, 30)}
+
+      <div className="flex flex-col justify-start gap-1 overflow-hidden px-4 pt-4 pb-5 text-center">
+        <h3 className="line-clamp-2 shrink-0 overflow-hidden break-words text-lg font-semibold leading-tight text-foreground">
+          {name}
+        </h3>
+        <div className="h-[2.55rem] w-full min-h-0 overflow-hidden">
+          <p className="line-clamp-2 break-words text-sm leading-snug text-muted-foreground">
+            {title || "\u00a0"}
           </p>
-        )} */}
-        <div className="mt-auto flex w-full min-w-0 flex-col gap-2 pt-3">
-          <a
-            href={avatarLink || "#"}
-            target={avatarLink ? "_blank" : undefined}
-            rel={avatarLink ? "noopener noreferrer" : undefined}
-            aria-disabled={!avatarLink}
-            className={`${AVATAR_BTN} ${avatarLink ? "" : "cursor-not-allowed opacity-50"}`}
-          >
-            <span className={AVATAR_BTN_INNER}>
-              <Sparkles
-                className={`h-4 w-4 shrink-0 transition-transform duration-200 ${avatarLink ? "group-hover:rotate-12 group-hover:scale-110" : ""}`}
-              />
-              Visit Avataar
-            </span>
-          </a>
-          {widgetLink ? (
-            <a
-              href={widgetLink}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={AVATAR_BTN}
-            >
-              <span className={AVATAR_BTN_INNER}>
-                <ExternalLink className="h-4 w-4 shrink-0 transition-transform duration-200 group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
-                View widget on website
-              </span>
-            </a>
-          ) : null}
         </div>
       </div>
     </div>

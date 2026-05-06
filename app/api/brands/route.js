@@ -27,19 +27,15 @@ export async function GET(req) {
         subtitle,
         subdomain,
         logo,
-        brandImage,
         clientWidgetUrl
       } | order(brandName asc)`
     );
 
     // Transform brands with image URLs and generate links
     const transformedBrands = brands.map((brand) => {
-      // Prefer DP-style image (logo). Fallback to hero image if logo not set.
+      // Card image = logo only (no hero/cover); UI shows initials when missing.
       const logoUrl = brand.logo?.asset?._ref ? urlFor(brand.logo).url() : null;
-      const heroUrl = brand.brandImage?.asset?._ref
-        ? urlFor(brand.brandImage).url()
-        : null;
-      const imageUrl = logoUrl || heroUrl || null;
+      const imageUrl = logoUrl || null;
 
       // Generate link to avatar home page
       const link = `https://${brand.subdomain}.${ROOT_HOST}`;
