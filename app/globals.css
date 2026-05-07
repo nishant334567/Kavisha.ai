@@ -105,8 +105,6 @@ body {
 
 /* Homepage — Explore Avataars static pill */
 .avataar-explore-static {
-  display: inline-flex;
-  align-items: center;
   gap: 10px;
   padding: 12px 18px;
   border-radius: 9999px;
@@ -119,7 +117,6 @@ body {
   cursor: pointer;
   user-select: none;
   text-decoration: none;
-  transform: translateY(-50%);
   transition: box-shadow 200ms ease, border-color 200ms ease, transform 200ms ease;
 }
 
@@ -133,7 +130,7 @@ body {
   background: #008389;
   border-color: rgba(0, 131, 137, 0.9);
   box-shadow: none;
-  transform: translateY(-50%) translateY(-1px);
+  transform: translateY(-1px);
 }
 
 .avataar-explore-static:hover .avataar-explore-text {

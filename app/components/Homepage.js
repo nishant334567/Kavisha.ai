@@ -101,10 +101,10 @@ export default function Homepage() {
     if (typeof window === "undefined") return 3;
     if (window.innerWidth < 640) return 1;
     if (window.innerWidth < 1024) return 2;
-    return 3;
+    return 4;
   };
 
-  const [visibleCount, setVisibleCount] = useState(3);
+  const [visibleCount, setVisibleCount] = useState(4);
 
   useEffect(() => {
     const handleResize = () => setVisibleCount(getVisibleCount());
@@ -315,50 +315,67 @@ export default function Homepage() {
           <p className="text-center text-muted">No featured avatars yet.</p>
         ) : (
           <div>
-            <div
-              className="relative overflow-x-hidden overflow-y-visible pb-4"
-              ref={sliderRef}
-            >
+            <div className="lg:flex lg:items-center lg:gap-8">
+              <div
+                className="relative min-w-0 flex-1 overflow-x-hidden overflow-y-visible pb-4"
+                ref={sliderRef}
+              >
+                <div
+                  className="flex justify-start transition-transform duration-300 ease-in-out"
+                  style={{
+                    gap: "24px",
+                    transform: `translateX(calc(-${currentIndex} * (100% / ${visibleCount} + ${24 / visibleCount}px)))`,
+                  }}
+                >
+                  {avatars.map((avatar) => (
+                    <div
+                      key={avatar.id}
+                      className="flex-shrink-0"
+                      style={{
+                        // Keep cards the same baseline size as Talk-to-Avataar (minmax(14rem, 1fr)).
+                        width: `min(calc((100% - ${(visibleCount - 1) * 24}px) / ${visibleCount}), 15.5rem)`,
+                      }}
+                    >
+                      <AvatarCard
+                        name={avatar.name}
+                        title={avatar.title}
+                        subtitle={avatar.subtitle}
+                        image={avatar.image}
+                        avatarLink={avatar.link}
+                        widgetLink={
+                          avatar.clientWidgetUrl
+                            ? String(avatar.clientWidgetUrl).trim()
+                            : ""
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop button lives in the free space (no overlap). */}
+              <div className="hidden shrink-0 justify-center lg:flex">
+                <Link
+                  href="/talk-to-avatar"
+                  className="avataar-explore-static inline-flex items-center"
+                  aria-label="Explore more Avataars"
+                >
+                  <span className="avataar-explore-text">
+                    Explore more Avataars
+                  </span>
+                </Link>
+              </div>
+            </div>
+            <div className="flex justify-center lg:hidden">
               <Link
                 href="/talk-to-avatar"
-                className="avataar-explore-static absolute right-0 top-1/2 hidden md:inline-flex md:right-2 lg:right-4"
+                className="avataar-explore-static inline-flex items-center"
                 aria-label="Explore more Avataars"
               >
                 <span className="avataar-explore-text">
                   Explore more Avataars
                 </span>
               </Link>
-              <div
-                className="flex justify-start transition-transform duration-300 ease-in-out"
-                style={{
-                  gap: "24px",
-                  transform: `translateX(calc(-${currentIndex} * (100% / ${visibleCount} + ${24 / visibleCount}px)))`,
-                }}
-              >
-                {avatars.map((avatar) => (
-                  <div
-                    key={avatar.id}
-                    className="flex-shrink-0"
-                    style={{
-                      // Keep cards the same baseline size as Talk-to-Avataar (minmax(14rem, 1fr)).
-                      width: `min(calc((100% - ${(visibleCount - 1) * 24}px) / ${visibleCount}), 14rem)`,
-                    }}
-                  >
-                    <AvatarCard
-                      name={avatar.name}
-                      title={avatar.title}
-                      subtitle={avatar.subtitle}
-                      image={avatar.image}
-                      avatarLink={avatar.link}
-                      widgetLink={
-                        avatar.clientWidgetUrl
-                          ? String(avatar.clientWidgetUrl).trim()
-                          : ""
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
             </div>
             {avatars.length > visibleCount && (
               <div className="flex justify-center gap-4 mt-8">
