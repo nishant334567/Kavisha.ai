@@ -276,15 +276,6 @@ export default function Navbar() {
                 {getNavLabel("/make-avatar", "MAKE MY AVATAAR")}
               </button>
             )}
-            {user && (
-              <button
-                onClick={() => handleNavigate("/chats")}
-                disabled={isNavigating}
-                className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
-              >
-                {getNavLabel("/chats", "CHATS")}
-              </button>
-            )}
             {enabledFeatureNavItems.map((item) => (
               <button
                 key={item.path}
@@ -484,21 +475,6 @@ export default function Navbar() {
                 >
                   <MessageCircle className={menuIconClass} strokeWidth={2} />
                   {getNavLabel("/talk-to-avatar", "Talk to Avataars")}
-                </button>
-              </li>
-            )}
-            {user && (
-              <li>
-                <button
-                  type="button"
-                  className={menuRowBtnClass}
-                  onClick={() => {
-                    handleNavigate("/chats", { closeMenu: true });
-                  }}
-                  disabled={isNavigating}
-                >
-                  <MessagesSquare className={menuIconClass} strokeWidth={2} />
-                  {getNavLabel("/chats", "Chats")}
                 </button>
               </li>
             )}
