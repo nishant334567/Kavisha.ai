@@ -11,7 +11,7 @@ import {
 } from "../lib/in-app-browser";
 import InfoCard from "./InfoCard";
 import AvatarCard from "./AvatarCard";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Footer from "./Footer";
 
 const cards = [
@@ -315,9 +315,9 @@ export default function Homepage() {
           <p className="text-center text-muted">No featured avatars yet.</p>
         ) : (
           <div>
-            <div className="lg:flex lg:items-center lg:gap-8">
+            <div className="lg:flex lg:items-center lg:justify-center lg:gap-6">
               <div
-                className="relative min-w-0 flex-1 overflow-x-hidden overflow-y-visible pb-4"
+                className="relative min-w-0 flex-1 overflow-x-hidden overflow-y-visible pb-4 lg:flex-none lg:w-[min(100%,66.5rem)]"
                 ref={sliderRef}
               >
                 <div
@@ -354,28 +354,38 @@ export default function Homepage() {
               </div>
 
               {/* Desktop button lives in the free space (no overlap). */}
-              <div className="hidden shrink-0 justify-center lg:flex">
-                <Link
-                  href="/talk-to-avatar"
-                  className="avataar-explore-static inline-flex items-center"
-                  aria-label="Explore more Avataars"
-                >
-                  <span className="avataar-explore-text">
-                    Explore more Avataars
-                  </span>
-                </Link>
+              <div className="hidden shrink-0 justify-center lg:flex lg:ml-[24px]">
+                <div className="group relative inline-flex">
+                  <Link
+                    href="/talk-to-avatar"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-muted shadow-sm transition-colors hover:bg-[#008389] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                    aria-label="Explore more Avataars"
+                  >
+                    <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
+                  </Link>
+                  <div className="pointer-events-none absolute left-1/2 top-full mt-3 hidden -translate-x-1/2 group-hover:block">
+                    <div className="rounded-xl bg-black px-3 py-2 text-sm font-medium text-white whitespace-nowrap">
+                      Explore more Avataars
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
             <div className="flex justify-center lg:hidden">
-              <Link
-                href="/talk-to-avatar"
-                className="avataar-explore-static inline-flex items-center"
-                aria-label="Explore more Avataars"
-              >
-                <span className="avataar-explore-text">
-                  Explore more Avataars
-                </span>
-              </Link>
+              <div className="group relative inline-flex">
+                <Link
+                  href="/talk-to-avatar"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-muted shadow-sm transition-colors hover:bg-[#008389] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  aria-label="Explore more Avataars"
+                >
+                  <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
+                </Link>
+                <div className="pointer-events-none absolute left-1/2 top-full mt-3 hidden -translate-x-1/2 group-hover:block">
+                  <div className="rounded-xl bg-black px-3 py-2 text-sm font-medium text-white whitespace-nowrap">
+                    Explore more Avataars
+                  </div>
+                </div>
+              </div>
             </div>
             {avatars.length > visibleCount && (
               <div className="flex justify-center gap-4 mt-8">
