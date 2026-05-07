@@ -55,7 +55,7 @@ export default function AvatarCard({
   const showImage = Boolean(String(image || "").trim());
 
   const cardClass =
-    "group/card flex w-full max-w-xs shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card text-center shadow-md transition-shadow duration-300 ease-out hover:shadow-xl hover:shadow-black/[0.09] focus-visible:outline-none cursor-default " +
+    "group/card flex w-full shrink-0 flex-col overflow-hidden rounded-2xl border border-border bg-card text-center shadow-md transition-shadow duration-300 ease-out hover:shadow-xl hover:shadow-black/[0.09] focus-visible:outline-none cursor-default " +
     (!hasAvatarLink && !hasWidgetLink
       ? "opacity-75 pointer-events-none"
       : "");
@@ -63,7 +63,7 @@ export default function AvatarCard({
   return (
     <div className={cardClass}>
       <div
-        className="relative h-[250px] w-full flex-shrink-0 overflow-hidden [container-type:size] has-[a:hover]:[&_.avatar-card-media]:blur-[3px]"
+        className="relative w-full flex-shrink-0 overflow-hidden [container-type:size] has-[a:hover]:[&_.avatar-card-media]:blur-[3px] aspect-square"
       >
         {showImage ? (
           <img

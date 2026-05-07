@@ -300,13 +300,13 @@ export default function Homepage() {
       </div>
 
       {/* Avatar cards */}
-      <div className="flex items-center gap-4 my-6 px-4 md:px-8">
+      <div className="my-6 flex items-center gap-4 px-4 md:px-8">
         <p className="whitespace-nowrap text-lg text-[#264653] dark:text-foreground md:text-2xl">
           Existing Avataars
         </p>
-        <div className="h-[1px] flex-1 bg-border"></div>
+        <div className="h-[1px] flex-1 bg-border" />
       </div>
-      <div className="max-w-6xl mx-auto px-4 mt-8 md:mt-12">
+      <div className="relative mt-8 w-[90%] mx-auto px-4 md:mt-12 md:px-8">
         {avatarsLoading ? (
           <p className="text-center text-muted">Loading avatars…</p>
         ) : avatarsError ? (
@@ -315,9 +315,21 @@ export default function Homepage() {
           <p className="text-center text-muted">No featured avatars yet.</p>
         ) : (
           <div>
-            <div className="overflow-hidden px-2 pb-4" ref={sliderRef}>
+            <div
+              className="relative overflow-x-hidden overflow-y-visible pb-4"
+              ref={sliderRef}
+            >
+              <Link
+                href="/talk-to-avatar"
+                className="avataar-explore-static absolute right-0 top-1/2 hidden md:inline-flex md:right-2 lg:right-4"
+                aria-label="Explore more Avataars"
+              >
+                <span className="avataar-explore-text">
+                  Explore more Avataars
+                </span>
+              </Link>
               <div
-                className="flex transition-transform duration-300 ease-in-out"
+                className="flex justify-start transition-transform duration-300 ease-in-out"
                 style={{
                   gap: "24px",
                   transform: `translateX(calc(-${currentIndex} * (100% / ${visibleCount} + ${24 / visibleCount}px)))`,
@@ -326,9 +338,10 @@ export default function Homepage() {
                 {avatars.map((avatar) => (
                   <div
                     key={avatar.id}
-                    className="flex-shrink-0 flex justify-center"
+                    className="flex-shrink-0"
                     style={{
-                      width: `calc((100% - ${(visibleCount - 1) * 24}px) / ${visibleCount})`,
+                      // Keep cards the same baseline size as Talk-to-Avataar (minmax(14rem, 1fr)).
+                      width: `min(calc((100% - ${(visibleCount - 1) * 24}px) / ${visibleCount}), 14rem)`,
                     }}
                   >
                     <AvatarCard
