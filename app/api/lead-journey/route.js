@@ -13,16 +13,10 @@ import {
   generateGeminiContentRest,
 } from "../../lib/gemini-rest.js";
 import { connectDB } from "../../lib/db.js";
+import { enqueueCloudTask } from "../../lib/cloudTasks.js";
 
 const LEAD_JOURNEY_GEMINI_MAX_429_RETRIES = 2;
 const LEAD_JOURNEY_GEMINI_RETRY_DELAY_MS = 1500;
-
-// Simple token estimation: words * 1.33
-function estimateTokens(text) {
-  if (!text || typeof text !== "string") return 0;
-  const words = text.trim().split(/\s+/).filter(Boolean);
-  return Math.ceil(words.length * 1.33);
-}
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -87,7 +81,7 @@ function buildPublishedAtMsMetadataFilter(t) {
   return { publishedAtMs: inner };
 }
 
-/** Parse Part 4 chunk-id JSON (same rules as main + retry paths). */
+/** Parse Part 2 JSON array of chunk ids (verbatim ids from context). */
 function extractChunkIdsFromPart4(chunkIdsPart) {
   const raw = typeof chunkIdsPart === "string" ? chunkIdsPart.trim() : "";
   if (!raw) return [];
@@ -165,6 +159,10 @@ function isRetryableGemini429(error) {
   return error?.status === 429 || error?.vertexStatus === "RESOURCE_EXHAUSTED";
 }
 
+function responseStatusForVertexError(error) {
+  return isRetryableGemini429(error) ? 429 : 500;
+}
+
 async function generateLeadJourneyGeminiContent(params) {
   let lastError;
 
@@ -196,7 +194,9 @@ export async function POST(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
       try {
-        const { userMessage, history, sessionId, summary } = await req.json();
+        const body = await req.json();
+        const history = Array.isArray(body.history) ? body.history : [];
+        const { userMessage, sessionId } = body;
         const dbUser = await createOrGetUser(decodedToken);
         const user = {
           id: dbUser._id.toString(),
@@ -213,13 +213,23 @@ export async function POST(req) {
 
         // Get brand and serviceKey from session (single source of truth; no client override)
         const session = await Session.findById(sessionId)
-          .select("brand serviceKey")
+          .select("brand serviceKey chatSummary summaryPendingCount userId")
           .lean();
         if (!session) {
           return errorResponse(404, "Session not found", "load-session");
         }
+        const sessionOwnerId =
+          session.userId != null ? String(session.userId) : "";
+        if (!sessionOwnerId || sessionOwnerId !== user.id) {
+          return errorResponse(
+            403,
+            "Forbidden — session does not belong to this user",
+            "validate-session-owner"
+          );
+        }
         const brand = session.brand;
         const serviceKey = session.serviceKey;
+        const chatSummary = String(session.chatSummary || "").trim();
         if (!brand || !serviceKey) {
           return errorResponse(
             400,
@@ -231,12 +241,10 @@ export async function POST(req) {
 
         const prompt = await getLeadPromptFromSanity(brand, serviceKey);
 
-        let inputToken = 0;
-        let outputToken = 0;
         let sourceChunkIds = [];
         let sourceUrls = [];
         let sourceCards = [];
-        const modelName = process.env.AI_MODEL ?? "gemini-2.5-flash";
+        const modelName = process.env.AI_MODEL ?? "gemini-3.1-flash-lite";
 
         if (!modelName) {
           return errorResponse(500, "AI model not configured", "load-model");
@@ -266,7 +274,6 @@ export async function POST(req) {
           referenceNowIsoUtc,
           referenceNowMsUtc
         );
-        inputToken += estimateTokens(rewritePrompt);
         const responseQuery = await generateLeadJourneyGeminiContent({
           modelName,
           location: "global",
@@ -283,14 +290,13 @@ export async function POST(req) {
         });
 
         let responseText = extractGeminiText(responseQuery);
-        outputToken += estimateTokens(responseText);
 
-      // Extract JSON (JSON mode should return raw object text; still tolerate markdown)
-      let jsonText = responseText.trim();
-      if (jsonText.includes("```")) {
-        const match = jsonText.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
-        if (match) jsonText = match[1];
-      }
+        // Extract JSON (JSON mode should return raw object text; still tolerate markdown)
+        let jsonText = responseText.trim();
+        if (jsonText.includes("```")) {
+          const match = jsonText.match(/```(?:json)?\s*(\{[\s\S]*\})\s*```/);
+          if (match) jsonText = match[1];
+        }
 
         let parsedResponse;
         try {
@@ -311,138 +317,150 @@ export async function POST(req) {
         const pineconePublishedAtFilter =
           buildPublishedAtMsMetadataFilter(timeFilterPublishedAtMs);
 
-      let context = "";
-      const uniqueContext = new Map(); // Declare at higher scope so it's always available
+        let context = "";
+        const uniqueContext = new Map(); // Declare at higher scope so it's always available
 
-      if (betterQuery && betterQuery !== '""' && betterQuery !== "''") {
-        const userMessageEmbedding = await generateEmbedding(
-          betterQuery,
-          "RETRIEVAL_QUERY"
-        );
-        if (
-          userMessageEmbedding === 0 ||
-          !Array.isArray(userMessageEmbedding)
-        ) {
-          return errorResponse(500, "Failed to generate embedding", "generate-embedding");
-        }
+        if (betterQuery && betterQuery !== '""' && betterQuery !== "''") {
+          const userMessageEmbedding = await generateEmbedding(
+            betterQuery,
+            "RETRIEVAL_QUERY"
+          );
+          if (
+            userMessageEmbedding === 0 ||
+            !Array.isArray(userMessageEmbedding)
+          ) {
+            return errorResponse(500, "Failed to generate embedding", "generate-embedding");
+          }
 
-        // Validate embedding is a proper array with values
-        if (userMessageEmbedding.length === 0) {
-          return errorResponse(500, "Invalid embedding generated", "validate-embedding");
-        }
-        try {
-          const runPineconeRetrieval = async (metadataFilter) => {
-            const denseOpts = {
-              vector: userMessageEmbedding,
-              topK: 10,
-              includeMetadata: true,
-              includeValues: false,
-              ...(metadataFilter ? { filter: metadataFilter } : {}),
+          // Validate embedding is a proper array with values
+          if (userMessageEmbedding.length === 0) {
+            return errorResponse(500, "Invalid embedding generated", "validate-embedding");
+          }
+          try {
+            const runPineconeRetrieval = async (metadataFilter) => {
+              const denseOpts = {
+                vector: userMessageEmbedding,
+                topK: 10,
+                includeMetadata: true,
+                includeValues: false,
+                ...(metadataFilter ? { filter: metadataFilter } : {}),
+              };
+              const sparseQuery = {
+                topK: 10,
+                inputs: { text: betterQuery },
+                ...(metadataFilter ? { filter: metadataFilter } : {}),
+              };
+              const [results, results2] = await Promise.all([
+                pc.index("intelligent-kavisha").namespace(brand).query(denseOpts),
+                pc
+                  .index("kavisha-sparse")
+                  .namespace(brand)
+                  .searchRecords({ query: sparseQuery })
+                  .catch(() => ({ result: { hits: [] } })),
+              ]);
+              const map = new Map();
+              mergePineconeIntoUniqueContext(map, results, results2);
+              return map;
             };
-            const sparseQuery = {
-              topK: 10,
-              inputs: { text: betterQuery },
-              ...(metadataFilter ? { filter: metadataFilter } : {}),
-            };
-            const [results, results2] = await Promise.all([
-              pc.index("intelligent-kavisha").namespace(brand).query(denseOpts),
-              pc
-                .index("kavisha-sparse")
-                .namespace(brand)
-                .searchRecords({ query: sparseQuery })
-                .catch(() => ({ result: { hits: [] } })),
-            ]);
-            const map = new Map();
-            mergePineconeIntoUniqueContext(map, results, results2);
-            return map;
-          };
 
-          if (pineconePublishedAtFilter) {
-            try {
-              const filteredMap = await runPineconeRetrieval(
-                pineconePublishedAtFilter
-              );
-              if (filteredMap.size > 0) {
-                filteredMap.forEach((v, k) => uniqueContext.set(k, v));
-              } else {
+            if (pineconePublishedAtFilter) {
+              try {
+                const filteredMap = await runPineconeRetrieval(
+                  pineconePublishedAtFilter
+                );
+                if (filteredMap.size > 0) {
+                  filteredMap.forEach((v, k) => uniqueContext.set(k, v));
+                } else {
+                  const unfiltered = await runPineconeRetrieval(null);
+                  unfiltered.forEach((v, k) => uniqueContext.set(k, v));
+                }
+              } catch {
                 const unfiltered = await runPineconeRetrieval(null);
                 unfiltered.forEach((v, k) => uniqueContext.set(k, v));
               }
-            } catch {
-              const unfiltered = await runPineconeRetrieval(null);
-              unfiltered.forEach((v, k) => uniqueContext.set(k, v));
-            }
-          } else {
-            const m = await runPineconeRetrieval(null);
-            m.forEach((v, k) => uniqueContext.set(k, v));
-          }
-
-          const documentsForRerank = Array.from(uniqueContext.entries()).map(
-            ([id, data]) => ({
-              id,
-              text: data?.text || "",
-            })
-          );
-
-          if (documentsForRerank.length > 0) {
-            // Skip reranking if we have 10 or fewer chunks (optimization)
-            if (documentsForRerank.length <= 10) {
-
-              context = documentsForRerank
-                .map(({ id, text }) => {
-                  if (!text || !id) return "";
-                  return `[CHUNK_ID:${id}] ${text}`;
-                })
-                .filter(Boolean)
-                .join("\n\n");
-              sourceChunkIds = documentsForRerank.map(doc => doc.id).filter(Boolean);
             } else {
-              // Rerank for larger contexts
-              try {
-                const rerankOptions = {
-                  topN: 10,
-                  rankFields: ["text"],
-                  returnDocuments: true,
-                };
+              const m = await runPineconeRetrieval(null);
+              m.forEach((v, k) => uniqueContext.set(k, v));
+            }
 
-                const reranked = await pc.inference.rerank(
-                  "bge-reranker-v2-m3",
-                  betterQuery,
-                  documentsForRerank,
-                  rerankOptions
-                );
+            const documentsForRerank = Array.from(uniqueContext.entries()).map(
+              ([id, data]) => ({
+                id,
+                text: data?.text || "",
+              })
+            );
 
-                if (
-                  reranked &&
-                  reranked.data &&
-                  Array.isArray(reranked.data) &&
-                  reranked.data.length > 0
-                ) {
-                  const rerankedItems = reranked.data.map((item) => {
-                    let text = "";
-                    let id = "";
+            if (documentsForRerank.length > 0) {
+              // Skip reranking if we have 10 or fewer chunks (optimization)
+              if (documentsForRerank.length <= 10) {
 
-                    if (item.document) {
-                      text = item.document.text || "";
-                      id = item.document.id || item.id || "";
-                    }
+                context = documentsForRerank
+                  .map(({ id, text }) => {
+                    if (!text || !id) return "";
+                    return `[CHUNK_ID:${id}] ${text}`;
+                  })
+                  .filter(Boolean)
+                  .join("\n\n");
+                sourceChunkIds = documentsForRerank.map(doc => doc.id).filter(Boolean);
+              } else {
+                // Rerank for larger contexts
+                try {
+                  const rerankOptions = {
+                    topN: 10,
+                    rankFields: ["text"],
+                    returnDocuments: true,
+                  };
 
-                    return { text, id };
-                  });
-                  // Format context with chunk IDs: [CHUNK_ID:id] text
-                  context = rerankedItems
-                    .map((item) => {
-                      if (!item.text || !item.id) return "";
-                      return `[CHUNK_ID:${item.id}] ${item.text}`;
-                    })
-                    .filter(Boolean)
-                    .join("\n\n");
-                  sourceChunkIds = rerankedItems
-                    .map((item) => item.id)
-                    .filter(Boolean);
+                  const reranked = await pc.inference.rerank(
+                    "bge-reranker-v2-m3",
+                    betterQuery,
+                    documentsForRerank,
+                    rerankOptions
+                  );
 
-                } else {
-                  // Format context with chunk IDs when reranking fails
+                  if (
+                    reranked &&
+                    reranked.data &&
+                    Array.isArray(reranked.data) &&
+                    reranked.data.length > 0
+                  ) {
+                    const rerankedItems = reranked.data.map((item) => {
+                      let text = "";
+                      let id = "";
+
+                      if (item.document) {
+                        text = item.document.text || "";
+                        id = item.document.id || item.id || "";
+                      }
+
+                      return { text, id };
+                    });
+                    // Format context with chunk IDs: [CHUNK_ID:id] text
+                    context = rerankedItems
+                      .map((item) => {
+                        if (!item.text || !item.id) return "";
+                        return `[CHUNK_ID:${item.id}] ${item.text}`;
+                      })
+                      .filter(Boolean)
+                      .join("\n\n");
+                    sourceChunkIds = rerankedItems
+                      .map((item) => item.id)
+                      .filter(Boolean);
+
+                  } else {
+                    // Format context with chunk IDs when reranking fails
+                    const contextItems = Array.from(uniqueContext.entries());
+                    context = contextItems
+                      .map(([id, data]) => {
+                        if (!data?.text || !id) return "";
+                        return `[CHUNK_ID:${id}] ${data.text}`;
+                      })
+                      .filter(Boolean)
+                      .join("\n\n");
+                    sourceChunkIds = Array.from(uniqueContext.keys());
+                  }
+                } catch (rerankError) {
+                  // Format context with chunk IDs when reranking errors
                   const contextItems = Array.from(uniqueContext.entries());
                   context = contextItems
                     .map(([id, data]) => {
@@ -453,58 +471,40 @@ export async function POST(req) {
                     .join("\n\n");
                   sourceChunkIds = Array.from(uniqueContext.keys());
                 }
-              } catch (rerankError) {
-                // Format context with chunk IDs when reranking errors
-                const contextItems = Array.from(uniqueContext.entries());
-                context = contextItems
-                  .map(([id, data]) => {
-                    if (!data?.text || !id) return "";
-                    return `[CHUNK_ID:${id}] ${data.text}`;
-                  })
-                  .filter(Boolean)
-                  .join("\n\n");
-                sourceChunkIds = Array.from(uniqueContext.keys());
               }
+            } else {
+              context = "";
             }
-          } else {
+          } catch (pineconeError) {
             context = "";
           }
-        } catch (pineconeError) {
-          context = "";
+        } else {
+          betterQuery = userMessage;
         }
-      } else {
-        betterQuery = userMessage;
-      }
 
-      const citationAllowlistChunkIds =
-        Array.isArray(sourceChunkIds) && sourceChunkIds.length > 0
-          ? [...sourceChunkIds]
-          : [];
+        const citationAllowlistChunkIds =
+          Array.isArray(sourceChunkIds) && sourceChunkIds.length > 0
+            ? [...sourceChunkIds]
+            : [];
 
-      const fullName = user?.name || "";
-      const firstName = fullName.split(" ")[0] || "";
-      const nameInstruction = firstName
-        ? `\n\nIMPORTANT - PERSONAL CONNECTION: The user's first name is "${firstName}". Use their name naturally in your responses when it feels appropriate and adds warmth to the conversation. Consider the conversation history - if you've already used their name recently, you don't need to repeat it. Use it when it feels natural: at the beginning of a new topic, when emphasizing a point, or when transitioning between ideas. The goal is to create a personal connection without overusing it. Let the conversation flow naturally and use their name when it genuinely enhances the interaction.`
-        : "";
-
-
-
-      const citationRequirement =
-        context.trim().length > 0
-          ? `
-              CITATIONS (mandatory when context is non-empty): If you use ANY fact from RELEVANT CONTEXT,
-              Part 4 MUST be a JSON array of chunk ids you used — each string MUST be the **full** id inside the bracket,
-              copied **verbatim** from \`[CHUNK_ID:FULL_ID_HERE]\` (same spelling and length; ids are long, often TitleWords_hex_0).
-              Do NOT shorten to a suffix (e.g. only hex_0); source links require the complete id. At least one id if you used context.
-              Do NOT return [] unless you truly used no retrieved chunks.
-              **Never paste those ids into Part 1** — not as \`[CHUNK_ID:...]\`, not as \`[TitleWords_hex_0]\`, not as footnotes. Part 1 must read like a normal article for humans; ids are **only** the JSON strings in Part 4.
-`
+        const fullName = user?.name || "";
+        const firstName = fullName.split(" ")[0] || "";
+        const nameInstruction = firstName
+          ? `\n\nIMPORTANT - PERSONAL CONNECTION: The user's first name is "${firstName}". Use their name naturally in your responses when it feels appropriate and adds warmth to the conversation. Consider the conversation history - if you've already used their name recently, you don't need to repeat it. Use it when it feels natural: at the beginning of a new topic, when emphasizing a point, or when transitioning between ideas. The goal is to create a personal connection without overusing it. Let the conversation flow naturally and use their name when it genuinely enhances the interaction.`
           : "";
 
-      const finalPrompt = `${prompt}${nameInstruction}
 
-              CONVERSATION HISTORY:
-              ${fullFormattedHistory}
+
+        const summaryBlock = chatSummary
+          ? `SUMMARY:\n${chatSummary}`
+          : "SUMMARY:\n(empty)";
+
+        const finalPrompt = `${prompt}${nameInstruction}
+
+              ${summaryBlock}
+
+              RECENT MESSAGES:
+              ${formattedHistory}
 
               RELEVANT CONTEXT (each chunk is marked with [CHUNK_ID:...]):
               ${context}
@@ -512,169 +512,128 @@ export async function POST(req) {
               USER QUESTION: ${betterQuery}
 
               IMPORTANT: The [CHUNK_ID:...] prefixes in RELEVANT CONTEXT are for your internal tracking only.
-              Part 1 (your visible answer) must contain **zero** retrieval identifiers: no \`[CHUNK_ID:...]\`, and no bracketed strings that look like chunk ids (e.g. long tokens with underscores and hex, ending in \`_0\`, \`_1\`, etc.).
-              Do not invent inline “citations” in square brackets — the product shows sources from Part 4 separately.
+              Your visible answer (Part 1 only) must contain **zero** retrieval identifiers: no \`[CHUNK_ID:...]\`, and no bracketed strings that look like chunk ids (e.g. long tokens with underscores and hex, ending in \`_0\`, \`_1\`, etc.).
               Extract facts into clean prose; attribute in words when helpful (e.g. publication name), never by pasting ids.
-              In Part 4 only, output each **full** id exactly as it appears after \`[CHUNK_ID:\` and before \`]\` — no truncation.
-              ${citationRequirement}
-              Please provide a helpful response based on the above information.`;
+              Follow the system instructions: respond as EXACTLY 2 parts separated by //// — Part 1 your reply, Part 2 a JSON array of the **full** chunk id strings you used from \`[CHUNK_ID:...]\` (use [] if none).`;
 
-      const mainPrompt = finalPrompt + SYSTEM_PROMPT_LEAD;
-      inputToken += estimateTokens(mainPrompt);
+        const mainPrompt = finalPrompt + SYSTEM_PROMPT_LEAD;
 
-      let geminiContents = [
-        {
-          role: "user",
-          parts: [{ text: mainPrompt }],
-        },
-      ];
+        let geminiContents = [
+          {
+            role: "user",
+            parts: [{ text: mainPrompt }],
+          },
+        ];
 
-      try {
-        let responseGemini = await generateLeadJourneyGeminiContent({
-          modelName,
-          location: "global",
-          contents: geminiContents,
-        });
-
-        let responseText = extractGeminiText(responseGemini);
-        outputToken += estimateTokens(responseText);
-
-        let reParts = responseText.split("////").map((item) => item.trim());
-
-        const chunkIdsPartRawFirst =
-          reParts.length >= 4 ? reParts[3].trim() : "";
-        let usedChunkIds = extractChunkIdsFromPart4(chunkIdsPartRawFirst);
-        usedChunkIds = usedChunkIds.filter((id) =>
-          citationAllowlistChunkIds.includes(id)
-        );
-
-        if (usedChunkIds.length > 0) {
-          const next = sourcesFromUsedChunkIds(usedChunkIds, uniqueContext);
-          sourceUrls = next.sourceUrls;
-          sourceCards = next.sourceCards;
-          sourceChunkIds = usedChunkIds;
-        } else {
-          sourceUrls = [];
-          sourceCards = [];
-          sourceChunkIds = [];
-        }
-
-        if (reParts.length !== 4) {
-          const strictPrompt = `CRITICAL ERROR: Your previous response had ${reParts.length} parts but the format requires EXACTLY 4 parts separated by ////.\n\nYou MUST follow the format specified in the system instructions. This is MANDATORY, not optional.\n\nREMINDER: Part 4 must be a JSON array of the **complete** chunk id strings exactly as shown inside each [CHUNK_ID:...] in context — full length, not a short suffix. Part 1 must be human-readable only: no [CHUNK_ID:...], no bracketed chunk ids like [TitleWords_hex_0], no internal id footnotes.\n\nPlease retry with the correct 4-part format.`;
-
-          inputToken += estimateTokens(strictPrompt);
-          responseGemini = await generateLeadJourneyGeminiContent({
+        try {
+          const responseGemini = await generateLeadJourneyGeminiContent({
             modelName,
             location: "global",
-            contents: [
-              {
-                role: "user",
-                parts: [
-                  {
-                    text: mainPrompt + "\n\n" + strictPrompt,
-                  },
-                ],
-              },
-            ],
+            contents: geminiContents,
           });
 
-          responseText = extractGeminiText(responseGemini);
-          outputToken = estimateTokens(responseText);
-          reParts = responseText.split("////").map((item) => item.trim());
+          const responseText = extractGeminiText(responseGemini);
+          const reParts = responseText.split("////").map((item) => item.trim());
 
-          if (reParts.length >= 4) {
-            const chunkIdsPartRetry = reParts[3].trim();
-            usedChunkIds = extractChunkIdsFromPart4(chunkIdsPartRetry);
+          let reply = "";
+          let usedChunkIds = [];
+
+          if (reParts.length >= 2) {
+            reply = reParts[0] || "";
+            const chunkIdsPartRaw = reParts[1].trim();
+            usedChunkIds = extractChunkIdsFromPart4(chunkIdsPartRaw);
             usedChunkIds = usedChunkIds.filter((id) =>
               citationAllowlistChunkIds.includes(id)
             );
-
-            if (usedChunkIds.length > 0) {
-              const next = sourcesFromUsedChunkIds(usedChunkIds, uniqueContext);
-              sourceUrls = next.sourceUrls;
-              sourceCards = next.sourceCards;
-              sourceChunkIds = usedChunkIds;
-            } else {
-              sourceUrls = [];
-              sourceCards = [];
-              sourceChunkIds = [];
-            }
+          } else {
+            reply = responseText.trim();
+            usedChunkIds = [];
           }
-        }
 
-        if (reParts.length === 4) {
-          setImmediate(async () => {
-            try {
-              await Logs.create({
-                message: userMessage || "",
-                altMessage: betterQuery || "",
-                sessionId: sessionId,
-                userId: user.id,
-                role: "user",
-              });
+          if (usedChunkIds.length > 0) {
+            const next = sourcesFromUsedChunkIds(usedChunkIds, uniqueContext);
+            sourceUrls = next.sourceUrls;
+            sourceCards = next.sourceCards;
+            sourceChunkIds = usedChunkIds;
+          } else {
+            sourceUrls = [];
+            sourceCards = [];
+            sourceChunkIds = [];
+          }
 
-              await Logs.create({
-                message: reParts[0] || "",
-                sessionId: sessionId,
-                userId: user.id,
-                role: "assistant",
-                sourceUrls: Array.isArray(sourceUrls) ? sourceUrls : [],
-                sourceCards: Array.isArray(sourceCards) ? sourceCards : [],
-                sourceChunkIds: Array.isArray(sourceChunkIds) ? sourceChunkIds : [],
-              });
+          try {
+            await Logs.create({
+              message: userMessage || "",
+              altMessage: betterQuery || "",
+              sessionId: sessionId,
+              userId: user.id,
+              role: "user",
+            });
 
-              await Session.updateOne(
-                { _id: sessionId },
-                {
-                  $set: {
-                    chatSummary: reParts[1],
-                    title: reParts[2],
-                  },
-                  $inc: {
-                    totalInputTokens: inputToken,
-                    totalOutputTokens: outputToken,
-                  },
-                },
-                { upsert: true }
-              );
-            } catch (error) { }
-          });
+            await Logs.create({
+              message: reply || "",
+              sessionId: sessionId,
+              userId: user.id,
+              role: "assistant",
+              sourceUrls: Array.isArray(sourceUrls) ? sourceUrls : [],
+              sourceCards: Array.isArray(sourceCards) ? sourceCards : [],
+              sourceChunkIds: Array.isArray(sourceChunkIds) ? sourceChunkIds : [],
+            });
 
+            const updated = await Session.findOneAndUpdate(
+              { _id: sessionId },
+              { $inc: { summaryPendingCount: 2 } },
+              { new: true, select: "summaryPendingCount" }
+            ).lean();
+
+            const pending = Number(updated?.summaryPendingCount || 0);
+            const tasksSecret = process.env.TASKS_SECRET;
+
+            if (pending >= 4 && tasksSecret) {
+              try {
+                const requestOrigin = new URL(req.url).origin;
+                const baseUrl =
+                  process.env.PUBLIC_BASE_URL ||
+                  process.env.BASE_URL ||
+                  requestOrigin;
+                await enqueueCloudTask({
+                  url: `${baseUrl.replace(/\/$/, "")}/api/tasks/summarize-session`,
+                  payload: { sessionId },
+                  taskNameSuffix: `summarize-${sessionId}`,
+                  headers: { "x-tasks-secret": tasksSecret },
+                });
+              } catch (e) {
+                console.error(
+                  "[lead-journey] summarize Cloud Task enqueue failed:",
+                  e?.message || e
+                );
+              }
+            }
+          } catch (persistErr) {
+            console.error("[lead-journey] log/session update failed:", persistErr);
+          }
 
           return NextResponse.json({
-            reply: reParts[0],
-            summary: reParts[1],
-            title: reParts[2],
+            reply,
             requery: betterQuery,
-            sourceUrls: sourceUrls,
-            sourceCards: sourceCards,
-            inputTokens: inputToken,
-            outputTokens: outputToken,
-            totalTokens: inputToken + outputToken,
+            sourceUrls,
+            sourceCards,
           });
-        } else {
-          return errorResponse(
-            500,
-            "Unexpected response format from AI model",
-            "format-main-response",
-            { partsReceived: reParts.length }
-          );
+        } catch (error) {
+          const status = responseStatusForVertexError(error);
+          const message =
+            status === 429
+              ? "Rate limited; please try again later"
+              : "Failed to generate AI response";
+          return errorResponse(status, message, "generate-main-response", serializeError(error));
         }
       } catch (error) {
-        return errorResponse(
-          500,
-          "Failed to generate AI response",
-          "generate-main-response",
-          serializeError(error)
-        );
-      }
-      } catch (error) {
-        return errorResponse(
-          500,
-          "Lead journey request failed",
-          "unhandled",
-          serializeError(error)
-        );
+        const status = responseStatusForVertexError(error);
+        const message =
+          status === 429
+            ? "Rate limited; please try again later"
+            : "Lead journey request failed";
+        return errorResponse(status, message, "unhandled", serializeError(error));
       }
     },
   });

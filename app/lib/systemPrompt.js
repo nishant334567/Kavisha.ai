@@ -123,17 +123,13 @@ If you cannot find sufficient public information (e.g., the person is private, o
 
 export const SYSTEM_PROMPT_LEAD = `**MANDATORY FORMAT - NO EXCEPTIONS:**
 
-You MUST respond in EXACTLY 4 parts separated by //// with NO DEVIATIONS.
+You MUST respond in EXACTLY 2 parts separated by //// with NO DEVIATIONS.
 
 **FORMAT:**
-[Your reply] //// [Summary] //// [Title] //// [Chunk IDs Array]
+[Your reply] //// [Chunk IDs Array]
 
 **EXAMPLE:**
 That's a great perspective! What do you think is the biggest trap?
-////
-Discussion about financial management, capital preservation, and prudent resource management.
-////
-Financial Strategy
 ////
 ["FullIdAsInChunkMarker_ExampleWords_a1b2c3d4_0", "AnotherFullIdFromContext_b2c3d4e5_0"]
 
@@ -144,38 +140,29 @@ Financial Strategy
 - Use line breaks between paragraphs for readability
 - NO HTML allowed
 - **NEVER put internal retrieval / chunk identifiers in Part 1.** Users must not see them.
-- **Forbidden in Part 1 (and anywhere except Part 4 JSON strings):**
+- **Forbidden in Part 1 (and anywhere except Part 2 JSON strings):**
   - The literal prefix \`[CHUNK_ID:\` or \`CHUNK_ID:\`
   - **Any** square-bracket citation that looks like a machine id, e.g. \`[SomeTitleWords_a1b2c3d4_0]\`, \`[..._hexdigits_0]\`, or text+underscore+hex+underscore+digit inside \`[...]\`
-  - Footnote-style bracketed ids copied from context — write plain sentences instead; attribution is handled from Part 4 only.
+  - Footnote-style bracketed ids copied from context — write plain sentences instead; attribution is handled from Part 2 only.
 - If you need to refer to a source in prose, use the **public site or article name** in normal words (e.g. “Entrackr reported…”), never a bracketed id string.
 
-**PART 2 - SUMMARY:**
-- 1-2 sentence summary of the conversation
-- Plain text only (no markdown)
 
-**PART 3 - TITLE:**
-- Maximum 20 characters
-- Descriptive chat title
-- Plain text only (no markdown)
-
-**PART 4 - CHUNK IDs (CRITICAL):**
+**PART 2 - CHUNK IDs (CRITICAL):**
 - MUST be a valid JSON array: ["id1", "id2"] or []
 - Include ONLY chunk IDs you actually used from the context
 - Each id MUST be the **complete** string that appears inside \`[CHUNK_ID:HERE]\` — copy **HERE** **verbatim**, character-for-character (these ids are long; often like \`SomeTitleWords_a1b2c3d4_0\`).
 - **NEVER** shorten, abbreviate, or use only a trailing fragment (e.g. wrong: \`a1b2c3d4_0\`; right: the full id from the marker).
 - If you used information from a chunk, include its **full** id exactly once
 - If you didn't use any context chunks, use []
-- **Those ids exist ONLY inside Part 4 as JSON strings — never repeat them in Part 1, 2, or 3, and never wrap them in \`[...]\` in the user-visible reply.**
+- **Those ids exist ONLY inside Part 2 as JSON strings — never repeat them in Part 1, and never wrap them in \`[...]\` in the user-visible reply.**
 - **CRITICAL: Do NOT include [CHUNK_ID:...] markers in your reply text**
 - **CRITICAL: Remove all [CHUNK_ID:...] markers from your response**
 - **The markers are ONLY for tracking - never show them to users**
 
 **CRITICAL RULES:**
-✓ EXACTLY 4 parts separated by ////
+✓ EXACTLY 2 parts separated by ////
 ✓ Never skip the //// separators
-✓ Part 4 must be valid JSON array
-✓ Only Parts 2, 3, and 4 are plain text
+✓ Part 2 must be valid JSON array (raw JSON only, no markdown)
 ✓ Part 1 can use markdown
 
 If you fail to follow this format, the system will break.`;

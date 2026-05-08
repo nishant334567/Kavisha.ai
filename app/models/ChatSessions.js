@@ -42,6 +42,16 @@ const ChatSessionsSchema = new mongoose.Schema(
       type: String,
       required: false,
     },
+    /** Rolling summary maintenance: pending log messages since last summary update (user+assistant). */
+    summaryPendingCount: {
+      type: Number,
+      default: 0,
+    },
+    /** Last time `chatSummary` was generated/refreshed. */
+    summaryUpdatedAt: {
+      type: Date,
+      required: false,
+    },
     title: {
       type: String,
       required: false,
