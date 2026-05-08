@@ -29,6 +29,8 @@ export default function ChatBox({
   // setShowInbox,
 }) {
   const endOfMessagesRef = useRef(null);
+  const messagesScrollRef = useRef(null);
+  const shouldStickToBottomRef = useRef(true);
   const suggestedQuestionsScrollRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
@@ -191,6 +193,10 @@ export default function ChatBox({
   }, [currentChatId, currentChatType]);
 
   useEffect(() => {
+    shouldStickToBottomRef.current = true;
+  }, [currentChatId]);
+
+  useEffect(() => {
     setMatches([]);
     setMatchesLastSyncedAt(null);
   }, [currentChatId]);
@@ -237,6 +243,14 @@ export default function ChatBox({
 
     fetchMatches();
   }, [currentChatId, eligibleForMatches, sessionDetailsLoading]);
+
+  const updateStickyFromScroll = useCallback(() => {
+    const el = messagesScrollRef.current;
+    if (!el) return;
+    const distanceFromBottom =
+      el.scrollHeight - (el.scrollTop + el.clientHeight);
+    shouldStickToBottomRef.current = distanceFromBottom < 120;
+  }, []);
 
   const openChatSession = useCallback((userA, userB, otherDisplayName = null) => {
     setUserA(userA);
@@ -295,11 +309,16 @@ export default function ChatBox({
     }
   }, [currentChatId, eligibleForMatches, refetchPaidConnections]);
   useEffect(() => {
-    const timeout = setTimeout(() => {
-      endOfMessagesRef.current?.scrollIntoView({ behavior: "smooth" });
-    }, 100);
-    return () => clearTimeout(timeout);
-  }, [messages]);
+    if (!shouldStickToBottomRef.current) return;
+    const el = messagesScrollRef.current;
+    if (!el) {
+      endOfMessagesRef.current?.scrollIntoView({ behavior: "auto" });
+      return;
+    }
+    requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+    });
+  }, [messages, messageLoading]);
 
   const uploadAudio = async (audioBlob) => {
     setIsTranscribing(true);
@@ -471,6 +490,9 @@ export default function ChatBox({
       updatedMessages = [...messages, newUserMessage];
       historyToUse = updatedMessages;
     }
+
+    // User sent / retried — follow the thread to the bottom even if they had scrolled up.
+    shouldStickToBottomRef.current = true;
 
     setMessages(updatedMessages);
     setMessageLoading(true);
@@ -729,7 +751,13 @@ export default function ChatBox({
             )}
 
             {/* Messages Section - flex-2, scrollable */}
-            <div className="flex-[4] min-h-0 overflow-y-scroll overflow-x-hidden scrollbar-none">
+            <div
+              ref={messagesScrollRef}
+              onScroll={updateStickyFromScroll}
+              onWheel={updateStickyFromScroll}
+              onTouchMove={updateStickyFromScroll}
+              className="flex-[4] min-h-0 overflow-y-scroll overflow-x-hidden scrollbar-none"
+            >
               {/* <div className="flex flex-col gap-2 min-h-full justify-end"> */}
               {currentChatId &&
                 messages.length > 0 &&
@@ -1079,8 +1107,8 @@ export default function ChatBox({
         </div>
       )}
       {openChat && userA && userB && (
-        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/30 p-0 sm:items-center sm:p-4">
-          <div className="flex h-[85vh] max-h-[100vh] w-full flex-col overflow-hidden rounded-t-xl border border-border bg-background shadow-2xl sm:h-[80vh] sm:max-w-lg sm:rounded-xl">
+        <div className="fixed inset-0 z-[70] flex items-end justify-center bg-black/30 p-0 sm:items-center sm:p-3">
+          <div className="flex h-[min(88dvh,560px)] w-full max-h-[92dvh] max-w-md flex-col overflow-hidden rounded-t-2xl border border-border bg-card shadow-2xl sm:rounded-2xl">
             <LiveChat
               userA={userA}
               userB={userB}
