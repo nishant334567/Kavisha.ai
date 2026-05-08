@@ -599,7 +599,8 @@ export async function POST(req) {
                 await enqueueCloudTask({
                   url: `${baseUrl.replace(/\/$/, "")}/api/tasks/summarize-session`,
                   payload: { sessionId },
-                  taskNameSuffix: `summarize-${sessionId}`,
+                  // Unique name per enqueue: Cloud Tasks forbids reusing the same task name for ~1h after completion (409 ALREADY_EXISTS).
+                  taskNameSuffix: `summarize-${sessionId}-${Date.now()}`,
                   headers: { "x-tasks-secret": tasksSecret },
                 });
               } catch (e) {

@@ -49,6 +49,7 @@ const LogsSchema = new mongoose.Schema(
 );
 
 LogsSchema.index({ sessionId: 1 });
+LogsSchema.index({ sessionId: 1, createdAt: 1 });
 
 const Logs = mongoose.models.Logs || mongoose.model("Logs", LogsSchema);
 module.exports = Logs;

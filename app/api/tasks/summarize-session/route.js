@@ -4,6 +4,16 @@ import Session from "@/app/models/ChatSessions";
 import Logs from "@/app/models/ChatLogs";
 import { extractGeminiText, generateGeminiContentRest } from "@/app/lib/gemini-rest";
 
+const SYSTEM_SUMMARY_INSTRUCTION = `You update a rolling plain-text summary of a chat session for (1) model context on later turns and (2) admin skim.
+
+Output: plain text only—no markdown headings, no "Part 1/2", no labeled bullets. Never include internal IDs like [CHUNK_ID:...].
+
+Be user-centric: lead with what the user asked, shared, wants, or decided (topics, facts, constraints). For each assistant message, add at most one short phrase on how the assistant helped (e.g. explained X, suggested Y)—do not reproduce long assistant replies.
+
+Merge the previous summary with the new logs: keep stable facts from the previous summary unless newer logs contradict them; when they conflict, prefer newer logs. If new logs add nothing material, keep the previous summary with light edits only.
+
+Respond with only the updated summary—no preamble, title, or explanation.`;
+
 /** @returns {null | { error: string, status: number }} */
 function requireTasksSecret(request) {
   if (process.env.NODE_ENV === "production" && !process.env.TASKS_SECRET) {
@@ -18,11 +28,22 @@ function requireTasksSecret(request) {
   return null;
 }
 
+/** Build text for summarization (full assistant message text; user lines may include altMessage). */
 function formatMessagesForSummary(logs) {
   return logs
-    .map((l) => `${l.role}: ${String(l.message || "").trim()}`)
+    .map((l) => {
+      const msg = String(l.message || "").trim();
+      if (l.role === "user") {
+        const alt = String(l.altMessage || "").trim();
+        if (alt && alt !== msg) {
+          return `user: ${msg}\n(user intent / retrieval query: ${alt})`;
+        }
+        return `user: ${msg}`;
+      }
+      return `assistant: ${msg}`;
+    })
     .filter(Boolean)
-    .join("\n");
+    .join("\n\n");
 }
 
 export async function POST(request) {
@@ -40,61 +61,77 @@ export async function POST(request) {
     await connectDB();
 
     const session = await Session.findById(sessionId)
-      .select("chatSummary summaryPendingCount")
+      .select("chatSummary summaryPendingCount summaryUpdatedAt")
       .lean();
     if (!session) {
       return NextResponse.json({ error: "Session not found" }, { status: 404 });
     }
 
-    // No-op when nothing is pending (idempotent).
     const pending = Number(session.summaryPendingCount || 0);
     if (pending < 4) {
       return NextResponse.json({ ok: true, skipped: true, reason: "pending<4" });
     }
 
-    const recentLogs = await Logs.find({ sessionId })
-      .sort({ createdAt: -1 })
-      .limit(4)
-      .select("role message createdAt")
+    const logFilter = { sessionId };
+    if (session.summaryUpdatedAt) {
+      logFilter.createdAt = { $gt: session.summaryUpdatedAt };
+    }
+
+    const sessionLogs = await Logs.find(logFilter)
+      .sort({ createdAt: 1 })
+      .select("role message altMessage createdAt")
       .lean();
 
-    const recent = formatMessagesForSummary([...recentLogs].reverse());
+    const conversationText = formatMessagesForSummary(sessionLogs).trim();
+    if (sessionLogs.length === 0 || !conversationText) {
+      console.warn("[summarize-session] skip summarize: no logs in window or empty content", {
+        sessionId,
+        logCount: sessionLogs.length,
+      });
+      return NextResponse.json({
+        ok: true,
+        skipped: true,
+        reason:
+          sessionLogs.length === 0 ? "no_logs_in_window" : "empty_log_messages",
+      });
+    }
+
     const oldSummary = String(session.chatSummary || "").trim();
 
-    const modelName = process.env.AI_MODEL_SUMMARY || process.env.AI_MODEL || "gemini-3.1-flash-lite";
+    const modelName =
+      process.env.AI_MODEL_SUMMARY || process.env.AI_MODEL || "gemini-3.1-flash-lite";
 
-    const prompt = [
-      "You maintain a concise rolling conversation summary for future context.",
-      "Update the summary using the previous summary + recent messages.",
-      "",
-      "Rules:",
-      "- Output ONLY the updated summary text (no markdown, no headings).",
-      "- Keep it short: aim <= 400 tokens. Hard cap: ~2500 characters.",
-      "- Preserve stable user facts/preferences and important decisions.",
-      "- Do not include any internal IDs like [CHUNK_ID:...].",
-      "",
-      "Previous summary (may be empty):",
+    const userTurn = [
+      "Previous summary:",
       oldSummary ? oldSummary : "(empty)",
       "",
-      "Recent messages:",
-      recent ? recent : "(no recent messages)",
-      "",
-      "Updated summary:",
+      "New chat logs since last summary update (chronological):",
+      conversationText,
     ].join("\n");
 
     const resp = await generateGeminiContentRest({
       modelName,
       location: "global",
-      contents: [{ role: "user", parts: [{ text: prompt }] }],
-      generationConfig: { temperature: 0 },
+      systemInstruction: {
+        parts: [{ text: SYSTEM_SUMMARY_INSTRUCTION }],
+      },
+      contents: [{ role: "user", parts: [{ text: userTurn }] }],
+      generationConfig: {
+        temperature: 0,
+      },
     });
 
-    let nextSummary = extractGeminiText(resp);
-    if (nextSummary.length > 2500) nextSummary = nextSummary.slice(0, 2500);
+    const nextSummary = extractGeminiText(resp);
 
     await Session.updateOne(
       { _id: sessionId },
-      { $set: { chatSummary: nextSummary, summaryUpdatedAt: new Date(), summaryPendingCount: 0 } }
+      {
+        $set: {
+          chatSummary: nextSummary,
+          summaryUpdatedAt: new Date(),
+          summaryPendingCount: 0,
+        },
+      }
     );
 
     return NextResponse.json({ ok: true });
@@ -105,4 +142,3 @@ export async function POST(request) {
     );
   }
 }
-
