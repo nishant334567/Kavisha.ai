@@ -589,7 +589,8 @@ export async function POST(req) {
             const pending = Number(updated?.summaryPendingCount || 0);
             const tasksSecret = process.env.TASKS_SECRET;
 
-            if (pending >= 4 && tasksSecret) {
+            // After 3 user messages (each turn writes user + assistant logs → +6 pending since reset).
+            if (pending >= 6 && tasksSecret) {
               try {
                 const requestOrigin = new URL(req.url).origin;
                 const baseUrl =
