@@ -5,7 +5,7 @@ import { ThumbsUp } from "lucide-react";
 
 export default function AssistantEngagementRow({
     logId,
-    likeCount = 0,
+    liked = false,
     onUpdated,
     className = "",
 }) {
@@ -13,21 +13,21 @@ export default function AssistantEngagementRow({
 
     if (!logId) return null;
 
-    const postLike = async () => {
+    const toggleLike = async () => {
         if (pending) return;
         setPending(true);
         try {
             const res = await fetch(`/api/logs/message/${logId}`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "like" }),
+                body: JSON.stringify({ action: liked ? "unlike" : "like" }),
                 credentials: "same-origin",
             });
             const data = await res.json().catch(() => ({}));
             if (res.ok && onUpdated) {
                 onUpdated({
-                    likeCount: Number(data.likeCount) || 0,
-                    copyCount: Number(data.copyCount) || 0,
+                    liked: Boolean(data.liked),
+                    copied: Boolean(data.copied),
                 });
             }
         } finally {
@@ -42,11 +42,16 @@ export default function AssistantEngagementRow({
             <button
                 type="button"
                 disabled={pending}
-                onClick={() => void postLike()}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-border/60 bg-background/80 px-2 py-1.5 transition hover:bg-muted-bg disabled:opacity-50"
+                aria-pressed={liked}
+                aria-label={liked ? "Unlike this answer" : "Like this answer"}
+                onClick={() => void toggleLike()}
+                className={`inline-flex items-center justify-center rounded-lg border border-border/60 bg-background/80 p-2 transition hover:bg-muted-bg ${pending ? "opacity-50" : ""}`}
             >
-                <ThumbsUp className="h-3.5 w-3.5 text-[#18A6B8]" aria-hidden />
-                <span className="tabular-nums text-[#18A6B8]">{likeCount}</span>
+                <ThumbsUp
+                    className={`h-3.5 w-3.5 text-[#18A6B8] ${liked ? "fill-[#18A6B8]" : "fill-none"}`}
+                    strokeWidth={2}
+                    aria-hidden
+                />
             </button>
         </div>
     );

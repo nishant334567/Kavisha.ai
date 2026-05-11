@@ -44,15 +44,15 @@ const LogsSchema = new mongoose.Schema(
       enum: ["user", "assistant"],
       required: true,
     },
-    /** Assistant messages only; incremented when user likes this answer. */
-    likeCount: {
-      type: Number,
-      default: 0,
+    /** Assistant messages only; user liked state (toggle). */
+    liked: {
+      type: Boolean,
+      default: false,
     },
-    /** Assistant messages only; incremented when user copies this answer (clipboard). */
-    copyCount: {
-      type: Number,
-      default: 0,
+    /** Assistant messages only; set true first time user copies (stays true; analytics). */
+    copied: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true }

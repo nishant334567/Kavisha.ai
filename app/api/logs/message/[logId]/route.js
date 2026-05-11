@@ -6,6 +6,14 @@ import Session from "@/app/models/ChatSessions";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { createOrGetUser } from "@/app/lib/firebase/create-user";
 
+function effectiveLiked(doc) {
+  return doc?.liked === true;
+}
+
+function effectiveCopied(doc) {
+  return doc?.copied === true;
+}
+
 export async function POST(req, { params }) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
@@ -23,9 +31,9 @@ export async function POST(req, { params }) {
         }
 
         const action = body?.action;
-        if (action !== "like" && action !== "copy") {
+        if (action !== "like" && action !== "unlike" && action !== "copy") {
           return NextResponse.json(
-            { error: "action must be like or copy" },
+            { error: "action must be like, unlike, or copy" },
             { status: 400 }
           );
         }
@@ -34,7 +42,9 @@ export async function POST(req, { params }) {
         const dbUser = await createOrGetUser(decodedToken);
         const userId = dbUser._id.toString();
 
-        const log = await Logs.findById(logId).select("sessionId role").lean();
+        const log = await Logs.findById(logId)
+          .select("sessionId role liked copied")
+          .lean();
         if (!log) {
           return NextResponse.json({ error: "Not found" }, { status: 404 });
         }
@@ -49,16 +59,21 @@ export async function POST(req, { params }) {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        const inc = action === "like" ? { likeCount: 1 } : { copyCount: 1 };
-        const updated = await Logs.findByIdAndUpdate(
-          logId,
-          { $inc: inc },
-          { new: true, select: "likeCount copyCount" }
-        ).lean();
+        if (action === "like") {
+          await Logs.updateOne({ _id: logId }, { $set: { liked: true } });
+        } else if (action === "unlike") {
+          await Logs.updateOne({ _id: logId }, { $set: { liked: false } });
+        } else if (action === "copy" && log.copied !== true) {
+          await Logs.updateOne({ _id: logId }, { $set: { copied: true } });
+        }
+
+        const updated = await Logs.findById(logId)
+          .select("liked copied")
+          .lean();
 
         return NextResponse.json({
-          likeCount: updated?.likeCount ?? 0,
-          copyCount: updated?.copyCount ?? 0,
+          liked: effectiveLiked(updated),
+          copied: effectiveCopied(updated),
         });
       } catch (err) {
         console.error("[logs/message POST]", err);

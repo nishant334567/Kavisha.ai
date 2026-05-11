@@ -443,8 +443,8 @@ export default function ChatBoxWidget({
               requery: null,
               sourceUrls: row.sourceUrls,
               sourceCards: row.sourceCards,
-              likeCount: Number(row.likeCount) || 0,
-              copyCount: Number(row.copyCount) || 0,
+              liked: Boolean(row.liked),
+              copied: Boolean(row.copied),
             }))
           );
         }
@@ -672,8 +672,8 @@ export default function ChatBoxWidget({
         message: data.reply ?? "",
         sourceUrls: data?.sourceUrls || [],
         sourceCards: data?.sourceCards || [],
-        likeCount: 0,
-        copyCount: 0,
+        liked: false,
+        copied: false,
       };
       setMessages([...withRequery, assistantMsg]);
     } catch {
@@ -1175,7 +1175,7 @@ export default function ChatBoxWidget({
                               logId={
                                 m.id != null ? String(m.id) : ""
                               }
-                              likeCount={Number(m.likeCount) || 0}
+                              liked={Boolean(m.liked)}
                               onUpdated={(c) =>
                                 updateMessageEngagement(
                                   m.id != null ? String(m.id) : "",
@@ -1192,6 +1192,7 @@ export default function ChatBoxWidget({
                               logId={
                                 m.id != null ? String(m.id) : ""
                               }
+                              copied={Boolean(m.copied)}
                               onRecorded={(c) =>
                                 updateMessageEngagement(
                                   m.id != null ? String(m.id) : "",

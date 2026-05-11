@@ -1,7 +1,7 @@
 "use client";
 
-import { useCallback, useState } from "react";
-import { Check, Copy } from "lucide-react";
+import { useCallback } from "react";
+import { Copy } from "lucide-react";
 
 function hostFromUrl(url) {
   try {
@@ -11,16 +11,12 @@ function hostFromUrl(url) {
   }
 }
 
-/** One line, no internal newlines — better for pasted summaries. */
 function singleLine(s) {
   return String(s ?? "")
     .replace(/\s+/g, " ")
     .trim();
 }
 
-/**
- * Short optional blurb when there is no title (strip KB metadata lines from chunk text).
- */
 function excerptFromDescription(desc) {
   if (!desc || typeof desc !== "string") return "";
   const lines = desc.split(/\r?\n/).filter((line) => {
@@ -49,9 +45,6 @@ function labelForSourceCard(c) {
   return host || "Source";
 }
 
-/**
- * Sanity `copyReadMoreUrl` wins; else Entrackr brand or entrackr.com sources → https://entrackr.com
- */
 function resolveReadMoreForCopy(
   readMoreUrl,
   brandSubdomain,
@@ -82,10 +75,6 @@ function resolveReadMoreForCopy(
   return "";
 }
 
-/**
- * Plain text for clipboard: answer + compact sources (title + URL per row).
- * Omits long Pinecone descriptions (Author/Published/body blobs) so paste is shareable.
- */
 export function buildAssistantReplyCopyText(
   message,
   sourceCards,
@@ -139,17 +128,13 @@ export default function AssistantReplyCopyButton({
   message,
   sourceCards,
   sourceUrls,
-  /** e.g. https://entrackr.com — from Sanity widget launcher */
   readMoreUrl = "",
-  /** Kavisha brand slug (e.g. entrackr) — used when readMoreUrl not set in CMS */
   brandSubdomain = "",
-  /** When set, successful clipboard copy increments server copyCount and calls onRecorded. */
   logId = "",
   onRecorded,
+  copied = false,
   className = "",
 }) {
-  const [copied, setCopied] = useState(false);
-
   const handleCopy = useCallback(async () => {
     const more = resolveReadMoreForCopy(
       readMoreUrl,
@@ -165,11 +150,9 @@ export default function AssistantReplyCopyButton({
     );
     try {
       await navigator.clipboard.writeText(text);
-      setCopied(true);
-      window.setTimeout(() => setCopied(false), 2000);
 
       const id = String(logId || "").trim();
-      if (id && typeof onRecorded === "function") {
+      if (id && typeof onRecorded === "function" && !copied) {
         try {
           const res = await fetch(`/api/logs/message/${id}`, {
             method: "POST",
@@ -180,8 +163,8 @@ export default function AssistantReplyCopyButton({
           const data = await res.json().catch(() => ({}));
           if (res.ok) {
             onRecorded({
-              likeCount: Number(data.likeCount) || 0,
-              copyCount: Number(data.copyCount) || 0,
+              liked: Boolean(data.liked),
+              copied: Boolean(data.copied),
             });
           }
         } catch {
@@ -189,7 +172,7 @@ export default function AssistantReplyCopyButton({
         }
       }
     } catch {
-      /* denied or unsupported — widget needs parent iframe allow="clipboard-write" */
+      /* denied or unsupported */
     }
   }, [
     message,
@@ -199,6 +182,7 @@ export default function AssistantReplyCopyButton({
     brandSubdomain,
     logId,
     onRecorded,
+    copied,
   ]);
 
   return (
@@ -209,11 +193,11 @@ export default function AssistantReplyCopyButton({
         onClick={() => void handleCopy()}
         className={`inline-flex items-center justify-center rounded-md bg-transparent p-2 text-foreground transition-colors hover:bg-black/[0.06] dark:hover:bg-white/[0.08] ${className}`.trim()}
       >
-        {copied ? (
-          <Check className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2} />
-        ) : (
-          <Copy className="h-4 w-4 shrink-0 text-foreground" strokeWidth={2} />
-        )}
+        <Copy
+          className={`h-4 w-4 shrink-0 text-foreground ${copied ? "fill-foreground" : "fill-none"}`}
+          strokeWidth={2}
+          aria-hidden
+        />
       </button>
       <span
         role="tooltip"
