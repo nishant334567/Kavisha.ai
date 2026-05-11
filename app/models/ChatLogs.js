@@ -49,8 +49,8 @@ const LogsSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
-    /** Assistant messages only; incremented when user shares this answer. */
-    shareCount: {
+    /** Assistant messages only; incremented when user copies this answer (clipboard). */
+    copyCount: {
       type: Number,
       default: 0,
     },

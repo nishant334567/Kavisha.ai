@@ -23,9 +23,9 @@ export async function POST(req, { params }) {
         }
 
         const action = body?.action;
-        if (action !== "like" && action !== "share") {
+        if (action !== "like" && action !== "copy") {
           return NextResponse.json(
-            { error: "action must be like or share" },
+            { error: "action must be like or copy" },
             { status: 400 }
           );
         }
@@ -49,16 +49,16 @@ export async function POST(req, { params }) {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        const inc = action === "like" ? { likeCount: 1 } : { shareCount: 1 };
+        const inc = action === "like" ? { likeCount: 1 } : { copyCount: 1 };
         const updated = await Logs.findByIdAndUpdate(
           logId,
           { $inc: inc },
-          { new: true, select: "likeCount shareCount" }
+          { new: true, select: "likeCount copyCount" }
         ).lean();
 
         return NextResponse.json({
           likeCount: updated?.likeCount ?? 0,
-          shareCount: updated?.shareCount ?? 0,
+          copyCount: updated?.copyCount ?? 0,
         });
       } catch (err) {
         console.error("[logs/message POST]", err);

@@ -38,7 +38,7 @@ export default function Analytics() {
     const [daily, setDaily] = useState([]);
     const [performance, setPerformance] = useState({
         answersLiked: 0,
-        answersShared: 0,
+        answersCopied: 0,
     });
     const [topKbDocs, setTopKbDocs] = useState([]);
     const [powerUsers, setPowerUsers] = useState([]);
@@ -72,7 +72,7 @@ export default function Analytics() {
             const p = data?.performance;
             setPerformance({
                 answersLiked: Number(p?.answersLiked) || 0,
-                answersShared: Number(p?.answersShared) || 0,
+                answersCopied: Number(p?.answersCopied) || 0,
             });
             setTopKbDocs(Array.isArray(data?.topKbDocs) ? data.topKbDocs : []);
             setPowerUsers(Array.isArray(data?.powerUsers) ? data.powerUsers : []);
@@ -199,7 +199,7 @@ export default function Analytics() {
             <div className="mt-6 grid grid-cols-1 gap-4 sm:mt-8 sm:gap-6 lg:grid-cols-2">
                 <PerformanceMetricsCard
                     answersLiked={performance.answersLiked}
-                    answersShared={performance.answersShared}
+                    answersCopied={performance.answersCopied}
                 />
                 <TopKbDocsCard docs={topKbDocs} />
             </div>

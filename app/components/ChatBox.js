@@ -576,7 +576,7 @@ export default function ChatBox({
     ) {
       assistantMsg._id = data.assistantLogId;
       assistantMsg.likeCount = 0;
-      assistantMsg.shareCount = 0;
+      assistantMsg.copyCount = 0;
     }
     setMessages([...updatedMessagesWithRequery, assistantMsg]);
     setMessageLoading(false);
@@ -871,7 +871,6 @@ export default function ChatBox({
                               m._id != null ? String(m._id) : ""
                             }
                             likeCount={Number(m.likeCount) || 0}
-                            shareCount={Number(m.shareCount) || 0}
                             onUpdated={(c) =>
                               updateMessageEngagement(
                                 m._id != null ? String(m._id) : "",
@@ -885,6 +884,15 @@ export default function ChatBox({
                             sourceUrls={m.sourceUrls}
                             readMoreUrl={brandContext?.assistantCopyReadMoreUrl}
                             brandSubdomain={brandContext?.subdomain}
+                            logId={
+                              m._id != null ? String(m._id) : ""
+                            }
+                            onRecorded={(c) =>
+                              updateMessageEngagement(
+                                m._id != null ? String(m._id) : "",
+                                c
+                              )
+                            }
                           />
                         </div>
                       )}

@@ -115,15 +115,15 @@ const getAnalytics = async (brand, fromDate, toDate) => {
                 answersLiked: {
                     $sum: { $ifNull: ["$likeCount", 0] },
                 },
-                answersShared: {
-                    $sum: { $ifNull: ["$shareCount", 0] },
+                answersCopied: {
+                    $sum: { $ifNull: ["$copyCount", 0] },
                 },
             },
         },
     ]);
     const performanceRow = performanceAgg?.[0] || {};
     const answersLiked = Number(performanceRow.answersLiked) || 0;
-    const answersShared = Number(performanceRow.answersShared) || 0;
+    const answersCopied = Number(performanceRow.answersCopied) || 0;
 
     const citationLogs = await Logs.aggregate([
         {
@@ -259,7 +259,7 @@ const getAnalytics = async (brand, fromDate, toDate) => {
         },
         performance: {
             answersLiked,
-            answersShared,
+            answersCopied,
         },
         topKbDocs,
         /** Ordered by messageCount (user messages only) descending. */

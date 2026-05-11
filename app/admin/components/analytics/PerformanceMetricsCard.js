@@ -1,6 +1,6 @@
-import { CheckCircle2, Share2 } from "lucide-react";
+import { CheckCircle2, Copy } from "lucide-react";
 
-export default function PerformanceMetricsCard({ answersLiked = 0, answersShared = 0 }) {
+export default function PerformanceMetricsCard({ answersLiked = 0, answersCopied = 0 }) {
     return (
         <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm ring-1 ring-black/[0.03] dark:ring-white/[0.05]">
             <div className="border-b border-border/60 px-4 py-3 sm:px-6 sm:py-4">
@@ -23,16 +23,16 @@ export default function PerformanceMetricsCard({ answersLiked = 0, answersShared
                     </span>
                 </div>
                 <div className="flex items-center gap-3 py-4">
-                    <Share2
+                    <Copy
                         className="h-8 w-8 shrink-0 text-foreground"
                         strokeWidth={2}
                         aria-hidden
                     />
                     <span className="min-w-0 flex-1 text-sm text-foreground">
-                        Number of answers shared
+                        Number of answers copied
                     </span>
                     <span className="shrink-0 text-lg font-semibold tabular-nums text-[#18A6B8]">
-                        {answersShared}
+                        {answersCopied}
                     </span>
                 </div>
             </div>

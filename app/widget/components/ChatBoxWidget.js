@@ -444,7 +444,7 @@ export default function ChatBoxWidget({
               sourceUrls: row.sourceUrls,
               sourceCards: row.sourceCards,
               likeCount: Number(row.likeCount) || 0,
-              shareCount: Number(row.shareCount) || 0,
+              copyCount: Number(row.copyCount) || 0,
             }))
           );
         }
@@ -673,7 +673,7 @@ export default function ChatBoxWidget({
         sourceUrls: data?.sourceUrls || [],
         sourceCards: data?.sourceCards || [],
         likeCount: 0,
-        shareCount: 0,
+        copyCount: 0,
       };
       setMessages([...withRequery, assistantMsg]);
     } catch {
@@ -1176,7 +1176,6 @@ export default function ChatBoxWidget({
                                 m.id != null ? String(m.id) : ""
                               }
                               likeCount={Number(m.likeCount) || 0}
-                              shareCount={Number(m.shareCount) || 0}
                               onUpdated={(c) =>
                                 updateMessageEngagement(
                                   m.id != null ? String(m.id) : "",
@@ -1190,6 +1189,15 @@ export default function ChatBoxWidget({
                               sourceUrls={m.sourceUrls}
                               readMoreUrl={readMoreCopyUrl}
                               brandSubdomain={brand}
+                              logId={
+                                m.id != null ? String(m.id) : ""
+                              }
+                              onRecorded={(c) =>
+                                updateMessageEngagement(
+                                  m.id != null ? String(m.id) : "",
+                                  c
+                                )
+                              }
                             />
                           </div>
                         )}
