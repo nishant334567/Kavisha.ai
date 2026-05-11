@@ -53,6 +53,7 @@ export default function AdminNavbar() {
     { name: "Train My Avataar", path: `/admin/${brand?.subdomain}/train/v2` },
     { name: "Revenue", path: `/admin/${brand?.subdomain}/revenue` },
     { name: "My Profile", path: `/admin/${brand?.subdomain}/edit-profile` },
+    { name: "Chats", path: "/chats" },
   ];
 
   const handleNavigate = (path, { closeMenu = false, closeSettings = false } = {}) => {
@@ -132,6 +133,13 @@ export default function AdminNavbar() {
             >
               {getNavLabel(`/admin/${brand?.subdomain}/edit-profile`, "MY PROFILE")}
             </li>
+            <li
+              className={`cursor-pointer uppercase tracking-wide text-muted hover:text-foreground transition-colors ${pathname?.startsWith("/chats") ? "font-semibold text-foreground" : ""
+                }`}
+              onClick={() => handleNavigate("/chats")}
+            >
+              {getNavLabel("/chats", "CHATS")}
+            </li>
             <li className="relative" ref={settingDropdownRef}>
               <button onClick={() => setShowsettingDropdown((prev) => !prev)} className="text-muted transition-colors hover:text-foreground">
                 <Settings className="w-4 h-4 stroke-2" />
@@ -190,21 +198,27 @@ export default function AdminNavbar() {
               </button>
             </div>
             <div className="flex flex-col">
-              {navOptions.map((item, index) => (
+              {navOptions.map((item, index) => {
+                const navActive =
+                  item.path === "/chats"
+                    ? pathname?.startsWith("/chats")
+                    : pathname === item.path;
+                return (
                 <button
                   key={index}
                   onClick={() => {
                     setShowNavoption(false);
                     handleNavigate(item.path, { closeMenu: true });
                   }}
-                  className={`w-full border-b border-border px-4 py-3 text-left font-baloo text-sm uppercase tracking-wide transition-colors ${pathname === item.path
+                  className={`w-full border-b border-border px-4 py-3 text-left font-baloo text-sm uppercase tracking-wide transition-colors ${navActive
                     ? "bg-muted-bg text-foreground font-semibold"
                     : "text-muted hover:bg-muted-bg hover:text-foreground"
                     }`}
                 >
                   {getNavLabel(item.path, item.name)}
                 </button>
-              ))}
+              );
+              })}
               {settingOptions.map((item, index) => {
                 return (
                   <button

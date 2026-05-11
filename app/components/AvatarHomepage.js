@@ -11,6 +11,7 @@ import {
 } from "../lib/in-app-browser";
 import BrandHeroImageFrame from "./BrandHeroImageFrame";
 import { DEFAULT_LOGIN_BUTTON_TEXT } from "../lib/loginButtonText";
+import { showPublicChatsNavForHostname } from "@/app/lib/hostNavChats";
 
 export default function AvatarHomepage() {
   const brand = useBrandContext();
@@ -22,10 +23,18 @@ export default function AvatarHomepage() {
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
   const [loadingPath, setLoadingPath] = useState(null);
+  const [showPublicChatsNav, setShowPublicChatsNav] = useState(false);
 
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
     setIsMobile(isMobileDevice());
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setShowPublicChatsNav(
+      showPublicChatsNavForHostname(window.location.hostname)
+    );
   }, []);
 
   const handleSignIn = async () => {
@@ -52,7 +61,9 @@ export default function AvatarHomepage() {
     ? `?brand=${encodeURIComponent(brand.subdomain)}`
     : "";
   const homepageActionLinks = [
-    { label: "TALK TO ME", path: "/chats", primary: true },
+    ...(showPublicChatsNav
+      ? [{ label: "TALK TO ME", path: "/chats", primary: true }]
+      : []),
     { label: "COMMUNITY", path: "/community" },
     ...(brand?.enableLinks !== false
       ? [{ label: "LINKS", path: `/links${linksQs}` }]
