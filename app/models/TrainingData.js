@@ -58,6 +58,11 @@ const TrainingDataSchema = new mongoose.Schema(
       type: Date,
       required: false,
     },
+    /** Lifetime count of assistant answers that cited this doc (once per answer per doc). */
+    chunkReferenceCount: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

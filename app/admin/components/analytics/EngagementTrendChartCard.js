@@ -45,11 +45,13 @@ export default function EngagementTrendChartCard({ data }) {
     };
 
     return (
-        <div className="w-full overflow-hidden rounded-2xl border border-border/60 bg-card p-4 shadow-sm ring-1 ring-black/[0.03] dark:ring-white/[0.05]">
-            <div className="flex items-center justify-between gap-3">
-                <p className="text-sm font-semibold text-foreground">Growth Rate</p>
+        <div className="w-full min-w-0 overflow-hidden rounded-2xl border border-border/60 bg-card p-3 shadow-sm ring-1 ring-black/[0.03] sm:p-4 dark:ring-white/[0.05]">
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="shrink-0 text-sm font-semibold text-foreground">
+                    Growth Rate
+                </p>
                 <div
-                    className="inline-flex items-center rounded-lg border border-border/60 bg-background p-1 text-xs text-muted-foreground"
+                    className="inline-flex min-w-0 flex-wrap items-center gap-1 rounded-lg border border-border/60 bg-background p-1 text-xs text-muted-foreground sm:justify-end"
                     role="tablist"
                     aria-label="Metric"
                 >
@@ -75,7 +77,7 @@ export default function EngagementTrendChartCard({ data }) {
                 </div>
             </div>
 
-            <div className="mt-3 h-56 w-full">
+            <div className="mt-3 h-[220px] w-full min-w-0 sm:h-56">
                 <ResponsiveContainer width="100%" height="100%">
                     <LineChart data={rows} margin={{ top: 6, right: 12, left: 0, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="4 4" opacity={0.25} />

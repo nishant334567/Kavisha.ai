@@ -17,6 +17,7 @@ import Matches from "@/app/components/Matches";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
 import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton";
+import AssistantEngagementRow from "@/app/components/AssistantEngagementRow";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
 import LiveChat from "@/app/components/LiveChat";
 import { useCommunityConnect } from "@/app/hooks/useCommunityConnect";
@@ -274,6 +275,20 @@ export default function ChatBox({
     brandSubdomain: brandContext?.subdomain ?? "",
     openChatSession,
   });
+
+  const updateMessageEngagement = useCallback((logId, counts) => {
+    const id = String(logId || "");
+    if (!id) return;
+    setMessages((prev) =>
+      prev.map((msg) => {
+        const mid = msg._id != null ? String(msg._id) : "";
+        if (mid === id) {
+          return { ...msg, ...counts };
+        }
+        return msg;
+      })
+    );
+  }, []);
 
   const handleRefreshMatches = useCallback(async () => {
     if (!currentChatId || eligibleForMatches !== true) return;
@@ -548,16 +563,22 @@ export default function ChatBox({
       return msg;
     });
 
-    setMessages([
-      ...updatedMessagesWithRequery,
-      {
-        role: "assistant",
-        message: data.reply,
-        sourceUrls: data?.sourceUrls || [],
-        sourceCards: data?.sourceCards || [],
-        intent: data?.intent || "",
-      },
-    ]);
+    const assistantMsg = {
+      role: "assistant",
+      message: data.reply,
+      sourceUrls: data?.sourceUrls || [],
+      sourceCards: data?.sourceCards || [],
+      intent: data?.intent || "",
+    };
+    if (
+      currentChatType?.toLowerCase() === "lead_journey" &&
+      data?.assistantLogId
+    ) {
+      assistantMsg._id = data.assistantLogId;
+      assistantMsg.likeCount = 0;
+      assistantMsg.shareCount = 0;
+    }
+    setMessages([...updatedMessagesWithRequery, assistantMsg]);
     setMessageLoading(false);
     // Reset retry state on success
     if (isRetry) {
@@ -763,7 +784,7 @@ export default function ChatBox({
                 messages.length > 0 &&
                 messages.map((m, i) => (
                   <div
-                    key={i}
+                    key={m._id != null ? String(m._id) : `msg-${i}`}
                     className={`mb-4 w-full min-w-0 ${m.role === "user"
                       ? "flex flex-col items-end"
                       : "flex flex-col items-start"
@@ -844,7 +865,20 @@ export default function ChatBox({
                       )}
                     {m.role === "assistant" &&
                       currentChatType?.toLowerCase() === "lead_journey" && (
-                        <div className="mt-1.5 w-full min-w-0 max-w-[90%] sm:max-w-[60%]">
+                        <div className="mt-1.5 flex w-full min-w-0 max-w-[90%] flex-wrap items-center gap-2 sm:max-w-[60%]">
+                          <AssistantEngagementRow
+                            logId={
+                              m._id != null ? String(m._id) : ""
+                            }
+                            likeCount={Number(m.likeCount) || 0}
+                            shareCount={Number(m.shareCount) || 0}
+                            onUpdated={(c) =>
+                              updateMessageEngagement(
+                                m._id != null ? String(m._id) : "",
+                                c
+                              )
+                            }
+                          />
                           <AssistantReplyCopyButton
                             message={m.message}
                             sourceCards={m.sourceCards}

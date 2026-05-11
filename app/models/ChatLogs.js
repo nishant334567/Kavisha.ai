@@ -44,6 +44,16 @@ const LogsSchema = new mongoose.Schema(
       enum: ["user", "assistant"],
       required: true,
     },
+    /** Assistant messages only; incremented when user likes this answer. */
+    likeCount: {
+      type: Number,
+      default: 0,
+    },
+    /** Assistant messages only; incremented when user shares this answer. */
+    shareCount: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );

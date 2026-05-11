@@ -4,6 +4,8 @@ import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
 import Logs from "@/app/models/ChatLogs";
+import TrainingData from "@/app/models/TrainingData";
+import { docidFromChunkId } from "@/app/lib/chunkDocid";
 
 const getAnalytics = async (brand, fromDate, toDate) => {
     // Treat YYYY-MM-DD inputs as whole-day range (inclusive).
@@ -90,6 +92,143 @@ const getAnalytics = async (brand, fromDate, toDate) => {
     ]);
     const messageCount = messageTotalAgg?.[0]?.messageCount || 0;
 
+    const performanceAgg = await Logs.aggregate([
+        {
+            $match: {
+                role: "assistant",
+                createdAt: { $gte: from, $lte: to },
+            },
+        },
+        {
+            $lookup: {
+                from: "chatsessions",
+                localField: "sessionId",
+                foreignField: "_id",
+                as: "session",
+            },
+        },
+        { $unwind: "$session" },
+        { $match: { "session.brand": brand } },
+        {
+            $group: {
+                _id: null,
+                answersLiked: {
+                    $sum: { $ifNull: ["$likeCount", 0] },
+                },
+                answersShared: {
+                    $sum: { $ifNull: ["$shareCount", 0] },
+                },
+            },
+        },
+    ]);
+    const performanceRow = performanceAgg?.[0] || {};
+    const answersLiked = Number(performanceRow.answersLiked) || 0;
+    const answersShared = Number(performanceRow.answersShared) || 0;
+
+    const citationLogs = await Logs.aggregate([
+        {
+            $match: {
+                role: "assistant",
+                createdAt: { $gte: from, $lte: to },
+                sourceChunkIds: { $exists: true, $ne: [] },
+            },
+        },
+        {
+            $lookup: {
+                from: "chatsessions",
+                localField: "sessionId",
+                foreignField: "_id",
+                as: "session",
+            },
+        },
+        { $unwind: "$session" },
+        { $match: { "session.brand": brand } },
+        { $project: { sourceChunkIds: 1 } },
+    ]);
+
+    /** Per doc: number of assistant answers in range that cited that doc (≥1 chunk). */
+    const docTotals = new Map();
+    for (const log of citationLogs) {
+        const docids = new Set();
+        for (const chunkId of log.sourceChunkIds || []) {
+            const docid = docidFromChunkId(String(chunkId || ""));
+            if (docid) docids.add(docid);
+        }
+        for (const docid of docids) {
+            docTotals.set(docid, (docTotals.get(docid) || 0) + 1);
+        }
+    }
+    const topDocids = [...docTotals.entries()]
+        .sort((a, b) => b[1] - a[1])
+        .slice(0, 10)
+        .map(([d]) => d);
+
+    let topKbDocs = [];
+    if (topDocids.length > 0) {
+        const meta = await TrainingData.find({
+            brand,
+            docid: { $in: topDocids },
+        })
+            .select("docid title sourceUrl")
+            .lean();
+        topKbDocs = topDocids.map((docid) => {
+            const doc = meta.find((m) => m.docid === docid);
+            return {
+                docid,
+                referenceCount: docTotals.get(docid) || 0,
+                title: doc?.title || "",
+                sourceUrl: doc?.sourceUrl || "",
+            };
+        });
+    }
+
+    /** Top 5 users by user message count for this brand in range. */
+    const powerUsersAgg = await Logs.aggregate([
+        {
+            $match: {
+                role: "user",
+                createdAt: { $gte: from, $lte: to },
+            },
+        },
+        {
+            $lookup: {
+                from: "chatsessions",
+                localField: "sessionId",
+                foreignField: "_id",
+                as: "session",
+            },
+        },
+        { $unwind: "$session" },
+        { $match: { "session.brand": brand } },
+        {
+            $group: {
+                _id: "$userId",
+                messageCount: { $sum: 1 },
+            },
+        },
+        { $sort: { messageCount: -1 } },
+        { $limit: 5 },
+        {
+            $lookup: {
+                from: "users",
+                localField: "_id",
+                foreignField: "_id",
+                as: "user",
+            },
+        },
+        { $unwind: { path: "$user", preserveNullAndEmptyArrays: true } },
+        {
+            $project: {
+                _id: 0,
+                userId: { $toString: "$_id" },
+                messageCount: 1,
+                name: { $ifNull: ["$user.name", ""] },
+                email: { $ifNull: ["$user.email", ""] },
+                image: { $ifNull: ["$user.image", ""] },
+            },
+        },
+    ]);
+
     const msgMap = new Map(messageDaily.map((r) => [r.date, r.messages]));
     const sessionsMap = new Map(
         sessionsDaily.map((r) => [
@@ -118,6 +257,13 @@ const getAnalytics = async (brand, fromDate, toDate) => {
             chatCount: totalsFromSessions.chatCount || 0,
             messageCount,
         },
+        performance: {
+            answersLiked,
+            answersShared,
+        },
+        topKbDocs,
+        /** Ordered by messageCount (user messages only) descending. */
+        powerUsers: powerUsersAgg,
         daily,
     };
 };

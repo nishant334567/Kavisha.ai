@@ -14,6 +14,7 @@ import {
 } from "../../lib/gemini-rest.js";
 import { connectDB } from "../../lib/db.js";
 import { enqueueCloudTask } from "../../lib/cloudTasks.js";
+import { recordKbChunkReferences } from "../../lib/recordKbChunkReferences.js";
 
 const LEAD_JOURNEY_GEMINI_MAX_429_RETRIES = 2;
 const LEAD_JOURNEY_GEMINI_RETRY_DELAY_MS = 1500;
@@ -118,16 +119,24 @@ function mergePineconeIntoUniqueContext(uniqueContext, results, results2) {
       url: match.metadata?.chunkSourceUrl || "",
       title: String(match.metadata?.title || "").trim(),
       description: String(match.metadata?.description || "").trim(),
+      docid: String(match.metadata?.docid || "").trim(),
     });
   });
   results2?.result?.hits?.forEach((hit) => {
+    const docid = String(hit.fields?.docid || "").trim();
     if (!uniqueContext.has(hit._id)) {
       uniqueContext.set(hit._id, {
         text: hit.fields?.text || "",
         url: hit.fields?.chunkSourceUrl || hit.chunkSourceUrl || "",
         title: String(hit.fields?.title || "").trim(),
         description: String(hit.fields?.description || "").trim(),
+        docid,
       });
+    } else if (docid) {
+      const cur = uniqueContext.get(hit._id);
+      if (cur && !String(cur.docid || "").trim()) {
+        uniqueContext.set(hit._id, { ...cur, docid });
+      }
     }
   });
 }
@@ -561,6 +570,7 @@ export async function POST(req) {
             sourceChunkIds = [];
           }
 
+          let assistantLogId;
           try {
             await Logs.create({
               message: userMessage || "",
@@ -570,7 +580,7 @@ export async function POST(req) {
               role: "user",
             });
 
-            await Logs.create({
+            const assistantLog = await Logs.create({
               message: reply || "",
               sessionId: sessionId,
               userId: user.id,
@@ -579,6 +589,20 @@ export async function POST(req) {
               sourceCards: Array.isArray(sourceCards) ? sourceCards : [],
               sourceChunkIds: Array.isArray(sourceChunkIds) ? sourceChunkIds : [],
             });
+            assistantLogId = assistantLog?._id?.toString();
+
+            const persistedChunkIds = Array.isArray(sourceChunkIds)
+              ? sourceChunkIds.filter(Boolean)
+              : [];
+            if (persistedChunkIds.length > 0) {
+              setImmediate(() => {
+                void recordKbChunkReferences(
+                  brand,
+                  persistedChunkIds,
+                  uniqueContext
+                );
+              });
+            }
 
             const updated = await Session.findOneAndUpdate(
               { _id: sessionId },
@@ -620,6 +644,7 @@ export async function POST(req) {
             requery: betterQuery,
             sourceUrls,
             sourceCards,
+            ...(assistantLogId ? { assistantLogId } : {}),
           });
         } catch (error) {
           const status = responseStatusForVertexError(error);
