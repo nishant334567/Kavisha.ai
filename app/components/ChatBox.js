@@ -628,9 +628,6 @@ export default function ChatBox({
   }, [currentChatId]);
 
   const primaryBrandHex = normalizeBrandHex(brandContext?.primaryBrandColor);
-  const secondaryBrandHex = normalizeBrandHex(
-    brandContext?.secondaryBrandColor,
-  );
 
   if (chatLoading) {
     return (

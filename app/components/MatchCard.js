@@ -2,7 +2,12 @@
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { MessageSquare } from "lucide-react";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { normalizeBrandHex, hexToRgba } from "../lib/brandTheme";
+import {
+  normalizeBrandHex,
+  hexToRgba,
+  getEffectiveCommunityPrimaryColorStr,
+  getEffectiveCommunitySecondaryColorStr,
+} from "../lib/brandTheme";
 
 export default function MatchCard({
   type = 0,
@@ -24,8 +29,12 @@ export default function MatchCard({
 }) {
   const { user } = useFirebaseSession();
   const brandContext = useBrandContext();
-  const primaryHex = normalizeBrandHex(brandContext?.primaryBrandColor);
-  const secondaryHex = normalizeBrandHex(brandContext?.secondaryBrandColor);
+  const primaryHex = normalizeBrandHex(
+    getEffectiveCommunityPrimaryColorStr(brandContext),
+  );
+  const secondaryHex = normalizeBrandHex(
+    getEffectiveCommunitySecondaryColorStr(brandContext),
+  );
   const accentText = secondaryHex || primaryHex;
 
   const cardSurfaceStyle =

@@ -154,17 +154,39 @@ export default {
     },
     {
       name: "primaryBrandColor",
-      title: "Primary brand color (Community & widget)",
+      title: "Primary brand color (widget)",
       type: "string",
       description:
-        "Optional hex (e.g. #2d545e). Community title, Find Jobs / Hire / Friends, Connect, sidebar New button, and widget launcher / primary actions. Leave empty for default teal (highlight) styling.",
+        "Optional hex (e.g. #2d545e). Embed widget launcher and primary actions. Leave empty for default teal (highlight) styling.",
     },
     {
       name: "secondaryBrandColor",
-      title: "Secondary brand color (Community & widget)",
+      title: "Secondary brand color (legacy)",
       type: "string",
       description:
-        "Optional hex for card accents (name, tags, “Already connected”). Leave empty for default.",
+        "Deprecated for the widget; saving widget colors clears this. Optional fallback in older data only.",
+    },
+    {
+      name: "communityColorsMatchWidget",
+      title: "Community colors match widget",
+      type: "boolean",
+      description:
+        "When enabled, Community uses the same primary/secondary colors as the widget. Turn off to set separate community colors in My Services.",
+      initialValue: true,
+    },
+    {
+      name: "communityPrimaryBrandColor",
+      title: "Community primary color (override)",
+      type: "string",
+      description:
+        "Only used when Community colors are set independently from the widget. Optional hex for Community title, buttons, sidebar New, etc.",
+    },
+    {
+      name: "communitySecondaryBrandColor",
+      title: "Community secondary color (override)",
+      type: "string",
+      description:
+        "Only used when Community colors differ from the widget. Optional hex for tags and card accents on Community.",
     },
     {
       name: "widgetLauncher",
@@ -208,6 +230,33 @@ export default {
           type: "url",
           description:
             "If set, copied assistant replies begin with: To read more, visit [this URL]. Use your public site (e.g. https://entrackr.com). Applies to main chat and embed widget.",
+        },
+      ],
+    },
+    {
+      name: "supportChannel",
+      title: "Support channel",
+      type: "object",
+      description:
+        "Shown to visitors who need help (e.g. after being blocked from the avatar). Use an email and/or a Slack link for unblock or support requests.",
+      options: {
+        collapsible: true,
+        collapsed: true,
+      },
+      fields: [
+        {
+          name: "email",
+          title: "Support email",
+          type: "string",
+          description:
+            "Optional. Address users can write to for unblock requests or other support.",
+        },
+        {
+          name: "slackUrl",
+          title: "Slack URL",
+          type: "url",
+          description:
+            "Optional. Link to a Slack channel or workflow (https) for support or unblock requests.",
         },
       ],
     },

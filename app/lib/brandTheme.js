@@ -1,6 +1,8 @@
 /**
- * Optional per-brand colors for Community + embed widget only.
- * When normalized hex is null, callers should use default Tailwind / CSS tokens.
+ * Widget uses `primaryBrandColor` only. Community can override with its own
+ * primary/secondary when `communityColorsMatchWidget` is false; when true,
+ * both community colors follow widget primary. When normalized hex is null,
+ * callers should use default Tailwind / CSS tokens.
  */
 
 export function normalizeBrandHex(input) {
@@ -25,4 +27,33 @@ export function hexToRgba(hex, alpha) {
   const g = (n >> 8) & 255;
   const b = n & 255;
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/** When true (default), community primary and secondary both use widget primary. */
+export function brandCommunityColorsMatchWidget(brand) {
+  return brand?.communityColorsMatchWidget !== false;
+}
+
+/** Raw hex string for community primary before normalizeBrandHex. */
+export function getEffectiveCommunityPrimaryColorStr(brand) {
+  if (brandCommunityColorsMatchWidget(brand)) {
+    return brand?.primaryBrandColor ?? "";
+  }
+  const override = brand?.communityPrimaryBrandColor;
+  if (typeof override === "string" && override.trim() !== "") return override;
+  return brand?.primaryBrandColor ?? "";
+}
+
+/** Raw hex string for community secondary before normalizeBrandHex. */
+export function getEffectiveCommunitySecondaryColorStr(brand) {
+  if (brandCommunityColorsMatchWidget(brand)) {
+    return brand?.primaryBrandColor ?? "";
+  }
+  const override = brand?.communitySecondaryBrandColor;
+  if (typeof override === "string" && override.trim() !== "") return override;
+  const primaryOverride = brand?.communityPrimaryBrandColor;
+  if (typeof primaryOverride === "string" && primaryOverride.trim() !== "") {
+    return primaryOverride;
+  }
+  return brand?.primaryBrandColor ?? "";
 }

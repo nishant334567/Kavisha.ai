@@ -9,7 +9,10 @@ import ChatSidebar from "@/app/components/ChatSidebar";
 import CommunityBrandStrip from "@/app/components/CommunityBrandStrip";
 import Loader from "@/app/components/Loader";
 import PoweredByKavisha from "@/app/components/PoweredByKavisha";
-import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import {
+  normalizeBrandHex,
+  getEffectiveCommunityPrimaryColorStr,
+} from "@/app/lib/brandTheme";
 
 export default function CommunityChatPage() {
   const params = useParams();
@@ -70,7 +73,9 @@ export default function CommunityChatPage() {
         loadingMessage="Loading..."
         primaryHex={
           brandContext
-            ? normalizeBrandHex(brandContext.primaryBrandColor)
+            ? normalizeBrandHex(
+                getEffectiveCommunityPrimaryColorStr(brandContext),
+              )
             : null
         }
       />
@@ -78,7 +83,9 @@ export default function CommunityChatPage() {
   }
   if (!user) return null;
 
-  const primaryHex = normalizeBrandHex(brandContext?.primaryBrandColor);
+  const primaryHex = normalizeBrandHex(
+    getEffectiveCommunityPrimaryColorStr(brandContext),
+  );
 
   return (
     <div className="min-h-[calc(100vh-64px)] h-[calc(100vh-64px)] flex flex-col overflow-hidden">

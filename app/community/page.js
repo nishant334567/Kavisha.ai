@@ -15,7 +15,11 @@ import Loader from "@/app/components/Loader";
 import PoweredByKavisha from "@/app/components/PoweredByKavisha";
 import CommunityBrandStrip from "@/app/components/CommunityBrandStrip";
 import { ArrowLeft } from "lucide-react";
-import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import {
+  normalizeBrandHex,
+  getEffectiveCommunityPrimaryColorStr,
+  getEffectiveCommunitySecondaryColorStr,
+} from "@/app/lib/brandTheme";
 import {
   JOB_SEEKER_CHAT_TITLE,
   JOB_SEEKER_OPENING_MESSAGE,
@@ -118,14 +122,20 @@ export default function Community() {
       <Loader
         loadingMessage="Loading..."
         primaryHex={
-          brand ? normalizeBrandHex(brand.primaryBrandColor) : null
+          brand
+            ? normalizeBrandHex(getEffectiveCommunityPrimaryColorStr(brand))
+            : null
         }
       />
     );
   }
 
-  const primaryHex = normalizeBrandHex(brand?.primaryBrandColor);
-  const secondaryHex = normalizeBrandHex(brand?.secondaryBrandColor);
+  const primaryHex = normalizeBrandHex(
+    getEffectiveCommunityPrimaryColorStr(brand),
+  );
+  const secondaryHex = normalizeBrandHex(
+    getEffectiveCommunitySecondaryColorStr(brand),
+  );
   const rawBrandLabel =
     brand?.brandName || brand?.title || brand?.communityName || brand?.subdomain || "";
   const brandDisplayName = String(rawBrandLabel).trim() || "We";

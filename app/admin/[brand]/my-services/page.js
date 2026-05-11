@@ -1,7 +1,15 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Edit2, Check, X, ArrowUpRight } from "lucide-react";
+import {
+  ArrowLeft,
+  Edit2,
+  Check,
+  X,
+  ArrowUpRight,
+  Trash2,
+  ImageUp,
+} from "lucide-react";
 import ServiceModal from "@/app/admin/components/ServiceModal";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
@@ -30,8 +38,24 @@ export default function MyServices() {
   const [updating, setUpdating] = useState(false);
   const [brandColors, setBrandColors] = useState({
     primaryBrandColor: "",
-    secondaryBrandColor: "",
   });
+  const [communityColorsMatchWidget, setCommunityColorsMatchWidget] =
+    useState(true);
+  const [communityBrandColors, setCommunityBrandColors] = useState({
+    communityPrimaryBrandColor: "",
+    communitySecondaryBrandColor: "",
+  });
+  const [widgetLauncherAttention, setWidgetLauncherAttention] =
+    useState(false);
+  const [widgetLauncherTexts, setWidgetLauncherTexts] = useState({
+    chatbotWidgetHeader: "",
+    copyReadMoreUrl: "",
+  });
+  const [supportChannel, setSupportChannel] = useState({
+    email: "",
+    slackUrl: "",
+  });
+  const widgetButtonFileInputRef = useRef(null);
   const brandSubdomain = brandContext?.subdomain || "";
 
   const services = brandContext?.services || [];
@@ -107,12 +131,31 @@ export default function MyServices() {
       });
       setBrandColors({
         primaryBrandColor: brandContext.primaryBrandColor || "",
-        secondaryBrandColor: brandContext.secondaryBrandColor || "",
+      });
+      setCommunityColorsMatchWidget(
+        brandContext.communityColorsMatchWidget !== false,
+      );
+      setCommunityBrandColors({
+        communityPrimaryBrandColor:
+          brandContext.communityPrimaryBrandColor || "",
+        communitySecondaryBrandColor:
+          brandContext.communitySecondaryBrandColor || "",
+      });
+      setWidgetLauncherAttention(
+        Boolean(brandContext.widgetLauncherEnableAttentionAnimation),
+      );
+      setWidgetLauncherTexts({
+        chatbotWidgetHeader: brandContext.widgetLauncherChatbotHeader || "",
+        copyReadMoreUrl: brandContext.assistantCopyReadMoreUrl || "",
+      });
+      setSupportChannel({
+        email: brandContext.supportChannelEmail || "",
+        slackUrl: brandContext.supportChannelSlackUrl || "",
       });
     }
   }, [brandContext]);
 
-  const handleSaveBrandColors = async () => {
+  const handleSaveWidgetColors = async () => {
     if (updating) return;
     setUpdating(true);
     try {
@@ -122,18 +165,261 @@ export default function MyServices() {
         body: JSON.stringify({
           subdomain: brandContext?.subdomain,
           primaryBrandColor: brandColors.primaryBrandColor,
-          secondaryBrandColor: brandColors.secondaryBrandColor,
+          secondaryBrandColor: "",
         }),
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || "Failed to save brand colors");
+        throw new Error(data.error || "Failed to save widget colors");
       }
       await new Promise((r) => setTimeout(r, 400));
       window.location.reload();
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to save brand colors");
+      alert(err.message || "Failed to save widget colors");
+      setUpdating(false);
+    }
+  };
+
+  const handleSaveCommunityColors = async () => {
+    if (updating || communityColorsMatchWidget) return;
+    setUpdating(true);
+    try {
+      const response = await fetch("/api/admin/update-features", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: brandContext?.subdomain,
+          communityPrimaryBrandColor:
+            communityBrandColors.communityPrimaryBrandColor,
+          communitySecondaryBrandColor:
+            communityBrandColors.communitySecondaryBrandColor,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save community colors");
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to save community colors");
+      setUpdating(false);
+    }
+  };
+
+  const handleCommunityColorsMatchToggle = async (checked) => {
+    if (updating) return;
+    const prev = communityColorsMatchWidget;
+    setCommunityColorsMatchWidget(checked);
+    setUpdating(true);
+    try {
+      const response = await fetch("/api/admin/update-features", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: brandContext?.subdomain,
+          communityColorsMatchWidget: checked,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update community color mode");
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      setCommunityColorsMatchWidget(prev);
+      alert(err.message || "Failed to update community color mode");
+      setUpdating(false);
+    }
+  };
+
+  const handleSaveWidgetChatbotHeader = async () => {
+    if (updating || !brandContext?.subdomain) return;
+    setUpdating(true);
+    try {
+      const response = await fetch("/api/admin/update-features", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: brandContext.subdomain,
+          widgetLauncherChatbotHeader: widgetLauncherTexts.chatbotWidgetHeader,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save widget header");
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to save widget header");
+      setUpdating(false);
+    }
+  };
+
+  const handleSaveWidgetReadMoreUrl = async () => {
+    if (updating || !brandContext?.subdomain) return;
+    setUpdating(true);
+    try {
+      const response = await fetch("/api/admin/update-features", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: brandContext.subdomain,
+          widgetLauncherCopyReadMoreUrl: widgetLauncherTexts.copyReadMoreUrl,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save read-more URL");
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to save read-more URL");
+      setUpdating(false);
+    }
+  };
+
+  const handleSaveSupportChannelEmail = async () => {
+    if (updating || !brandContext?.subdomain) return;
+    setUpdating(true);
+    try {
+      const response = await fetch("/api/admin/update-features", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: brandContext.subdomain,
+          supportChannelEmail: supportChannel.email,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save support email");
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to save support email");
+      setUpdating(false);
+    }
+  };
+
+  const handleSaveSupportChannelSlackUrl = async () => {
+    if (updating || !brandContext?.subdomain) return;
+    setUpdating(true);
+    try {
+      const response = await fetch("/api/admin/update-features", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: brandContext.subdomain,
+          supportChannelSlackUrl: supportChannel.slackUrl,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to save Slack URL");
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to save Slack URL");
+      setUpdating(false);
+    }
+  };
+
+  const handleWidgetButtonImageSelected = async (e) => {
+    const file = e.target.files?.[0];
+    e.target.value = "";
+    if (!file || updating || !brandContext?.subdomain) return;
+    setUpdating(true);
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("subdomain", brandContext.subdomain);
+      formData.append("imageType", "widgetLauncherButtonImage");
+      const response = await fetch("/api/admin/upload-image", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to upload image");
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to upload image");
+      setUpdating(false);
+    }
+  };
+
+  const handleRemoveWidgetButtonImage = async () => {
+    if (updating || !brandContext?.subdomain) return;
+    if (
+      !confirm(
+        "Remove the custom widget button image? The default chat icon will be used.",
+      )
+    ) {
+      return;
+    }
+    setUpdating(true);
+    try {
+      const response = await fetch("/api/admin/update-features", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: brandContext.subdomain,
+          unsetWidgetLauncherButtonImage: true,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to remove image");
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      alert(err.message || "Failed to remove image");
+      setUpdating(false);
+    }
+  };
+
+  const handleToggleWidgetLauncherAttention = async (checked) => {
+    if (updating || !brandContext?.subdomain) return;
+    const prev = widgetLauncherAttention;
+    setWidgetLauncherAttention(checked);
+    setUpdating(true);
+    try {
+      const response = await fetch("/api/admin/update-features", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          subdomain: brandContext.subdomain,
+          widgetLauncherEnableAttentionAnimation: checked,
+        }),
+      });
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Failed to update animation setting");
+      }
+      await new Promise((r) => setTimeout(r, 400));
+      window.location.reload();
+    } catch (err) {
+      console.error(err);
+      setWidgetLauncherAttention(prev);
+      alert(err.message || "Failed to update animation setting");
       setUpdating(false);
     }
   };
@@ -248,69 +534,470 @@ export default function MyServices() {
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
-            <section className="rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6 lg:col-span-5">
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="font-baloo text-xl font-bold text-highlight">
-                  Chat Services
-                </h2>
-                <span className="text-xs uppercase tracking-wider text-muted">
-                  {services.length} active
-                </span>
-              </div>
-
-              <div className="space-y-2">
-                {services.length === 0 && (
-                  <p className="text-sm text-muted">
-                    No services configured yet.
-                  </p>
-                )}
-                {services.map((service, index) => (
-                  <button
-                    key={service._key || index}
-                    className="w-full rounded-xl border border-border bg-muted-bg px-4 py-3 text-left transition-colors hover:border-[#2D545E]/30 hover:bg-muted-bg/80"
-                    onClick={() => handleEdit(service)}
-                  >
-                    <p className="text-sm uppercase tracking-wide text-highlight font-medium">
-                      {service?.title || service?.name || "Untitled Service"}
-                    </p>
-                    <p className="mt-0.5 text-xs text-muted">
-                      {service?.name || "service"}
-                    </p>
-                  </button>
-                ))}
-              </div>
-
-              {hasServicesToAdd && (
-                <div className="mt-4 relative" ref={dropdownRef}>
-                  <button
-                    onClick={() => setshowAddserviceoptions((prev) => !prev)}
-                    className="w-full px-4 py-3 rounded-xl border border-dashed border-[#2D545E]/50 text-highlight font-medium hover:bg-[#EEF3F6] transition-colors"
-                  >
-                    + Add Service
-                  </button>
-                  {showAddserviceoptions && (
-                    <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
-                      {availableServices
-                        .filter(
-                          (item) =>
-                            item.allowMultiple ||
-                            !availedServices.includes(item.serviceName),
-                        )
-                        .map((item, index) => (
-                          <button
-                            key={index}
-                            onClick={() => addService(item)}
-                            className="w-full px-4 py-2.5 text-left text-sm text-foreground hover:bg-muted-bg"
-                          >
-                            {item.serviceTitle}
-                          </button>
-                        ))}
-                    </div>
-                  )}
+          <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-12">
+            <div className="flex flex-col gap-6 lg:col-span-5">
+              <section className="rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="font-baloo text-xl font-bold text-highlight">
+                    Chat Services
+                  </h2>
+                  <span className="text-xs uppercase tracking-wider text-muted">
+                    {services.length} active
+                  </span>
                 </div>
-              )}
-            </section>
+
+                <div className="space-y-2">
+                  {services.length === 0 && (
+                    <p className="text-sm text-muted">
+                      No services configured yet.
+                    </p>
+                  )}
+                  {services.map((service, index) => (
+                    <button
+                      key={service._key || index}
+                      className="w-full rounded-xl border border-border bg-muted-bg px-4 py-3 text-left transition-colors hover:border-[#2D545E]/30 hover:bg-muted-bg/80"
+                      onClick={() => handleEdit(service)}
+                    >
+                      <p className="text-sm uppercase tracking-wide text-highlight font-medium">
+                        {service?.title || service?.name || "Untitled Service"}
+                      </p>
+                      <p className="mt-0.5 text-xs text-muted">
+                        {service?.name || "service"}
+                      </p>
+                    </button>
+                  ))}
+                </div>
+
+                {hasServicesToAdd && (
+                  <div className="mt-4 relative" ref={dropdownRef}>
+                    <button
+                      onClick={() => setshowAddserviceoptions((prev) => !prev)}
+                      className="w-full px-4 py-3 rounded-xl border border-dashed border-[#2D545E]/50 text-highlight font-medium hover:bg-[#EEF3F6] transition-colors"
+                    >
+                      + Add Service
+                    </button>
+                    {showAddserviceoptions && (
+                      <div className="absolute left-0 right-0 top-full z-50 mt-2 overflow-hidden rounded-xl border border-border bg-card shadow-lg">
+                        {availableServices
+                          .filter(
+                            (item) =>
+                              item.allowMultiple ||
+                              !availedServices.includes(item.serviceName),
+                          )
+                          .map((item, index) => (
+                            <button
+                              key={index}
+                              onClick={() => addService(item)}
+                              className="w-full px-4 py-2.5 text-left text-sm text-foreground hover:bg-muted-bg"
+                            >
+                              {item.serviceTitle}
+                            </button>
+                          ))}
+                      </div>
+                    )}
+                  </div>
+                )}
+              </section>
+
+              <section className="rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6">
+                <h2 className="font-baloo text-xl font-bold text-highlight">
+                  The widget
+                </h2>
+
+                <div className="mt-4">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+                    Widget header
+                  </h3>
+                  <div className="mt-3 space-y-2">
+                    <label
+                      className="text-xs font-medium text-muted"
+                      htmlFor="widget-chatbot-header"
+                    >
+                      Chatbot widget header
+                    </label>
+                    <p className="text-xs text-muted">
+                      Title in the top bar when the embed chat is open. Leave
+                      empty to use the default &quot;{"{Brand}"}&apos;s AI
+                      Chat&quot; title.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        id="widget-chatbot-header"
+                        type="text"
+                        value={widgetLauncherTexts.chatbotWidgetHeader}
+                        onChange={(e) =>
+                          setWidgetLauncherTexts((p) => ({
+                            ...p,
+                            chatbotWidgetHeader: e.target.value,
+                          }))
+                        }
+                        disabled={updating}
+                        className="min-w-0 flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
+                        placeholder="e.g. EntrackrIQ"
+                        autoComplete="off"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveWidgetChatbotHeader}
+                        disabled={updating}
+                        className="shrink-0 text-green-600 hover:text-green-700 disabled:opacity-50"
+                        title="Save header"
+                        aria-label="Save header"
+                      >
+                        <Check className="h-5 w-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setWidgetLauncherTexts((p) => ({
+                            ...p,
+                            chatbotWidgetHeader:
+                              brandContext?.widgetLauncherChatbotHeader || "",
+                          }))
+                        }
+                        disabled={updating}
+                        className="shrink-0 text-red-600 hover:text-red-700 disabled:opacity-50"
+                        title="Reset header"
+                        aria-label="Reset header"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 border-t border-border pt-6">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+                    Logo &amp; animation
+                  </h3>
+                  <p className="mt-1 text-xs text-muted">
+                    Custom launcher image (optional) and a subtle shake animation
+                    so the floating button is easier to notice.
+                  </p>
+                  <input
+                    ref={widgetButtonFileInputRef}
+                    type="file"
+                    accept="image/jpeg,image/png,image/gif,image/webp"
+                    className="sr-only"
+                    onChange={handleWidgetButtonImageSelected}
+                    disabled={updating}
+                  />
+                  <div className="mt-3 flex w-full min-w-0 flex-row items-center justify-between gap-4">
+                    {brandContext?.widgetLauncherButtonImageUrl ? (
+                      <div className="relative h-24 w-24 shrink-0 overflow-hidden rounded-xl border border-border bg-muted-bg sm:h-28 sm:w-28">
+                        <img
+                          src={brandContext.widgetLauncherButtonImageUrl}
+                          alt="Widget launcher button"
+                          className="h-full w-full object-contain p-1"
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex h-24 w-24 shrink-0 items-center justify-center rounded-xl border border-dashed border-border bg-muted-bg text-xs text-muted sm:h-28 sm:w-28">
+                        Default
+                      </div>
+                    )}
+                    <div className="flex min-w-0 flex-1 flex-col items-stretch gap-2 sm:flex-none sm:shrink-0 sm:flex-row sm:flex-nowrap sm:items-center sm:justify-end">
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={() => widgetButtonFileInputRef.current?.click()}
+                        className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 whitespace-nowrap rounded-lg border border-border bg-card px-3 text-sm font-medium text-foreground transition-colors hover:bg-muted-bg disabled:opacity-50 sm:h-auto sm:w-auto sm:justify-start sm:whitespace-normal sm:py-2"
+                      >
+                        <ImageUp className="h-4 w-4 shrink-0" aria-hidden />
+                        Upload image
+                      </button>
+                      {brandContext?.widgetLauncherButtonImageUrl ? (
+                        <button
+                          type="button"
+                          disabled={updating}
+                          onClick={handleRemoveWidgetButtonImage}
+                          className="inline-flex h-10 w-full shrink-0 items-center justify-center gap-2 rounded-lg border border-border bg-card px-3 text-sm font-medium text-red-600 transition-colors hover:bg-red-50 disabled:opacity-50 sm:h-auto sm:w-auto sm:justify-start sm:py-2"
+                        >
+                          <Trash2 className="h-4 w-4" aria-hidden />
+                          Remove
+                        </button>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="mt-6 rounded-xl border border-border bg-muted-bg p-4">
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
+                        <p className="text-sm font-medium text-foreground">
+                          Subtle attention animation
+                        </p>
+                        <p className="mt-1 text-xs text-muted">
+                          When enabled, the floating button plays a gentle periodic
+                          shake so visitors notice it.
+                        </p>
+                      </div>
+                      <label className="relative inline-flex shrink-0 cursor-pointer items-center">
+                        <input
+                          type="checkbox"
+                          checked={widgetLauncherAttention}
+                          onChange={(e) =>
+                            handleToggleWidgetLauncherAttention(e.target.checked)
+                          }
+                          disabled={updating}
+                          className="sr-only peer"
+                        />
+                        <div className="relative h-6 w-11 rounded-full bg-border peer peer-checked:bg-ring after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-border after:bg-card after:transition-all after:content-[''] peer-checked:after:translate-x-full" />
+                      </label>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 border-t border-border pt-6">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+                    Widget colors
+                  </h3>
+                  <p className="mt-1 text-xs text-muted">
+                    Optional. Leave empty for default Kavisha styling. Applies to
+                    the embed widget launcher and chat widget accents.
+                  </p>
+                  <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
+                    <div className="min-w-0 flex-1 space-y-2 sm:min-w-[12rem]">
+                      <label
+                        className="text-xs font-medium text-muted"
+                        htmlFor="widget-primary-brand-color"
+                      >
+                        Primary (hex)
+                      </label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          id="widget-primary-brand-color"
+                          type="text"
+                          value={brandColors.primaryBrandColor}
+                          onChange={(e) =>
+                            setBrandColors((p) => ({
+                              ...p,
+                              primaryBrandColor: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. #2d545e"
+                          disabled={updating}
+                          className="min-w-[8rem] flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
+                        />
+                        <input
+                          type="color"
+                          aria-label="Pick widget primary color"
+                          value={
+                            normalizeBrandHex(brandColors.primaryBrandColor) ||
+                            "#2d545e"
+                          }
+                          onChange={(e) =>
+                            setBrandColors((p) => ({
+                              ...p,
+                              primaryBrandColor: e.target.value,
+                            }))
+                          }
+                          disabled={updating}
+                          className="h-10 w-14 cursor-pointer rounded border border-border bg-background p-0.5"
+                        />
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 gap-2">
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={handleSaveWidgetColors}
+                        className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
+                      >
+                        Save widget colors
+                      </button>
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={() =>
+                          setBrandColors({
+                            primaryBrandColor: "",
+                          })
+                        }
+                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted-bg disabled:opacity-50"
+                      >
+                        Clear
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 border-t border-border pt-6">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+                    Read more URL
+                  </h3>
+                  <div className="mt-3 space-y-2">
+                    <label
+                      className="text-xs font-medium text-muted"
+                      htmlFor="widget-copy-read-more-url"
+                    >
+                      &quot;Read more&quot; URL for copy to clipboard
+                    </label>
+                    <p className="text-xs text-muted">
+                      Optional. When someone copies a chatbot reply, we add one
+                      line at the top that points to this website. Use your main
+                      public site, or leave empty to skip that line.
+                    </p>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <input
+                        id="widget-copy-read-more-url"
+                        type="url"
+                        inputMode="url"
+                        value={widgetLauncherTexts.copyReadMoreUrl}
+                        onChange={(e) =>
+                          setWidgetLauncherTexts((p) => ({
+                            ...p,
+                            copyReadMoreUrl: e.target.value,
+                          }))
+                        }
+                        disabled={updating}
+                        className="min-w-0 flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
+                        placeholder="https://yoursite.com"
+                        autoComplete="off"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSaveWidgetReadMoreUrl}
+                        disabled={updating}
+                        className="shrink-0 text-green-600 hover:text-green-700 disabled:opacity-50"
+                        title="Save read-more URL"
+                        aria-label="Save read-more URL"
+                      >
+                        <Check className="h-5 w-5" />
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setWidgetLauncherTexts((p) => ({
+                            ...p,
+                            copyReadMoreUrl:
+                              brandContext?.assistantCopyReadMoreUrl || "",
+                          }))
+                        }
+                        disabled={updating}
+                        className="shrink-0 text-red-600 hover:text-red-700 disabled:opacity-50"
+                        title="Reset read-more URL"
+                        aria-label="Reset read-more URL"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="mt-8 border-t border-border pt-6">
+                  <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
+                    Support channel
+                  </h3>
+                  <p className="mt-1 text-xs text-muted">
+                    If you block someone from talking to the avatar, they may need
+                    a way to reach you to ask for an unblock. Add an email and/or a
+                    Slack link (e.g. channel or workflow URL) your team monitors.
+                  </p>
+                  <div className="mt-4 space-y-4">
+                    <div className="space-y-2">
+                      <label
+                        className="text-xs font-medium text-muted"
+                        htmlFor="support-channel-email"
+                      >
+                        Support email
+                      </label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          id="support-channel-email"
+                          type="email"
+                          value={supportChannel.email}
+                          onChange={(e) =>
+                            setSupportChannel((p) => ({
+                              ...p,
+                              email: e.target.value,
+                            }))
+                          }
+                          disabled={updating}
+                          className="min-w-0 flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
+                          placeholder="support@yourbrand.com"
+                          autoComplete="off"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSaveSupportChannelEmail}
+                          disabled={updating}
+                          className="shrink-0 text-green-600 hover:text-green-700 disabled:opacity-50"
+                          title="Save support email"
+                          aria-label="Save support email"
+                        >
+                          <Check className="h-5 w-5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSupportChannel((p) => ({
+                              ...p,
+                              email: brandContext?.supportChannelEmail || "",
+                            }))
+                          }
+                          disabled={updating}
+                          className="shrink-0 text-red-600 hover:text-red-700 disabled:opacity-50"
+                          title="Reset support email"
+                          aria-label="Reset support email"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="space-y-2">
+                      <label
+                        className="text-xs font-medium text-muted"
+                        htmlFor="support-channel-slack-url"
+                      >
+                        Slack URL
+                      </label>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <input
+                          id="support-channel-slack-url"
+                          type="url"
+                          inputMode="url"
+                          value={supportChannel.slackUrl}
+                          onChange={(e) =>
+                            setSupportChannel((p) => ({
+                              ...p,
+                              slackUrl: e.target.value,
+                            }))
+                          }
+                          disabled={updating}
+                          className="min-w-0 flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
+                          placeholder="https://slack.com/..."
+                          autoComplete="off"
+                        />
+                        <button
+                          type="button"
+                          onClick={handleSaveSupportChannelSlackUrl}
+                          disabled={updating}
+                          className="shrink-0 text-green-600 hover:text-green-700 disabled:opacity-50"
+                          title="Save Slack URL"
+                          aria-label="Save Slack URL"
+                        >
+                          <Check className="h-5 w-5" />
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setSupportChannel((p) => ({
+                              ...p,
+                              slackUrl: brandContext?.supportChannelSlackUrl || "",
+                            }))
+                          }
+                          disabled={updating}
+                          className="shrink-0 text-red-600 hover:text-red-700 disabled:opacity-50"
+                          title="Reset Slack URL"
+                          aria-label="Reset Slack URL"
+                        >
+                          <X className="h-5 w-5" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </section>
+            </div>
 
             <section className="rounded-2xl border border-border bg-card p-5 shadow-sm md:p-6 lg:col-span-7">
               <div className="flex items-start justify-between gap-4 mb-5">
@@ -337,49 +1024,49 @@ export default function MyServices() {
                 featureData.enableBlogs ||
                 featureData.enableLinks ||
                 featureData.enableCommunityOnboarding) && (
-                <div className="mb-5 rounded-xl border border-border bg-muted-bg p-3">
-                  <p className="mb-2 text-xs uppercase tracking-widest text-muted">
-                    Visible on user side
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {featureData.enableCommunityOnboarding && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        {featureData.communityName || "Community"}
-                      </span>
-                    )}
-                    {featureData.enableQuiz && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        {featureData.quizName || "Take a Quiz/Survey"}
-                      </span>
-                    )}
-                    {featureData.enableJobs && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Jobs
-                      </span>
-                    )}
-                    {featureData.enableProducts && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Products
-                      </span>
-                    )}
-                    {featureData.enableBooking && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Bookings
-                      </span>
-                    )}
-                    {featureData.enableBlogs && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Blog
-                      </span>
-                    )}
-                    {featureData.enableLinks && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Links
-                      </span>
-                    )}
+                  <div className="mb-5 rounded-xl border border-border bg-muted-bg p-3">
+                    <p className="mb-2 text-xs uppercase tracking-widest text-muted">
+                      Visible on user side
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {featureData.enableCommunityOnboarding && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          {featureData.communityName || "Community"}
+                        </span>
+                      )}
+                      {featureData.enableQuiz && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          {featureData.quizName || "Take a Quiz/Survey"}
+                        </span>
+                      )}
+                      {featureData.enableJobs && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Jobs
+                        </span>
+                      )}
+                      {featureData.enableProducts && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Products
+                        </span>
+                      )}
+                      {featureData.enableBooking && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Bookings
+                        </span>
+                      )}
+                      {featureData.enableBlogs && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Blog
+                        </span>
+                      )}
+                      {featureData.enableLinks && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Links
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               <div
                 className={`space-y-4 ${updating ? "pointer-events-none opacity-70" : ""}`}
@@ -535,118 +1222,144 @@ export default function MyServices() {
                         </p>
                       )}
                   </div>
-                </div>
 
-                <div className="rounded-xl border border-border bg-muted-bg p-4">
-                  <div className="mb-3">
+                  <div className="mt-4 rounded-lg border border-border bg-card px-3 py-3">
                     <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-                      Community &amp; widget colors
+                      Community colors
                     </h3>
                     <p className="mt-1 text-xs text-muted">
-                      Optional. Leave fields empty to keep default Kavisha styling.
-                      Primary applies to the Community title, action buttons, Connect,
-                      sidebar &quot;New&quot;, and the chat widget launcher. Secondary
-                      accents tags and card highlights on Community.
+                      With &quot;Same as Widget colors&quot; on, Community primary and
+                      secondary both use the widget&apos;s single primary color.
+                      Turn it off to set Community primary and secondary separately
+                      (e.g. secondary for hub buttons and accents).
                     </p>
-                  </div>
-                  <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <label className="text-xs font-medium text-muted" htmlFor="primary-brand-color">
-                        Primary (hex)
-                      </label>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <input
-                          id="primary-brand-color"
-                          type="text"
-                          value={brandColors.primaryBrandColor}
-                          onChange={(e) =>
-                            setBrandColors((p) => ({
-                              ...p,
-                              primaryBrandColor: e.target.value,
-                            }))
-                          }
-                          placeholder="e.g. #2d545e"
-                          disabled={updating}
-                          className="min-w-[8rem] flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
-                        />
-                        <input
-                          type="color"
-                          aria-label="Pick primary color"
-                          value={
-                            normalizeBrandHex(brandColors.primaryBrandColor) ||
-                            "#2d545e"
-                          }
-                          onChange={(e) =>
-                            setBrandColors((p) => ({
-                              ...p,
-                              primaryBrandColor: e.target.value,
-                            }))
-                          }
-                          disabled={updating}
-                          className="h-10 w-14 cursor-pointer rounded border border-border bg-background p-0.5"
-                        />
-                      </div>
-                    </div>
-                    <div className="min-w-0 flex-1 space-y-2">
-                      <label className="text-xs font-medium text-muted" htmlFor="secondary-brand-color">
-                        Secondary (hex)
-                      </label>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <input
-                          id="secondary-brand-color"
-                          type="text"
-                          value={brandColors.secondaryBrandColor}
-                          onChange={(e) =>
-                            setBrandColors((p) => ({
-                              ...p,
-                              secondaryBrandColor: e.target.value,
-                            }))
-                          }
-                          placeholder="e.g. #004A4E"
-                          disabled={updating}
-                          className="min-w-[8rem] flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
-                        />
-                        <input
-                          type="color"
-                          aria-label="Pick secondary color"
-                          value={
-                            normalizeBrandHex(brandColors.secondaryBrandColor) ||
-                            "#004A4E"
-                          }
-                          onChange={(e) =>
-                            setBrandColors((p) => ({
-                              ...p,
-                              secondaryBrandColor: e.target.value,
-                            }))
-                          }
-                          disabled={updating}
-                          className="h-10 w-14 cursor-pointer rounded border border-border bg-background p-0.5"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 gap-2">
-                      <button
-                        type="button"
-                        disabled={updating}
-                        onClick={handleSaveBrandColors}
-                        className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
-                      >
-                        Save colors
-                      </button>
-                      <button
-                        type="button"
-                        disabled={updating}
-                        onClick={() =>
-                          setBrandColors({
-                            primaryBrandColor: "",
-                            secondaryBrandColor: "",
-                          })
+                    <label className="mt-3 flex cursor-pointer items-start gap-3">
+                      <input
+                        type="checkbox"
+                        checked={communityColorsMatchWidget}
+                        onChange={(e) =>
+                          handleCommunityColorsMatchToggle(e.target.checked)
                         }
-                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted-bg disabled:opacity-50"
-                      >
-                        Clear
-                      </button>
-                    </div>
+                        disabled={updating}
+                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-border text-highlight focus:ring-highlight"
+                      />
+                      <span className="text-sm leading-snug text-foreground">
+                        Same as Widget colors
+                      </span>
+                    </label>
+                    {!communityColorsMatchWidget && (
+                      <div className="mt-4 flex flex-col gap-4 border-t border-border pt-4 sm:flex-row sm:items-end">
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <label
+                            className="text-xs font-medium text-muted"
+                            htmlFor="community-primary-brand-color"
+                          >
+                            Primary (hex)
+                          </label>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input
+                              id="community-primary-brand-color"
+                              type="text"
+                              value={
+                                communityBrandColors.communityPrimaryBrandColor
+                              }
+                              onChange={(e) =>
+                                setCommunityBrandColors((p) => ({
+                                  ...p,
+                                  communityPrimaryBrandColor: e.target.value,
+                                }))
+                              }
+                              placeholder="e.g. #2d545e"
+                              disabled={updating}
+                              className="min-w-[8rem] flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
+                            />
+                            <input
+                              type="color"
+                              aria-label="Pick community primary color"
+                              value={
+                                normalizeBrandHex(
+                                  communityBrandColors.communityPrimaryBrandColor,
+                                ) || "#2d545e"
+                              }
+                              onChange={(e) =>
+                                setCommunityBrandColors((p) => ({
+                                  ...p,
+                                  communityPrimaryBrandColor: e.target.value,
+                                }))
+                              }
+                              disabled={updating}
+                              className="h-10 w-14 cursor-pointer rounded border border-border bg-background p-0.5"
+                            />
+                          </div>
+                        </div>
+                        <div className="min-w-0 flex-1 space-y-2">
+                          <label
+                            className="text-xs font-medium text-muted"
+                            htmlFor="community-secondary-brand-color"
+                          >
+                            Secondary (hex)
+                          </label>
+                          <div className="flex flex-wrap items-center gap-2">
+                            <input
+                              id="community-secondary-brand-color"
+                              type="text"
+                              value={
+                                communityBrandColors.communitySecondaryBrandColor
+                              }
+                              onChange={(e) =>
+                                setCommunityBrandColors((p) => ({
+                                  ...p,
+                                  communitySecondaryBrandColor: e.target.value,
+                                }))
+                              }
+                              placeholder="e.g. #004A4E"
+                              disabled={updating}
+                              className="min-w-[8rem] flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
+                            />
+                            <input
+                              type="color"
+                              aria-label="Pick community secondary color"
+                              value={
+                                normalizeBrandHex(
+                                  communityBrandColors.communitySecondaryBrandColor,
+                                ) || "#004A4E"
+                              }
+                              onChange={(e) =>
+                                setCommunityBrandColors((p) => ({
+                                  ...p,
+                                  communitySecondaryBrandColor: e.target.value,
+                                }))
+                              }
+                              disabled={updating}
+                              className="h-10 w-14 cursor-pointer rounded border border-border bg-background p-0.5"
+                            />
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 gap-2">
+                          <button
+                            type="button"
+                            disabled={updating}
+                            onClick={handleSaveCommunityColors}
+                            className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
+                          >
+                            Save community colors
+                          </button>
+                          <button
+                            type="button"
+                            disabled={updating}
+                            onClick={() =>
+                              setCommunityBrandColors({
+                                communityPrimaryBrandColor: "",
+                                communitySecondaryBrandColor: "",
+                              })
+                            }
+                            className="rounded-lg border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted-bg disabled:opacity-50"
+                          >
+                            Clear
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
 
