@@ -1230,7 +1230,7 @@ export default function ChatBoxWidget({
                   </p>
                   <div className="flex flex-col gap-3">
                     <div className="mx-auto flex w-full max-w-full items-center gap-2 sm:gap-2.5">
-                      <div className="hidden w-11 shrink-0 items-center justify-center md:flex sm:w-12">
+                      <div className="hidden shrink-0 items-center justify-center md:flex md:basis-[2.5%] md:max-w-9">
                         {prevIntroQuestion ? (
                           <button
                             type="button"
@@ -1238,17 +1238,17 @@ export default function ChatBoxWidget({
                             onClick={() =>
                               setIntroQuestionIndex((idx) => Math.max(0, idx - 1))
                             }
-                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background text-foreground shadow-sm ring-1 ring-black/[0.04] transition-all duration-200 hover:border-border hover:bg-muted-bg hover:text-foreground hover:shadow-md hover:ring-highlight/25 dark:border-border/55 dark:bg-card dark:ring-white/[0.06] dark:hover:ring-highlight/35"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background text-foreground shadow-sm ring-1 ring-black/[0.04] transition-all duration-200 hover:border-border hover:bg-muted-bg hover:text-foreground hover:shadow-md hover:ring-highlight/25 dark:border-border/55 dark:bg-card dark:ring-white/[0.06] dark:hover:ring-highlight/35"
                           >
-                            <ChevronLeft className="h-5 w-5" strokeWidth={2.25} />
+                            <ChevronLeft className="h-3.5 w-3.5" strokeWidth={2.6} />
                           </button>
                         ) : (
-                          <div className="h-11 w-11 shrink-0" aria-hidden />
+                          <div className="h-8 w-8 shrink-0" aria-hidden />
                         )}
                       </div>
 
                       <div
-                        className="relative z-10 min-h-12 min-w-0 flex-1 touch-pan-y overflow-hidden rounded-2xl border border-border/45 bg-background shadow-sm dark:border-border/40"
+                        className="relative z-10 min-h-12 min-w-0 flex-1 touch-pan-y overflow-hidden rounded-2xl border border-border/45 bg-background shadow-sm dark:border-border/40 md:basis-[95%]"
                         onTouchStart={handleIntroCarouselTouchStart}
                         onTouchEnd={handleIntroCarouselTouchEnd}
                         onTouchCancel={handleIntroCarouselTouchCancel}
@@ -1273,7 +1273,7 @@ export default function ChatBoxWidget({
                         </div>
                       </div>
 
-                      <div className="hidden w-11 shrink-0 items-center justify-center md:flex sm:w-12">
+                      <div className="hidden shrink-0 items-center justify-center md:flex md:basis-[2.5%] md:max-w-9">
                         {nextIntroQuestion ? (
                           <button
                             type="button"
@@ -1283,12 +1283,12 @@ export default function ChatBoxWidget({
                                 Math.min(introQuestionCount - 1, idx + 1)
                               )
                             }
-                            className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background text-foreground shadow-sm ring-1 ring-black/[0.04] transition-all duration-200 hover:border-border hover:bg-muted-bg hover:text-foreground hover:shadow-md hover:ring-highlight/25 dark:border-border/55 dark:bg-card dark:ring-white/[0.06] dark:hover:ring-highlight/35"
+                            className="flex h-8 w-8 shrink-0 items-center justify-center rounded-xl border border-border/50 bg-background text-foreground shadow-sm ring-1 ring-black/[0.04] transition-all duration-200 hover:border-border hover:bg-muted-bg hover:text-foreground hover:shadow-md hover:ring-highlight/25 dark:border-border/55 dark:bg-card dark:ring-white/[0.06] dark:hover:ring-highlight/35"
                           >
-                            <ChevronRight className="h-5 w-5" strokeWidth={2.25} />
+                            <ChevronRight className="h-3.5 w-3.5" strokeWidth={2.6} />
                           </button>
                         ) : (
-                          <div className="h-11 w-11 shrink-0" aria-hidden />
+                          <div className="h-8 w-8 shrink-0" aria-hidden />
                         )}
                       </div>
                     </div>

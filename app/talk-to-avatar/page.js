@@ -114,11 +114,11 @@ export default function TalkToAvatarPage() {
               </h2>
             </div>
 
-            <div className="grid grid-cols-1 gap-4 px-4 sm:grid-cols-2 sm:gap-4 md:grid-cols-3 md:gap-6 md:px-8 lg:grid-cols-4 lg:gap-7 xl:grid-cols-5 xl:gap-8 justify-items-center sm:justify-items-stretch min-w-0">
+            <div className="grid min-w-0 justify-items-center gap-4 px-4 [grid-template-columns:repeat(auto-fit,minmax(14rem,1fr))] sm:justify-items-stretch md:gap-6 md:px-8 lg:gap-7 xl:gap-8">
               {avatars.map((avatar) => (
                 <div
                   key={avatar.id}
-                  className="block h-full w-full min-w-0 max-w-sm sm:max-w-none"
+                  className="block w-full min-w-0"
                 >
                   <AvatarCard
                     image={avatar.image}
