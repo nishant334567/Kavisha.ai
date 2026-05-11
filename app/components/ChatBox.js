@@ -575,8 +575,8 @@ export default function ChatBox({
       data?.assistantLogId
     ) {
       assistantMsg._id = data.assistantLogId;
-      assistantMsg.likeCount = 0;
-      assistantMsg.copyCount = 0;
+      assistantMsg.liked = false;
+      assistantMsg.copied = false;
     }
     setMessages([...updatedMessagesWithRequery, assistantMsg]);
     setMessageLoading(false);
@@ -870,7 +870,7 @@ export default function ChatBox({
                             logId={
                               m._id != null ? String(m._id) : ""
                             }
-                            likeCount={Number(m.likeCount) || 0}
+                            liked={Boolean(m.liked)}
                             onUpdated={(c) =>
                               updateMessageEngagement(
                                 m._id != null ? String(m._id) : "",
@@ -887,6 +887,7 @@ export default function ChatBox({
                             logId={
                               m._id != null ? String(m._id) : ""
                             }
+                            copied={Boolean(m.copied)}
                             onRecorded={(c) =>
                               updateMessageEngagement(
                                 m._id != null ? String(m._id) : "",

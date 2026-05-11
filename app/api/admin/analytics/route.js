@@ -113,10 +113,10 @@ const getAnalytics = async (brand, fromDate, toDate) => {
             $group: {
                 _id: null,
                 answersLiked: {
-                    $sum: { $ifNull: ["$likeCount", 0] },
+                    $sum: { $cond: [{ $eq: ["$liked", true] }, 1, 0] },
                 },
                 answersCopied: {
-                    $sum: { $ifNull: ["$copyCount", 0] },
+                    $sum: { $cond: [{ $eq: ["$copied", true] }, 1, 0] },
                 },
             },
         },
