@@ -163,6 +163,9 @@ export default function Navbar() {
   const blogPath =
     "/blogs" +
     (brand?.subdomain ? `?subdomain=${encodeURIComponent(brand.subdomain)}` : "");
+  const showChatsNav =
+    !!brand?.subdomain && brand.subdomain !== "kavisha";
+
   const enabledFeatureNavItems = [
     ...(showCommunityForBrand
       ? [
@@ -171,6 +174,16 @@ export default function Navbar() {
             mobileLabel: brand?.communityName || "Community",
             path: communityPath,
             icon: Users,
+          },
+        ]
+      : []),
+    ...(showChatsNav
+      ? [
+          {
+            label: "CHATS",
+            mobileLabel: "Chats",
+            path: "/chats",
+            icon: MessagesSquare,
           },
         ]
       : []),
@@ -274,15 +287,6 @@ export default function Navbar() {
               // className="px-3 py-1.5 rounded-md text-sm bg-blue-600 hover:bg-blue-700 transition-colors"
               >
                 {getNavLabel("/make-avatar", "MAKE MY AVATAAR")}
-              </button>
-            )}
-            {user && (
-              <button
-                onClick={() => handleNavigate("/chats")}
-                disabled={isNavigating}
-                className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
-              >
-                {getNavLabel("/chats", "CHATS")}
               </button>
             )}
             {enabledFeatureNavItems.map((item) => (
@@ -484,21 +488,6 @@ export default function Navbar() {
                 >
                   <MessageCircle className={menuIconClass} strokeWidth={2} />
                   {getNavLabel("/talk-to-avatar", "Talk to Avataars")}
-                </button>
-              </li>
-            )}
-            {user && (
-              <li>
-                <button
-                  type="button"
-                  className={menuRowBtnClass}
-                  onClick={() => {
-                    handleNavigate("/chats", { closeMenu: true });
-                  }}
-                  disabled={isNavigating}
-                >
-                  <MessagesSquare className={menuIconClass} strokeWidth={2} />
-                  {getNavLabel("/chats", "Chats")}
                 </button>
               </li>
             )}

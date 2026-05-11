@@ -11,7 +11,7 @@ import {
 } from "../lib/in-app-browser";
 import InfoCard from "./InfoCard";
 import AvatarCard from "./AvatarCard";
-import { ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
 import Footer from "./Footer";
 
 const cards = [
@@ -101,10 +101,10 @@ export default function Homepage() {
     if (typeof window === "undefined") return 3;
     if (window.innerWidth < 640) return 1;
     if (window.innerWidth < 1024) return 2;
-    return 3;
+    return 4;
   };
 
-  const [visibleCount, setVisibleCount] = useState(3);
+  const [visibleCount, setVisibleCount] = useState(4);
 
   useEffect(() => {
     const handleResize = () => setVisibleCount(getVisibleCount());
@@ -300,13 +300,13 @@ export default function Homepage() {
       </div>
 
       {/* Avatar cards */}
-      <div className="flex items-center gap-4 my-6 px-4 md:px-8">
+      <div className="my-6 flex items-center gap-4 px-4 md:px-8">
         <p className="whitespace-nowrap text-lg text-[#264653] dark:text-foreground md:text-2xl">
           Existing Avataars
         </p>
-        <div className="h-[1px] flex-1 bg-border"></div>
+        <div className="h-[1px] flex-1 bg-border" />
       </div>
-      <div className="max-w-6xl mx-auto px-4 mt-8 md:mt-12">
+      <div className="relative mt-8 w-[90%] mx-auto px-4 md:mt-12 md:px-8">
         {avatarsLoading ? (
           <p className="text-center text-muted">Loading avatars…</p>
         ) : avatarsError ? (
@@ -315,36 +315,76 @@ export default function Homepage() {
           <p className="text-center text-muted">No featured avatars yet.</p>
         ) : (
           <div>
-            <div className="overflow-hidden px-2 pb-4" ref={sliderRef}>
+            <div className="lg:flex lg:items-center lg:justify-center lg:gap-6">
               <div
-                className="flex transition-transform duration-300 ease-in-out"
-                style={{
-                  gap: "24px",
-                  transform: `translateX(calc(-${currentIndex} * (100% / ${visibleCount} + ${24 / visibleCount}px)))`,
-                }}
+                className="relative min-w-0 flex-1 overflow-x-hidden overflow-y-visible pb-4 lg:flex-none lg:w-[min(100%,66.5rem)]"
+                ref={sliderRef}
               >
-                {avatars.map((avatar) => (
-                  <div
-                    key={avatar.id}
-                    className="flex-shrink-0 flex justify-center"
-                    style={{
-                      width: `calc((100% - ${(visibleCount - 1) * 24}px) / ${visibleCount})`,
-                    }}
+                <div
+                  className="flex justify-start transition-transform duration-300 ease-in-out"
+                  style={{
+                    gap: "24px",
+                    transform: `translateX(calc(-${currentIndex} * (100% / ${visibleCount} + ${24 / visibleCount}px)))`,
+                  }}
+                >
+                  {avatars.map((avatar) => (
+                    <div
+                      key={avatar.id}
+                      className="flex-shrink-0"
+                      style={{
+                        // Keep cards the same baseline size as Talk-to-Avataar (minmax(14rem, 1fr)).
+                        width: `min(calc((100% - ${(visibleCount - 1) * 24}px) / ${visibleCount}), 15.5rem)`,
+                      }}
+                    >
+                      <AvatarCard
+                        name={avatar.name}
+                        title={avatar.title}
+                        subtitle={avatar.subtitle}
+                        image={avatar.image}
+                        avatarLink={avatar.link}
+                        widgetLink={
+                          avatar.clientWidgetUrl
+                            ? String(avatar.clientWidgetUrl).trim()
+                            : ""
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Desktop button lives in the free space (no overlap). */}
+              <div className="hidden shrink-0 justify-center lg:flex lg:ml-[24px]">
+                <div className="group relative inline-flex">
+                  <Link
+                    href="/talk-to-avatar"
+                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-muted shadow-sm transition-colors hover:bg-[#008389] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                    aria-label="Explore more Avataars"
                   >
-                    <AvatarCard
-                      name={avatar.name}
-                      title={avatar.title}
-                      subtitle={avatar.subtitle}
-                      image={avatar.image}
-                      avatarLink={avatar.link}
-                      widgetLink={
-                        avatar.clientWidgetUrl
-                          ? String(avatar.clientWidgetUrl).trim()
-                          : ""
-                      }
-                    />
+                    <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
+                  </Link>
+                  <div className="pointer-events-none absolute left-1/2 top-full mt-3 hidden -translate-x-1/2 group-hover:block">
+                    <div className="rounded-xl bg-black px-3 py-2 text-sm font-medium text-white whitespace-nowrap">
+                      Explore more Avataars
+                    </div>
                   </div>
-                ))}
+                </div>
+              </div>
+            </div>
+            <div className="flex justify-center lg:hidden">
+              <div className="group relative inline-flex">
+                <Link
+                  href="/talk-to-avatar"
+                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-muted shadow-sm transition-colors hover:bg-[#008389] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
+                  aria-label="Explore more Avataars"
+                >
+                  <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
+                </Link>
+                <div className="pointer-events-none absolute left-1/2 top-full mt-3 hidden -translate-x-1/2 group-hover:block">
+                  <div className="rounded-xl bg-black px-3 py-2 text-sm font-medium text-white whitespace-nowrap">
+                    Explore more Avataars
+                  </div>
+                </div>
               </div>
             </div>
             {avatars.length > visibleCount && (
