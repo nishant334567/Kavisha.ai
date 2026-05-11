@@ -1,21 +1,13 @@
 import { GoogleAuth } from "google-auth-library";
 
-function mustGetEnv(name) {
-  const v = process.env[name];
-  if (!v) throw new Error(`Missing env var: ${name}`);
-  return v;
-}
-
 export async function enqueueCloudTask({
   url,
   payload,
   taskNameSuffix,
   headers = {},
 }) {
-  const projectId =
-    process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT_ID;
-  const location =
-    process.env.CLOUD_TASKS_LOCATION || process.env.GOOGLE_CLOUD_LOCATION;
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT_ID;
+  const location = process.env.CLOUD_TASKS_LOCATION || process.env.GOOGLE_CLOUD_LOCATION;
   const queue = process.env.CLOUD_TASKS_QUEUE;
 
   if (!projectId) throw new Error("Missing GOOGLE_CLOUD_PROJECT / GCP_PROJECT_ID");
@@ -39,14 +31,7 @@ export async function enqueueCloudTask({
     },
   };
 
-  // If your Cloud Run service requires auth, set TASKS_OIDC_SERVICE_ACCOUNT_EMAIL
-  // so Cloud Tasks includes an OIDC token when calling your endpoint.
-  const oidcServiceAccountEmail = process.env.TASKS_OIDC_SERVICE_ACCOUNT_EMAIL;
-  if (oidcServiceAccountEmail) {
-    body.task.httpRequest.oidcToken = { serviceAccountEmail: oidcServiceAccountEmail };
-  }
-
-  // Optional deterministic task name (helps de-dupe when you build idempotency later)
+  // Deterministic task name enables de-dupe.
   if (taskNameSuffix) {
     body.task.name = `${parent}/tasks/${taskNameSuffix}`;
   }

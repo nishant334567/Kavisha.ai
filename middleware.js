@@ -12,6 +12,7 @@ const PUBLIC_PATHS = [
   "/api/brands",
   "/api/tasks/enrich-derived-profile",
   "/api/tasks/compute-matches",
+  "/api/tasks/summarize-session",
   "/tnc",
   "/privacy-policy",
   "/help",

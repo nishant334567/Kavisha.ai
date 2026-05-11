@@ -27,6 +27,7 @@ import {
 import FormatText from "@/app/components/FormatText";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
 import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton";
+import AssistantEngagementRow from "@/app/components/AssistantEngagementRow";
 import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
 import LiveChat from "@/app/components/LiveChat";
@@ -442,6 +443,8 @@ export default function ChatBoxWidget({
               requery: null,
               sourceUrls: row.sourceUrls,
               sourceCards: row.sourceCards,
+              likeCount: Number(row.likeCount) || 0,
+              copyCount: Number(row.copyCount) || 0,
             }))
           );
         }
@@ -586,6 +589,20 @@ export default function ChatBoxWidget({
     void openNewChatPickerRef.current();
   }, [sessionsHydrated, effectiveUser, brand, authLoading, signingOut]);
 
+  const updateMessageEngagement = useCallback((logId, counts) => {
+    const lid = String(logId || "");
+    if (!lid) return;
+    setMessages((prev) =>
+      prev.map((msg) => {
+        const mid = msg.id != null ? String(msg.id) : "";
+        if (mid === lid) {
+          return { ...msg, ...counts };
+        }
+        return msg;
+      })
+    );
+  }, []);
+
   async function sendUserMessage(rawText) {
     const text = String(rawText ?? "").trim();
     if (
@@ -649,16 +666,16 @@ export default function ChatBoxWidget({
         return msg;
       });
 
-      setMessages([
-        ...withRequery,
-        {
-          id: null,
-          role: "assistant",
-          message: data.reply ?? "",
-          sourceUrls: data?.sourceUrls || [],
-          sourceCards: data?.sourceCards || [],
-        },
-      ]);
+      const assistantMsg = {
+        id: data?.assistantLogId ?? null,
+        role: "assistant",
+        message: data.reply ?? "",
+        sourceUrls: data?.sourceUrls || [],
+        sourceCards: data?.sourceCards || [],
+        likeCount: 0,
+        copyCount: 0,
+      };
+      setMessages([...withRequery, assistantMsg]);
     } catch {
       rollbackFailedSend();
     } finally {
@@ -1153,14 +1170,36 @@ export default function ChatBoxWidget({
                           </>
                         )}
                         {chatRole === LEAD_JOURNEY_ROLE && (
-                          <AssistantReplyCopyButton
-                            className="mt-1"
-                            message={m.message}
-                            sourceCards={m.sourceCards}
-                            sourceUrls={m.sourceUrls}
-                            readMoreUrl={readMoreCopyUrl}
-                            brandSubdomain={brand}
-                          />
+                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                            <AssistantEngagementRow
+                              logId={
+                                m.id != null ? String(m.id) : ""
+                              }
+                              likeCount={Number(m.likeCount) || 0}
+                              onUpdated={(c) =>
+                                updateMessageEngagement(
+                                  m.id != null ? String(m.id) : "",
+                                  c
+                                )
+                              }
+                            />
+                            <AssistantReplyCopyButton
+                              message={m.message}
+                              sourceCards={m.sourceCards}
+                              sourceUrls={m.sourceUrls}
+                              readMoreUrl={readMoreCopyUrl}
+                              brandSubdomain={brand}
+                              logId={
+                                m.id != null ? String(m.id) : ""
+                              }
+                              onRecorded={(c) =>
+                                updateMessageEngagement(
+                                  m.id != null ? String(m.id) : "",
+                                  c
+                                )
+                              }
+                            />
+                          </div>
                         )}
                       </div>
                     ) : (

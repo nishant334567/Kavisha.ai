@@ -143,6 +143,9 @@ export default function AssistantReplyCopyButton({
   readMoreUrl = "",
   /** Kavisha brand slug (e.g. entrackr) — used when readMoreUrl not set in CMS */
   brandSubdomain = "",
+  /** When set, successful clipboard copy increments server copyCount and calls onRecorded. */
+  logId = "",
+  onRecorded,
   className = "",
 }) {
   const [copied, setCopied] = useState(false);
@@ -164,10 +167,39 @@ export default function AssistantReplyCopyButton({
       await navigator.clipboard.writeText(text);
       setCopied(true);
       window.setTimeout(() => setCopied(false), 2000);
+
+      const id = String(logId || "").trim();
+      if (id && typeof onRecorded === "function") {
+        try {
+          const res = await fetch(`/api/logs/message/${id}`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ action: "copy" }),
+            credentials: "same-origin",
+          });
+          const data = await res.json().catch(() => ({}));
+          if (res.ok) {
+            onRecorded({
+              likeCount: Number(data.likeCount) || 0,
+              copyCount: Number(data.copyCount) || 0,
+            });
+          }
+        } catch {
+          /* network — copy already succeeded */
+        }
+      }
     } catch {
       /* denied or unsupported — widget needs parent iframe allow="clipboard-write" */
     }
-  }, [message, sourceCards, sourceUrls, readMoreUrl, brandSubdomain]);
+  }, [
+    message,
+    sourceCards,
+    sourceUrls,
+    readMoreUrl,
+    brandSubdomain,
+    logId,
+    onRecorded,
+  ]);
 
   return (
     <div className="group relative inline-flex">

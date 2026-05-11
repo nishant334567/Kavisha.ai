@@ -44,11 +44,22 @@ const LogsSchema = new mongoose.Schema(
       enum: ["user", "assistant"],
       required: true,
     },
+    /** Assistant messages only; incremented when user likes this answer. */
+    likeCount: {
+      type: Number,
+      default: 0,
+    },
+    /** Assistant messages only; incremented when user copies this answer (clipboard). */
+    copyCount: {
+      type: Number,
+      default: 0,
+    },
   },
   { timestamps: true }
 );
 
 LogsSchema.index({ sessionId: 1 });
+LogsSchema.index({ sessionId: 1, createdAt: 1 });
 
 const Logs = mongoose.models.Logs || mongoose.model("Logs", LogsSchema);
 module.exports = Logs;

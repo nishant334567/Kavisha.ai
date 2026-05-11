@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { ArrowLeft, X, Mail, MessageCircleMore } from "lucide-react";
+import { ArrowLeft, X, Mail, MessageCircleMore, BarChart3 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import UserCard from "@/app/admin/components/UserCard";
 import AdminLogsModal from "@/app/admin/components/AdminLogsModal";
@@ -112,7 +112,7 @@ export default function ChatRequests() {
       <div className="w-full lg:w-[90%] min-w-0 mx-auto px-4 sm:px-6 mt-4">
 
 
-        {/* Header: back + title left; Send email top right */}
+        {/* Header: back + title left; Advance analytics + Send email top right */}
         <div className="flex flex-wrap items-center justify-between gap-4 mb-6">
           <div className="flex items-center gap-2 min-w-0">
             <button
@@ -126,6 +126,14 @@ export default function ChatRequests() {
             </h1>
           </div>
           <div className="flex items-center gap-2 shrink-0">
+            <button
+              type="button"
+              onClick={() => router.push("/admin/analytics")}
+              className="flex items-center gap-2 px-4 py-2 rounded-lg border border-border bg-card text-highlight text-sm font-medium hover:bg-muted-bg transition-colors"
+            >
+              <BarChart3 className="w-4 h-4" />
+              Advance analytics
+            </button>
             <button
               type="button"
               onClick={() => setShowSelect((prev) => !prev)}
