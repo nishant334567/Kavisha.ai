@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import { ThumbsUp } from "lucide-react";
 
 export default function AssistantEngagementRow({
     logId,
@@ -45,11 +44,14 @@ export default function AssistantEngagementRow({
                 aria-pressed={liked}
                 aria-label={liked ? "Unlike this answer" : "Like this answer"}
                 onClick={() => void toggleLike()}
-                className={`inline-flex size-9 items-center justify-center rounded-md bg-transparent transition-colors hover:bg-black/[0.06] dark:hover:bg-white/[0.08] ${pending ? "opacity-50" : ""}`}
+                className={`dark:invert inline-flex size-9 items-center justify-center rounded-md bg-transparent transition-colors hover:bg-black/[0.06] dark:hover:bg-white/[0.08] ${pending ? "opacity-50" : ""}`}
             >
-                <ThumbsUp
-                    className={`h-4 w-4 shrink-0 text-foreground ${liked ? "fill-foreground" : "fill-none"}`}
-                    strokeWidth={2}
+                <img
+                    src={liked ? "/like-filled-2.png" : "/like.png"}
+                    alt=""
+                    width={16}
+                    height={16}
+                    className="h-4 w-4 shrink-0 object-contain"
                     aria-hidden
                 />
             </button>
