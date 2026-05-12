@@ -223,7 +223,7 @@ export default function AssistantReplyCopyButton({
         <span
           role="status"
           aria-live="polite"
-          className="pointer-events-none absolute left-full top-1/2 z-10 ml-1 -translate-y-1/2 whitespace-nowrap rounded border border-black px-1.5 py-0.5 text-xs text-foreground dark:border-neutral-200"
+          className="pointer-events-none absolute left-full top-1/2 z-10 ml-0.5 -translate-y-1/2 whitespace-nowrap rounded border border-black px-1.5 py-0.5 text-xs text-foreground dark:border-neutral-200"
         >
           Copied
         </span>

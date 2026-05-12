@@ -865,7 +865,7 @@ export default function ChatBox({
                       )}
                     {m.role === "assistant" &&
                       currentChatType?.toLowerCase() === "lead_journey" && (
-                        <div className="mt-1.5 flex w-full min-w-0 max-w-[90%] flex-nowrap items-center gap-1 sm:max-w-[60%]">
+                        <div className="mt-1.5 flex w-full min-w-0 max-w-[90%] flex-nowrap items-center gap-0.5 sm:max-w-[60%]">
                           <AssistantEngagementRow
                             logId={
                               m._id != null ? String(m._id) : ""
