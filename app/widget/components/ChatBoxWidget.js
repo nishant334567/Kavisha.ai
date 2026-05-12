@@ -148,7 +148,8 @@ export default function ChatBoxWidget({
   const [signInError, setSignInError] = useState("");
   const [popupBlocked, setPopupBlocked] = useState(false);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
+  /** Default true: avoid a first-paint flash of intro chevrons on phones before `isMobileDevice()` runs. */
+  const [isMobile, setIsMobile] = useState(true);
   const [signingOut, setSigningOut] = useState(false);
   const [historyMenuOpen, setHistoryMenuOpen] = useState(false);
   const historyMenuRef = useRef(null);
@@ -1231,7 +1232,9 @@ export default function ChatBoxWidget({
                   </p>
                   <div className="flex flex-col gap-3">
                     <div className="mx-auto flex w-full max-w-full items-center gap-2 sm:gap-2.5">
-                      <div className="hidden shrink-0 items-center justify-center md:flex md:basis-[2.5%] md:max-w-9">
+                      <div
+                        className={`hidden shrink-0 items-center justify-center ${!isMobile ? "min-[360px]:flex min-[360px]:basis-[2.5%] min-[360px]:max-w-9" : ""}`}
+                      >
                         {prevIntroQuestion ? (
                           <button
                             type="button"
@@ -1249,7 +1252,7 @@ export default function ChatBoxWidget({
                       </div>
 
                       <div
-                        className="relative z-10 min-h-12 min-w-0 flex-1 touch-pan-y overflow-hidden rounded-2xl border border-border/45 bg-background shadow-sm dark:border-border/40 md:basis-[95%]"
+                        className={`relative z-10 min-h-12 min-w-0 flex-1 touch-pan-y overflow-hidden rounded-2xl border border-border/45 bg-background shadow-sm dark:border-border/40 ${!isMobile ? "min-[360px]:basis-[95%]" : ""}`}
                         onTouchStart={handleIntroCarouselTouchStart}
                         onTouchEnd={handleIntroCarouselTouchEnd}
                         onTouchCancel={handleIntroCarouselTouchCancel}
@@ -1274,7 +1277,9 @@ export default function ChatBoxWidget({
                         </div>
                       </div>
 
-                      <div className="hidden shrink-0 items-center justify-center md:flex md:basis-[2.5%] md:max-w-9">
+                      <div
+                        className={`hidden shrink-0 items-center justify-center ${!isMobile ? "min-[360px]:flex min-[360px]:basis-[2.5%] min-[360px]:max-w-9" : ""}`}
+                      >
                         {nextIntroQuestion ? (
                           <button
                             type="button"
