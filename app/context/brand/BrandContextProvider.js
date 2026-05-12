@@ -67,8 +67,17 @@ export default function BrandContextProvider({ children }) {
                   services,
                   primaryBrandColor,
                   secondaryBrandColor,
+                  communityPrimaryBrandColor,
+                  communitySecondaryBrandColor,
                   widgetLauncher{
-                    copyReadMoreUrl
+                    copyReadMoreUrl,
+                    buttonImage,
+                    enableAttentionAnimation,
+                    chatbotWidgetHeader
+                  },
+                  supportChannel{
+                    email,
+                    slackUrl
                   }
               }`,
           { subdomain },
@@ -83,6 +92,15 @@ export default function BrandContextProvider({ children }) {
             : null;
           const paymentQrUrl = brand.paymentQr?.asset?._ref
             ? urlFor(brand.paymentQr).url()
+            : null;
+          const widgetLauncherButtonImageUrl = brand.widgetLauncher?.buttonImage
+            ?.asset?._ref
+            ? urlFor(brand.widgetLauncher.buttonImage)
+                .width(128)
+                .height(128)
+                .fit("max")
+                .auto("format")
+                .url()
             : null;
 
           const isAdmin = brand.admins?.includes(user?.email) || false;
@@ -129,9 +147,27 @@ export default function BrandContextProvider({ children }) {
             services: brand.services,
             primaryBrandColor: brand.primaryBrandColor || "",
             secondaryBrandColor: brand.secondaryBrandColor || "",
+            communityPrimaryBrandColor: brand.communityPrimaryBrandColor || "",
+            communitySecondaryBrandColor: brand.communitySecondaryBrandColor || "",
             assistantCopyReadMoreUrl:
               typeof brand.widgetLauncher?.copyReadMoreUrl === "string"
                 ? brand.widgetLauncher.copyReadMoreUrl.trim()
+                : "",
+            widgetLauncherChatbotHeader:
+              typeof brand.widgetLauncher?.chatbotWidgetHeader === "string"
+                ? brand.widgetLauncher.chatbotWidgetHeader.trim()
+                : "",
+            widgetLauncherButtonImageUrl,
+            widgetLauncherEnableAttentionAnimation: Boolean(
+              brand.widgetLauncher?.enableAttentionAnimation,
+            ),
+            supportChannelEmail:
+              typeof brand.supportChannel?.email === "string"
+                ? brand.supportChannel.email.trim()
+                : "",
+            supportChannelSlackUrl:
+              typeof brand.supportChannel?.slackUrl === "string"
+                ? String(brand.supportChannel.slackUrl).trim()
                 : "",
           };
 

@@ -6,7 +6,10 @@ import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { PanelLeftClose, MoreVertical, Trash2 } from "lucide-react";
-import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import {
+  normalizeBrandHex,
+  getEffectiveCommunityPrimaryColorStr,
+} from "@/app/lib/brandTheme";
 import {
   JOB_SEEKER_CHAT_TITLE,
   JOB_SEEKER_OPENING_MESSAGE,
@@ -40,7 +43,9 @@ export default function ChatSidebar({
   const [showNewChatDropdown, setShowNewChatDropdown] = useState(false);
   const [showCommunityNewDropdown, setShowCommunityNewDropdown] = useState(false);
   const brandContext = useBrandContext();
-  const communityPrimaryHex = normalizeBrandHex(brandContext?.primaryBrandColor);
+  const sidebarAccentHex = normalizeBrandHex(
+    getEffectiveCommunityPrimaryColorStr(brandContext),
+  );
 
   const [deletingChatId, setDeletingChatId] = useState(null);
   const router = useRouter();
@@ -181,10 +186,10 @@ export default function ChatSidebar({
                     <>
                       <div className="relative">
                         <button
-                          className={`flex w-full justify-center gap-2 rounded-md p-2 text-xs font-medium text-white transition-colors hover:opacity-90 ${!communityPrimaryHex ? "bg-highlight" : ""}`}
+                          className={`flex w-full justify-center gap-2 rounded-md p-2 text-xs font-medium text-white transition-colors hover:opacity-90 ${!sidebarAccentHex ? "bg-highlight" : ""}`}
                           style={
-                            communityPrimaryHex
-                              ? { backgroundColor: communityPrimaryHex }
+                            sidebarAccentHex
+                              ? { backgroundColor: sidebarAccentHex }
                               : undefined
                           }
                           onClick={() => setShowCommunityNewDropdown((v) => !v)}
@@ -318,11 +323,11 @@ export default function ChatSidebar({
                           <div className="h-6 w-6 rounded-full border-2 border-border" />
                           <div
                             className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${
-                              !communityPrimaryHex ? "border-t-highlight" : ""
+                              !sidebarAccentHex ? "border-t-highlight" : ""
                             }`}
                             style={
-                              communityPrimaryHex
-                                ? { borderTopColor: communityPrimaryHex }
+                              sidebarAccentHex
+                                ? { borderTopColor: sidebarAccentHex }
                                 : undefined
                             }
                           />

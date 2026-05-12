@@ -43,18 +43,30 @@ export async function POST(req) {
           );
         }
 
-        await client
-          .patch(brandData._id)
-          .set({
-            [imageType]: {
-              _type: "image",
-              asset: {
-                _type: "reference",
-                _ref: asset._id,
-              },
-            },
-          })
-          .commit();
+        const imageValue = {
+          _type: "image",
+          asset: {
+            _type: "reference",
+            _ref: asset._id,
+          },
+        };
+
+        if (imageType === "widgetLauncherButtonImage") {
+          const rawWl = brandData.widgetLauncher;
+          const wl =
+            rawWl && typeof rawWl === "object" && !Array.isArray(rawWl)
+              ? { ...rawWl }
+              : {};
+          wl.buttonImage = imageValue;
+          await client.patch(brandData._id).set({ widgetLauncher: wl }).commit();
+        } else {
+          await client
+            .patch(brandData._id)
+            .set({
+              [imageType]: imageValue,
+            })
+            .commit();
+        }
 
         return NextResponse.json({ success: true });
       } catch (error) {

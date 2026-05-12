@@ -1,6 +1,10 @@
 import { NextResponse } from "next/server";
 import { client, urlFor } from "@/app/lib/sanity";
-import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import {
+  getEffectiveCommunityPrimaryColorStr,
+  getEffectiveCommunitySecondaryColorStr,
+  normalizeBrandHex,
+} from "@/app/lib/brandTheme";
 
 /**
  * Public read for embed widget + optional clients. No auth.
@@ -34,6 +38,8 @@ export async function GET(req) {
       `*[_type == "brand" && subdomain == $brand][0]{
         primaryBrandColor,
         secondaryBrandColor,
+        communityPrimaryBrandColor,
+        communitySecondaryBrandColor,
         enableAdminMessages,
         enableFriendConnect,
         enableProfessionalConnect,
@@ -76,8 +82,12 @@ export async function GET(req) {
 
     return NextResponse.json(
       {
-        primaryBrandColor: normalizeBrandHex(data?.primaryBrandColor),
-        secondaryBrandColor: normalizeBrandHex(data?.secondaryBrandColor),
+        primaryBrandColor: normalizeBrandHex(
+          getEffectiveCommunityPrimaryColorStr(data),
+        ),
+        secondaryBrandColor: normalizeBrandHex(
+          getEffectiveCommunitySecondaryColorStr(data),
+        ),
         widgetLauncherImageUrl,
         widgetLauncherAnimation: Boolean(wl?.enableAttentionAnimation),
         widgetChatbotHeader,

@@ -154,17 +154,39 @@ export default {
     },
     {
       name: "primaryBrandColor",
-      title: "Primary brand color (Community & widget)",
+      title: "Primary brand color (widget)",
       type: "string",
       description:
-        "Optional hex (e.g. #2d545e). Community title, Find Jobs / Hire / Friends, Connect, sidebar New button, and widget launcher / primary actions. Leave empty for default teal (highlight) styling.",
+        "Optional hex. Kept in sync with Community primary in My Services; drives embed widget launcher and chat accents when set.",
     },
     {
       name: "secondaryBrandColor",
-      title: "Secondary brand color (Community & widget)",
+      title: "Secondary brand color",
       type: "string",
       description:
-        "Optional hex for card accents (name, tags, “Already connected”). Leave empty for default.",
+        "Optional hex. Kept in sync with Community secondary in My Services; used where secondary accents apply (e.g. widget theme, community UI).",
+    },
+    {
+      name: "communityColorsMatchWidget",
+      title: "Community colors match widget (legacy)",
+      type: "boolean",
+      description:
+        "Legacy flag; the app no longer reads this. Community colors in My Services are the single source of truth and are saved to widget fields automatically.",
+      initialValue: true,
+    },
+    {
+      name: "communityPrimaryBrandColor",
+      title: "Community primary color",
+      type: "string",
+      description:
+        "Optional hex for Community and embed widget primary accents (titles, buttons, user bubbles). Leave empty for default Kavisha styling.",
+    },
+    {
+      name: "communitySecondaryBrandColor",
+      title: "Community secondary color",
+      type: "string",
+      description:
+        "Optional hex for Community and widget secondary accents (tags, card highlights). If empty, UI falls back to primary where appropriate.",
     },
     {
       name: "widgetLauncher",
@@ -208,6 +230,33 @@ export default {
           type: "url",
           description:
             "If set, copied assistant replies begin with: To read more, visit [this URL]. Use your public site (e.g. https://entrackr.com). Applies to main chat and embed widget.",
+        },
+      ],
+    },
+    {
+      name: "supportChannel",
+      title: "Support channel",
+      type: "object",
+      description:
+        "Shown to visitors who need help (e.g. after being blocked from the avatar). Use an email and/or a Slack link for unblock or support requests.",
+      options: {
+        collapsible: true,
+        collapsed: true,
+      },
+      fields: [
+        {
+          name: "email",
+          title: "Support email",
+          type: "string",
+          description:
+            "Optional. Address users can write to for unblock requests or other support.",
+        },
+        {
+          name: "slackUrl",
+          title: "Slack URL",
+          type: "url",
+          description:
+            "Optional. Link to a Slack channel or workflow (https) for support or unblock requests.",
         },
       ],
     },

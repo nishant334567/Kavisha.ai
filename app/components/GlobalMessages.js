@@ -2,7 +2,11 @@
 import { useState, useEffect, useRef } from "react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { normalizeBrandHex } from "../lib/brandTheme";
+import {
+  normalizeBrandHex,
+  getEffectiveCommunityPrimaryColorStr,
+  getEffectiveCommunitySecondaryColorStr,
+} from "../lib/brandTheme";
 import { Info, MessageCircleMore } from "lucide-react";
 import Inbox from "./Inbox";
 import LiveChat from "./LiveChat";
@@ -13,8 +17,12 @@ const MESSAGES_INFO_COPY =
 export default function GlobalMessages() {
   const { user } = useFirebaseSession();
   const brand = useBrandContext();
-  const primaryHex = normalizeBrandHex(brand?.primaryBrandColor);
-  const secondaryHex = normalizeBrandHex(brand?.secondaryBrandColor);
+  const primaryHex = normalizeBrandHex(
+    getEffectiveCommunityPrimaryColorStr(brand),
+  );
+  const secondaryHex = normalizeBrandHex(
+    getEffectiveCommunitySecondaryColorStr(brand),
+  );
   const [showInbox, setShowInbox] = useState(false);
   const [openChat, setOpenChat] = useState(false);
   const [userA, setUserA] = useState(null);

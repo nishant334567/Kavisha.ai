@@ -1,6 +1,9 @@
 /**
- * Optional per-brand colors for Community + embed widget only.
- * When normalized hex is null, callers should use default Tailwind / CSS tokens.
+ * Brand accents: admins set primary/secondary under Community in My Services.
+ * Those values are stored as `communityPrimaryBrandColor` /
+ * `communitySecondaryBrandColor` and kept in sync with `primaryBrandColor` /
+ * `secondaryBrandColor` for the embed widget and chat. When normalized hex is
+ * null, callers should use default Tailwind / CSS tokens.
  */
 
 export function normalizeBrandHex(input) {
@@ -25,4 +28,22 @@ export function hexToRgba(hex, alpha) {
   const g = (n >> 8) & 255;
   const b = n & 255;
   return `rgba(${r},${g},${b},${alpha})`;
+}
+
+/** Raw hex string for community primary before normalizeBrandHex. */
+export function getEffectiveCommunityPrimaryColorStr(brand) {
+  const c = brand?.communityPrimaryBrandColor;
+  if (typeof c === "string" && c.trim() !== "") return c;
+  return brand?.primaryBrandColor ?? "";
+}
+
+/** Raw hex string for community secondary before normalizeBrandHex. */
+export function getEffectiveCommunitySecondaryColorStr(brand) {
+  const s = brand?.communitySecondaryBrandColor;
+  if (typeof s === "string" && s.trim() !== "") return s;
+  const c = brand?.communityPrimaryBrandColor;
+  if (typeof c === "string" && c.trim() !== "") return c;
+  const legacySec = brand?.secondaryBrandColor;
+  if (typeof legacySec === "string" && legacySec.trim() !== "") return legacySec;
+  return brand?.primaryBrandColor ?? "";
 }

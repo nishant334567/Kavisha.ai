@@ -4,7 +4,11 @@ import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import CommunityCard from "./CommunityCard";
 import { ChevronLeft, ChevronRight, RefreshCw } from "lucide-react";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { normalizeBrandHex } from "../lib/brandTheme";
+import {
+  normalizeBrandHex,
+  getEffectiveCommunityPrimaryColorStr,
+  getEffectiveCommunitySecondaryColorStr,
+} from "../lib/brandTheme";
 import { maskCommunityPeerName } from "../lib/communityPeerDisplayName";
 
 function formatLastSynced(ts) {
@@ -30,8 +34,12 @@ export default function Matches({
 }) {
   const { user } = useFirebaseSession();
   const brandContext = useBrandContext();
-  const primaryHex = normalizeBrandHex(brandContext?.primaryBrandColor);
-  const secondaryHex = normalizeBrandHex(brandContext?.secondaryBrandColor);
+  const primaryHex = normalizeBrandHex(
+    getEffectiveCommunityPrimaryColorStr(brandContext),
+  );
+  const secondaryHex = normalizeBrandHex(
+    getEffectiveCommunitySecondaryColorStr(brandContext),
+  );
 
   const scrollRef = useRef();
 

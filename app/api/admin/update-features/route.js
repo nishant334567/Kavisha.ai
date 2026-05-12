@@ -22,6 +22,15 @@ export async function PATCH(req) {
         enableFriendConnect,
         primaryBrandColor,
         secondaryBrandColor,
+        communityColorsMatchWidget,
+        communityPrimaryBrandColor,
+        communitySecondaryBrandColor,
+        widgetLauncherEnableAttentionAnimation,
+        unsetWidgetLauncherButtonImage,
+        widgetLauncherChatbotHeader,
+        widgetLauncherCopyReadMoreUrl,
+        supportChannelEmail,
+        supportChannelSlackUrl,
       } = await req.json();
 
       // Check if requester is admin for this brand
@@ -54,6 +63,9 @@ export async function PATCH(req) {
       if (enableBooking !== undefined) updateData.enableBooking = enableBooking;
       if (enableBlogs !== undefined) updateData.enableBlogs = enableBlogs;
       if (enableLinks !== undefined) updateData.enableLinks = enableLinks;
+      if (communityColorsMatchWidget !== undefined) {
+        updateData.communityColorsMatchWidget = Boolean(communityColorsMatchWidget);
+      }
 
       let patch = client.patch(brandData._id);
       let hasOps = false;
@@ -98,6 +110,176 @@ export async function PATCH(req) {
           }
           patch = patch.set({ secondaryBrandColor: hex });
         }
+        hasOps = true;
+      }
+
+      if (communityPrimaryBrandColor !== undefined) {
+        const raw =
+          typeof communityPrimaryBrandColor === "string"
+            ? communityPrimaryBrandColor.trim()
+            : "";
+        if (raw === "") {
+          patch = patch.unset(["communityPrimaryBrandColor"]);
+        } else {
+          const hex = normalizeBrandHex(raw);
+          if (!hex) {
+            return NextResponse.json(
+              { error: "Invalid community primary color (use #rrggbb or #rgb)" },
+              { status: 400 }
+            );
+          }
+          patch = patch.set({ communityPrimaryBrandColor: hex });
+        }
+        hasOps = true;
+      }
+
+      if (communitySecondaryBrandColor !== undefined) {
+        const raw =
+          typeof communitySecondaryBrandColor === "string"
+            ? communitySecondaryBrandColor.trim()
+            : "";
+        if (raw === "") {
+          patch = patch.unset(["communitySecondaryBrandColor"]);
+        } else {
+          const hex = normalizeBrandHex(raw);
+          if (!hex) {
+            return NextResponse.json(
+              { error: "Invalid community secondary color (use #rrggbb or #rgb)" },
+              { status: 400 }
+            );
+          }
+          patch = patch.set({ communitySecondaryBrandColor: hex });
+        }
+        hasOps = true;
+      }
+
+      if (unsetWidgetLauncherButtonImage === true) {
+        patch = patch.unset(["widgetLauncher.buttonImage"]);
+        hasOps = true;
+      }
+
+      if (widgetLauncherEnableAttentionAnimation !== undefined) {
+        const rawWl = brandData.widgetLauncher;
+        const wl =
+          rawWl && typeof rawWl === "object" && !Array.isArray(rawWl)
+            ? { ...rawWl }
+            : {};
+        wl.enableAttentionAnimation = Boolean(
+          widgetLauncherEnableAttentionAnimation,
+        );
+        patch = patch.set({ widgetLauncher: wl });
+        hasOps = true;
+      }
+
+      if (
+        widgetLauncherChatbotHeader !== undefined ||
+        widgetLauncherCopyReadMoreUrl !== undefined
+      ) {
+        const rawWl = brandData.widgetLauncher;
+        const wl =
+          rawWl && typeof rawWl === "object" && !Array.isArray(rawWl)
+            ? { ...rawWl }
+            : {};
+
+        if (widgetLauncherChatbotHeader !== undefined) {
+          const h =
+            typeof widgetLauncherChatbotHeader === "string"
+              ? widgetLauncherChatbotHeader.trim()
+              : "";
+          if (h === "") delete wl.chatbotWidgetHeader;
+          else wl.chatbotWidgetHeader = h;
+        }
+
+        if (widgetLauncherCopyReadMoreUrl !== undefined) {
+          const u =
+            typeof widgetLauncherCopyReadMoreUrl === "string"
+              ? widgetLauncherCopyReadMoreUrl.trim()
+              : "";
+          if (u === "") delete wl.copyReadMoreUrl;
+          else {
+            try {
+              const parsed = new URL(u);
+              if (
+                parsed.protocol !== "https:" &&
+                parsed.protocol !== "http:"
+              ) {
+                return NextResponse.json(
+                  { error: "Read more URL must use http:// or https://" },
+                  { status: 400 },
+                );
+              }
+              wl.copyReadMoreUrl = u;
+            } catch {
+              return NextResponse.json(
+                { error: "Invalid read more URL" },
+                { status: 400 },
+              );
+            }
+          }
+        }
+
+        patch = patch.set({ widgetLauncher: wl });
+        hasOps = true;
+      }
+
+      if (
+        supportChannelEmail !== undefined ||
+        supportChannelSlackUrl !== undefined
+      ) {
+        const rawSc = brandData.supportChannel;
+        const sc =
+          rawSc && typeof rawSc === "object" && !Array.isArray(rawSc)
+            ? { ...rawSc }
+            : {};
+
+        if (supportChannelEmail !== undefined) {
+          const e =
+            typeof supportChannelEmail === "string"
+              ? supportChannelEmail.trim()
+              : "";
+          if (e === "") {
+            delete sc.email;
+          } else {
+            if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) {
+              return NextResponse.json(
+                { error: "Invalid support email address" },
+                { status: 400 },
+              );
+            }
+            sc.email = e;
+          }
+        }
+
+        if (supportChannelSlackUrl !== undefined) {
+          const s =
+            typeof supportChannelSlackUrl === "string"
+              ? supportChannelSlackUrl.trim()
+              : "";
+          if (s === "") {
+            delete sc.slackUrl;
+          } else {
+            try {
+              const parsed = new URL(s);
+              if (
+                parsed.protocol !== "https:" &&
+                parsed.protocol !== "http:"
+              ) {
+                return NextResponse.json(
+                  { error: "Slack URL must use http:// or https://" },
+                  { status: 400 },
+                );
+              }
+              sc.slackUrl = s;
+            } catch {
+              return NextResponse.json(
+                { error: "Invalid Slack URL" },
+                { status: 400 },
+              );
+            }
+          }
+        }
+
+        patch = patch.set({ supportChannel: sc });
         hasOps = true;
       }
 
