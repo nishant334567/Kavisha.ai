@@ -1,5 +1,6 @@
 "use client";
 import { useState, useEffect, useRef } from "react";
+import { showPublicChatsNavForHostname } from "@/app/lib/hostNavChats";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { signIn } from "../lib/firebase/sign-in";
 import { signOut } from "../lib/firebase/logout";
@@ -45,12 +46,20 @@ export default function Navbar() {
   const [showSettingDropdown, setShowsettingDropdown] = useState(false);
   const [isInAppBrowser, setIsInAppBrowser] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [showPublicChatsNav, setShowPublicChatsNav] = useState(false);
   const settingDropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
 
   useEffect(() => {
     setIsInAppBrowser(detectInAppBrowser());
     setIsMobile(isMobileDevice());
+  }, []);
+
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setShowPublicChatsNav(
+      showPublicChatsNavForHostname(window.location.hostname)
+    );
   }, []);
 
   const searchKey = searchParams.toString();
@@ -169,13 +178,13 @@ export default function Navbar() {
   const enabledFeatureNavItems = [
     ...(showCommunityForBrand
       ? [
-          {
-            label: "COMMUNITY",
-            mobileLabel: brand?.communityName || "Community",
-            path: communityPath,
-            icon: Users,
-          },
-        ]
+        {
+          label: "COMMUNITY",
+          mobileLabel: brand?.communityName || "Community",
+          path: communityPath,
+          icon: Users,
+        },
+      ]
       : []),
     ...(showChatsNav
       ? [
@@ -189,13 +198,13 @@ export default function Navbar() {
       : []),
     ...(isKavishaMainBrand
       ? [
-          {
-            label: "BUILD MY AGENT",
-            mobileLabel: "Build My Agent",
-            path: "/widget-intro",
-            icon: Sparkles,
-          },
-        ]
+        {
+          label: "BUILD MY AGENT",
+          mobileLabel: "Build My Agent",
+          path: "/widget-intro",
+          icon: Sparkles,
+        },
+      ]
       : []),
     ...(brand?.subdomain && brand?.enableLinks !== false
       ? [
@@ -300,6 +309,16 @@ export default function Navbar() {
                 {getNavLabel(item.path, item.label)}
               </button>
             ))}
+            {showPublicChatsNav && (
+              <button
+                type="button"
+                onClick={() => handleNavigate("/chats")}
+                disabled={isNavigating}
+                className={isNavigating ? "opacity-60 cursor-not-allowed" : ""}
+              >
+                {getNavLabel("/chats", "CHATS")}
+              </button>
+            )}
             {loading ? (
               <div className=" text-sm text-muted">Loading...</div>
             ) : !user ? (
@@ -509,6 +528,21 @@ export default function Navbar() {
                 </li>
               );
             })}
+            {showPublicChatsNav && (
+              <li>
+                <button
+                  type="button"
+                  className={menuRowBtnClass}
+                  onClick={() => {
+                    handleNavigate("/chats", { closeMenu: true });
+                  }}
+                  disabled={isNavigating}
+                >
+                  <MessagesSquare className={menuIconClass} strokeWidth={2} />
+                  {getNavLabel("/chats", "Chats")}
+                </button>
+              </li>
+            )}
             <li className="mt-2 border-t border-border pt-2">
               {loading ? (
                 <button

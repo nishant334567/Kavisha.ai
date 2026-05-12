@@ -1,8 +1,9 @@
 "use client";
 
 import Link from "next/link";
-import { useMemo } from "react";
+import { useMemo, useState, useEffect } from "react";
 import { usePathname } from "next/navigation";
+import { showPublicChatsNavForHostname } from "@/app/lib/hostNavChats";
 import {
   LayoutGrid,
   Users,
@@ -16,7 +17,7 @@ import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 const ACTIVE = "text-[#00888E]";
 const INACTIVE = "text-muted";
 
-function useBottomNavItems(brand) {
+function useBottomNavItems(brand, includeChats) {
   return useMemo(() => {
     const communityEnabled =
       !!brand?.enableFriendConnect || !!brand?.enableProfessionalConnect;
@@ -68,22 +69,23 @@ function useBottomNavItems(brand) {
       });
     }
 
-    list.push(
-      {
-        key: "home",
-        href: "/",
-        label: "Home",
-        icon: Home,
-        match: (p) => p === "/",
-      },
-      {
+    list.push({
+      key: "home",
+      href: "/",
+      label: "Home",
+      icon: Home,
+      match: (p) => p === "/",
+    });
+
+    if (includeChats) {
+      list.push({
         key: "chats",
         href: "/chats",
         label: "Chats",
         icon: MessagesSquare,
         match: (p) => p.startsWith("/chats"),
-      }
-    );
+      });
+    }
 
     if (showLinks) {
       list.push({
@@ -102,13 +104,19 @@ function useBottomNavItems(brand) {
     brand?.enableProfessionalConnect,
     brand?.communityName,
     brand?.enableLinks,
+    includeChats,
   ]);
 }
 
 export default function MobileBottomNav({ embedded = false }) {
   const pathname = usePathname() || "";
   const brand = useBrandContext();
-  const visibleItems = useBottomNavItems(brand);
+  const [includeChats, setIncludeChats] = useState(false);
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    setIncludeChats(showPublicChatsNavForHostname(window.location.hostname));
+  }, []);
+  const visibleItems = useBottomNavItems(brand, includeChats);
 
   return (
     <nav

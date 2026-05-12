@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { showPublicChatsNavForHostname } from "@/app/lib/hostNavChats";
 import Link from "next/link";
 import SocketProvider from "../context/SocketProvider";
 import {
@@ -101,13 +102,22 @@ export default function ClientLayout({ children }) {
   function MobileBottomArea() {
     const { user } = useFirebaseSession();
     const brand = useBrandContext();
+    const [showPublicChatsNav, setShowPublicChatsNav] = useState(false);
+    useEffect(() => {
+      if (typeof window === "undefined") return;
+      setShowPublicChatsNav(
+        showPublicChatsNavForHostname(window.location.hostname)
+      );
+    }, []);
     const showHomepageLinks =
       pathname === "/" && brand?.subdomain && brand.subdomain !== "kavisha" && user;
     const linksQs = brand?.subdomain
       ? `?brand=${encodeURIComponent(brand.subdomain)}`
       : "";
     const homepageActionLinks = [
-      { label: "TALK TO ME", path: "/chats", primary: true },
+      ...(showPublicChatsNav
+        ? [{ label: "TALK TO ME", path: "/chats", primary: true }]
+        : []),
       { label: "COMMUNITY", path: "/community" },
       ...(brand?.enableLinks !== false
         ? [{ label: "LINKS", path: `/links${linksQs}` }]
