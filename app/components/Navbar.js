@@ -172,6 +172,9 @@ export default function Navbar() {
   const blogPath =
     "/blogs" +
     (brand?.subdomain ? `?subdomain=${encodeURIComponent(brand.subdomain)}` : "");
+  const showChatsNav =
+    !!brand?.subdomain && brand.subdomain !== "kavisha";
+
   const enabledFeatureNavItems = [
     ...(showCommunityForBrand
       ? [
@@ -182,6 +185,16 @@ export default function Navbar() {
           icon: Users,
         },
       ]
+      : []),
+    ...(showChatsNav
+      ? [
+          {
+            label: "CHATS",
+            mobileLabel: "Chats",
+            path: "/chats",
+            icon: MessagesSquare,
+          },
+        ]
       : []),
     ...(isKavishaMainBrand
       ? [
