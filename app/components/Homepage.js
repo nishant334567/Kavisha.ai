@@ -335,7 +335,7 @@ export default function Homepage() {
                     className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-muted shadow-sm transition-colors hover:bg-[#008389] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                     aria-label="Explore more Avataars"
                   >
-                    <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
+                    <ArrowRight className="h-5 w-5 origin-center -rotate-45" strokeWidth={2.5} />
                   </Link>
                   <div className="pointer-events-none absolute left-1/2 top-full mt-3 hidden -translate-x-1/2 group-hover:block">
                     <div className="rounded-xl bg-black px-3 py-2 text-sm font-medium text-white whitespace-nowrap">
@@ -352,7 +352,7 @@ export default function Homepage() {
                   className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-muted shadow-sm transition-colors hover:bg-[#008389] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
                   aria-label="Explore more Avataars"
                 >
-                  <ArrowRight className="h-5 w-5" strokeWidth={2.5} />
+                  <ArrowRight className="h-5 w-5 origin-center -rotate-45" strokeWidth={2.5} />
                 </Link>
                 <div className="pointer-events-none absolute left-1/2 top-full mt-3 hidden -translate-x-1/2 group-hover:block">
                   <div className="rounded-xl bg-black px-3 py-2 text-sm font-medium text-white whitespace-nowrap">
