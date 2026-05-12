@@ -37,7 +37,7 @@ export default function AssistantEngagementRow({
 
     return (
         <div
-            className={`flex flex-wrap items-center gap-2 text-xs text-muted-foreground ${className}`.trim()}
+            className={`inline-flex shrink-0 items-center text-xs text-muted-foreground ${className}`.trim()}
         >
             <button
                 type="button"
@@ -45,10 +45,10 @@ export default function AssistantEngagementRow({
                 aria-pressed={liked}
                 aria-label={liked ? "Unlike this answer" : "Like this answer"}
                 onClick={() => void toggleLike()}
-                className={`inline-flex items-center justify-center rounded-lg border border-border/60 bg-background/80 p-2 transition hover:bg-muted-bg ${pending ? "opacity-50" : ""}`}
+                className={`inline-flex size-9 items-center justify-center rounded-md bg-transparent transition-colors hover:bg-black/[0.06] dark:hover:bg-white/[0.08] ${pending ? "opacity-50" : ""}`}
             >
                 <ThumbsUp
-                    className={`h-3.5 w-3.5 text-[#18A6B8] ${liked ? "fill-[#18A6B8]" : "fill-none"}`}
+                    className={`h-4 w-4 shrink-0 text-foreground ${liked ? "fill-foreground" : "fill-none"}`}
                     strokeWidth={2}
                     aria-hidden
                 />

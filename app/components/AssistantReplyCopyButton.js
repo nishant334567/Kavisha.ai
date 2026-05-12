@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Copy } from "lucide-react";
 
 function hostFromUrl(url) {
@@ -135,6 +135,17 @@ export default function AssistantReplyCopyButton({
   copied = false,
   className = "",
 }) {
+  const [showCopied, setShowCopied] = useState(false);
+  const copiedHintTimerRef = useRef(null);
+
+  useEffect(() => {
+    return () => {
+      if (copiedHintTimerRef.current != null) {
+        clearTimeout(copiedHintTimerRef.current);
+      }
+    };
+  }, []);
+
   const handleCopy = useCallback(async () => {
     const more = resolveReadMoreForCopy(
       readMoreUrl,
@@ -150,6 +161,15 @@ export default function AssistantReplyCopyButton({
     );
     try {
       await navigator.clipboard.writeText(text);
+
+      if (copiedHintTimerRef.current != null) {
+        clearTimeout(copiedHintTimerRef.current);
+      }
+      setShowCopied(true);
+      copiedHintTimerRef.current = window.setTimeout(() => {
+        setShowCopied(false);
+        copiedHintTimerRef.current = null;
+      }, 2000);
 
       const id = String(logId || "").trim();
       if (id && typeof onRecorded === "function" && !copied) {
@@ -186,25 +206,28 @@ export default function AssistantReplyCopyButton({
   ]);
 
   return (
-    <div className="group relative inline-flex">
+    <div className="relative inline-flex">
       <button
         type="button"
         aria-label="Copy response"
         onClick={() => void handleCopy()}
-        className={`inline-flex items-center justify-center rounded-md bg-transparent p-2 text-foreground transition-colors hover:bg-black/[0.06] dark:hover:bg-white/[0.08] ${className}`.trim()}
+        className={`inline-flex size-9 items-center justify-center text-foreground ${className}`.trim()}
       >
         <Copy
-          className={`h-4 w-4 shrink-0 text-foreground ${copied ? "fill-foreground" : "fill-none"}`}
+          className="h-4 w-4 shrink-0 fill-none text-foreground"
           strokeWidth={2}
           aria-hidden
         />
       </button>
-      <span
-        role="tooltip"
-        className="pointer-events-none absolute left-1/2 top-[calc(100%+8px)] z-30 -translate-x-1/2 translate-x-3 whitespace-nowrap rounded-md bg-black/90 px-2 py-1 text-xs font-medium text-white opacity-0 shadow-sm transition-opacity duration-150 group-hover:opacity-100 group-focus-within:opacity-100"
-      >
-        Copy response
-      </span>
+      {showCopied ? (
+        <span
+          role="status"
+          aria-live="polite"
+          className="pointer-events-none absolute left-full top-1/2 z-10 ml-0.5 -translate-y-1/2 whitespace-nowrap rounded border border-black px-1.5 py-0.5 text-xs text-foreground dark:border-neutral-200"
+        >
+          Copied
+        </span>
+      ) : null}
     </div>
   );
 }
