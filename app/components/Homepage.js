@@ -1,5 +1,5 @@
 "use client";
-import { useState, useEffect, useLayoutEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { signIn } from "../lib/firebase/sign-in";
@@ -11,7 +11,7 @@ import {
 } from "../lib/in-app-browser";
 import InfoCard from "./InfoCard";
 import AvatarCard from "./AvatarCard";
-import { ArrowRight, ChevronLeft, ChevronRight } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import Footer from "./Footer";
 
 const cards = [
@@ -51,8 +51,6 @@ async function fetchFeaturedAvatars() {
 export default function Homepage() {
   const router = useRouter();
   const { user, refresh } = useFirebaseSession();
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const sliderRef = useRef(null);
   const [signingIn, setSigningIn] = useState(false);
   const [error, setError] = useState("");
   const [popupBlocked, setPopupBlocked] = useState(false);
@@ -96,34 +94,6 @@ export default function Homepage() {
     }
   };
 
-  // Get visible count based on screen size
-  const getVisibleCount = () => {
-    if (typeof window === "undefined") return 3;
-    if (window.innerWidth < 640) return 1;
-    if (window.innerWidth < 1024) return 2;
-    return 4;
-  };
-
-  const [visibleCount, setVisibleCount] = useState(4);
-  const [sliderViewportWidth, setSliderViewportWidth] = useState(0);
-
-  useEffect(() => {
-    const handleResize = () => setVisibleCount(getVisibleCount());
-    handleResize();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
-
-  useLayoutEffect(() => {
-    const el = sliderRef.current;
-    if (!el) return;
-    const measure = () => setSliderViewportWidth(el.clientWidth);
-    measure();
-    const ro = new ResizeObserver(measure);
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, [avatars.length, avatarsLoading]);
-
   useEffect(() => {
     let cancelled = false;
     setAvatarsLoading(true);
@@ -141,84 +111,12 @@ export default function Homepage() {
     return () => { cancelled = true; };
   }, []);
 
-  const maxIndex = Math.max(0, avatars.length - visibleCount);
-
-  useEffect(() => {
-    setCurrentIndex((i) => Math.min(i, maxIndex));
-  }, [maxIndex]);
-
-  const slideLeft = () => {
-    setCurrentIndex((prev) => Math.max(0, prev - 1));
-  };
-
-  const slideRight = () => {
-    setCurrentIndex((prev) => Math.min(maxIndex, prev + 1));
-  };
-
-  const avatarSwipeTouch = useRef(null);
-
-  const isAvatarSwipeViewport = () =>
-    typeof window !== "undefined" && window.innerWidth < 768;
-
-  const handleAvatarSliderTouchStart = (e) => {
-    if (!isAvatarSwipeViewport() || avatars.length <= visibleCount) return;
-    const t = e.touches[0];
-    avatarSwipeTouch.current = { x: t.clientX, y: t.clientY };
-  };
-
-  const handleAvatarSliderTouchEnd = (e) => {
-    if (!isAvatarSwipeViewport() || !avatarSwipeTouch.current) {
-      avatarSwipeTouch.current = null;
-      return;
-    }
-    const t = e.changedTouches[0];
-    const dx = t.clientX - avatarSwipeTouch.current.x;
-    const dy = t.clientY - avatarSwipeTouch.current.y;
-    avatarSwipeTouch.current = null;
-    const minDx = 48;
-    if (Math.abs(dx) < minDx) return;
-    if (Math.abs(dx) < Math.abs(dy) * 1.15) return;
-    if (dx > 0) slideLeft();
-    else slideRight();
-  };
-
-  const handleAvatarSliderTouchCancel = () => {
-    avatarSwipeTouch.current = null;
-  };
-
   const avatarGapPx = 24;
-  const useMobileMeasuredCarousel =
-    visibleCount === 1 && sliderViewportWidth > 0;
-
-  let avatarTrackStyle;
-  let avatarCardSlideStyle;
-
-  if (useMobileMeasuredCarousel) {
-    const rootPx =
-      typeof document !== "undefined"
-        ? parseFloat(getComputedStyle(document.documentElement).fontSize || "16")
-        : 16;
-    const maxCardPx = 15.5 * rootPx;
-    const cardW = Math.min(sliderViewportWidth, maxCardPx);
-    const step = cardW + avatarGapPx;
-    const sidePad = Math.max(0, (sliderViewportWidth - cardW) / 2);
-    avatarTrackStyle = {
-      gap: `${avatarGapPx}px`,
-      paddingLeft: sidePad,
-      paddingRight: sidePad,
-      transform: `translateX(${-currentIndex * step}px)`,
-    };
-    avatarCardSlideStyle = { width: `${cardW}px`, flexShrink: 0 };
-  } else {
-    avatarTrackStyle = {
-      gap: `${avatarGapPx}px`,
-      transform: `translateX(calc(-${currentIndex} * (100% / ${visibleCount} + ${avatarGapPx / visibleCount}px)))`,
-    };
-    avatarCardSlideStyle = {
-      width: `min(calc((100% - ${(visibleCount - 1) * avatarGapPx}px) / ${visibleCount}), 15.5rem)`,
-      flexShrink: 0,
-    };
-  }
+  const avatarTrackStyle = { gap: `${avatarGapPx}px` };
+  const avatarCardSlideStyle = {
+    width: "min(15.5rem, max(14rem, calc(100vw - 4.5rem)))",
+    flexShrink: 0,
+  };
 
   return (
     <div className="mt-8 text-foreground sm:mt-16">
@@ -398,26 +296,19 @@ export default function Homepage() {
           <div>
             <div className="lg:flex lg:items-center lg:justify-center lg:gap-6">
               <div
-                className="relative min-w-0 flex-1 touch-pan-y overflow-x-hidden overflow-y-visible pb-4 md:touch-auto lg:flex-none lg:w-[min(100%,66.5rem)]"
-                ref={sliderRef}
-                onTouchStart={handleAvatarSliderTouchStart}
-                onTouchEnd={handleAvatarSliderTouchEnd}
-                onTouchCancel={handleAvatarSliderTouchCancel}
+                className="relative min-w-0 flex-1 overflow-y-visible pb-4 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none [-webkit-overflow-scrolling:touch] lg:flex-none lg:w-[min(100%,66.5rem)]"
                 role="region"
-                aria-label="Featured avatars. Swipe left or right on mobile to browse."
+                aria-label="Featured avatars. Scroll horizontally to see more."
               >
                 <div
-                  className="flex justify-start transition-transform duration-300 ease-in-out"
+                  className="flex w-max flex-nowrap justify-start"
                   style={avatarTrackStyle}
                 >
                   {avatars.map((avatar) => (
                     <div
                       key={avatar.id}
-                      className="flex-shrink-0"
-                      style={{
-                        // Match Talk-to-Avataar grid: minmax(14rem, 1fr) cap at 15.5rem; mobile uses px from viewport measure.
-                        ...avatarCardSlideStyle,
-                      }}
+                      className="snap-start flex-shrink-0"
+                      style={avatarCardSlideStyle}
                     >
                       <AvatarCard
                         name={avatar.name}
@@ -470,32 +361,6 @@ export default function Homepage() {
                 </div>
               </div>
             </div>
-            {avatars.length > visibleCount && (
-              <div className="mt-8 hidden justify-center gap-4 md:flex">
-                <button
-                  type="button"
-                  onClick={slideLeft}
-                  disabled={currentIndex === 0}
-                  className={`group flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#264653] transition-colors ${currentIndex === 0
-                    ? "cursor-not-allowed opacity-40"
-                    : "hover:bg-[#264653]"
-                    }`}
-                >
-                  <ChevronLeft className="h-5 w-5 text-[#264653] transition-colors group-hover:text-white" />
-                </button>
-                <button
-                  type="button"
-                  onClick={slideRight}
-                  disabled={currentIndex >= maxIndex}
-                  className={`group flex h-10 w-10 items-center justify-center rounded-full border-2 border-[#264653] transition-colors ${currentIndex >= maxIndex
-                    ? "cursor-not-allowed opacity-40"
-                    : "hover:bg-[#264653]"
-                    }`}
-                >
-                  <ChevronRight className="h-5 w-5 text-[#264653] transition-colors group-hover:text-white" />
-                </button>
-              </div>
-            )}
           </div>
         )}
       </div>
