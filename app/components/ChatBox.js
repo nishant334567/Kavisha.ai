@@ -728,17 +728,17 @@ export default function ChatBox({
                 className="h-[65px] w-[65px] flex-shrink-0 rounded-full object-cover"
               />
               <div className="flex flex-col items-center md:items-start">
-                <div className="my-2 flex border border-border font-baloo">
+                <div className="my-2 inline-flex items-stretch overflow-hidden border border-border font-baloo text-xs">
                   <button
                     type="button"
-                    className="cursor-default bg-foreground px-1.5 py-0.5 text-background"
+                    className="flex cursor-default items-center bg-foreground px-2.5 py-1.5 font-medium text-background"
                     disabled
                   >
                     {firstHeaderBadge}
                   </button>
                   <button
                     type="button"
-                    className="cursor-default border border-border bg-background px-1.5 py-0.5 text-foreground"
+                    className="flex cursor-default items-center border-l border-border bg-background px-2.5 py-1.5 font-medium text-foreground"
                     disabled
                   >
                     {secondHeaderBadge}
@@ -865,7 +865,7 @@ export default function ChatBox({
                       )}
                     {m.role === "assistant" &&
                       currentChatType?.toLowerCase() === "lead_journey" && (
-                        <div className="mt-1.5 flex w-full min-w-0 max-w-[90%] flex-wrap items-center gap-2 sm:max-w-[60%]">
+                        <div className="mt-1.5 flex w-full min-w-0 max-w-[90%] flex-nowrap items-center gap-1 sm:max-w-[60%]">
                           <AssistantEngagementRow
                             logId={
                               m._id != null ? String(m._id) : ""

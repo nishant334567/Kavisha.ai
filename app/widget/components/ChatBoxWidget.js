@@ -1171,7 +1171,7 @@ export default function ChatBoxWidget({
                           </>
                         )}
                         {chatRole === LEAD_JOURNEY_ROLE && (
-                          <div className="mt-1 flex flex-wrap items-center gap-2">
+                          <div className="mt-1 flex flex-nowrap items-center gap-1">
                             <AssistantEngagementRow
                               logId={
                                 m.id != null ? String(m.id) : ""
