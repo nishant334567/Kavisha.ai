@@ -67,7 +67,6 @@ export default function BrandContextProvider({ children }) {
                   services,
                   primaryBrandColor,
                   secondaryBrandColor,
-                  communityColorsMatchWidget,
                   communityPrimaryBrandColor,
                   communitySecondaryBrandColor,
                   widgetLauncher{
@@ -148,7 +147,6 @@ export default function BrandContextProvider({ children }) {
             services: brand.services,
             primaryBrandColor: brand.primaryBrandColor || "",
             secondaryBrandColor: brand.secondaryBrandColor || "",
-            communityColorsMatchWidget: brand.communityColorsMatchWidget !== false,
             communityPrimaryBrandColor: brand.communityPrimaryBrandColor || "",
             communitySecondaryBrandColor: brand.communitySecondaryBrandColor || "",
             assistantCopyReadMoreUrl:

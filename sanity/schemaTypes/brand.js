@@ -157,36 +157,36 @@ export default {
       title: "Primary brand color (widget)",
       type: "string",
       description:
-        "Optional hex (e.g. #2d545e). Embed widget launcher and primary actions. Leave empty for default teal (highlight) styling.",
+        "Optional hex. Kept in sync with Community primary in My Services; drives embed widget launcher and chat accents when set.",
     },
     {
       name: "secondaryBrandColor",
-      title: "Secondary brand color (legacy)",
+      title: "Secondary brand color",
       type: "string",
       description:
-        "Deprecated for the widget; saving widget colors clears this. Optional fallback in older data only.",
+        "Optional hex. Kept in sync with Community secondary in My Services; used where secondary accents apply (e.g. widget theme, community UI).",
     },
     {
       name: "communityColorsMatchWidget",
-      title: "Community colors match widget",
+      title: "Community colors match widget (legacy)",
       type: "boolean",
       description:
-        "When enabled, Community uses the same primary/secondary colors as the widget. Turn off to set separate community colors in My Services.",
+        "Legacy flag; the app no longer reads this. Community colors in My Services are the single source of truth and are saved to widget fields automatically.",
       initialValue: true,
     },
     {
       name: "communityPrimaryBrandColor",
-      title: "Community primary color (override)",
+      title: "Community primary color",
       type: "string",
       description:
-        "Only used when Community colors are set independently from the widget. Optional hex for Community title, buttons, sidebar New, etc.",
+        "Optional hex for Community and embed widget primary accents (titles, buttons, user bubbles). Leave empty for default Kavisha styling.",
     },
     {
       name: "communitySecondaryBrandColor",
-      title: "Community secondary color (override)",
+      title: "Community secondary color",
       type: "string",
       description:
-        "Only used when Community colors differ from the widget. Optional hex for tags and card accents on Community.",
+        "Optional hex for Community and widget secondary accents (tags, card highlights). If empty, UI falls back to primary where appropriate.",
     },
     {
       name: "widgetLauncher",

@@ -12,7 +12,10 @@ import {
   JOB_SEEKER_CHAT_TITLE,
   JOB_SEEKER_OPENING_MESSAGE,
 } from "@/app/lib/jobSeekerIntro";
-import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import {
+  getEffectiveCommunityPrimaryColorStr,
+  normalizeBrandHex,
+} from "@/app/lib/brandTheme";
 
 export default function JobsPage() {
   const router = useRouter();
@@ -29,7 +32,9 @@ export default function JobsPage() {
     () => getJobSeekerServiceKey(brandContext?.services),
     [brandContext?.services]
   );
-  const primaryHex = normalizeBrandHex(brandContext?.primaryBrandColor);
+  const primaryHex = normalizeBrandHex(
+    getEffectiveCommunityPrimaryColorStr(brandContext),
+  );
 
   useEffect(() => {
     if (!brand) return;

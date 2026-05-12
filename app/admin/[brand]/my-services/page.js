@@ -36,11 +36,6 @@ export default function MyServices() {
     enableFriendConnect: brandContext?.enableFriendConnect || false,
   });
   const [updating, setUpdating] = useState(false);
-  const [brandColors, setBrandColors] = useState({
-    primaryBrandColor: "",
-  });
-  const [communityColorsMatchWidget, setCommunityColorsMatchWidget] =
-    useState(true);
   const [communityBrandColors, setCommunityBrandColors] = useState({
     communityPrimaryBrandColor: "",
     communitySecondaryBrandColor: "",
@@ -129,17 +124,16 @@ export default function MyServices() {
           brandContext.enableProfessionalConnect || false,
         enableFriendConnect: brandContext.enableFriendConnect || false,
       });
-      setBrandColors({
-        primaryBrandColor: brandContext.primaryBrandColor || "",
-      });
-      setCommunityColorsMatchWidget(
-        brandContext.communityColorsMatchWidget !== false,
-      );
       setCommunityBrandColors({
         communityPrimaryBrandColor:
-          brandContext.communityPrimaryBrandColor || "",
+          brandContext.communityPrimaryBrandColor ||
+          brandContext.primaryBrandColor ||
+          "",
         communitySecondaryBrandColor:
-          brandContext.communitySecondaryBrandColor || "",
+          brandContext.communitySecondaryBrandColor ||
+          brandContext.secondaryBrandColor ||
+          brandContext.primaryBrandColor ||
+          "",
       });
       setWidgetLauncherAttention(
         Boolean(brandContext.widgetLauncherEnableAttentionAnimation),
@@ -155,34 +149,8 @@ export default function MyServices() {
     }
   }, [brandContext]);
 
-  const handleSaveWidgetColors = async () => {
-    if (updating) return;
-    setUpdating(true);
-    try {
-      const response = await fetch("/api/admin/update-features", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subdomain: brandContext?.subdomain,
-          primaryBrandColor: brandColors.primaryBrandColor,
-          secondaryBrandColor: "",
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to save widget colors");
-      }
-      await new Promise((r) => setTimeout(r, 400));
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      alert(err.message || "Failed to save widget colors");
-      setUpdating(false);
-    }
-  };
-
   const handleSaveCommunityColors = async () => {
-    if (updating || communityColorsMatchWidget) return;
+    if (updating) return;
     setUpdating(true);
     try {
       const response = await fetch("/api/admin/update-features", {
@@ -194,45 +162,22 @@ export default function MyServices() {
             communityBrandColors.communityPrimaryBrandColor,
           communitySecondaryBrandColor:
             communityBrandColors.communitySecondaryBrandColor,
+          primaryBrandColor:
+            communityBrandColors.communityPrimaryBrandColor,
+          secondaryBrandColor:
+            communityBrandColors.communitySecondaryBrandColor,
+          communityColorsMatchWidget: false,
         }),
       });
       const data = await response.json();
       if (!response.ok) {
-        throw new Error(data.error || "Failed to save community colors");
+        throw new Error(data.error || "Failed to save colors");
       }
       await new Promise((r) => setTimeout(r, 400));
       window.location.reload();
     } catch (err) {
       console.error(err);
-      alert(err.message || "Failed to save community colors");
-      setUpdating(false);
-    }
-  };
-
-  const handleCommunityColorsMatchToggle = async (checked) => {
-    if (updating) return;
-    const prev = communityColorsMatchWidget;
-    setCommunityColorsMatchWidget(checked);
-    setUpdating(true);
-    try {
-      const response = await fetch("/api/admin/update-features", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          subdomain: brandContext?.subdomain,
-          communityColorsMatchWidget: checked,
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.error || "Failed to update community color mode");
-      }
-      await new Promise((r) => setTimeout(r, 400));
-      window.location.reload();
-    } catch (err) {
-      console.error(err);
-      setCommunityColorsMatchWidget(prev);
-      alert(err.message || "Failed to update community color mode");
+      alert(err.message || "Failed to save colors");
       setUpdating(false);
     }
   };
@@ -748,80 +693,6 @@ export default function MyServices() {
 
                 <div className="mt-8 border-t border-border pt-6">
                   <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-                    Widget colors
-                  </h3>
-                  <p className="mt-1 text-xs text-muted">
-                    Optional. Leave empty for default Kavisha styling. Applies to
-                    the embed widget launcher and chat widget accents.
-                  </p>
-                  <div className="mt-3 flex flex-col gap-4 sm:flex-row sm:flex-wrap sm:items-end">
-                    <div className="min-w-0 flex-1 space-y-2 sm:min-w-[12rem]">
-                      <label
-                        className="text-xs font-medium text-muted"
-                        htmlFor="widget-primary-brand-color"
-                      >
-                        Primary (hex)
-                      </label>
-                      <div className="flex flex-wrap items-center gap-2">
-                        <input
-                          id="widget-primary-brand-color"
-                          type="text"
-                          value={brandColors.primaryBrandColor}
-                          onChange={(e) =>
-                            setBrandColors((p) => ({
-                              ...p,
-                              primaryBrandColor: e.target.value,
-                            }))
-                          }
-                          placeholder="e.g. #2d545e"
-                          disabled={updating}
-                          className="min-w-[8rem] flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
-                        />
-                        <input
-                          type="color"
-                          aria-label="Pick widget primary color"
-                          value={
-                            normalizeBrandHex(brandColors.primaryBrandColor) ||
-                            "#2d545e"
-                          }
-                          onChange={(e) =>
-                            setBrandColors((p) => ({
-                              ...p,
-                              primaryBrandColor: e.target.value,
-                            }))
-                          }
-                          disabled={updating}
-                          className="h-10 w-14 cursor-pointer rounded border border-border bg-background p-0.5"
-                        />
-                      </div>
-                    </div>
-                    <div className="flex shrink-0 gap-2">
-                      <button
-                        type="button"
-                        disabled={updating}
-                        onClick={handleSaveWidgetColors}
-                        className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
-                      >
-                        Save widget colors
-                      </button>
-                      <button
-                        type="button"
-                        disabled={updating}
-                        onClick={() =>
-                          setBrandColors({
-                            primaryBrandColor: "",
-                          })
-                        }
-                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted-bg disabled:opacity-50"
-                      >
-                        Clear
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="mt-8 border-t border-border pt-6">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
                     Read more URL
                   </h3>
                   <div className="mt-3 space-y-2">
@@ -1223,143 +1094,127 @@ export default function MyServices() {
                       )}
                   </div>
 
-                  <div className="mt-4 rounded-lg border border-border bg-card px-3 py-3">
+                  <div className="mt-4 rounded-xl border border-border bg-muted-bg p-4 sm:p-5">
                     <h3 className="text-sm font-semibold uppercase tracking-wider text-foreground">
-                      Community colors
+                      Community &amp; widget colors
                     </h3>
-                    <p className="mt-1 text-xs text-muted">
-                      With &quot;Same as Widget colors&quot; on, Community primary and
-                      secondary both use the widget&apos;s single primary color.
-                      Turn it off to set Community primary and secondary separately
-                      (e.g. secondary for hub buttons and accents).
+                    <p className="mt-2 max-w-3xl text-xs leading-relaxed text-muted">
+                      Optional. Leave fields empty to keep default Kavisha styling.
+                      Primary applies to the Community title, action buttons,
+                      Connect, sidebar &apos;New&apos;, and the chat widget launcher.
+                      Secondary accents tags and card highlights on Community.
                     </p>
-                    <label className="mt-3 flex cursor-pointer items-start gap-3">
-                      <input
-                        type="checkbox"
-                        checked={communityColorsMatchWidget}
-                        onChange={(e) =>
-                          handleCommunityColorsMatchToggle(e.target.checked)
-                        }
-                        disabled={updating}
-                        className="mt-0.5 h-4 w-4 shrink-0 rounded border-border text-highlight focus:ring-highlight"
-                      />
-                      <span className="text-sm leading-snug text-foreground">
-                        Same as Widget colors
-                      </span>
-                    </label>
-                    {!communityColorsMatchWidget && (
-                      <div className="mt-4 flex flex-col gap-4 border-t border-border pt-4 sm:flex-row sm:items-end">
-                        <div className="min-w-0 flex-1 space-y-2">
-                          <label
-                            className="text-xs font-medium text-muted"
-                            htmlFor="community-primary-brand-color"
-                          >
-                            Primary (hex)
-                          </label>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <input
-                              id="community-primary-brand-color"
-                              type="text"
-                              value={
-                                communityBrandColors.communityPrimaryBrandColor
-                              }
-                              onChange={(e) =>
-                                setCommunityBrandColors((p) => ({
-                                  ...p,
-                                  communityPrimaryBrandColor: e.target.value,
-                                }))
-                              }
-                              placeholder="e.g. #2d545e"
-                              disabled={updating}
-                              className="min-w-[8rem] flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
-                            />
-                            <input
-                              type="color"
-                              aria-label="Pick community primary color"
-                              value={
-                                normalizeBrandHex(
-                                  communityBrandColors.communityPrimaryBrandColor,
-                                ) || "#2d545e"
-                              }
-                              onChange={(e) =>
-                                setCommunityBrandColors((p) => ({
-                                  ...p,
-                                  communityPrimaryBrandColor: e.target.value,
-                                }))
-                              }
-                              disabled={updating}
-                              className="h-10 w-14 cursor-pointer rounded border border-border bg-background p-0.5"
-                            />
-                          </div>
-                        </div>
-                        <div className="min-w-0 flex-1 space-y-2">
-                          <label
-                            className="text-xs font-medium text-muted"
-                            htmlFor="community-secondary-brand-color"
-                          >
-                            Secondary (hex)
-                          </label>
-                          <div className="flex flex-wrap items-center gap-2">
-                            <input
-                              id="community-secondary-brand-color"
-                              type="text"
-                              value={
-                                communityBrandColors.communitySecondaryBrandColor
-                              }
-                              onChange={(e) =>
-                                setCommunityBrandColors((p) => ({
-                                  ...p,
-                                  communitySecondaryBrandColor: e.target.value,
-                                }))
-                              }
-                              placeholder="e.g. #004A4E"
-                              disabled={updating}
-                              className="min-w-[8rem] flex-1 rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
-                            />
-                            <input
-                              type="color"
-                              aria-label="Pick community secondary color"
-                              value={
-                                normalizeBrandHex(
-                                  communityBrandColors.communitySecondaryBrandColor,
-                                ) || "#004A4E"
-                              }
-                              onChange={(e) =>
-                                setCommunityBrandColors((p) => ({
-                                  ...p,
-                                  communitySecondaryBrandColor: e.target.value,
-                                }))
-                              }
-                              disabled={updating}
-                              className="h-10 w-14 cursor-pointer rounded border border-border bg-background p-0.5"
-                            />
-                          </div>
-                        </div>
-                        <div className="flex shrink-0 gap-2">
-                          <button
-                            type="button"
-                            disabled={updating}
-                            onClick={handleSaveCommunityColors}
-                            className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
-                          >
-                            Save community colors
-                          </button>
-                          <button
-                            type="button"
-                            disabled={updating}
-                            onClick={() =>
-                              setCommunityBrandColors({
-                                communityPrimaryBrandColor: "",
-                                communitySecondaryBrandColor: "",
-                              })
-                            }
-                            className="rounded-lg border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted-bg disabled:opacity-50"
-                          >
-                            Clear
-                          </button>
-                        </div>
+                    <div className="mt-5 grid grid-cols-1 gap-6 sm:grid-cols-2">
+                      <div className="space-y-2">
+                        <label
+                          className="text-xs font-medium text-muted"
+                          htmlFor="community-primary-brand-color"
+                        >
+                          Primary (hex)
+                        </label>
+                        <input
+                          id="community-primary-brand-color"
+                          type="text"
+                          value={
+                            communityBrandColors.communityPrimaryBrandColor
+                          }
+                          onChange={(e) =>
+                            setCommunityBrandColors((p) => ({
+                              ...p,
+                              communityPrimaryBrandColor: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. #2d545e"
+                          disabled={updating}
+                          autoComplete="off"
+                          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm"
+                        />
+                        <input
+                          type="color"
+                          aria-label="Pick primary color"
+                          title="Pick primary color"
+                          value={
+                            normalizeBrandHex(
+                              communityBrandColors.communityPrimaryBrandColor,
+                            ) || "#2d545e"
+                          }
+                          onChange={(e) =>
+                            setCommunityBrandColors((p) => ({
+                              ...p,
+                              communityPrimaryBrandColor: e.target.value,
+                            }))
+                          }
+                          disabled={updating}
+                          className="h-12 w-12 cursor-pointer overflow-hidden rounded-md border border-border bg-card p-0.5 shadow-sm disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0 [&::-moz-color-swatch]:rounded"
+                        />
                       </div>
-                    )}
+                      <div className="space-y-2">
+                        <label
+                          className="text-xs font-medium text-muted"
+                          htmlFor="community-secondary-brand-color"
+                        >
+                          Secondary (hex)
+                        </label>
+                        <input
+                          id="community-secondary-brand-color"
+                          type="text"
+                          value={
+                            communityBrandColors.communitySecondaryBrandColor
+                          }
+                          onChange={(e) =>
+                            setCommunityBrandColors((p) => ({
+                              ...p,
+                              communitySecondaryBrandColor: e.target.value,
+                            }))
+                          }
+                          placeholder="e.g. #004A4E"
+                          disabled={updating}
+                          autoComplete="off"
+                          className="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm"
+                        />
+                        <input
+                          type="color"
+                          aria-label="Pick secondary color"
+                          title="Pick secondary color"
+                          value={
+                            normalizeBrandHex(
+                              communityBrandColors.communitySecondaryBrandColor,
+                            ) || "#004A4E"
+                          }
+                          onChange={(e) =>
+                            setCommunityBrandColors((p) => ({
+                              ...p,
+                              communitySecondaryBrandColor: e.target.value,
+                            }))
+                          }
+                          disabled={updating}
+                          className="h-12 w-12 cursor-pointer overflow-hidden rounded-md border border-border bg-card p-0.5 shadow-sm disabled:cursor-not-allowed disabled:opacity-50 [&::-webkit-color-swatch-wrapper]:p-0 [&::-webkit-color-swatch]:rounded [&::-webkit-color-swatch]:border-0 [&::-moz-color-swatch]:rounded"
+                        />
+                      </div>
+                    </div>
+                    <div className="mt-6 flex flex-wrap justify-end gap-2">
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={handleSaveCommunityColors}
+                        className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:opacity-50"
+                      >
+                        Save colors
+                      </button>
+                      <button
+                        type="button"
+                        disabled={updating}
+                        onClick={() =>
+                          setCommunityBrandColors({
+                            communityPrimaryBrandColor: "",
+                            communitySecondaryBrandColor: "",
+                          })
+                        }
+                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-background disabled:opacity-50"
+                      >
+                        Clear
+                      </button>
+                    </div>
                   </div>
                 </div>
 

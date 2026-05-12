@@ -44,9 +44,7 @@ export default function ChatSidebar({
   const [showCommunityNewDropdown, setShowCommunityNewDropdown] = useState(false);
   const brandContext = useBrandContext();
   const sidebarAccentHex = normalizeBrandHex(
-    isCommunity
-      ? getEffectiveCommunityPrimaryColorStr(brandContext)
-      : brandContext?.primaryBrandColor,
+    getEffectiveCommunityPrimaryColorStr(brandContext),
   );
 
   const [deletingChatId, setDeletingChatId] = useState(null);

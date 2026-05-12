@@ -1,8 +1,9 @@
 /**
- * Widget uses `primaryBrandColor` only. Community can override with its own
- * primary/secondary when `communityColorsMatchWidget` is false; when true,
- * both community colors follow widget primary. When normalized hex is null,
- * callers should use default Tailwind / CSS tokens.
+ * Brand accents: admins set primary/secondary under Community in My Services.
+ * Those values are stored as `communityPrimaryBrandColor` /
+ * `communitySecondaryBrandColor` and kept in sync with `primaryBrandColor` /
+ * `secondaryBrandColor` for the embed widget and chat. When normalized hex is
+ * null, callers should use default Tailwind / CSS tokens.
  */
 
 export function normalizeBrandHex(input) {
@@ -29,31 +30,20 @@ export function hexToRgba(hex, alpha) {
   return `rgba(${r},${g},${b},${alpha})`;
 }
 
-/** When true (default), community primary and secondary both use widget primary. */
-export function brandCommunityColorsMatchWidget(brand) {
-  return brand?.communityColorsMatchWidget !== false;
-}
-
 /** Raw hex string for community primary before normalizeBrandHex. */
 export function getEffectiveCommunityPrimaryColorStr(brand) {
-  if (brandCommunityColorsMatchWidget(brand)) {
-    return brand?.primaryBrandColor ?? "";
-  }
-  const override = brand?.communityPrimaryBrandColor;
-  if (typeof override === "string" && override.trim() !== "") return override;
+  const c = brand?.communityPrimaryBrandColor;
+  if (typeof c === "string" && c.trim() !== "") return c;
   return brand?.primaryBrandColor ?? "";
 }
 
 /** Raw hex string for community secondary before normalizeBrandHex. */
 export function getEffectiveCommunitySecondaryColorStr(brand) {
-  if (brandCommunityColorsMatchWidget(brand)) {
-    return brand?.primaryBrandColor ?? "";
-  }
-  const override = brand?.communitySecondaryBrandColor;
-  if (typeof override === "string" && override.trim() !== "") return override;
-  const primaryOverride = brand?.communityPrimaryBrandColor;
-  if (typeof primaryOverride === "string" && primaryOverride.trim() !== "") {
-    return primaryOverride;
-  }
+  const s = brand?.communitySecondaryBrandColor;
+  if (typeof s === "string" && s.trim() !== "") return s;
+  const c = brand?.communityPrimaryBrandColor;
+  if (typeof c === "string" && c.trim() !== "") return c;
+  const legacySec = brand?.secondaryBrandColor;
+  if (typeof legacySec === "string" && legacySec.trim() !== "") return legacySec;
   return brand?.primaryBrandColor ?? "";
 }

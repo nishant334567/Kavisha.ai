@@ -14,7 +14,7 @@ import {
   ChevronRight,
 } from "lucide-react";
 import Matches from "@/app/components/Matches";
-import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import { normalizeBrandHex, getEffectiveCommunityPrimaryColorStr } from "@/app/lib/brandTheme";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
 import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton";
 import AssistantEngagementRow from "@/app/components/AssistantEngagementRow";
@@ -627,7 +627,9 @@ export default function ChatBox({
     fetchChat();
   }, [currentChatId]);
 
-  const primaryBrandHex = normalizeBrandHex(brandContext?.primaryBrandColor);
+  const primaryBrandHex = normalizeBrandHex(
+    getEffectiveCommunityPrimaryColorStr(brandContext),
+  );
 
   if (chatLoading) {
     return (
@@ -912,7 +914,7 @@ export default function ChatBox({
                 <ChatThinkingRow
                   className="mb-4"
                   displayName={brandContext?.brandName}
-                  primaryColor={brandContext?.primaryBrandColor}
+                  primaryColor={getEffectiveCommunityPrimaryColorStr(brandContext)}
                 />
               )}
 
