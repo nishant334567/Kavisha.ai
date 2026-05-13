@@ -100,10 +100,11 @@ export default function Livechat({
         userB,
         connectionId: connectionId,
         currentUserId,
-        ...(showMessagingControls && messagingBrand
+        // Any brand inbox (widget or admin) should upsert with brand_inbox meta so new threads start unblocked.
+        ...(brandKey
           ? {
             type: "brand_inbox",
-            brand: brandKey || messagingBrand,
+            brand: brandKey,
             // Canonical: connectionId is `${brand}_${endUserId}`.
             // Avoid relying on userA/userB ordering.
             endUserId:
@@ -123,7 +124,15 @@ export default function Livechat({
         reopenRequestedAt: data.reopenRequestedAt ?? null,
       });
     }
-  }, [userA, userB, connectionId, currentUserId, httpFetch]);
+  }, [
+    userA,
+    userB,
+    connectionId,
+    currentUserId,
+    httpFetch,
+    messagingBrand,
+    showMessagingControls,
+  ]);
 
   useEffect(() => {
     setConnectionLoading(true);

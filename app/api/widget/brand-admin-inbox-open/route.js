@@ -73,6 +73,8 @@ export async function GET(request) {
               userA: dbUser._id,
               userB: peer._id,
               connectionId,
+              blockedUserId: null,
+              reopenRequestedAt: null,
             },
           },
           { upsert: true, new: true }

@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
-import {
-  extractInboundTextMessages,
-  sendWhatsAppText,
-} from "@/app/lib/whatsapp-graph";
+import { extractInboundTextMessages } from "@/app/lib/whatsapp-graph";
+import { ensureWhatsAppLeadUserSession } from "@/app/lib/ensureWhatsAppLeadUserSession";
+import { sendWhatsAppLeadJourneyReply } from "@/app/lib/whatsappLeadReply";
 
 /**
  * WhatsApp Cloud API — webhook verification (Meta sends this when you configure the callback URL).
@@ -35,8 +34,11 @@ export async function POST(req) {
     const inbound = extractInboundTextMessages(body);
     for (const msg of inbound) {
       if (!msg.from) continue;
-      const reply = `Echo: ${msg.body}`.slice(0, 4096);
-      await sendWhatsAppText({ to: msg.from, body: reply });
+      const ctx = await ensureWhatsAppLeadUserSession(msg.from, {
+        displayName: msg.displayName,
+      });
+      if (!ctx) continue;
+      await sendWhatsAppLeadJourneyReply(msg, ctx);
     }
   } catch (e) {
     console.warn("[whatsapp webhook POST] non-JSON or parse error:", e?.message || e);
