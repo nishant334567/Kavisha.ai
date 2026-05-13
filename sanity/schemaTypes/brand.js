@@ -209,6 +209,13 @@ export default {
           description:
             "If set, copied assistant replies begin with: To read more, visit [this URL]. Use your public site (e.g. https://entrackr.com). Applies to main chat and embed widget.",
         },
+        {
+          name: "whatsappPhoneNumberId",
+          title: "WhatsApp number (widget icon)",
+          type: "string",
+          description:
+            "Digits only (country code + number). Widget opens wa.me for this line—not Meta’s Graph phone_number_id.",
+        },
       ],
     },
     {
@@ -343,7 +350,24 @@ export default {
         },
       ],
     },
-
+    {
+      name: "supportChannels",
+      title: "Support channels",
+      type: "object",
+      options: { collapsible: true, collapsed: true },
+      fields: [
+        {
+          name: "slackWebhookUrl",
+          title: "Slack webhook URL",
+          type: "url",
+        },
+        {
+          name: "supportEmail",
+          title: "Support email",
+          type: "string",
+        },
+      ],
+    },
     {
       name: "enableAdminMessages",
       title: "Enable admin messages (embed widget)",

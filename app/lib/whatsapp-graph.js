@@ -50,11 +50,11 @@ export async function sendWhatsAppText({ to, body }) {
   return { ok: res.ok, status: res.status, data };
 }
 
-/**
- * Pull inbound user text messages from a webhook POST body.
- * @param {unknown} body
- * @returns {{ from: string, body: string, id: string }[]}
- */
+function digits(s) {
+  return String(s || "").replace(/\D/g, "");
+}
+
+/** @returns {{ from: string, body: string, id: string, displayName: string }[]} */
 export function extractInboundTextMessages(body) {
   if (!body || typeof body !== "object") return [];
   const entry = body.entry;
@@ -66,14 +66,25 @@ export function extractInboundTextMessages(body) {
     if (!Array.isArray(changes)) continue;
     for (const ch of changes) {
       if (ch?.field !== "messages") continue;
-      const messages = ch?.value?.messages;
+      const value = ch?.value;
+      const messages = value?.messages;
       if (!Array.isArray(messages)) continue;
+
+      const names = new Map();
+      for (const c of value?.contacts || []) {
+        const d = digits(c?.wa_id);
+        const n = String(c?.profile?.name ?? "").trim();
+        if (d && n) names.set(d, n);
+      }
+
       for (const m of messages) {
         if (m?.type !== "text" || m?.text?.body == null) continue;
+        const from = String(m.from || "");
         out.push({
-          from: String(m.from || ""),
+          from,
           body: String(m.text.body || ""),
           id: String(m.id || ""),
+          displayName: names.get(digits(from)) || "",
         });
       }
     }

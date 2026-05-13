@@ -26,6 +26,7 @@ export async function GET(req) {
       enableAdminMessages: false,
       enableFriendConnect: false,
       enableProfessionalConnect: false,
+      widgetWhatsAppNumberId: null,
     });
   }
 
@@ -41,7 +42,8 @@ export async function GET(req) {
           buttonImage,
           enableAttentionAnimation,
           chatbotWidgetHeader,
-          copyReadMoreUrl
+          copyReadMoreUrl,
+          whatsappPhoneNumberId
         }
       }`,
       { brand }
@@ -59,6 +61,13 @@ export async function GET(req) {
         ? wl.copyReadMoreUrl.trim()
         : "";
     const widgetCopyReadMoreUrl = readMoreRaw.length > 0 ? readMoreRaw : null;
+
+    const waRaw =
+      typeof wl?.whatsappPhoneNumberId === "string"
+        ? wl.whatsappPhoneNumberId.replace(/\D/g, "")
+        : "";
+    const widgetWhatsAppNumberId =
+      waRaw.length >= 8 && waRaw.length <= 15 ? waRaw : null;
 
     let widgetLauncherImageUrl = null;
     if (wl?.buttonImage && urlFor) {
@@ -85,6 +94,7 @@ export async function GET(req) {
         enableAdminMessages: Boolean(data?.enableAdminMessages),
         enableFriendConnect: Boolean(data?.enableFriendConnect),
         enableProfessionalConnect: Boolean(data?.enableProfessionalConnect),
+        widgetWhatsAppNumberId,
       },
     );
   } catch (e) {

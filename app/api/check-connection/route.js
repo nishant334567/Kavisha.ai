@@ -29,6 +29,8 @@ export async function POST(req) {
           userA,
           userB,
           connectionId: canonicalConnectionId,
+          blockedUserId: null,
+          reopenRequestedAt: null,
           ...(typeof type === "string" && type.trim()
             ? { type: type.trim() }
             : {}),

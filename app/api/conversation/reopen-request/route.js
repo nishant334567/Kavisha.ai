@@ -3,6 +3,10 @@ import { connectDB } from "@/app/lib/db";
 import Conversations from "@/app/models/Conversations";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { getUserFromDB } from "@/app/lib/firebase/get-user";
+import {
+  getSupportSlackWebhookUrl,
+  postSlackIncomingWebhook,
+} from "@/app/lib/slackSupportNotify";
 
 /**
  * POST — blocked participant asks admins to reopen the DM.
@@ -35,7 +39,7 @@ export async function POST(request) {
         const conv = await Conversations.findOne({
           connectionId: connectionId.trim(),
         })
-          .select("blockedUserId reopenRequestedAt userA userB")
+          .select("blockedUserId reopenRequestedAt userA userB brand")
           .lean();
 
         if (!conv) {
@@ -71,6 +75,23 @@ export async function POST(request) {
           { connectionId: connectionId.trim() },
           { $set: { reopenRequestedAt: now } }
         );
+
+        const brandSlug =
+          conv.brand != null ? String(conv.brand).trim().toLowerCase() : "";
+        if (brandSlug) {
+          try {
+            const webhookUrl = await getSupportSlackWebhookUrl(brandSlug);
+            if (webhookUrl) {
+              const who = [dbUser.name, dbUser.email].filter(Boolean).join(" · ");
+              await postSlackIncomingWebhook({
+                webhookUrl,
+                text: `*Reopen chat requested*\nBrand: \`${brandSlug}\`\nConnection: \`${connectionId.trim()}\`\nUser: ${who || dbUser.id}`,
+              });
+            }
+          } catch (e) {
+            console.warn("[conversation/reopen-request] slack notify:", e?.message || e);
+          }
+        }
 
         return NextResponse.json({
           success: true,
