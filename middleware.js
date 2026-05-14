@@ -31,6 +31,7 @@ const PUBLIC_PATHS = [
   "/api/widget/sso-introspect",
   "/api/public/brand-theme",
   "/widget-login",
+  "/connect/whatsapp",
 ];
 
 function getSubdomainFromRequest(hostname) {
