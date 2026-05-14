@@ -211,10 +211,17 @@ export default {
         },
         {
           name: "whatsappPhoneNumberId",
-          title: "WhatsApp number (widget icon)",
+          title: "WhatsApp business number (widget + webhooks)",
           type: "string",
           description:
-            "Digits only (country code + number). Widget opens wa.me for this line—not Meta’s Graph phone_number_id.",
+            "Digits only, full international number (country code + number). Used for the widget wa.me link and to match inbound webhooks (`metadata.display_phone_number`).",
+        },
+        {
+          name: "whatsappCloudPhoneNumberId",
+          title: "WhatsApp Cloud API phone number ID (send path)",
+          type: "string",
+          description:
+            "Digits only — Meta “Phone number ID” from Developer → WhatsApp → API Setup. Required for outbound replies for this brand when you use multiple WhatsApp lines; must match `metadata.phone_number_id` on webhooks for this line.",
         },
       ],
     },

@@ -559,7 +559,12 @@ export async function runLeadJourneyTurn({
         const pending = Number(updated?.summaryPendingCount || 0);
         const tasksSecret = process.env.TASKS_SECRET;
         if (pending >= 6 && tasksSecret) {
-          const baseUrl = String(process.env.PUBLIC_BASE_URL || "")
+          const baseUrl = String(
+            process.env.CLOUD_TASKS_BASE_URL ||
+              process.env.PUBLIC_BASE_URL ||
+              process.env.BASE_URL ||
+              ""
+          )
             .trim()
             .replace(/\/$/, "");
           if (baseUrl) {
