@@ -6,6 +6,10 @@ import { getMatches } from "@/app/api/matches/[sessionId]/route";
 import { sendEmail } from "@/app/lib/email";
 import { sendCronReport } from "@/app/lib/cronReportEmail";
 import { maskCommunityPeerName } from "@/app/lib/communityPeerDisplayName";
+import {
+  getBrandOrigin,
+  getKavishaRootHost,
+} from "@/app/lib/kavishaSiteEnv";
 
 const BATCH_LIMIT = parseInt(
   process.env.CRON_COMMUNITY_MATCH_BATCH || "80",
@@ -90,12 +94,8 @@ function buildEmailHtml({
           ? "friends"
           : "matches";
 
-  const kavishaOrigin = isStagingDeployment()
-    ? "https://kavisha.staging.kavisha.ai"
-    : "https://kavisha.ai";
-  const kavishaLabel = isStagingDeployment()
-    ? "kavisha.staging.kavisha.ai"
-    : "kavisha.ai";
+  const kavishaOrigin = getBrandOrigin("kavisha");
+  const kavishaLabel = `kavisha.${getKavishaRootHost()}`;
 
   const summaryBlock =
     sessionSummary && String(sessionSummary).trim()
@@ -156,48 +156,6 @@ function buildEmailHtml({
 
 function delay(ms) {
   return new Promise((r) => setTimeout(r, ms));
-}
-
-/** Staging vs prod: explicit env, or infer from app URLs containing staging.kavisha.ai */
-function isStagingDeployment() {
-  if (process.env.KAVISHA_SITE_ENV === "staging") return true;
-  if (process.env.NEXT_PUBLIC_KAVISHA_SITE_ENV === "staging") return true;
-  const urls = [
-    process.env.PUBLIC_BASE_URL,
-    process.env.BASE_URL,
-    process.env.NEXT_PUBLIC_APP_URL,
-  ].filter(Boolean);
-  for (const u of urls) {
-    const lower = String(u).toLowerCase();
-    if (
-      lower.includes("staging.kavisha.ai") ||
-      lower.includes(".staging.kavisha.ai")
-    ) {
-      return true;
-    }
-  }
-  return false;
-}
-
-function getDefaultKavishaBaseUrl() {
-  return (
-    process.env.NEXT_PUBLIC_APP_URL ||
-    process.env.PUBLIC_BASE_URL ||
-    process.env.BASE_URL ||
-    "https://kavisha.ai"
-  ).replace(/\/$/, "");
-}
-
-/** Brand root for links in emails: abc.staging.kavisha.ai vs abc.kavisha.ai (widget parity). */
-function getBrandOriginForCommunityLink(brand) {
-  const sub = String(brand || "kavisha").trim().toLowerCase();
-  const staging = isStagingDeployment();
-  if (staging) {
-    if (sub === "kavisha") return "https://kavisha.staging.kavisha.ai";
-    return `https://${sub}.staging.kavisha.ai`;
-  }
-  if (sub === "kavisha") return getDefaultKavishaBaseUrl();
-  return `https://${sub}.kavisha.ai`;
 }
 
 export async function runCommunityMatchDigest({ dryRun = false } = {}) {
@@ -267,7 +225,7 @@ export async function runCommunityMatchDigest({ dryRun = false } = {}) {
       }
 
       wouldSend++;
-      const sessionUrl = `${getBrandOriginForCommunityLink(s.brand)}/community/${sid}`;
+      const sessionUrl = `${getBrandOrigin(s.brand)}/community/${sid}`;
       const html = buildEmailHtml({
         recipientName: userDoc.name,
         matches,

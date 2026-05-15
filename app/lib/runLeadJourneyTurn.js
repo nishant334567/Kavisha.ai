@@ -4,7 +4,7 @@ import Logs from "../models/ChatLogs.js";
 import Session from "../models/ChatSessions.js";
 import { SYSTEM_PROMPT_LEAD } from "./systemPrompt.js";
 import { buildLeadRewritePrompt } from "./rewriteLeadQueryPrompt.js";
-import { getLeadPromptFromSanity } from "./getLeadPromptFromSanity.js";
+import { getLeadPrompt } from "@/app/lib/brandRepository";
 import {
   extractGeminiText,
   generateGeminiContentRest,
@@ -192,7 +192,7 @@ export async function runLeadJourneyTurn({
   try {
     await connectDB();
 
-    const prompt = await getLeadPromptFromSanity(brand, serviceKey);
+    const prompt = await getLeadPrompt(brand, serviceKey);
 
     let sourceChunkIds = [];
     let sourceUrls = [];

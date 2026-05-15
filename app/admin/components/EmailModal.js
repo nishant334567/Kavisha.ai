@@ -6,8 +6,14 @@ import EmailConfirmRecipients from "./EmailConfirmRecipients";
 
 function getBrandBaseUrl(brand) {
   const sub = String(brand || "kavisha").trim().toLowerCase();
-  if (sub === "kavisha") return typeof process !== "undefined" && process.env?.NEXT_PUBLIC_APP_URL ? process.env.NEXT_PUBLIC_APP_URL : "https://kavisha.ai";
-  return `https://${sub}.kavisha.ai`;
+  const onStaging =
+    (typeof window !== "undefined" && window.location.hostname.includes(".staging.")) ||
+    process.env.NEXT_PUBLIC_KAVISHA_SITE_ENV === "staging";
+  const rootHost = onStaging ? "staging.kavisha.ai" : "kavisha.ai";
+  if (sub === "kavisha") {
+    return onStaging ? "https://kavisha.staging.kavisha.ai" : (process.env.NEXT_PUBLIC_APP_URL || "https://kavisha.ai");
+  }
+  return `https://${sub}.${rootHost}`;
 }
 
 /** Builds final email HTML: title, subtitle, center (logo, brand name, date, Powered by, Talk to me, My Community), body. Inline styles for email clients. */

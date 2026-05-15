@@ -7,13 +7,13 @@ import {
   updateBrandBySubdomain,
 } from "@/app/lib/brandRepository";
 import { Resend } from "resend";
+import { getBrandOrigin } from "@/app/lib/kavishaSiteEnv";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const ROOT_HOST = process.env.NODE_ENV === "staging" ? "staging.kavisha.ai" : "kavisha.ai";
 
-async function sendAdminAccessEmail(to, name, subdomain) {
+async function sendAdminAccessEmail(to, name, subdomain, request) {
   if (!resend) return;
-  const url = `https://${subdomain}.${ROOT_HOST}/admin/${subdomain}/v2`;
+  const url = `${getBrandOrigin(subdomain, { request })}/admin/${subdomain}/v2`;
   await resend.emails.send({
     from: "hello@kavisha.ai",
     to: [to],
@@ -65,7 +65,7 @@ export async function POST(req) {
       }
       const next = [...current, em];
       await updateBrandBySubdomain(brand, { set: { admins: next } });
-      sendAdminAccessEmail(em, (name || "").trim() || em, brand).catch(() => {});
+      sendAdminAccessEmail(em, (name || "").trim() || em, brand, req).catch(() => {});
       return NextResponse.json({ ok: true, admins: next });
     },
   });

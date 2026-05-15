@@ -11,16 +11,18 @@ import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { connectDB } from "@/app/lib/db";
 import User from "@/app/models/Users";
 import { normalizeLoginButtonText } from "@/app/lib/loginButtonText";
+import {
+  getBrandOrigin,
+  getKavishaCloudRunService,
+  getKavishaRootHost,
+} from "@/app/lib/kavishaSiteEnv";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-const SERVICE_NAME = process.env.NODE_ENV === "staging" ? "kavisha-staging" : "kavisha-ai";
 const REGION = "us-central1";
-const ROOT_DOMAIN = "kavisha.ai";
-const ROOT_HOST = process.env.NODE_ENV === "staging" ? "staging.kavisha.ai" : ROOT_DOMAIN;
 const UNLIMITED_AVATAR_CREATOR_EMAIL = "hello@kavisha.ai";
 
 const auth = new GoogleAuth({
@@ -86,6 +88,9 @@ export async function POST(request) {
 
 async function runCreateAvatar(request, creatorEmail) {
   let createdSubdomain = null;
+  const siteOpts = { request };
+  const rootHost = getKavishaRootHost(siteOpts);
+  const serviceName = getKavishaCloudRunService(siteOpts);
 
   try {
     const formData = await request.formData();
@@ -192,7 +197,7 @@ async function runCreateAvatar(request, creatorEmail) {
     createdSubdomain = normalizedSubdomain;
     await createBrandDocument(brandDoc);
 
-    const domainName = `${normalizedSubdomain}.${ROOT_HOST}`;
+    const domainName = `${normalizedSubdomain}.${rootHost}`;
     const gcpClient = await auth.getClient();
     const token = (await gcpClient.getAccessToken()).token;
 
@@ -208,7 +213,7 @@ async function runCreateAvatar(request, creatorEmail) {
           apiVersion: "domains.cloudrun.com/v1",
           kind: "DomainMapping",
           metadata: { name: domainName, namespace: PROJECT_ID },
-          spec: { routeName: SERVICE_NAME },
+          spec: { routeName: serviceName },
         }),
       }
     );
@@ -232,8 +237,9 @@ async function runCreateAvatar(request, creatorEmail) {
 
     if (email?.trim() && resend) {
       try {
-        const editProfileUrl = `https://${domainName}/admin/${normalizedSubdomain}/edit-profile`;
-        const trainUrl = `https://${domainName}/admin/${normalizedSubdomain}/train/v2`;
+        const brandOrigin = getBrandOrigin(normalizedSubdomain, siteOpts);
+        const editProfileUrl = `${brandOrigin}/admin/${normalizedSubdomain}/edit-profile`;
+        const trainUrl = `${brandOrigin}/admin/${normalizedSubdomain}/train/v2`;
 
         await resend.emails.send({
           from: "hello@kavisha.ai",
@@ -244,7 +250,7 @@ async function runCreateAvatar(request, creatorEmail) {
               <h2>Hello!</h2>
               <p>Your AI avatar for <strong>${brandName || normalizedSubdomain}</strong> has been created successfully!</p>
               <p>Domain mapping is currently in progress. You can check your domain after 30 minutes at:</p>
-              <p><a href="https://${domainName}" style="color: #2563eb; text-decoration: none;">https://${domainName}</a></p>
+              <p><a href="${brandOrigin}" style="color: #2563eb; text-decoration: none;">${brandOrigin}</a></p>
               
               <div style="margin-top: 30px; padding: 20px; background-color: #f3f4f6; border-radius: 8px;">
                 <h3 style="margin-top: 0; color: #111827;">Admin Access</h3>

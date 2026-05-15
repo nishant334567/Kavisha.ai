@@ -10,18 +10,11 @@ import User from "@/app/models/Users";
 import BlogPost from "@/app/models/BlogPost";
 import EmailUnsubscribe from "@/app/models/EmailUnsubscribe";
 import SentEmailLog from "@/app/models/SentEmailLog";
+import { getBrandOrigin } from "@/app/lib/kavishaSiteEnv";
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
-
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://kavisha.ai";
-
-function getBrandBaseUrl(brand) {
-  const sub = String(brand || "kavisha").trim().toLowerCase();
-  if (sub === "kavisha") return BASE_URL;
-  return `https://${sub}.kavisha.ai`;
-}
 
 function escapeHtml(str) {
   if (typeof str !== "string") return "";
@@ -60,7 +53,7 @@ function buildPostHtml(post, blogUrl) {
 }
 
 /** Load post, recipients (after unsub filter), blogUrl, postBodyHtml. Call after connectDB(). */
-async function getBlogEmailPayload(brandVal, slugVal) {
+async function getBlogEmailPayload(brandVal, slugVal, request) {
   const post = await BlogPost.findOne({
     brand: brandVal,
     slug: slugVal,
@@ -92,7 +85,7 @@ async function getBlogEmailPayload(brandVal, slugVal) {
   const unsubSet = new Set(unsubscribed.map((u) => u.email.toLowerCase()));
   const toSend = recipients.filter((r) => r.email && !unsubSet.has(r.email));
 
-  const blogUrl = `${getBrandBaseUrl(brandVal)}/blogs/${encodeURIComponent(slugVal)}`;
+  const blogUrl = `${getBrandOrigin(brandVal, { request })}/blogs/${encodeURIComponent(slugVal)}`;
   const postBodyHtml = buildPostHtml(post, blogUrl);
 
   return { post, recipients, toSend, blogUrl, postBodyHtml };
@@ -123,7 +116,7 @@ export async function GET(req) {
         }
 
         await connectDB();
-        const payload = await getBlogEmailPayload(brandVal, slugVal);
+        const payload = await getBlogEmailPayload(brandVal, slugVal, req);
         if (!payload) {
           return NextResponse.json(
             { success: false, error: "Published post not found" },
@@ -194,7 +187,7 @@ export async function POST(req) {
         }
 
         await connectDB();
-        const payload = await getBlogEmailPayload(brandVal, slugVal);
+        const payload = await getBlogEmailPayload(brandVal, slugVal, req);
         if (!payload) {
           return NextResponse.json(
             { success: false, error: "Published post not found" },

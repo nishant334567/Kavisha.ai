@@ -4,9 +4,7 @@ import { uploadSanityImageAsset as uploadSanityImageAssetImpl } from "@/app/lib/
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 import { normalizeLoginButtonText } from "@/app/lib/loginButtonText";
 import { getSanityImageUrl } from "@/app/lib/brandImageUrl";
-
-const ROOT_HOST =
-  process.env.NODE_ENV === "staging" ? "staging.kavisha.ai" : "kavisha.ai";
+import { getKavishaRootHost } from "@/app/lib/kavishaSiteEnv";
 
 function normSubdomain(value) {
   const s = String(value || "")
@@ -64,6 +62,7 @@ function whatsAppLeadFromBrandDoc(doc) {
 
 function transformPublicBrand(brand) {
   const sub = normSubdomain(brand?.subdomain);
+  const rootHost = getKavishaRootHost();
   const logoUrl = getSanityImageUrl(brand?.logo);
   return {
     id: brandDocId(brand),
@@ -72,7 +71,7 @@ function transformPublicBrand(brand) {
     subtitle: brand.subtitle || "",
     subdomain: sub,
     image: logoUrl,
-    link: sub ? `https://${sub}.${ROOT_HOST}` : "",
+    link: sub ? `https://${sub}.${rootHost}` : "",
     logo: logoUrl,
     clientWidgetUrl: brand.clientWidgetUrl || "",
   };

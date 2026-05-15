@@ -51,6 +51,7 @@ jobs:
             --build-arg NEXT_PUBLIC_META_APP_ID="${{ secrets.NEXT_PUBLIC_META_APP_ID }}" \
             --build-arg NEXT_PUBLIC_FB_EMBEDDED_SIGNUP_CONFIG_ID="${{ secrets.NEXT_PUBLIC_FB_EMBEDDED_SIGNUP_CONFIG_ID }}" \
             --build-arg NEXT_PUBLIC_META_GRAPH_API_VERSION="${{ secrets.NEXT_PUBLIC_META_GRAPH_API_VERSION }}" \
+            --build-arg NEXT_PUBLIC_KAVISHA_SITE_ENV=staging \
             .
 
       - name: Push image (once)
@@ -58,4 +59,9 @@ jobs:
 
       # Update all services to the same image. Services must already exist with envs set.
       - name: Deploy kavisha-staging
-        run: gcloud run services update kavisha-staging --image $IMAGE --region ${{ env.REGION }} --platform managed
+        run: |
+          gcloud run services update kavisha-staging \
+            --image $IMAGE \
+            --region ${{ env.REGION }} \
+            --platform managed \
+            --update-env-vars KAVISHA_SITE_ENV=staging,NODE_ENV=production

@@ -16,9 +16,9 @@ import {
   sendBookingCalendarInvite,
 } from "@/app/lib/booking-invite-email";
 import { getUserFromDB } from "@/app/lib/firebase/get-user";
+import { getBrandOrigin } from "@/app/lib/kavishaSiteEnv";
 
 const DIGITAL_DOWNLOAD_LINK_EXPIRY_MS = 7 * 24 * 60 * 60 * 1000; // 7 days
-const BASE_URL = process.env.NEXT_PUBLIC_APP_URL || "https://kavisha.ai";
 
 function escapeHtml(str) {
   if (typeof str !== "string") return "";
@@ -274,7 +274,7 @@ export async function POST(request) {
                     filename: file.filename || "download",
                     expiresAtMs,
                   });
-                  const downloadUrl = `${BASE_URL}/api/download-digital-file?token=${encodeURIComponent(token)}`;
+                  const downloadUrl = `${getBrandOrigin(brand, { request })}/api/download-digital-file?token=${encodeURIComponent(token)}`;
                   linkLines.push(
                     `<p style="margin:4px 0;"><a href="${escapeHtml(downloadUrl)}" style="color:#004A4E;text-decoration:underline;">${escapeHtml(file.filename || "Download")}</a> (link valid 7 days)</p>`
                   );
