@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
-import { client, urlFor } from "@/app/lib/sanity";
-import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import { getPublicBrandTheme } from "@/app/lib/brandRepository";
 
 /**
  * Public read for embed widget + optional clients. No auth.
@@ -15,88 +14,9 @@ export async function GET(req) {
     return NextResponse.json({ error: "Invalid brand" }, { status: 400 });
   }
 
-  if (!client) {
-    return NextResponse.json({
-      primaryBrandColor: null,
-      secondaryBrandColor: null,
-      widgetLauncherImageUrl: null,
-      widgetLauncherAnimation: false,
-      widgetChatbotHeader: null,
-      widgetCopyReadMoreUrl: null,
-      enableAdminMessages: false,
-      enableFriendConnect: false,
-      enableProfessionalConnect: false,
-      widgetWhatsAppNumberId: null,
-    });
-  }
-
   try {
-    const data = await client.fetch(
-      `*[_type == "brand" && subdomain == $brand][0]{
-        primaryBrandColor,
-        secondaryBrandColor,
-        enableAdminMessages,
-        enableFriendConnect,
-        enableProfessionalConnect,
-        widgetLauncher{
-          buttonImage,
-          enableAttentionAnimation,
-          chatbotWidgetHeader,
-          copyReadMoreUrl,
-          whatsappPhoneNumberId
-        }
-      }`,
-      { brand }
-    );
-
-    const wl = data?.widgetLauncher;
-    const headerRaw =
-      typeof wl?.chatbotWidgetHeader === "string"
-        ? wl.chatbotWidgetHeader.trim()
-        : "";
-    const widgetChatbotHeader = headerRaw.length > 0 ? headerRaw : null;
-
-    const readMoreRaw =
-      typeof wl?.copyReadMoreUrl === "string"
-        ? wl.copyReadMoreUrl.trim()
-        : "";
-    const widgetCopyReadMoreUrl = readMoreRaw.length > 0 ? readMoreRaw : null;
-
-    const waRaw =
-      typeof wl?.whatsappPhoneNumberId === "string"
-        ? wl.whatsappPhoneNumberId.replace(/\D/g, "")
-        : "";
-    const widgetWhatsAppNumberId =
-      waRaw.length >= 8 && waRaw.length <= 15 ? waRaw : null;
-
-    let widgetLauncherImageUrl = null;
-    if (wl?.buttonImage && urlFor) {
-      try {
-        widgetLauncherImageUrl = urlFor(wl.buttonImage)
-          .width(128)
-          .height(128)
-          .fit("max")
-          .auto("format")
-          .url();
-      } catch {
-        widgetLauncherImageUrl = null;
-      }
-    }
-
-    return NextResponse.json(
-      {
-        primaryBrandColor: normalizeBrandHex(data?.primaryBrandColor),
-        secondaryBrandColor: normalizeBrandHex(data?.secondaryBrandColor),
-        widgetLauncherImageUrl,
-        widgetLauncherAnimation: Boolean(wl?.enableAttentionAnimation),
-        widgetChatbotHeader,
-        widgetCopyReadMoreUrl,
-        enableAdminMessages: Boolean(data?.enableAdminMessages),
-        enableFriendConnect: Boolean(data?.enableFriendConnect),
-        enableProfessionalConnect: Boolean(data?.enableProfessionalConnect),
-        widgetWhatsAppNumberId,
-      },
-    );
+    const theme = await getPublicBrandTheme(brand);
+    return NextResponse.json(theme);
   } catch (e) {
     return NextResponse.json(
       { error: "Failed to load brand theme" },

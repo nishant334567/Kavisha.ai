@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import LinkTree from "@/app/models/LinkTree";
 import { refreshImageUrl } from "@/app/lib/gcs";
-import { client } from "@/app/lib/sanity";
+import { getBrandBySubdomain } from "@/app/lib/brandRepository";
 
 export async function GET(req) {
   try {
@@ -11,17 +11,12 @@ export async function GET(req) {
       return NextResponse.json({ error: "brand required" }, { status: 400 });
     }
 
-    if (client) {
-      const brandDoc = await client.fetch(
-        `*[_type == "brand" && subdomain == $sub][0]{ enableLinks }`,
-        { sub: brand }
-      );
-      if (brandDoc?.enableLinks === false) {
-        return NextResponse.json({
-          linkTree: null,
-          enableLinks: false,
-        });
-      }
+    const brandDoc = await getBrandBySubdomain(brand);
+    if (brandDoc?.enableLinks === false) {
+      return NextResponse.json({
+        linkTree: null,
+        enableLinks: false,
+      });
     }
 
     await connectDB();

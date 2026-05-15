@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import getGeminiModel from "../../lib/getAiModel.js";
 import { SYSTEM_PROMPT_AVATAR } from "@/app/lib/systemPrompt.js";
-import { client as sanityClient } from "@/app/lib/sanity";
+import { filterAvailableSubdomains } from "@/app/lib/brandRepository";
 
 const model = getGeminiModel("gemini-2.5-pro");
 
@@ -10,22 +10,6 @@ function normalizeSubdomain(value) {
   return value.trim().toLowerCase().replace(/\.kavisha\.ai$/i, "");
 }
 
-async function filterAvailableSubdomains(subdomains) {
-  if (!Array.isArray(subdomains) || subdomains.length === 0 || !sanityClient) {
-    return [];
-  }
-  const available = [];
-  for (const raw of subdomains) {
-    const sub = normalizeSubdomain(raw);
-    if (!sub) continue;
-    const existing = await sanityClient.fetch(
-      `*[_type == "brand" && subdomain == $sub][0]{ _id }`,
-      { sub }
-    );
-    if (!existing) available.push(sub);
-  }
-  return available;
-}
 
 const STRICT_RETRY_PROMPT = `
 ⚠️ CRITICAL: Your previous response was invalid JSON and could not be parsed. ⚠️

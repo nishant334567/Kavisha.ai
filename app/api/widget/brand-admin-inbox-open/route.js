@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { createOrGetUser } from "@/app/lib/firebase/create-user";
-import { client as sanity } from "@/app/lib/sanity";
+import { getBrandAdmins } from "@/app/lib/brandRepository";
 import Conversations from "@/app/models/Conversations";
 import User from "@/app/models/Users";
 
@@ -24,22 +24,10 @@ export async function GET(request) {
         const dbUser = await createOrGetUser(decodedToken);
         const viewerId = String(dbUser._id);
 
-        if (!sanity) {
-          return NextResponse.json(
-            { error: "Service configuration unavailable" },
-            { status: 500 }
-          );
-        }
-
-        const brandDoc = await sanity.fetch(
-          `*[_type == "brand" && subdomain == $brand][0]{ "emails": admins }`,
-          { brand }
-        );
-        const emails = Array.isArray(brandDoc?.emails)
-          ? brandDoc.emails
-              .map((e) => String(e || "").trim().toLowerCase())
-              .filter(Boolean)
-          : [];
+        const adminList = await getBrandAdmins(brand);
+        const emails = adminList
+          .map((e) => String(e || "").trim().toLowerCase())
+          .filter(Boolean);
         if (emails.length === 0) {
           return NextResponse.json(
             { error: "No brand admins configured" },

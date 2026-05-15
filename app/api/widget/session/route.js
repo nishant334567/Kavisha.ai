@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { createOrGetUser } from "@/app/lib/firebase/create-user";
 import { createSessionWithDefaultLog } from "@/app/lib/createSessionWithDefaultLog";
-import { client as sanity } from "@/app/lib/sanity";
+import { getLeadJourneyServices } from "@/app/lib/brandRepository";
 
 const fail = (message, status) =>
   NextResponse.json({ success: false, error: message }, { status });
@@ -23,18 +23,8 @@ export async function POST(request) {
 
       const brand = String(body?.brand ?? "").trim();
       if (!brand) return fail("brand is required", 400);
-      if (!sanity) return fail("Service configuration unavailable", 500);
 
-      const data = await sanity.fetch(
-        `*[_type == "brand" && subdomain == $brand][0]{
-          "services": services[]{ _key, name, initialMessage }
-        }`,
-        { brand }
-      );
-
-      const leads = (data?.services || []).filter(
-        (s) => String(s?.name || "").toLowerCase() === "lead_journey"
-      );
+      const leads = await getLeadJourneyServices(brand);
       if (!leads.length) {
         return fail("This brand has no lead journey service", 400);
       }
@@ -42,7 +32,7 @@ export async function POST(request) {
       const requestedKey = String(body?.serviceKey ?? "").trim();
       let selected;
       if (requestedKey) {
-        selected = leads.find((s) => s._key === requestedKey);
+        selected = leads.find((s) => s.serviceKey === requestedKey);
         if (!selected) {
           return fail("Invalid lead journey for this brand", 400);
         }
@@ -50,11 +40,11 @@ export async function POST(request) {
         selected = leads[0];
       }
 
-      const serviceKey = selected._key;
+      const serviceKey = selected.serviceKey;
       const initialMessage = String(selected.initialMessage ?? "").trim();
       if (!initialMessage) {
         return fail(
-          "Lead journey has no ChatBot Initial Message in Sanity — set it on the service.",
+          "Lead journey has no ChatBot Initial Message — set it on the service.",
           400
         );
       }

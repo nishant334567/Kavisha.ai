@@ -1,7 +1,10 @@
-import { client } from "@/app/lib/sanity";
 import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
+import {
+  getBrandBySubdomain,
+  updateBrandBySubdomain,
+} from "@/app/lib/brandRepository";
 
 export async function POST(req) {
   return withAuth(req, {
@@ -22,7 +25,6 @@ export async function POST(req) {
         return NextResponse.json({ error: "Invalid subdomain" }, { status: 400 });
       }
 
-      // Check if requester is admin for this brand
       const isAdmin = await isBrandAdmin(decodedToken.email, subdomain);
       if (!isAdmin) {
         return NextResponse.json(
@@ -31,11 +33,7 @@ export async function POST(req) {
         );
       }
 
-      const brandData = await client.fetch(
-        `*[_type == "brand" && subdomain == $subdomain][0]{ _id }`,
-        { subdomain: subdomain.trim() }
-      );
-
+      const brandData = await getBrandBySubdomain(subdomain.trim());
       if (!brandData) {
         return NextResponse.json({ error: "Brand not found" }, { status: 404 });
       }
@@ -63,12 +61,11 @@ export async function POST(req) {
         );
       }
 
-      const updatedBrandData = await client
-        .patch(brandData._id)
-        .set(updateData)
-        .commit();
+      const updated = await updateBrandBySubdomain(subdomain.trim(), {
+        set: updateData,
+      });
 
-      return NextResponse.json(updatedBrandData);
+      return NextResponse.json(updated);
     },
   });
 }

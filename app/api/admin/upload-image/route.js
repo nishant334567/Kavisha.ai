@@ -1,7 +1,11 @@
-import { client } from "@/app/lib/sanity";
 import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
+import {
+  getBrandBySubdomain,
+  uploadSanityImageAsset,
+  setBrandImageField,
+} from "@/app/lib/brandRepository";
 
 export async function POST(req) {
   return withAuth(req, {
@@ -27,15 +31,7 @@ export async function POST(req) {
           );
         }
 
-        const buffer = Buffer.from(await file.arrayBuffer());
-        const asset = await client.assets.upload("image", buffer, {
-          filename: file.name,
-        });
-
-        const brandData = await client.fetch(
-          `*[_type == "brand" && subdomain == "${subdomain}"][0]`
-        );
-
+        const brandData = await getBrandBySubdomain(subdomain);
         if (!brandData) {
           return NextResponse.json(
             { error: "Brand not found" },
@@ -43,18 +39,9 @@ export async function POST(req) {
           );
         }
 
-        await client
-          .patch(brandData._id)
-          .set({
-            [imageType]: {
-              _type: "image",
-              asset: {
-                _type: "reference",
-                _ref: asset._id,
-              },
-            },
-          })
-          .commit();
+        const buffer = Buffer.from(await file.arrayBuffer());
+        const asset = await uploadSanityImageAsset(buffer, file.name);
+        await setBrandImageField(subdomain, imageType, asset._id);
 
         return NextResponse.json({ success: true });
       } catch (error) {

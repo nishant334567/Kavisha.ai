@@ -1,5 +1,5 @@
 import { connectDB } from "@/app/lib/db";
-import { client as sanityClient } from "@/app/lib/sanity";
+import { getBrandAdmins } from "@/app/lib/brandRepository";
 import User from "@/app/models/Users";
 import BookingAppointment from "@/app/models/BookingAppointment";
 import { sendEmail } from "@/app/lib/email";
@@ -20,20 +20,17 @@ export async function getBookingInviteRecipients(appointment) {
 
     await connectDB();
 
-    const [user, brandDoc] = await Promise.all([
+    const [user, admins] = await Promise.all([
         User.findById(appointment.customerId).select("email name").lean(),
-        sanityClient?.fetch(
-            `*[_type == "brand" && subdomain == $brand][0]{ admins }`,
-            { brand: appointment.brand }
-        ),
+        getBrandAdmins(appointment.brand),
     ]);
 
     if (user?.email) {
         result.customerEmail = user.email;
         result.customerName = user.name || undefined;
     }
-    if (Array.isArray(brandDoc?.admins)) {
-        result.adminEmails = brandDoc.admins.filter((e) => typeof e === "string" && e.trim());
+    if (Array.isArray(admins)) {
+        result.adminEmails = admins.filter((e) => typeof e === "string" && e.trim());
     }
     return result;
 }

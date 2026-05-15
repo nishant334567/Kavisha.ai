@@ -3,8 +3,6 @@
 import { useState, useEffect, useContext } from "react";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import BrandContext from "./BrandContext";
-import { client, urlFor } from "@/app/lib/sanity";
-import { normalizeLoginButtonText } from "@/app/lib/loginButtonText";
 import Loader from "@/app/components/Loader";
 
 export default function BrandContextProvider({ children }) {
@@ -34,115 +32,22 @@ export default function BrandContextProvider({ children }) {
 
     const subdomain = getSubdomain();
 
-    const brandDataFromSanity = async () => {
+    const loadBrandContext = async () => {
       try {
-        const brand = await client.fetch(
-          `*[_type == "brand" && subdomain == $subdomain][0]{
-                  _id,
-                  brandName,
-                  loginButtonText,
-                  subdomain,
-                  logo,
-                  brandImage,
-                  brandHeroZoom,
-                  brandHeroFocusY,
-                  brandHeroFocusX,
-                  paymentQr,
-                  acceptPayment,
-                  title,
-                  subtitle,
-                  admins,
-                  initialmessage,
-                  enableCommunityOnboarding,
-                  enableProfessionalConnect,
-                  enableFriendConnect,
-                  communityName,
-                  enableQuiz,
-                  quizName,
-                  enableJobs,
-                  enableProducts,
-                  enableBooking,
-                  enableBlogs,
-                  enableLinks,
-                  services,
-                  primaryBrandColor,
-                  secondaryBrandColor,
-                  widgetLauncher{
-                    copyReadMoreUrl
-                  }
-              }`,
-          { subdomain },
-        );
-        if (brand) {
-          // Generate URLs using urlFor helper with proper null checks
-          const logoUrl = brand.logo?.asset?._ref
-            ? urlFor(brand.logo).url()
-            : null;
-          const brandImageUrl = brand.brandImage?.asset?._ref
-            ? urlFor(brand.brandImage).url()
-            : null;
-          const paymentQrUrl = brand.paymentQr?.asset?._ref
-            ? urlFor(brand.paymentQr).url()
-            : null;
-
-          const isAdmin = brand.admins?.includes(user?.email) || false;
-          const context = {
-            brandId: brand._id,
-            brandName: brand.brandName,
-            loginButtonText: normalizeLoginButtonText(brand.loginButtonText),
-            logoUrl: logoUrl,
-            brandImageUrl: brandImageUrl,
-            brandHeroZoom:
-              typeof brand.brandHeroZoom === "number" &&
-              Number.isFinite(brand.brandHeroZoom)
-                ? brand.brandHeroZoom
-                : 1,
-            brandHeroFocusY:
-              typeof brand.brandHeroFocusY === "number" &&
-              Number.isFinite(brand.brandHeroFocusY)
-                ? brand.brandHeroFocusY
-                : 50,
-            brandHeroFocusX:
-              typeof brand.brandHeroFocusX === "number" &&
-              Number.isFinite(brand.brandHeroFocusX)
-                ? brand.brandHeroFocusX
-                : 50,
-            paymentQrUrl: paymentQrUrl,
-            acceptPayment: brand.acceptPayment || false,
-            title: brand.title,
-            subtitle: brand.subtitle,
-            admins: brand.admins || [],
-            isBrandAdmin: isAdmin,
-            subdomain,
-            initialmessage: brand.initialmessage,
-            enableCommunityOnboarding: true,
-            enableProfessionalConnect: brand.enableProfessionalConnect || false,
-            enableFriendConnect: brand.enableFriendConnect || false,
-            communityName: brand.communityName || "Community",
-            enableQuiz: brand.enableQuiz || false,
-            quizName: brand.quizName || "Take quiz/survey",
-            enableJobs: brand.enableJobs || false,
-            enableProducts: brand.enableProducts || false,
-            enableBooking: brand.enableBooking || false,
-            enableBlogs: brand.enableBlogs || false,
-            enableLinks: brand.enableLinks !== false,
-            services: brand.services,
-            primaryBrandColor: brand.primaryBrandColor || "",
-            secondaryBrandColor: brand.secondaryBrandColor || "",
-            assistantCopyReadMoreUrl:
-              typeof brand.widgetLauncher?.copyReadMoreUrl === "string"
-                ? brand.widgetLauncher.copyReadMoreUrl.trim()
-                : "",
-          };
-
+        const params = new URLSearchParams({ subdomain });
+        if (user?.email) params.set("email", user.email);
+        const res = await fetch(`/api/public/brand-context?${params}`);
+        if (res.ok) {
+          const context = await res.json();
           setBrandContext(context);
         }
-      } catch (err) {
+      } catch {
+        /* loader stays until retry/navigation */
       } finally {
         setLoading(false);
       }
     };
-    brandDataFromSanity();
+    loadBrandContext();
   }, [user?.email]);
 
   if (loading || !brandContext) {

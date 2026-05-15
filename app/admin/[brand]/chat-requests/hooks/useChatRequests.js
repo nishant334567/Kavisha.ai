@@ -1,6 +1,5 @@
 "use client"
 
-import { client } from "@/app/lib/sanity";
 import { useState, useEffect, useCallback } from "react";
 
 const DATE_PRESETS = [
@@ -120,17 +119,12 @@ export function useChatRequests(brand) {
         }
     }, [brand?.subdomain]);
     const getAllServices = useCallback(async (brandname) => {
-        const query = `
-    *[_type == "brand" && subdomain == $brandname][0]{
-      services[]{
-        _key,
-        name,
-        title
-      }
-    }
-  `;
-
-        const data = await client.fetch(query, { brandname });
+        const res = await fetch(`/api/admin/brand-services?brand=${encodeURIComponent(brandname)}`);
+        if (!res.ok) {
+            setServicesDropdown([]);
+            return;
+        }
+        const data = await res.json();
         setServicesDropdown(data?.services ?? []);
     }, [brand?.subdomain]);
     useEffect(() => {

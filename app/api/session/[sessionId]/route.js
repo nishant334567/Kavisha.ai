@@ -3,7 +3,7 @@ import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
 import Logs from "@/app/models/ChatLogs";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
-import { client as sanity } from "@/app/lib/sanity";
+import { getBrandService } from "@/app/lib/brandRepository";
 
 export async function GET(req, { params }) {
   return withAuth(req, {
@@ -38,17 +38,11 @@ export async function GET(req, { params }) {
         if (
           String(session.role || "").toLowerCase() === "lead_journey" &&
           brand &&
-          serviceKey &&
-          sanity
+          serviceKey
         ) {
           try {
-            const data = await sanity.fetch(
-              `*[_type == "brand" && subdomain == $brand][0]{
-                "service": services[_key == $serviceKey][0]{ introquestions }
-              }`,
-              { brand, serviceKey }
-            );
-            const raw = data?.service?.introquestions;
+            const service = await getBrandService(brand, serviceKey);
+            const raw = service?.introquestions;
             if (Array.isArray(raw)) {
               introQuestions = raw
                 .slice(0, 5)
