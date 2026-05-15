@@ -1,6 +1,11 @@
 import { NextResponse } from "next/server";
 import { GoogleAuth } from "google-auth-library";
-import { client as sanityClient } from "@/app/lib/sanity";
+import {
+  subdomainExists,
+  createBrandDocument,
+  deleteBrandBySubdomain,
+  uploadSanityImageAsset,
+} from "@/app/lib/brandRepository";
 import { Resend } from "resend";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { connectDB } from "@/app/lib/db";
@@ -30,12 +35,6 @@ const auth = new GoogleAuth({
   scopes: "https://www.googleapis.com/auth/cloud-platform",
 });
 
-const deleteBrand = async (brandId) => {
-  if (!brandId) return;
-  try {
-    await sanityClient.delete(brandId);
-  } catch (error) { }
-};
 
 export async function POST(request) {
   return withAuth(request, {
@@ -86,7 +85,7 @@ export async function POST(request) {
 }
 
 async function runCreateAvatar(request, creatorEmail) {
-  let brandId = null;
+  let createdSubdomain = null;
 
   try {
     const formData = await request.formData();
@@ -125,19 +124,7 @@ async function runCreateAvatar(request, creatorEmail) {
       );
     }
 
-    if (!sanityClient) {
-      return NextResponse.json(
-        { error: "Service temporarily unavailable. Please try again later." },
-        { status: 503 }
-      );
-    }
-
-    const existingBrand = await sanityClient.fetch(
-      `*[_type == "brand" && subdomain == $sub][0]`,
-      { sub: normalizedSubdomain }
-    );
-
-    if (existingBrand) {
+    if (await subdomainExists(normalizedSubdomain)) {
       return NextResponse.json(
         { error: "This subdomain is already taken. Please choose another." },
         { status: 400 }
@@ -149,9 +136,7 @@ async function runCreateAvatar(request, creatorEmail) {
     if (imageFile && imageFile.size > 0) {
       try {
         const buffer = Buffer.from(await imageFile.arrayBuffer());
-        imageAsset = await sanityClient.assets.upload("image", buffer, {
-          filename: (imageFile.name && String(imageFile.name).trim()) || "avatar-image.jpg",
-        });
+        imageAsset = await uploadSanityImageAsset(buffer, (imageFile.name && String(imageFile.name).trim()) || "avatar-image.jpg");
       } catch (uploadErr) {
         console.warn("create-avatar: image upload failed", uploadErr?.message || uploadErr);
       }
@@ -204,8 +189,8 @@ async function runCreateAvatar(request, creatorEmail) {
       };
     }
 
-    const brand = await sanityClient.create(brandDoc);
-    brandId = brand._id;
+    createdSubdomain = normalizedSubdomain;
+    await createBrandDocument(brandDoc);
 
     const domainName = `${normalizedSubdomain}.${ROOT_HOST}`;
     const gcpClient = await auth.getClient();
@@ -237,7 +222,7 @@ async function runCreateAvatar(request, creatorEmail) {
     }
 
     if (!response.ok) {
-      await deleteBrand(brandId);
+      await deleteBrandBySubdomain(createdSubdomain);
       const msg = (data?.error && String(data.error)) || "We couldn't set up your domain right now. Please try again later.";
       return NextResponse.json(
         { error: msg },
@@ -308,7 +293,7 @@ async function runCreateAvatar(request, creatorEmail) {
 
     return NextResponse.json({ success: true, domainName }, { status: 201 });
   } catch (error) {
-    await deleteBrand(brandId);
+    await deleteBrandBySubdomain(createdSubdomain);
     console.error("create-avatar:", error);
     return NextResponse.json(
       { error: "Something went wrong. Please try again." },

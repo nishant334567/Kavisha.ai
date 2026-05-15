@@ -3,7 +3,7 @@ import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
 import Logs from "@/app/models/ChatLogs";
-import { client } from "@/app/lib/sanity";
+import { getBrandBySubdomain } from "@/app/lib/brandRepository";
 
 export async function GET(request) {
   return withAuth(request, {
@@ -18,17 +18,7 @@ export async function GET(request) {
           );
         }
 
-        if (!client) {
-          return NextResponse.json(
-            { error: "Sanity not configured" },
-            { status: 500 }
-          );
-        }
-
-        const brandDoc = await client.fetch(
-          `*[_type == "brand" && subdomain == $brand][0]{ services }`,
-          { brand }
-        );
+        const brandDoc = await getBrandBySubdomain(brand);
         const rawServices = brandDoc?.services || [];
         if (!Array.isArray(rawServices) || rawServices.length === 0) {
           return NextResponse.json({ services: [] });

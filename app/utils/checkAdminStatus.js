@@ -1,19 +1,10 @@
-import { client } from "@/app/lib/sanity";
+import { isBrandAdmin } from "@/app/lib/brandRepository";
+
 export async function checkAdminStatus(brand, userEmail) {
   try {
-    if (!brand && !userEmail) {
-      return false;
-    }
-
-    const brandDoc = await client.fetch(
-      `*[_type=="brand" && subdomain ==$brand][0]{admins}`,
-      { brand }
-    );
-    return (
-      Array.isArray(brandDoc?.admins) && brandDoc.admins.includes(userEmail)
-    );
-  } catch (error) {
-    // console.error("Error checking admin status:", error);
+    if (!brand || !userEmail) return false;
+    return isBrandAdmin(userEmail, brand);
+  } catch {
     return false;
   }
 }

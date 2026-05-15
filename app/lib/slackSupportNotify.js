@@ -1,23 +1,11 @@
-import { client } from "./sanity";
+import { getBrandBySubdomain } from "./brandRepository";
 
-/**
- * @param {string} brandSubdomain
- * @returns {Promise<string|null>}
- */
 export async function getSupportSlackWebhookUrl(brandSubdomain) {
-  const b = String(brandSubdomain || "").trim().toLowerCase();
-  if (!b || !client) return null;
-  const url = await client.fetch(
-    `*[_type == "brand" && subdomain == $b][0].supportChannels.slackWebhookUrl`,
-    { b }
-  );
-  const s = typeof url === "string" ? url.trim() : "";
+  const doc = await getBrandBySubdomain(brandSubdomain);
+  const s = String(doc?.supportChannels?.slackWebhookUrl || "").trim();
   return s || null;
 }
 
-/**
- * @param {{ webhookUrl: string; text: string }} p
- */
 export async function postSlackIncomingWebhook({ webhookUrl, text }) {
   const u = String(webhookUrl || "").trim();
   const t = String(text || "").trim();

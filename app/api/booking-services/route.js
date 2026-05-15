@@ -2,7 +2,7 @@ import { connectDB } from "@/app/lib/db";
 import BookingService from "@/app/models/BookingService";
 import BookingAvailability from "@/app/models/BookingAvailability";
 import { refreshImageUrl } from "@/app/lib/gcs";
-import { client as sanityClient } from "@/app/lib/sanity";
+import { getBrandBySubdomain } from "@/app/lib/brandRepository";
 import { NextResponse } from "next/server";
 
 function hasOpenHoursSet(weeklySchedule) {
@@ -24,14 +24,9 @@ export async function GET(req) {
       );
     }
 
-    if (sanityClient) {
-      const brandDoc = await sanityClient.fetch(
-        `*[_type == "brand" && subdomain == $brand][0]{ enableBooking }`,
-        { brand }
-      );
-      if (brandDoc && brandDoc.enableBooking === false) {
-        return NextResponse.json({ services: [] }, { status: 200 });
-      }
+    const brandDoc = await getBrandBySubdomain(brand);
+    if (brandDoc && brandDoc.enableBooking === false) {
+      return NextResponse.json({ services: [] }, { status: 200 });
     }
 
     await connectDB();

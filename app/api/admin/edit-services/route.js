@@ -1,14 +1,16 @@
-import { client } from "@/app/lib/sanity";
 import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
+import {
+  getBrandBySubdomain,
+  updateBrandBySubdomain,
+} from "@/app/lib/brandRepository";
 
 export async function POST(req) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
       const { brandName, serviceData } = await req.json();
 
-      // Check if requester is admin for this brand
       const isAdmin = await isBrandAdmin(decodedToken.email, brandName);
       if (!isAdmin) {
         return NextResponse.json(
@@ -17,29 +19,21 @@ export async function POST(req) {
         );
       }
 
-      const brandData = await client.fetch(
-        `*[_type == "brand" && subdomain == "${brandName}"][0]`
-      );
-
+      const brandData = await getBrandBySubdomain(brandName);
       if (!brandData) {
         return NextResponse.json({ error: "Brand not found" }, { status: 404 });
       }
 
-      // Add new service to the array
       const services = brandData.services || [];
-      // Add _key property for Sanity array items (required for editing)
       const serviceWithKey = {
         ...serviceData,
         _key: Math.random().toString(36).substring(2, 15),
       };
       const updatedServices = [...services, serviceWithKey];
 
-      const updatedBrand = await client
-        .patch(brandData._id)
-        .set({
-          services: updatedServices,
-        })
-        .commit();
+      const updatedBrand = await updateBrandBySubdomain(brandName, {
+        set: { services: updatedServices },
+      });
 
       return NextResponse.json(updatedBrand);
     },
@@ -51,7 +45,6 @@ export async function PATCH(req) {
     onAuthenticated: async ({ decodedToken }) => {
       const { brandName, serviceName, serviceData, serviceKey } = await req.json();
 
-      // Check if requester is admin for this brand
       const isAdmin = await isBrandAdmin(decodedToken.email, brandName);
       if (!isAdmin) {
         return NextResponse.json(
@@ -60,10 +53,7 @@ export async function PATCH(req) {
         );
       }
 
-      const brandData = await client.fetch(
-        `*[_type == "brand" && subdomain == "${brandName}"][0]`
-      );
-
+      const brandData = await getBrandBySubdomain(brandName);
       if (!brandData) {
         return NextResponse.json({ error: "Brand not found" }, { status: 404 });
       }
@@ -82,7 +72,6 @@ export async function PATCH(req) {
       }
 
       const updatedServices = [...services];
-      // Preserve existing _key if it exists, otherwise generate a new one
       const existingKey = updatedServices[index]._key;
       updatedServices[index] = {
         ...updatedServices[index],
@@ -90,10 +79,9 @@ export async function PATCH(req) {
         _key: existingKey || Math.random().toString(36).substring(2, 15),
       };
 
-      const updateBrand = await client
-        .patch(brandData._id)
-        .set({ services: updatedServices })
-        .commit();
+      const updateBrand = await updateBrandBySubdomain(brandName, {
+        set: { services: updatedServices },
+      });
 
       return NextResponse.json(updateBrand);
     },
@@ -120,9 +108,7 @@ export async function DELETE(req) {
         );
       }
 
-      const brandData = await client.fetch(
-        `*[_type == "brand" && subdomain == "${brandName}"][0]`
-      );
+      const brandData = await getBrandBySubdomain(brandName);
       if (!brandData) {
         return NextResponse.json({ error: "Brand not found" }, { status: 404 });
       }
@@ -149,10 +135,9 @@ export async function DELETE(req) {
         );
       }
 
-      const updated = await client
-        .patch(brandData._id)
-        .set({ services: updatedServices })
-        .commit();
+      const updated = await updateBrandBySubdomain(brandName, {
+        set: { services: updatedServices },
+      });
 
       return NextResponse.json(updated);
     },
