@@ -1,53 +1,23 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 const FB_ORIGINS = new Set(["https://www.facebook.com", "https://web.facebook.com"]);
 
-function safeReturnPath(raw, brand) {
-  const t = typeof raw === "string" ? raw.trim() : "";
-  if (t.startsWith("/") && !t.startsWith("//") && t.startsWith("/admin/")) return t;
-  const b = typeof brand === "string" ? brand.trim() : "";
-  if (b) return `/admin/${b}/my-services`;
-  return "/";
-}
-
 export default function ConnectWhatsAppPage() {
-  const router = useRouter();
   const initOnce = useRef(false);
   const [ready, setReady] = useState(false);
   const [status, setStatus] = useState("idle");
-  const [waPayload, setWaPayload] = useState(null);
-  const [query, setQuery] = useState({ brand: "", returnTo: "" });
-
-  useEffect(() => {
-    const q = new URLSearchParams(window.location.search);
-    setQuery({
-      brand: q.get("brand") || "",
-      returnTo: q.get("returnTo") || "",
-    });
-  }, []);
-
-  const returnPath = useMemo(
-    () => safeReturnPath(query.returnTo, query.brand),
-    [query.returnTo, query.brand]
-  );
 
   useEffect(() => {
     const appId = process.env.NEXT_PUBLIC_META_APP_ID;
     const version = process.env.NEXT_PUBLIC_META_GRAPH_API_VERSION || "v22.0";
-    if (!appId || typeof window === "undefined" || initOnce.current) return;
+    if (!appId || initOnce.current) return;
 
     function initFb() {
       if (!window.FB || initOnce.current) return;
       initOnce.current = true;
-      window.FB.init({
-        appId,
-        cookie: true,
-        xfbml: false,
-        version,
-      });
+      window.FB.init({ appId, cookie: true, xfbml: false, version });
       setReady(true);
     }
 
@@ -72,24 +42,25 @@ export default function ConnectWhatsAppPage() {
   useEffect(() => {
     function onMessage(event) {
       if (!FB_ORIGINS.has(event.origin)) return;
-      let data;
+      let payload;
       try {
-        data = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
+        payload = typeof event.data === "string" ? JSON.parse(event.data) : event.data;
       } catch {
         return;
       }
-      if (data?.type === "WA_EMBEDDED_SIGNUP") {
-        setWaPayload(data);
-        if (process.env.NODE_ENV === "development") {
-          console.log("[WA_EMBEDDED_SIGNUP]", data);
-        }
-      }
+      if (payload?.type !== "WA_EMBEDDED_SIGNUP") return;
+      console.log("[whatsapp connect] postMessage payload", payload);
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
   }, []);
 
   const launch = useCallback(() => {
+    if (typeof window !== "undefined" && window.location.protocol !== "https:") {
+      console.warn("[whatsapp connect] FB.login requires HTTPS");
+      setStatus("error");
+      return;
+    }
     const configId = process.env.NEXT_PUBLIC_FB_EMBEDDED_SIGNUP_CONFIG_ID;
     if (!window.FB || !configId) {
       setStatus("error");
@@ -98,9 +69,10 @@ export default function ConnectWhatsAppPage() {
     setStatus("opening");
     window.FB.login(
       (response) => {
+        console.log("[whatsapp connect] FB.login response", response);
         const code = response?.authResponse?.code;
-        if (code && process.env.NODE_ENV === "development") {
-          console.log("[FB.login] code received — exchange server-side only");
+        if (code) {
+          console.log("[whatsapp connect] OAuth code (exchange server-side only)", code);
         }
         setStatus(response?.authResponse ? "done" : "cancelled");
       },
@@ -113,12 +85,6 @@ export default function ConnectWhatsAppPage() {
     );
   }, []);
 
-  useEffect(() => {
-    if (status !== "done") return;
-    const t = setTimeout(() => router.push(returnPath), 1200);
-    return () => clearTimeout(t);
-  }, [status, returnPath, router]);
-
   const missingEnv =
     !process.env.NEXT_PUBLIC_META_APP_ID ||
     !process.env.NEXT_PUBLIC_FB_EMBEDDED_SIGNUP_CONFIG_ID;
@@ -128,8 +94,8 @@ export default function ConnectWhatsAppPage() {
       <div className="mx-auto max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h1 className="text-xl font-semibold tracking-tight">WhatsApp Business</h1>
         <p className="mt-2 text-sm text-muted">
-          Connect your WhatsApp Business account. You will sign in with Meta and grant
-          access for this app.
+          Connect via Meta. Open the browser console to inspect the OAuth code and Embedded
+          Signup payloads.
         </p>
 
         {missingEnv && (
@@ -153,13 +119,12 @@ export default function ConnectWhatsAppPage() {
         )}
         {status === "error" && (
           <p className="mt-3 text-center text-sm text-red-600 dark:text-red-400">
-            Could not start Meta login. Check config and try again.
+            Could not start (use HTTPS and check env).
           </p>
         )}
         {status === "done" && (
           <p className="mt-3 text-center text-sm text-muted">
-            {waPayload?.event === "FINISH" ? "Setup finished. " : null}
-            Redirecting…
+            Login finished — check the console for code and postMessage data.
           </p>
         )}
       </div>

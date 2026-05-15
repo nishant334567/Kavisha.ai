@@ -350,49 +350,49 @@ export default function MyServices() {
                 featureData.enableBlogs ||
                 featureData.enableLinks ||
                 featureData.enableCommunityOnboarding) && (
-                <div className="mb-5 rounded-xl border border-border bg-muted-bg p-3">
-                  <p className="mb-2 text-xs uppercase tracking-widest text-muted">
-                    Visible on user side
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {featureData.enableCommunityOnboarding && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        {featureData.communityName || "Community"}
-                      </span>
-                    )}
-                    {featureData.enableQuiz && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        {featureData.quizName || "Take a Quiz/Survey"}
-                      </span>
-                    )}
-                    {featureData.enableJobs && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Jobs
-                      </span>
-                    )}
-                    {featureData.enableProducts && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Products
-                      </span>
-                    )}
-                    {featureData.enableBooking && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Bookings
-                      </span>
-                    )}
-                    {featureData.enableBlogs && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Blog
-                      </span>
-                    )}
-                    {featureData.enableLinks && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Links
-                      </span>
-                    )}
+                  <div className="mb-5 rounded-xl border border-border bg-muted-bg p-3">
+                    <p className="mb-2 text-xs uppercase tracking-widest text-muted">
+                      Visible on user side
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {featureData.enableCommunityOnboarding && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          {featureData.communityName || "Community"}
+                        </span>
+                      )}
+                      {featureData.enableQuiz && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          {featureData.quizName || "Take a Quiz/Survey"}
+                        </span>
+                      )}
+                      {featureData.enableJobs && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Jobs
+                        </span>
+                      )}
+                      {featureData.enableProducts && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Products
+                        </span>
+                      )}
+                      {featureData.enableBooking && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Bookings
+                        </span>
+                      )}
+                      {featureData.enableBlogs && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Blog
+                        </span>
+                      )}
+                      {featureData.enableLinks && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Links
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               <div
                 className={`space-y-4 ${updating ? "pointer-events-none opacity-70" : ""}`}
