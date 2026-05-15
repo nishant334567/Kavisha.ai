@@ -5,6 +5,7 @@ import { getBrandBySubdomain } from "./lib/brandRepository";
 import { getSanityImageUrl } from "./lib/brandImageUrl";
 import ClientLayout from "./components/ClientLayout";
 import Script from "next/script";
+import { subdomainFromHost } from "./lib/kavishaSiteEnv";
 
 function trimText(str = "", max = 100) {
   if (!str?.trim()) return "";
@@ -12,21 +13,10 @@ function trimText(str = "", max = 100) {
   return trimmed.length > max ? trimmed.slice(0, max - 1) + "…" : trimmed;
 }
 
-function getSubdomainFromHost(host) {
-  if (!host) return "kavisha";
-  const clean = host.toLowerCase().replace(/^www\./, "");
-  const parts = clean.split(".");
-  if (process.env.NODE_ENV === "staging") {
-    const stagingIdx = parts.indexOf("staging");
-    if (stagingIdx >= 0) return stagingIdx > 0 ? parts[0] : "kavisha";
-  }
-  return parts.length > 2 ? parts[0] : "kavisha";
-}
-
 export async function generateMetadata() {
   const headersList = await headers();
   const host = headersList.get("host") || "";
-  const subdomain = getSubdomainFromHost(host);
+  const subdomain = subdomainFromHost(host);
 
   const brand = await getBrandBySubdomain(subdomain);
 

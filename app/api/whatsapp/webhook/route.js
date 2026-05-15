@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { parseWhatsAppWebhook } from "@/app/lib/whatsapp-graph";
 import { ensureWhatsAppLeadUserSession } from "@/app/lib/ensureWhatsAppLeadUserSession";
 import { sendWhatsAppLeadJourneyReply } from "@/app/lib/whatsappLeadReply";
-import { getWhatsAppLeadBrandFromSanity } from "@/app/lib/getWhatsAppLeadBrandFromSanity";
+import { getWhatsAppLeadBrand } from "@/app/lib/brandRepository";
 
 /**
  * WhatsApp Cloud API — webhook verification (Meta sends this when you configure the callback URL).
@@ -34,7 +34,7 @@ export async function POST(req) {
 
         const resolved =
             displayDigits || graphPhoneNumberId
-                ? await getWhatsAppLeadBrandFromSanity({
+                ? await getWhatsAppLeadBrand({
                     displayDigits,
                     graphPhoneNumberId,
                 })
