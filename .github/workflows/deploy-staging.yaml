@@ -48,6 +48,9 @@ jobs:
             --build-arg NEXT_PUBLIC_FIREBASE_APP_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_APP_ID }}" \
             --build-arg NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID="${{ secrets.NEXT_PUBLIC_FIREBASE_MEASUREMENT_ID }}" \
             --build-arg NEXT_PUBLIC_RAZORPAY_KEY_ID="${{ secrets.NEXT_PUBLIC_RAZORPAY_KEY_ID_TEST }}" \
+            --build-arg NEXT_PUBLIC_META_APP_ID="${{ secrets.NEXT_PUBLIC_META_APP_ID }}" \
+            --build-arg NEXT_PUBLIC_FB_EMBEDDED_SIGNUP_CONFIG_ID="${{ secrets.NEXT_PUBLIC_FB_EMBEDDED_SIGNUP_CONFIG_ID }}" \
+            --build-arg NEXT_PUBLIC_META_GRAPH_API_VERSION="${{ secrets.NEXT_PUBLIC_META_GRAPH_API_VERSION }}" \
             .
 
       - name: Push image (once)
