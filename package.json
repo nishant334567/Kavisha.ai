@@ -10,6 +10,7 @@
     "lint": "next lint",
     "blog:sync-and-ingest": "node scripts/blog-feed-sync-and-ingest.js",
     "import-brands": "node scripts/import-brands-from-sanity.js",
+    "migrate-brand-images": "node scripts/migrate-brand-images-to-gcs.js",
     "deploy:firebase-auth-hosting": "cd firebase-auth-hosting && npx --yes firebase-tools@latest deploy --only hosting"
   },
   "dependencies": {

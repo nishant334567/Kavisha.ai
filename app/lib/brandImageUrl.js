@@ -1,16 +1,19 @@
-import { urlFor } from "@/app/lib/sanity";
+import { refreshImageUrl } from "@/app/lib/gcs";
 
-/** Resolve a Sanity image field to a CDN URL (logo, brandImage, widget launcher, etc.). */
-export function getSanityImageUrl(image, opts = {}) {
-  if (!image?.asset?._ref || !urlFor) return null;
+/** Canonical URL stored on Brand (GCS path). */
+export function getBrandImageUrl(url) {
+  const s = typeof url === "string" ? url.trim() : "";
+  return /^https?:\/\//i.test(s) ? s : null;
+}
+
+/** Browser-ready URL (signed when bucket is not public — same as quiz / JD). */
+export async function resolveBrandImageUrl(url) {
+  const s = getBrandImageUrl(url);
+  if (!s) return null;
+  if (!s.includes("storage.googleapis.com/")) return s;
   try {
-    let builder = urlFor(image);
-    if (opts.width) builder = builder.width(opts.width);
-    if (opts.height) builder = builder.height(opts.height);
-    if (opts.fit) builder = builder.fit(opts.fit);
-    if (opts.auto) builder = builder.auto(opts.auto);
-    return builder.url() || null;
+    return (await refreshImageUrl(s)) || s;
   } catch {
-    return null;
+    return s;
   }
 }

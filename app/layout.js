@@ -2,7 +2,7 @@ import "./globals.css";
 import { fontVariables } from "./lib/fonts";
 import { headers } from "next/headers";
 import { getBrandBySubdomain } from "./lib/brandRepository";
-import { getSanityImageUrl } from "./lib/brandImageUrl";
+import { resolveBrandImageUrl } from "./lib/brandImageUrl";
 import ClientLayout from "./components/ClientLayout";
 import Script from "next/script";
 import { subdomainFromHost } from "./lib/kavishaSiteEnv";
@@ -27,10 +27,11 @@ export async function generateMetadata() {
 
   const siteUrl = `https://${host}`;
   const ogImage =
-    getSanityImageUrl(brand?.brandImage) || "https://kavisha.ai/og-home.png";
+    (await resolveBrandImageUrl(brand?.brandImageUrl)) ||
+    "https://kavisha.ai/og-home.png";
   const favicon =
-    getSanityImageUrl(brand?.logo) ||
-    getSanityImageUrl(brand?.brandImage) ||
+    (await resolveBrandImageUrl(brand?.logoUrl)) ||
+    (await resolveBrandImageUrl(brand?.brandImageUrl)) ||
     "/favicon.ico";
 
   return {

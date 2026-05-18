@@ -41,7 +41,6 @@ function cfg(key, fileCfg) {
 
 function normalizeService(s) {
   return {
-    ...s,
     _key: String(s._key).trim(),
     name: String(s.name || "").trim() || "service",
     title: String(s.title || s.name || "Service").trim() || "Service",
@@ -50,6 +49,25 @@ function normalizeService(s) {
     behaviour: typeof s.behaviour === "string" ? s.behaviour : "",
     rules: typeof s.rules === "string" ? s.rules : "",
     introquestions: Array.isArray(s.introquestions) ? s.introquestions : [],
+  };
+}
+
+/** Drop Sanity image blobs; app uses logoUrl / brandImageUrl / etc. (set via GCS migration or upload). */
+function stripSanityImageFields(fields) {
+  const {
+    logo: _logo,
+    brandImage: _brandImage,
+    paymentQr: _paymentQr,
+    widgetLauncher,
+    services,
+    ...rest
+  } = fields || {};
+  const wl = widgetLauncher && typeof widgetLauncher === "object" ? { ...widgetLauncher } : {};
+  delete wl.buttonImage;
+  return {
+    ...rest,
+    widgetLauncher: wl,
+    services: Array.isArray(services) ? services.map(normalizeService) : [],
   };
 }
 
@@ -63,31 +81,26 @@ function toMongoBrand(sanityDoc) {
     ...fields
   } = sanityDoc;
 
-  const services = fields.services;
-  if (services !== undefined && !Array.isArray(services)) {
-    throw new TypeError("brand.services must be an array when present");
-  }
-
-  const mappedServices = (services || []).map((s, i) => {
-    if (!s?._key || typeof s._key !== "string") {
+  const stripped = stripSanityImageFields(fields);
+  const services = stripped.services;
+  for (let i = 0; i < services.length; i++) {
+    if (!services[i]?._key) {
       throw new TypeError(`services[${i}]._key must be a non-empty string`);
     }
-    return normalizeService(s);
-  });
+  }
 
-  const subdomain = String(fields.subdomain || "")
+  const subdomain = String(stripped.subdomain || "")
     .trim()
     .toLowerCase();
   if (!subdomain) throw new TypeError("brand missing subdomain");
 
   return {
-    ...fields,
+    ...stripped,
     subdomain,
     sanityId: typeof _id === "string" ? _id : "",
-    widgetLauncher: fields.widgetLauncher ?? {},
-    supportChannels: fields.supportChannels ?? {},
-    services: mappedServices,
-    admins: Array.isArray(fields.admins) ? fields.admins : [],
+    widgetLauncher: stripped.widgetLauncher ?? {},
+    supportChannels: stripped.supportChannels ?? {},
+    admins: Array.isArray(stripped.admins) ? stripped.admins : [],
   };
 }
 
