@@ -42,7 +42,7 @@ function logCreateAvatarSiteDebug(stage, siteOpts, extra = {}) {
     defaultKavishaBaseUrl: getDefaultKavishaBaseUrl(),
     ...extra,
   };
-  console.log("[create-avatar] site", JSON.stringify(payload));
+
   return payload;
 }
 

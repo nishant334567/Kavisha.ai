@@ -120,7 +120,7 @@ async function main() {
 
   const docs = await sanity.fetch(query, params);
   if (!Array.isArray(docs) || docs.length === 0) {
-    console.log(JSON.stringify({ ok: true, imported: 0, dataset, onlySub: onlySub || null }));
+
     return;
   }
 

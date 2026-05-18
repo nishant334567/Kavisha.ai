@@ -214,7 +214,7 @@ export async function POST(request) {
         if (allDataCollected === "true" && type !== "pitch_to_investor") {
           try {
             matchesLatest = await getMatches(userId, sessionId, type);
-            console.log("matchesLatest", matchesLatest);
+
           } catch (error) {
             matchesLatest = [];
           }

@@ -49,7 +49,7 @@ export default function ConnectWhatsAppPage() {
         return;
       }
       if (payload?.type !== "WA_EMBEDDED_SIGNUP") return;
-      console.log("[whatsapp connect] postMessage payload", payload);
+
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
@@ -69,10 +69,10 @@ export default function ConnectWhatsAppPage() {
     setStatus("opening");
     window.FB.login(
       (response) => {
-        console.log("[whatsapp connect] FB.login response", response);
+
         const code = response?.authResponse?.code;
         if (code) {
-          console.log("[whatsapp connect] OAuth code (exchange server-side only)", code);
+
         }
         setStatus(response?.authResponse ? "done" : "cancelled");
       },
