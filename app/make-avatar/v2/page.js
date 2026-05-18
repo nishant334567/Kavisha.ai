@@ -139,12 +139,28 @@ export default function MakeAvatar() {
         formData.append("image", coverImage);
       }
 
+      console.log("[create-avatar] client submit", {
+        hostname: typeof window !== "undefined" ? window.location.hostname : null,
+        origin: typeof window !== "undefined" ? window.location.origin : null,
+        domainSuffix,
+        subdomain,
+        NEXT_PUBLIC_KAVISHA_SITE_ENV:
+          process.env.NEXT_PUBLIC_KAVISHA_SITE_ENV ?? null,
+      });
+
       const response = await fetch("/api/create-avatar", {
         method: "POST",
         body: formData,
       });
 
       const data = await response.json();
+      console.log("[create-avatar] client response", {
+        ok: response.ok,
+        status: response.status,
+        domainName: data.domainName ?? null,
+        _debug: data._debug ?? null,
+        error: data.error ?? null,
+      });
       if (response.ok && data.success) {
         alert(
           `Avatar created successfully! Your domain will be live at: ${data.domainName || "your subdomain"}\n\nIt typically takes around 30 minutes for your avatar to be fully up and running. We'll have everything ready for you soon!`

@@ -13,9 +13,38 @@ import User from "@/app/models/Users";
 import { normalizeLoginButtonText } from "@/app/lib/loginButtonText";
 import {
   getBrandOrigin,
+  getDefaultKavishaBaseUrl,
   getKavishaCloudRunService,
   getKavishaRootHost,
+  isStagingDeployment,
+  isStagingSite,
 } from "@/app/lib/kavishaSiteEnv";
+
+/** Staging/debug: trace how rootHost, domainName, and email URLs are chosen. */
+function logCreateAvatarSiteDebug(stage, siteOpts, extra = {}) {
+  const host = siteOpts?.request?.headers?.get?.("host") ?? null;
+  const stagingSite = isStagingSite(siteOpts);
+  const payload = {
+    stage,
+    requestHost: host,
+    requestOrigin: siteOpts?.request?.headers?.get?.("origin") ?? null,
+    isStagingHost: host ? String(host).toLowerCase().includes(".staging.") : false,
+    KAVISHA_SITE_ENV: process.env.KAVISHA_SITE_ENV ?? null,
+    NEXT_PUBLIC_KAVISHA_SITE_ENV: process.env.NEXT_PUBLIC_KAVISHA_SITE_ENV ?? null,
+    NODE_ENV: process.env.NODE_ENV ?? null,
+    PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL ?? null,
+    BASE_URL: process.env.BASE_URL ?? null,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? null,
+    isStagingDeployment: isStagingDeployment(),
+    isStagingSite: stagingSite,
+    rootHost: getKavishaRootHost(siteOpts),
+    cloudRunService: getKavishaCloudRunService(siteOpts),
+    defaultKavishaBaseUrl: getDefaultKavishaBaseUrl(),
+    ...extra,
+  };
+  console.log("[create-avatar] site", JSON.stringify(payload));
+  return payload;
+}
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
@@ -91,6 +120,10 @@ async function runCreateAvatar(request, creatorEmail) {
   const siteOpts = { request };
   const rootHost = getKavishaRootHost(siteOpts);
   const serviceName = getKavishaCloudRunService(siteOpts);
+  let lastSiteDebug = logCreateAvatarSiteDebug("start", siteOpts, {
+    rootHost,
+    serviceName,
+  });
 
   try {
     const formData = await request.formData();
@@ -198,6 +231,11 @@ async function runCreateAvatar(request, creatorEmail) {
     await createBrandDocument(brandDoc);
 
     const domainName = `${normalizedSubdomain}.${rootHost}`;
+    lastSiteDebug = logCreateAvatarSiteDebug("before_domain_mapping", siteOpts, {
+      normalizedSubdomain,
+      domainName,
+      domainMappingRoute: serviceName,
+    });
     const gcpClient = await auth.getClient();
     const token = (await gcpClient.getAccessToken()).token;
 
@@ -227,6 +265,11 @@ async function runCreateAvatar(request, creatorEmail) {
     }
 
     if (!response.ok) {
+      logCreateAvatarSiteDebug("domain_mapping_failed", siteOpts, {
+        domainName,
+        httpStatus: response.status,
+        gcpError: data?.error ?? data?.message ?? null,
+      });
       await deleteBrandBySubdomain(createdSubdomain);
       const msg = (data?.error && String(data.error)) || "We couldn't set up your domain right now. Please try again later.";
       return NextResponse.json(
@@ -235,11 +278,18 @@ async function runCreateAvatar(request, creatorEmail) {
       );
     }
 
+    logCreateAvatarSiteDebug("domain_mapping_ok", siteOpts, { domainName });
+
     if (email?.trim() && resend) {
       try {
         const brandOrigin = getBrandOrigin(normalizedSubdomain, siteOpts);
         const editProfileUrl = `${brandOrigin}/admin/${normalizedSubdomain}/edit-profile`;
         const trainUrl = `${brandOrigin}/admin/${normalizedSubdomain}/train/v2`;
+        logCreateAvatarSiteDebug("welcome_email", siteOpts, {
+          brandOrigin,
+          editProfileUrl,
+          trainUrl,
+        });
 
         await resend.emails.send({
           from: "hello@kavisha.ai",
@@ -280,7 +330,12 @@ async function runCreateAvatar(request, creatorEmail) {
             </div>
           `,
         });
-      } catch (emailError) { }
+      } catch (emailError) {
+        console.warn(
+          "[create-avatar] welcome_email_failed",
+          emailError?.message || emailError
+        );
+      }
     }
 
     try {
@@ -297,7 +352,18 @@ async function runCreateAvatar(request, creatorEmail) {
       );
     }
 
-    return NextResponse.json({ success: true, domainName }, { status: 201 });
+    lastSiteDebug = logCreateAvatarSiteDebug("success_response", siteOpts, {
+      domainName,
+      alertWillShow: domainName,
+    });
+    return NextResponse.json(
+      {
+        success: true,
+        domainName,
+        ...(isStagingSite(siteOpts) ? { _debug: lastSiteDebug } : {}),
+      },
+      { status: 201 }
+    );
   } catch (error) {
     await deleteBrandBySubdomain(createdSubdomain);
     console.error("create-avatar:", error);
