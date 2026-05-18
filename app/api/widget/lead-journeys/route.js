@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { createOrGetUser } from "@/app/lib/firebase/create-user";
-import { client as sanity } from "@/app/lib/sanity";
+import { getLeadJourneyServices } from "@/app/lib/brandRepository";
 
 const fail = (message, status) =>
   NextResponse.json({ success: false, error: message }, { status });
@@ -14,25 +14,8 @@ export async function GET(request) {
 
       const brand = request.nextUrl.searchParams.get("brand")?.trim();
       if (!brand) return fail("brand is required", 400);
-      if (!sanity) return fail("Service configuration unavailable", 500);
 
-      const data = await sanity.fetch(
-        `*[_type == "brand" && subdomain == $brand][0]{
-          "services": services[]{ _key, name, title }
-        }`,
-        { brand }
-      );
-
-      const services = (data?.services || [])
-        .filter(
-          (s) => String(s?.name || "").toLowerCase() === "lead_journey"
-        )
-        .map((s) => ({
-          serviceKey: s._key,
-          title: (s.title && String(s.title).trim()) || "Lead journey",
-        }))
-        .filter((s) => s.serviceKey);
-
+      const services = await getLeadJourneyServices(brand);
       return NextResponse.json({ success: true, services });
     },
     onUnauthenticated: async () =>

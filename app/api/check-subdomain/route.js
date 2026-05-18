@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { client } from "@/app/lib/sanity";
+import { subdomainExists } from "@/app/lib/brandRepository";
 
 function normalizeSubdomain(value) {
   if (!value || typeof value !== "string") return "";
@@ -18,17 +18,7 @@ export async function GET(req) {
       );
     }
 
-    if (!client) {
-      return NextResponse.json(
-        { available: false, error: "Service unavailable" },
-        { status: 503 }
-      );
-    }
-
-    const existing = await client.fetch(
-      `*[_type == "brand" && subdomain == $sub][0]{ _id }`,
-      { sub: normalized }
-    );
+    const existing = await subdomainExists(normalized);
 
     return NextResponse.json({
       available: !existing,

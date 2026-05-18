@@ -1,17 +1,7 @@
 import { headers } from "next/headers";
 import { connectDB } from "@/app/lib/db";
 import BlogPost from "@/app/models/BlogPost";
-
-function getSubdomainFromHost(host) {
-  if (!host) return "kavisha";
-  const clean = host.toLowerCase().replace(/^www\./, "");
-  const parts = clean.split(".");
-  if (process.env.NODE_ENV === "staging") {
-    const stagingIdx = parts.indexOf("staging");
-    if (stagingIdx >= 0) return stagingIdx > 0 ? parts[0] : "kavisha";
-  }
-  return parts.length > 2 ? parts[0] : "kavisha";
-}
+import { subdomainFromHost } from "@/app/lib/kavishaSiteEnv";
 
 function trimText(str = "", max = 160) {
   if (!str?.trim()) return "";
@@ -23,7 +13,7 @@ export async function generateMetadata({ params }) {
   const { slug } = await params;
   const headersList = await headers();
   const host = headersList.get("host") || "";
-  const brand = getSubdomainFromHost(host);
+  const brand = subdomainFromHost(host);
 
   try {
     await connectDB();

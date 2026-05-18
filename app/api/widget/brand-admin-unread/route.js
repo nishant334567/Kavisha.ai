@@ -2,10 +2,7 @@ import { NextResponse } from "next/server";
 import { connectDB } from "@/app/lib/db";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { createOrGetUser } from "@/app/lib/firebase/create-user";
-import { client as sanity } from "@/app/lib/sanity";
-import Conversations from "@/app/models/Conversations";
 import Messages from "@/app/models/Messages";
-import User from "@/app/models/Users";
 
 /** Count brand-admin → user DM messages created after `since` (widget Bearer auth). */
 export async function GET(request) {

@@ -1,8 +1,11 @@
-import { client } from "@/app/lib/sanity";
 import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import {
+  getBrandBySubdomain,
+  updateBrandBySubdomain,
+} from "@/app/lib/brandRepository";
 
 export async function PATCH(req) {
   return withAuth(req, {
@@ -24,7 +27,6 @@ export async function PATCH(req) {
         secondaryBrandColor,
       } = await req.json();
 
-      // Check if requester is admin for this brand
       const isAdmin = await isBrandAdmin(decodedToken.email, subdomain);
       if (!isAdmin) {
         return NextResponse.json(
@@ -33,41 +35,35 @@ export async function PATCH(req) {
         );
       }
 
-      const brandData = await client.fetch(
-        `*[_type == "brand" && subdomain == "${subdomain}"][0]`
-      );
-
+      const brandData = await getBrandBySubdomain(subdomain);
       if (!brandData) {
         return NextResponse.json({ error: "Brand not found" }, { status: 404 });
       }
 
-      const updateData = {};
-      if (enableQuiz !== undefined) updateData.enableQuiz = enableQuiz;
-      if (quizName !== undefined) updateData.quizName = quizName;
-      if (enableJobs !== undefined) updateData.enableJobs = enableJobs;
-      if (enableProducts !== undefined) updateData.enableProducts = enableProducts;
-      if (enableCommunityOnboarding !== undefined)
-        updateData.enableCommunityOnboarding = enableCommunityOnboarding;
-      if (communityName !== undefined) updateData.communityName = communityName;
-      if (enableProfessionalConnect !== undefined) updateData.enableProfessionalConnect = enableProfessionalConnect;
-      if (enableFriendConnect !== undefined) updateData.enableFriendConnect = enableFriendConnect;
-      if (enableBooking !== undefined) updateData.enableBooking = enableBooking;
-      if (enableBlogs !== undefined) updateData.enableBlogs = enableBlogs;
-      if (enableLinks !== undefined) updateData.enableLinks = enableLinks;
+      const set = {};
+      const unset = [];
 
-      let patch = client.patch(brandData._id);
-      let hasOps = false;
-
-      if (Object.keys(updateData).length > 0) {
-        patch = patch.set(updateData);
-        hasOps = true;
+      if (enableQuiz !== undefined) set.enableQuiz = enableQuiz;
+      if (quizName !== undefined) set.quizName = quizName;
+      if (enableJobs !== undefined) set.enableJobs = enableJobs;
+      if (enableProducts !== undefined) set.enableProducts = enableProducts;
+      if (enableCommunityOnboarding !== undefined) {
+        set.enableCommunityOnboarding = enableCommunityOnboarding;
       }
+      if (communityName !== undefined) set.communityName = communityName;
+      if (enableProfessionalConnect !== undefined) {
+        set.enableProfessionalConnect = enableProfessionalConnect;
+      }
+      if (enableFriendConnect !== undefined) set.enableFriendConnect = enableFriendConnect;
+      if (enableBooking !== undefined) set.enableBooking = enableBooking;
+      if (enableBlogs !== undefined) set.enableBlogs = enableBlogs;
+      if (enableLinks !== undefined) set.enableLinks = enableLinks;
 
       if (primaryBrandColor !== undefined) {
         const raw =
           typeof primaryBrandColor === "string" ? primaryBrandColor.trim() : "";
         if (raw === "") {
-          patch = patch.unset(["primaryBrandColor"]);
+          unset.push("primaryBrandColor");
         } else {
           const hex = normalizeBrandHex(raw);
           if (!hex) {
@@ -76,9 +72,8 @@ export async function PATCH(req) {
               { status: 400 }
             );
           }
-          patch = patch.set({ primaryBrandColor: hex });
+          set.primaryBrandColor = hex;
         }
-        hasOps = true;
       }
 
       if (secondaryBrandColor !== undefined) {
@@ -87,7 +82,7 @@ export async function PATCH(req) {
             ? secondaryBrandColor.trim()
             : "";
         if (raw === "") {
-          patch = patch.unset(["secondaryBrandColor"]);
+          unset.push("secondaryBrandColor");
         } else {
           const hex = normalizeBrandHex(raw);
           if (!hex) {
@@ -96,19 +91,21 @@ export async function PATCH(req) {
               { status: 400 }
             );
           }
-          patch = patch.set({ secondaryBrandColor: hex });
+          set.secondaryBrandColor = hex;
         }
-        hasOps = true;
       }
 
-      if (!hasOps) {
+      if (Object.keys(set).length === 0 && unset.length === 0) {
         return NextResponse.json(
           { error: "No updates provided" },
           { status: 400 }
         );
       }
 
-      const updatedBrandData = await patch.commit();
+      const updatedBrandData = await updateBrandBySubdomain(subdomain, {
+        set,
+        unset,
+      });
 
       return NextResponse.json(updatedBrandData);
     },

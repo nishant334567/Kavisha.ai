@@ -8,9 +8,9 @@ import Job from "@/app/models/Job";
 import JobApplication from "@/app/models/JobApplication";
 import User from "@/app/models/Users";
 import { Resend } from "resend";
+import { getBrandOrigin } from "@/app/lib/kavishaSiteEnv";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const ROOT_HOST = process.env.NODE_ENV === "staging" ? "staging.kavisha.ai" : "kavisha.ai";
 
 function getValidatedStatus(status, job) {
   if (status === undefined || status === null) return null;
@@ -174,7 +174,7 @@ export async function PATCH(req, { params }) {
 
       if (updates.assignedTo && resend && brand) {
         const applicantName = updated.applicantName || updated.applicantEmail || "An applicant";
-        const applicationUrl = `https://${brand}.${ROOT_HOST}/admin/jobs/${jobId}/applications/${appId}?subdomain=${encodeURIComponent(brand)}`;
+        const applicationUrl = `${getBrandOrigin(brand, { request: req })}/admin/jobs/${jobId}/applications/${appId}?subdomain=${encodeURIComponent(brand)}`;
         const subject = "You have been assigned to a job application";
         const html = `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

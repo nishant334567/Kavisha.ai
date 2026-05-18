@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Edit2, Check, X, ArrowUpRight } from "lucide-react";
+import { ArrowLeft, Edit2, Check, X, ArrowUpRight, MessageCircle } from "lucide-react";
 import ServiceModal from "@/app/admin/components/ServiceModal";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
@@ -230,22 +230,35 @@ export default function MyServices() {
     <>
       <div className="min-h-[calc(100vh-56px)] overflow-y-auto bg-background py-8 text-foreground">
         <div className="max-w-6xl mx-auto px-4 md:px-6 font-baloo">
-          <div className="flex items-center gap-3 mb-6">
-            <button
-              onClick={() => router.back()}
-              className="rounded-lg border border-border bg-card p-2 text-foreground transition-colors hover:bg-muted-bg"
-              aria-label="Go back"
-            >
-              <ArrowLeft className="w-5 h-5" />
-            </button>
-            <div>
-              <h1 className="font-baloo text-3xl md:text-4xl font-black text-highlight tracking-tight">
-                My Services
-              </h1>
-              <p className="mt-1 text-sm text-muted">
-                Manage chatbot services and feature visibility for users.
-              </p>
+          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+            <div className="flex items-center gap-3">
+              <button
+                onClick={() => router.back()}
+                className="rounded-lg border border-border bg-card p-2 text-foreground transition-colors hover:bg-muted-bg"
+                aria-label="Go back"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+              <div>
+                <h1 className="font-baloo text-3xl md:text-4xl font-black text-highlight tracking-tight">
+                  My Services
+                </h1>
+                <p className="mt-1 text-sm text-muted">
+                  Manage chatbot services and feature visibility for users.
+                </p>
+              </div>
             </div>
+            <a
+              href={
+                brandSubdomain
+                  ? `/connect/whatsapp?${new URLSearchParams({ brand: brandSubdomain }).toString()}`
+                  : "/connect/whatsapp"
+              }
+              className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-lg border border-highlight bg-highlight/5 px-4 py-2.5 text-sm font-medium text-highlight transition-colors hover:bg-highlight/10 sm:self-auto"
+            >
+              <MessageCircle className="h-4 w-4 shrink-0" aria-hidden />
+              Connect WhatsApp Business
+            </a>
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -337,49 +350,49 @@ export default function MyServices() {
                 featureData.enableBlogs ||
                 featureData.enableLinks ||
                 featureData.enableCommunityOnboarding) && (
-                <div className="mb-5 rounded-xl border border-border bg-muted-bg p-3">
-                  <p className="mb-2 text-xs uppercase tracking-widest text-muted">
-                    Visible on user side
-                  </p>
-                  <div className="flex flex-wrap gap-2">
-                    {featureData.enableCommunityOnboarding && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        {featureData.communityName || "Community"}
-                      </span>
-                    )}
-                    {featureData.enableQuiz && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        {featureData.quizName || "Take a Quiz/Survey"}
-                      </span>
-                    )}
-                    {featureData.enableJobs && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Jobs
-                      </span>
-                    )}
-                    {featureData.enableProducts && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Products
-                      </span>
-                    )}
-                    {featureData.enableBooking && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Bookings
-                      </span>
-                    )}
-                    {featureData.enableBlogs && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Blog
-                      </span>
-                    )}
-                    {featureData.enableLinks && (
-                      <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
-                        Links
-                      </span>
-                    )}
+                  <div className="mb-5 rounded-xl border border-border bg-muted-bg p-3">
+                    <p className="mb-2 text-xs uppercase tracking-widest text-muted">
+                      Visible on user side
+                    </p>
+                    <div className="flex flex-wrap gap-2">
+                      {featureData.enableCommunityOnboarding && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          {featureData.communityName || "Community"}
+                        </span>
+                      )}
+                      {featureData.enableQuiz && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          {featureData.quizName || "Take a Quiz/Survey"}
+                        </span>
+                      )}
+                      {featureData.enableJobs && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Jobs
+                        </span>
+                      )}
+                      {featureData.enableProducts && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Products
+                        </span>
+                      )}
+                      {featureData.enableBooking && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Bookings
+                        </span>
+                      )}
+                      {featureData.enableBlogs && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Blog
+                        </span>
+                      )}
+                      {featureData.enableLinks && (
+                        <span className="rounded-full border border-border bg-card px-3 py-1 text-xs text-foreground">
+                          Links
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
 
               <div
                 className={`space-y-4 ${updating ? "pointer-events-none opacity-70" : ""}`}

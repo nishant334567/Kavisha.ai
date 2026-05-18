@@ -1,9 +1,11 @@
 import "./globals.css";
 import { fontVariables } from "./lib/fonts";
 import { headers } from "next/headers";
-import { client, urlFor } from "./lib/sanity";
+import { getBrandBySubdomain } from "./lib/brandRepository";
+import { getSanityImageUrl } from "./lib/brandImageUrl";
 import ClientLayout from "./components/ClientLayout";
 import Script from "next/script";
+import { subdomainFromHost } from "./lib/kavishaSiteEnv";
 
 function trimText(str = "", max = 100) {
   if (!str?.trim()) return "";
@@ -11,38 +13,12 @@ function trimText(str = "", max = 100) {
   return trimmed.length > max ? trimmed.slice(0, max - 1) + "…" : trimmed;
 }
 
-function getSubdomainFromHost(host) {
-  if (!host) return "kavisha";
-  const clean = host.toLowerCase().replace(/^www\./, "");
-  const parts = clean.split(".");
-  if (process.env.NODE_ENV === "staging") {
-    const stagingIdx = parts.indexOf("staging");
-    if (stagingIdx >= 0) return stagingIdx > 0 ? parts[0] : "kavisha";
-  }
-  return parts.length > 2 ? parts[0] : "kavisha";
-}
-
-function getImageUrl(imageAsset, fallback) {
-  if (!imageAsset?.asset?._ref) return fallback;
-  const url = urlFor(imageAsset).url();
-  return url || fallback;
-}
-
 export async function generateMetadata() {
   const headersList = await headers();
   const host = headersList.get("host") || "";
-  const subdomain = getSubdomainFromHost(host);
+  const subdomain = subdomainFromHost(host);
 
-  const brand = await client.fetch(
-    `*[_type == "brand" && subdomain == $subdomain][0]{
-      brandName,
-      title,
-      subtitle,
-      brandImage,
-      logo
-    }`,
-    { subdomain }
-  );
+  const brand = await getBrandBySubdomain(subdomain);
 
   const brandTitle = brand?.brandName || brand?.title || subdomain;
   const pageTitle =
@@ -50,8 +26,12 @@ export async function generateMetadata() {
   const description = trimText(brand?.subtitle || "AI platform", 100);
 
   const siteUrl = `https://${host}`;
-  const ogImage = getImageUrl(brand?.brandImage, "https://kavisha.ai/og-home.png");
-  const favicon = getImageUrl(brand?.logo, getImageUrl(brand?.brandImage, "/favicon.ico"));
+  const ogImage =
+    getSanityImageUrl(brand?.brandImage) || "https://kavisha.ai/og-home.png";
+  const favicon =
+    getSanityImageUrl(brand?.logo) ||
+    getSanityImageUrl(brand?.brandImage) ||
+    "/favicon.ico";
 
   return {
     title: pageTitle,

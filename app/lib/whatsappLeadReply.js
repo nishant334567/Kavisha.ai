@@ -43,8 +43,8 @@ export async function sendWhatsAppLeadJourneyReply(msg, ctx) {
   const userMessage = String(msg.body || "").trim();
   if (!userMessage) return;
 
-  const brand = process.env.WHATSAPP_LEAD_BRAND?.trim();
-  const serviceKey = process.env.WHATSAPP_LEAD_SERVICE_KEY?.trim();
+  const brand = String(ctx.brand || "").trim();
+  const serviceKey = String(ctx.serviceKey || "").trim();
   if (!brand || !serviceKey) return;
 
   await connectDB();
@@ -75,6 +75,11 @@ export async function sendWhatsAppLeadJourneyReply(msg, ctx) {
     chatSummary: String(session?.chatSummary || "").trim(),
   });
 
+  console.log(
+    "[whatsapp] lead_turn",
+    JSON.stringify({ ok: result.ok, stage: result.ok ? undefined : result.stage })
+  );
+
   const body = result.ok
     ? toWhatsAppSafeText(String(result.payload?.reply || "").trim()) || "…"
     : "Sorry, something went wrong. Please try again shortly.";
@@ -97,5 +102,9 @@ export async function sendWhatsAppLeadJourneyReply(msg, ctx) {
     }
   }
 
-  await sendWhatsAppText({ to: msg.from, body: out.slice(0, 4096) });
+  await sendWhatsAppText({
+    to: msg.from,
+    body: out.slice(0, 4096),
+    phoneNumberId: ctx.cloudPhoneNumberId,
+  });
 }

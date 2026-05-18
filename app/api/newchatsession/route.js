@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { getUserFromDB } from "@/app/lib/firebase/get-user";
 import { createSessionWithDefaultLog } from "@/app/lib/createSessionWithDefaultLog";
-import { client as sanity } from "@/app/lib/sanity";
+import { getBrandServiceKeys } from "@/app/lib/brandRepository";
 
 const fail = (message, status) =>
   NextResponse.json({ success: false, error: message }, { status });
@@ -27,13 +27,10 @@ export async function POST(request) {
       const sk = String(serviceKey ?? "").trim();
       if (!sk) return fail("Failed to create a session. Service is required.", 400);
 
-      if (!sanity) return fail("Failed to create a session. Service configuration unavailable.", 500);
-
-      const { serviceKeys = [] } = (await sanity.fetch(
-        `*[_type == "brand" && subdomain == $brand][0]{ "serviceKeys": services[]._key }`,
-        { brand }
-      )) || {};
-      if (!serviceKeys.includes(sk)) return fail("Failed to create a session. Invalid service.", 400);
+      const serviceKeys = await getBrandServiceKeys(brand);
+      if (!serviceKeys.includes(sk)) {
+        return fail("Failed to create a session. Invalid service.", 400);
+      }
 
       try {
         const session = await createSessionWithDefaultLog(

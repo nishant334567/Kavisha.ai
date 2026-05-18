@@ -4,8 +4,9 @@ import Session from "../models/ChatSessions.js";
 import { createSessionWithDefaultLog } from "./createSessionWithDefaultLog.js";
 
 export async function ensureWhatsAppLeadUserSession(waId, opts = {}) {
-  const brand = process.env.WHATSAPP_LEAD_BRAND?.trim();
-  const serviceKey = process.env.WHATSAPP_LEAD_SERVICE_KEY?.trim();
+  const brand = String(opts.brand || "").trim();
+  const serviceKey = String(opts.serviceKey || "").trim();
+  const cloudPhoneNumberId = String(opts.cloudPhoneNumberId || "").trim();
   if (!brand || !serviceKey) return null;
 
   const digits = String(waId || "").replace(/\D/g, "");
@@ -69,5 +70,8 @@ export async function ensureWhatsAppLeadUserSession(waId, opts = {}) {
     userId: id,
     sessionId: String(session._id),
     user: { id, name: String(user.name || "WhatsApp") },
+    brand,
+    serviceKey,
+    ...(cloudPhoneNumberId ? { cloudPhoneNumberId } : {}),
   };
 }

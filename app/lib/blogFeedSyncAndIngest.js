@@ -115,18 +115,18 @@ function logScrapeOutput(scraped) {
       ? `${text.slice(0, SCRAPE_PREVIEW_CHARS)}\n… (${text.length} chars total)`
       : text;
   const line = "─".repeat(72);
-  console.log(`\n${line}`);
-  console.log("SCRAPE OUTPUT");
-  console.log(line);
-  console.log("url:    ", scraped.url);
-  console.log("title:  ", scraped.title || "(empty)");
-  console.log("author: ", scraped.author || "(empty)");
-  console.log("date:   ", scraped.date || "(empty)");
-  console.log("image:  ", scraped.imageUrl || "(none)");
-  console.log("text:   ", `${text.length} character(s)`);
-  console.log(line);
-  console.log(preview || "(no body text)");
-  console.log(`${line}\n`);
+
+
+
+
+
+
+
+
+
+
+
+
 }
 
 async function runIngestPending() {
@@ -151,7 +151,7 @@ async function runIngestPending() {
       const scraped = await scrape(url);
       logScrapeOutput(scraped);
       await ingest(scraped);
-      console.log("[ok — scraped + ingested]", url);
+
       ok += 1;
     } catch (e) {
       const msg = (e && e.message) || String(e);
@@ -180,21 +180,21 @@ async function runBlogFeedSyncAndIngest(opts = {}) {
 
   await connectDB();
   try {
-    console.log(`RSS: ${feedUrl}`);
+
     const xml = await fetchFeed(feedUrl);
     const raw = extractUrlsFromRss(xml);
     const urls = raw.filter((u) => isArticleUrl(u, hostRe));
-    console.log(`Found ${urls.length} article URL(s) in feed`);
+
 
     const upserted = await upsertNewUrls(urls, source);
-    console.log(`Inserted new rows: ${upserted}`);
+
 
     const {
       ok: ingestOk,
       fail: ingestFail,
       failures: ingestFailures,
     } = await runIngestPending();
-    console.log(`Done. OK: ${ingestOk}, failed: ${ingestFail}`);
+
 
     return {
       success: true,

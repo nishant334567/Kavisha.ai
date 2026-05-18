@@ -1,9 +1,10 @@
-// Shared cookie configuration for auth
+import { isStagingDeployment } from "@/app/lib/kavishaSiteEnv";
+
 const ROOT_DOMAIN = "kavisha.ai";
 
 export function getCookieOptions() {
   const isProd = process.env.NODE_ENV === "production";
-  const isStaging = process.env.NODE_ENV === "staging";
+  const isStaging = isStagingDeployment();
   const domain = isStaging
     ? ".staging.kavisha.ai"
     : isProd

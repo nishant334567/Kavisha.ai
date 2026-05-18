@@ -1,21 +1,57 @@
 import { NextResponse } from "next/server";
 import { GoogleAuth } from "google-auth-library";
-import { client as sanityClient } from "@/app/lib/sanity";
+import {
+  subdomainExists,
+  createBrandDocument,
+  deleteBrandBySubdomain,
+  uploadSanityImageAsset,
+} from "@/app/lib/brandRepository";
 import { Resend } from "resend";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { connectDB } from "@/app/lib/db";
 import User from "@/app/models/Users";
 import { normalizeLoginButtonText } from "@/app/lib/loginButtonText";
+import {
+  getBrandOrigin,
+  getDefaultKavishaBaseUrl,
+  getKavishaCloudRunService,
+  getKavishaRootHost,
+  isStagingDeployment,
+  isStagingSite,
+} from "@/app/lib/kavishaSiteEnv";
+
+/** Staging/debug: trace how rootHost, domainName, and email URLs are chosen. */
+function logCreateAvatarSiteDebug(stage, siteOpts, extra = {}) {
+  const host = siteOpts?.request?.headers?.get?.("host") ?? null;
+  const stagingSite = isStagingSite(siteOpts);
+  const payload = {
+    stage,
+    requestHost: host,
+    requestOrigin: siteOpts?.request?.headers?.get?.("origin") ?? null,
+    isStagingHost: host ? String(host).toLowerCase().includes(".staging.") : false,
+    KAVISHA_SITE_ENV: process.env.KAVISHA_SITE_ENV ?? null,
+    NEXT_PUBLIC_KAVISHA_SITE_ENV: process.env.NEXT_PUBLIC_KAVISHA_SITE_ENV ?? null,
+    NODE_ENV: process.env.NODE_ENV ?? null,
+    PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL ?? null,
+    BASE_URL: process.env.BASE_URL ?? null,
+    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? null,
+    isStagingDeployment: isStagingDeployment(),
+    isStagingSite: stagingSite,
+    rootHost: getKavishaRootHost(siteOpts),
+    cloudRunService: getKavishaCloudRunService(siteOpts),
+    defaultKavishaBaseUrl: getDefaultKavishaBaseUrl(),
+    ...extra,
+  };
+
+  return payload;
+}
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
 const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-const SERVICE_NAME = process.env.NODE_ENV === "staging" ? "kavisha-staging" : "kavisha-ai";
 const REGION = "us-central1";
-const ROOT_DOMAIN = "kavisha.ai";
-const ROOT_HOST = process.env.NODE_ENV === "staging" ? "staging.kavisha.ai" : ROOT_DOMAIN;
 const UNLIMITED_AVATAR_CREATOR_EMAIL = "hello@kavisha.ai";
 
 const auth = new GoogleAuth({
@@ -30,12 +66,6 @@ const auth = new GoogleAuth({
   scopes: "https://www.googleapis.com/auth/cloud-platform",
 });
 
-const deleteBrand = async (brandId) => {
-  if (!brandId) return;
-  try {
-    await sanityClient.delete(brandId);
-  } catch (error) { }
-};
 
 export async function POST(request) {
   return withAuth(request, {
@@ -86,7 +116,14 @@ export async function POST(request) {
 }
 
 async function runCreateAvatar(request, creatorEmail) {
-  let brandId = null;
+  let createdSubdomain = null;
+  const siteOpts = { request };
+  const rootHost = getKavishaRootHost(siteOpts);
+  const serviceName = getKavishaCloudRunService(siteOpts);
+  let lastSiteDebug = logCreateAvatarSiteDebug("start", siteOpts, {
+    rootHost,
+    serviceName,
+  });
 
   try {
     const formData = await request.formData();
@@ -125,19 +162,7 @@ async function runCreateAvatar(request, creatorEmail) {
       );
     }
 
-    if (!sanityClient) {
-      return NextResponse.json(
-        { error: "Service temporarily unavailable. Please try again later." },
-        { status: 503 }
-      );
-    }
-
-    const existingBrand = await sanityClient.fetch(
-      `*[_type == "brand" && subdomain == $sub][0]`,
-      { sub: normalizedSubdomain }
-    );
-
-    if (existingBrand) {
+    if (await subdomainExists(normalizedSubdomain)) {
       return NextResponse.json(
         { error: "This subdomain is already taken. Please choose another." },
         { status: 400 }
@@ -149,9 +174,7 @@ async function runCreateAvatar(request, creatorEmail) {
     if (imageFile && imageFile.size > 0) {
       try {
         const buffer = Buffer.from(await imageFile.arrayBuffer());
-        imageAsset = await sanityClient.assets.upload("image", buffer, {
-          filename: (imageFile.name && String(imageFile.name).trim()) || "avatar-image.jpg",
-        });
+        imageAsset = await uploadSanityImageAsset(buffer, (imageFile.name && String(imageFile.name).trim()) || "avatar-image.jpg");
       } catch (uploadErr) {
         console.warn("create-avatar: image upload failed", uploadErr?.message || uploadErr);
       }
@@ -204,10 +227,15 @@ async function runCreateAvatar(request, creatorEmail) {
       };
     }
 
-    const brand = await sanityClient.create(brandDoc);
-    brandId = brand._id;
+    createdSubdomain = normalizedSubdomain;
+    await createBrandDocument(brandDoc);
 
-    const domainName = `${normalizedSubdomain}.${ROOT_HOST}`;
+    const domainName = `${normalizedSubdomain}.${rootHost}`;
+    lastSiteDebug = logCreateAvatarSiteDebug("before_domain_mapping", siteOpts, {
+      normalizedSubdomain,
+      domainName,
+      domainMappingRoute: serviceName,
+    });
     const gcpClient = await auth.getClient();
     const token = (await gcpClient.getAccessToken()).token;
 
@@ -223,7 +251,7 @@ async function runCreateAvatar(request, creatorEmail) {
           apiVersion: "domains.cloudrun.com/v1",
           kind: "DomainMapping",
           metadata: { name: domainName, namespace: PROJECT_ID },
-          spec: { routeName: SERVICE_NAME },
+          spec: { routeName: serviceName },
         }),
       }
     );
@@ -237,7 +265,12 @@ async function runCreateAvatar(request, creatorEmail) {
     }
 
     if (!response.ok) {
-      await deleteBrand(brandId);
+      logCreateAvatarSiteDebug("domain_mapping_failed", siteOpts, {
+        domainName,
+        httpStatus: response.status,
+        gcpError: data?.error ?? data?.message ?? null,
+      });
+      await deleteBrandBySubdomain(createdSubdomain);
       const msg = (data?.error && String(data.error)) || "We couldn't set up your domain right now. Please try again later.";
       return NextResponse.json(
         { error: msg },
@@ -245,10 +278,18 @@ async function runCreateAvatar(request, creatorEmail) {
       );
     }
 
+    logCreateAvatarSiteDebug("domain_mapping_ok", siteOpts, { domainName });
+
     if (email?.trim() && resend) {
       try {
-        const editProfileUrl = `https://${domainName}/admin/${normalizedSubdomain}/edit-profile`;
-        const trainUrl = `https://${domainName}/admin/${normalizedSubdomain}/train/v2`;
+        const brandOrigin = getBrandOrigin(normalizedSubdomain, siteOpts);
+        const editProfileUrl = `${brandOrigin}/admin/${normalizedSubdomain}/edit-profile`;
+        const trainUrl = `${brandOrigin}/admin/${normalizedSubdomain}/train/v2`;
+        logCreateAvatarSiteDebug("welcome_email", siteOpts, {
+          brandOrigin,
+          editProfileUrl,
+          trainUrl,
+        });
 
         await resend.emails.send({
           from: "hello@kavisha.ai",
@@ -259,7 +300,7 @@ async function runCreateAvatar(request, creatorEmail) {
               <h2>Hello!</h2>
               <p>Your AI avatar for <strong>${brandName || normalizedSubdomain}</strong> has been created successfully!</p>
               <p>Domain mapping is currently in progress. You can check your domain after 30 minutes at:</p>
-              <p><a href="https://${domainName}" style="color: #2563eb; text-decoration: none;">https://${domainName}</a></p>
+              <p><a href="${brandOrigin}" style="color: #2563eb; text-decoration: none;">${brandOrigin}</a></p>
               
               <div style="margin-top: 30px; padding: 20px; background-color: #f3f4f6; border-radius: 8px;">
                 <h3 style="margin-top: 0; color: #111827;">Admin Access</h3>
@@ -289,7 +330,12 @@ async function runCreateAvatar(request, creatorEmail) {
             </div>
           `,
         });
-      } catch (emailError) { }
+      } catch (emailError) {
+        console.warn(
+          "[create-avatar] welcome_email_failed",
+          emailError?.message || emailError
+        );
+      }
     }
 
     try {
@@ -306,9 +352,20 @@ async function runCreateAvatar(request, creatorEmail) {
       );
     }
 
-    return NextResponse.json({ success: true, domainName }, { status: 201 });
+    lastSiteDebug = logCreateAvatarSiteDebug("success_response", siteOpts, {
+      domainName,
+      alertWillShow: domainName,
+    });
+    return NextResponse.json(
+      {
+        success: true,
+        domainName,
+        ...(isStagingSite(siteOpts) ? { _debug: lastSiteDebug } : {}),
+      },
+      { status: 201 }
+    );
   } catch (error) {
-    await deleteBrand(brandId);
+    await deleteBrandBySubdomain(createdSubdomain);
     console.error("create-avatar:", error);
     return NextResponse.json(
       { error: "Something went wrong. Please try again." },

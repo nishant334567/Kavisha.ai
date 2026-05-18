@@ -1,16 +1,19 @@
 import { NextResponse } from "next/server";
-import { client } from "@/app/lib/sanity";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
+import {
+  getBrandBySubdomain,
+  getBrandAdmins,
+  updateBrandBySubdomain,
+} from "@/app/lib/brandRepository";
 import { Resend } from "resend";
+import { getBrandOrigin } from "@/app/lib/kavishaSiteEnv";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
-const ROOT_DOMAIN = "kavisha.ai";
-const ROOT_HOST = process.env.NODE_ENV === "staging" ? "staging.kavisha.ai" : ROOT_DOMAIN;
 
-async function sendAdminAccessEmail(to, name, subdomain) {
+async function sendAdminAccessEmail(to, name, subdomain, request) {
   if (!resend) return;
-  const url = `https://${subdomain}.${ROOT_HOST}/admin/${subdomain}/v2`;
+  const url = `${getBrandOrigin(subdomain, { request })}/admin/${subdomain}/v2`;
   await resend.emails.send({
     from: "hello@kavisha.ai",
     to: [to],
@@ -34,8 +37,8 @@ export async function GET(req) {
       if (!ok) {
         return NextResponse.json({ error: "Forbidden - not a brand admin" }, { status: 403 });
       }
-      const doc = await client.fetch(`*[_type=="brand" && subdomain==$brand][0]{admins}`, { brand });
-      return NextResponse.json({ admins: doc?.admins || [] });
+      const admins = await getBrandAdmins(brand);
+      return NextResponse.json({ admins });
     },
   });
 }
@@ -51,7 +54,7 @@ export async function POST(req) {
       if (!ok) {
         return NextResponse.json({ error: "Forbidden - not a brand admin" }, { status: 403 });
       }
-      const brandData = await client.fetch(`*[_type=="brand" && subdomain==$brand][0]`, { brand });
+      const brandData = await getBrandBySubdomain(brand);
       if (!brandData) {
         return NextResponse.json({ error: "Brand not found" }, { status: 404 });
       }
@@ -60,9 +63,10 @@ export async function POST(req) {
       if (current.map((e) => e?.toLowerCase()).includes(em)) {
         return NextResponse.json({ error: "Already an admin" }, { status: 400 });
       }
-      await client.patch(brandData._id).set({ admins: [...current, em] }).commit();
-      sendAdminAccessEmail(em, (name || "").trim() || em, brand).catch(() => {});
-      return NextResponse.json({ ok: true, admins: [...current, em] });
+      const next = [...current, em];
+      await updateBrandBySubdomain(brand, { set: { admins: next } });
+      sendAdminAccessEmail(em, (name || "").trim() || em, brand, req).catch(() => {});
+      return NextResponse.json({ ok: true, admins: next });
     },
   });
 }
@@ -79,7 +83,7 @@ export async function DELETE(req) {
       if (!ok) {
         return NextResponse.json({ error: "Forbidden - not a brand admin" }, { status: 403 });
       }
-      const brandData = await client.fetch(`*[_type=="brand" && subdomain==$brand][0]`, { brand });
+      const brandData = await getBrandBySubdomain(brand);
       if (!brandData) {
         return NextResponse.json({ error: "Brand not found" }, { status: 404 });
       }
@@ -92,7 +96,7 @@ export async function DELETE(req) {
       if (next.length === current.length) {
         return NextResponse.json({ error: "Admin not found" }, { status: 404 });
       }
-      await client.patch(brandData._id).set({ admins: next }).commit();
+      await updateBrandBySubdomain(brand, { set: { admins: next } });
       return NextResponse.json({ ok: true, admins: next });
     },
   });
