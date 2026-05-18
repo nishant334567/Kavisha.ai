@@ -1,7 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useRef } from "react";
-import { ArrowLeft, Edit2, Check, X, ArrowUpRight, MessageCircle } from "lucide-react";
+import { ArrowLeft, Edit2, Check, X, ArrowUpRight } from "lucide-react";
 import ServiceModal from "@/app/admin/components/ServiceModal";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
@@ -230,7 +230,7 @@ export default function MyServices() {
     <>
       <div className="min-h-[calc(100vh-56px)] overflow-y-auto bg-background py-8 text-foreground">
         <div className="max-w-6xl mx-auto px-4 md:px-6 font-baloo">
-          <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div className="mb-6 flex items-center gap-3">
             <div className="flex items-center gap-3">
               <button
                 onClick={() => router.back()}
@@ -248,17 +248,7 @@ export default function MyServices() {
                 </p>
               </div>
             </div>
-            <a
-              href={
-                brandSubdomain
-                  ? `/connect/whatsapp?${new URLSearchParams({ brand: brandSubdomain }).toString()}`
-                  : "/connect/whatsapp"
-              }
-              className="inline-flex shrink-0 items-center justify-center gap-2 self-start rounded-lg border border-highlight bg-highlight/5 px-4 py-2.5 text-sm font-medium text-highlight transition-colors hover:bg-highlight/10 sm:self-auto"
-            >
-              <MessageCircle className="h-4 w-4 shrink-0" aria-hidden />
-              Connect WhatsApp Business
-            </a>
+
           </div>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
