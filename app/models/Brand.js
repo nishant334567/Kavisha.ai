@@ -1,20 +1,8 @@
 const mongoose = require("mongoose");
 
-/** Matches Sanity `image` field shape for import / urlFor-style reads */
-const SanityImageSchema = new mongoose.Schema(
-    {
-        _type: { type: String, default: "image" },
-        asset: {
-            _type: { type: String, default: "reference" },
-            _ref: { type: String, default: "" },
-        },
-    },
-    { _id: false, strict: false }
-);
-
 const WidgetLauncherSchema = new mongoose.Schema(
     {
-        buttonImage: { type: SanityImageSchema, default: undefined },
+        buttonImageUrl: { type: String, default: "" },
         enableAttentionAnimation: { type: Boolean, default: false },
         chatbotWidgetHeader: { type: String, default: "" },
         copyReadMoreUrl: { type: String, default: "" },
@@ -26,16 +14,13 @@ const WidgetLauncherSchema = new mongoose.Schema(
 
 const BrandServiceSchema = new mongoose.Schema(
     {
-        /** Sanity array item key — keep verbatim on import (maps to session `serviceKey`) */
         _key: { type: String, required: true, trim: true },
         name: { type: String, required: true, trim: true },
         initialMessage: { type: String, default: "" },
         title: { type: String, required: true, trim: true },
-        /** Sanity allows empty; do not use `required` (Mongoose rejects "") */
         about: { type: String, default: "" },
         behaviour: { type: String, default: "" },
         rules: { type: String, default: "" },
-        logo: { type: SanityImageSchema, default: undefined },
         introquestions: {
             type: [String],
             default: [],
@@ -61,8 +46,8 @@ const BrandSchema = new mongoose.Schema(
         brandName: { type: String, required: true, trim: true },
         loginButtonText: { type: String, required: true, trim: true },
 
-        logo: { type: SanityImageSchema, default: undefined },
-        brandImage: { type: SanityImageSchema, default: undefined },
+        logoUrl: { type: String, default: "" },
+        brandImageUrl: { type: String, default: "" },
 
         clientWidgetUrl: { type: String, default: "" },
 
@@ -86,7 +71,7 @@ const BrandSchema = new mongoose.Schema(
         },
 
         acceptPayment: { type: Boolean, default: false },
-        paymentQr: { type: SanityImageSchema, default: undefined },
+        paymentQrUrl: { type: String, default: "" },
 
         title: { type: String, required: true, trim: true },
         subtitle: { type: String, required: true, default: "" },
@@ -133,7 +118,6 @@ const BrandSchema = new mongoose.Schema(
 
         admins: { type: [String], default: [] },
 
-        /** Optional: original Sanity document `_id` — not in Studio schema; useful for migration only */
         sanityId: { type: String, default: "", trim: true, index: true },
     },
     { timestamps: true, collection: "brands" }

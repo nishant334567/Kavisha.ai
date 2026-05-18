@@ -4,7 +4,7 @@ import {
   subdomainExists,
   createBrandDocument,
   deleteBrandBySubdomain,
-  uploadSanityImageAsset,
+  uploadBrandImageToGcs,
 } from "@/app/lib/brandRepository";
 import { Resend } from "resend";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
@@ -169,12 +169,18 @@ async function runCreateAvatar(request, creatorEmail) {
       );
     }
 
-    // Upload image to Sanity if provided (non-blocking: avatar works without image)
-    let imageAsset = null;
+    let imageUrl = "";
     if (imageFile && imageFile.size > 0) {
       try {
         const buffer = Buffer.from(await imageFile.arrayBuffer());
-        imageAsset = await uploadSanityImageAsset(buffer, (imageFile.name && String(imageFile.name).trim()) || "avatar-image.jpg");
+        const name =
+          (imageFile.name && String(imageFile.name).trim()) || "avatar-image.jpg";
+        imageUrl = await uploadBrandImageToGcs(
+          normalizedSubdomain,
+          "brandImage",
+          buffer,
+          name
+        );
       } catch (uploadErr) {
         console.warn("create-avatar: image upload failed", uploadErr?.message || uploadErr);
       }
@@ -209,22 +215,9 @@ async function runCreateAvatar(request, creatorEmail) {
       services,
     };
 
-    // Add brandImage and logo if uploaded (same image for both)
-    if (imageAsset) {
-      brandDoc.brandImage = {
-        _type: "image",
-        asset: {
-          _type: "reference",
-          _ref: imageAsset._id,
-        },
-      };
-      brandDoc.logo = {
-        _type: "image",
-        asset: {
-          _type: "reference",
-          _ref: imageAsset._id,
-        },
-      };
+    if (imageUrl) {
+      brandDoc.logoUrl = imageUrl;
+      brandDoc.brandImageUrl = imageUrl;
     }
 
     createdSubdomain = normalizedSubdomain;

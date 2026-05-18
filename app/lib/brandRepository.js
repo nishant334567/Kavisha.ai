@@ -1,9 +1,9 @@
 import { connectDB } from "@/app/lib/db.js";
 import Brand from "@/app/models/Brand";
-import { uploadSanityImageAsset as uploadSanityImageAssetImpl } from "@/app/lib/sanityImages";
+import { uploadToBucket } from "@/app/lib/gcs";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 import { normalizeLoginButtonText } from "@/app/lib/loginButtonText";
-import { getSanityImageUrl } from "@/app/lib/brandImageUrl";
+import { resolveBrandImageUrl } from "@/app/lib/brandImageUrl";
 import { getKavishaRootHost } from "@/app/lib/kavishaSiteEnv";
 
 function normSubdomain(value) {
@@ -60,19 +60,18 @@ function whatsAppLeadFromBrandDoc(doc) {
   };
 }
 
-function transformPublicBrand(brand) {
+function transformPublicBrand(brand, image = null) {
   const sub = normSubdomain(brand?.subdomain);
   const rootHost = getKavishaRootHost();
-  const logoUrl = getSanityImageUrl(brand?.logo);
   return {
     id: brandDocId(brand),
     name: brand.brandName,
     title: brand.title || "",
     subtitle: brand.subtitle || "",
     subdomain: sub,
-    image: logoUrl,
+    image,
     link: sub ? `https://${sub}.${rootHost}` : "",
-    logo: logoUrl,
+    logo: image,
     clientWidgetUrl: brand.clientWidgetUrl || "",
   };
 }
@@ -119,7 +118,12 @@ export async function listPublicBrands({ featuredOnly = false } = {}) {
     const q = { subdomain: { $ne: "kavisha" } };
     if (featuredOnly) q.featuredAvatar = true;
     const brands = await Brand.find(q).sort({ brandName: 1 }).lean();
-    return brands.map(transformPublicBrand);
+    return Promise.all(
+      brands.map(async (b) => {
+        const image = await resolveBrandImageUrl(b.logoUrl);
+        return transformPublicBrand(b, image);
+      })
+    );
   } catch (e) {
     console.warn("[brandRepository] listBrands:", e?.message || e);
     return [];
@@ -161,14 +165,7 @@ export async function getPublicBrandTheme(subdomain) {
   const widgetWhatsAppNumberId =
     waRaw.length >= 8 && waRaw.length <= 15 ? waRaw : null;
 
-  const widgetLauncherImageUrl = wl?.buttonImage
-    ? getSanityImageUrl(wl.buttonImage, {
-        width: 128,
-        height: 128,
-        fit: "max",
-        auto: "format",
-      })
-    : null;
+  const widgetLauncherImageUrl = await resolveBrandImageUrl(wl?.buttonImageUrl);
 
   return {
     primaryBrandColor: normalizeBrandHex(doc.primaryBrandColor),
@@ -184,12 +181,14 @@ export async function getPublicBrandTheme(subdomain) {
   };
 }
 
-export function mapBrandToClientContext(brand, userEmail) {
+export async function mapBrandToClientContext(brand, userEmail) {
   if (!brand) return null;
   const subdomain = normSubdomain(brand.subdomain);
-  const logoUrl = getSanityImageUrl(brand.logo);
-  const brandImageUrl = getSanityImageUrl(brand.brandImage);
-  const paymentQrUrl = getSanityImageUrl(brand.paymentQr);
+  const [logoUrl, brandImageUrl, paymentQrUrl] = await Promise.all([
+    resolveBrandImageUrl(brand.logoUrl),
+    resolveBrandImageUrl(brand.brandImageUrl),
+    resolveBrandImageUrl(brand.paymentQrUrl),
+  ]);
   const isAdmin =
     Boolean(userEmail) &&
     Array.isArray(brand.admins) &&
@@ -348,7 +347,7 @@ export async function updateBrandBySubdomain(subdomain, { set = {}, unset = [] }
   }
 }
 
-/** Create brand in Mongo only (image fields may reference Sanity asset ids). */
+/** Create brand in Mongo only. */
 export async function createBrandDocument(brandDoc) {
   const { _type, _id, _rev, _createdAt, _updatedAt, ...rest } = brandDoc || {};
   const subdomain = normSubdomain(rest.subdomain);
@@ -370,19 +369,48 @@ export async function deleteBrandBySubdomain(subdomain) {
   }
 }
 
-/** @deprecated Use deleteBrandBySubdomain */
-export async function deleteBrandBySanityId(_sanityId) {
-  /* no-op: brands are Mongo-only */
+const BRAND_IMAGE_UPLOAD = {
+  logo: { slug: "logo", urlField: "logoUrl" },
+  brandImage: { slug: "brand-image", urlField: "brandImageUrl" },
+  paymentQr: { slug: "payment-qr", urlField: "paymentQrUrl" },
+};
+
+function extFromFilename(filename) {
+  const m = String(filename || "").match(/\.([a-z0-9]{2,5})$/i);
+  return m ? m[1].toLowerCase() : "jpg";
 }
 
-export async function uploadSanityImageAsset(buffer, filename) {
-  return uploadSanityImageAssetImpl(buffer, filename);
+export async function uploadBrandImageToGcs(subdomain, imageType, buffer, filename) {
+  const sub = normSubdomain(subdomain);
+  const meta = BRAND_IMAGE_UPLOAD[imageType];
+  if (!sub || !meta) throw new Error("Invalid subdomain or imageType");
+
+  const objectPath = `brands/${sub}/${meta.slug}.${extFromFilename(filename)}`;
+  const lower = String(filename || "").toLowerCase();
+  const contentType = lower.endsWith(".png")
+    ? "image/png"
+    : lower.endsWith(".webp")
+      ? "image/webp"
+      : "image/jpeg";
+
+  const url = await uploadToBucket(objectPath, buffer, contentType);
+  if (!url) throw new Error("GCS bucket not configured");
+  if (url.includes("storage.googleapis.com/")) {
+    const bucketName =
+      process.env.GCS_KNOWLEDGE_BASE || process.env.GCS_BUCKET_NAME;
+    if (bucketName) {
+      return `https://storage.googleapis.com/${bucketName}/${objectPath}`;
+    }
+  }
+  return url;
 }
 
-export async function setBrandImageField(subdomain, imageType, assetId) {
-  const imageRef = {
-    _type: "image",
-    asset: { _type: "reference", _ref: assetId },
-  };
-  return updateBrandBySubdomain(subdomain, { set: { [imageType]: imageRef } });
+/** Upload brand image to GCS and persist stable public URL on Brand. */
+export async function uploadBrandImage(subdomain, imageType, buffer, filename) {
+  const sub = normSubdomain(subdomain);
+  const meta = BRAND_IMAGE_UPLOAD[imageType];
+  if (!sub || !meta) throw new Error("Invalid subdomain or imageType");
+
+  const url = await uploadBrandImageToGcs(sub, imageType, buffer, filename);
+  return updateBrandBySubdomain(sub, { set: { [meta.urlField]: url } });
 }

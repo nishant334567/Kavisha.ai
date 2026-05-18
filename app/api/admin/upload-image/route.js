@@ -1,11 +1,7 @@
 import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
-import {
-  getBrandBySubdomain,
-  uploadSanityImageAsset,
-  setBrandImageField,
-} from "@/app/lib/brandRepository";
+import { getBrandBySubdomain, uploadBrandImage } from "@/app/lib/brandRepository";
 
 export async function POST(req) {
   return withAuth(req, {
@@ -40,8 +36,12 @@ export async function POST(req) {
         }
 
         const buffer = Buffer.from(await file.arrayBuffer());
-        const asset = await uploadSanityImageAsset(buffer, file.name);
-        await setBrandImageField(subdomain, imageType, asset._id);
+        await uploadBrandImage(
+          subdomain,
+          String(imageType),
+          buffer,
+          file.name || "image.jpg"
+        );
 
         return NextResponse.json({ success: true });
       } catch (error) {

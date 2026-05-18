@@ -22,7 +22,7 @@ export async function GET(req) {
     if (!brand) {
       return NextResponse.json({ error: "Brand not found" }, { status: 404 });
     }
-    const context = mapBrandToClientContext(brand, userEmail || undefined);
+    const context = await mapBrandToClientContext(brand, userEmail || undefined);
     return NextResponse.json(context);
   } catch (e) {
     console.error("[public/brand-context]", e);
