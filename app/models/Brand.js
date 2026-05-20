@@ -104,6 +104,7 @@ const BrandSchema = new mongoose.Schema(
         quizName: { type: String, default: "Take quiz/survey", trim: true },
 
         enableProducts: { type: Boolean, default: false },
+        shopifyShopUrl: { type: String, default: "", trim: true },
         enableBooking: { type: Boolean, default: false },
         enableBlogs: { type: Boolean, default: false },
         enableLinks: { type: Boolean, default: true },

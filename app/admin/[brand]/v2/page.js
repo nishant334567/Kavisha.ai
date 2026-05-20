@@ -1,7 +1,8 @@
 "use client";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, Suspense } from "react";
+import ShopifyConnect from "@/app/admin/components/ShopifyConnect";
 
 const LoadingDots = () => (
   <span className="inline-flex gap-0.5 items-center">
@@ -173,6 +174,9 @@ export default function AdminHome() {
               </div>
             </>
           )}
+          <Suspense fallback={null}>
+            <ShopifyConnect />
+          </Suspense>
         </div>
       </div>
 
