@@ -60,6 +60,10 @@ function whatsAppLeadFromBrandDoc(doc) {
   };
 }
 
+export function isTalkToAvatarPublished(brand) {
+  return brand?.talkToAvatarPublished !== false;
+}
+
 function transformPublicBrand(brand, image = null) {
   const sub = normSubdomain(brand?.subdomain);
   const rootHost = getKavishaRootHost();
@@ -73,6 +77,7 @@ function transformPublicBrand(brand, image = null) {
     link: sub ? `https://${sub}.${rootHost}` : "",
     logo: image,
     clientWidgetUrl: brand.clientWidgetUrl || "",
+    talkToAvatarPublished: isTalkToAvatarPublished(brand),
   };
 }
 
@@ -112,11 +117,20 @@ export async function filterAvailableSubdomains(subdomains) {
   return available;
 }
 
-export async function listPublicBrands({ featuredOnly = false } = {}) {
+export async function listPublicBrands({
+  featuredOnly = false,
+  talkToAvatarOnly = false,
+} = {}) {
   try {
     await connectDB();
     const q = { subdomain: { $ne: "kavisha" } };
     if (featuredOnly) q.featuredAvatar = true;
+    if (talkToAvatarOnly) {
+      q.$or = [
+        { talkToAvatarPublished: true },
+        { talkToAvatarPublished: { $exists: false } },
+      ];
+    }
     const brands = await Brand.find(q).sort({ brandName: 1 }).lean();
     return Promise.all(
       brands.map(async (b) => {
@@ -240,6 +254,8 @@ export async function mapBrandToClientContext(brand, userEmail) {
       typeof brand.widgetLauncher?.copyReadMoreUrl === "string"
         ? brand.widgetLauncher.copyReadMoreUrl.trim()
         : "",
+    clientWidgetUrl: brand.clientWidgetUrl || "",
+    talkToAvatarPublished: isTalkToAvatarPublished(brand),
   };
 }
 

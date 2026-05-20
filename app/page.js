@@ -72,7 +72,11 @@ export default function HomePage() {
       typeof window !== "undefined" &&
       localStorage.getItem("redirectAfterLogin");
     if (hasRedirect) return;
-    router.push(`/admin/${brandContext.subdomain}/v2`);
+    const adminHome =
+      brandContext.subdomain === "kavisha"
+        ? "/admin"
+        : `/admin/${brandContext.subdomain}/v2`;
+    router.push(adminHome);
   }, [user, loading, brandContext, router]);
 
   if (loading) {

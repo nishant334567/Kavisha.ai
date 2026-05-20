@@ -5,7 +5,8 @@ export async function GET(req) {
   try {
     const { searchParams } = new URL(req.url);
     const featuredOnly = searchParams.get("featured") === "true";
-    const brands = await listPublicBrands({ featuredOnly });
+    const talkToAvatarOnly = searchParams.get("talkToAvatar") === "true";
+    const brands = await listPublicBrands({ featuredOnly, talkToAvatarOnly });
     return NextResponse.json({ brands }, { status: 200 });
   } catch (error) {
     console.error("Error fetching brands:", error);
