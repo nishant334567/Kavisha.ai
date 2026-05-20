@@ -3,7 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
+import { widgetAwareFetch } from "@/app/lib/widget-session";
 import { normalizeShopifyShopDomain } from "@/app/lib/shopifyShopUrl";
 
 function getOAuthOrigin() {
@@ -17,7 +17,6 @@ function getOAuthOrigin() {
 
 export default function ShopifyConnect() {
   const brand = useBrandContext();
-  const { user } = useFirebaseSession();
   const searchParams = useSearchParams();
   const connected = searchParams.get("shopify") === "connected";
 
@@ -34,17 +33,13 @@ export default function ShopifyConnect() {
 
   const saveShop = useCallback(async () => {
     const sub = brand?.subdomain;
-    if (!sub || !user) return;
+    if (!sub) return;
     setSaving(true);
     setError("");
     try {
-      const token = await user.getIdToken();
-      const res = await fetch("/api/admin/shopify-shop", {
+      const res = await widgetAwareFetch("/api/admin/shopify-shop", {
         method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ brand: sub, shopifyShopUrl: input }),
       });
       const data = await res.json().catch(() => ({}));
@@ -60,7 +55,7 @@ export default function ShopifyConnect() {
     } finally {
       setSaving(false);
     }
-  }, [brand?.subdomain, input, user]);
+  }, [brand?.subdomain, input]);
 
   const connectShopify = useCallback(() => {
     const sub = brand?.subdomain;
