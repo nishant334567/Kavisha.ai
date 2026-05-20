@@ -84,6 +84,8 @@ const BrandSchema = new mongoose.Schema(
         },
 
         featuredAvatar: { type: Boolean, default: false },
+        /** When false, hidden from /talk-to-avatar. Omitted/true = visible (legacy brands). */
+        talkToAvatarPublished: { type: Boolean, default: true },
 
         enableCommunityOnboarding: { type: Boolean, default: false },
         enableProfessionalConnect: { type: Boolean, default: false },
