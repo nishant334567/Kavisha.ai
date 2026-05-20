@@ -1,7 +1,7 @@
 "use client";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 
 const LoadingDots = () => (
   <span className="inline-flex gap-0.5 items-center">
@@ -19,6 +19,18 @@ export default function AdminHome() {
   const [quizSurveyAttemptCount, setQuizSurveyAttemptCount] = useState(0);
   const [countsLoading, setCountsLoading] = useState(true);
   const go = (path) => router.push(path);
+
+  const goWhatsAppConnect = useCallback(() => {
+    const onStaging =
+      (typeof window !== "undefined" && window.location.hostname.includes(".staging.")) ||
+      process.env.NEXT_PUBLIC_KAVISHA_SITE_ENV === "staging";
+    const origin = onStaging
+      ? "https://kavisha.staging.kavisha.ai"
+      : process.env.NEXT_PUBLIC_APP_URL || "https://kavisha.ai";
+    window.location.assign(
+      `${origin}/connect/whatsapp?brand=${encodeURIComponent(brand?.subdomain || "")}`
+    );
+  }, [brand?.subdomain]);
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -111,6 +123,7 @@ export default function AdminHome() {
           },
         ]
       : []),
+    { label: "Connect WhatsApp", action: goWhatsAppConnect },
   ];
   return (
     <div className="relative flex h-[calc(100vh-56px)] flex-col bg-background text-foreground">
@@ -145,7 +158,7 @@ export default function AdminHome() {
                   <div key={button.label} className="flex items-center">
                     {index > 0 && <div className="mx-1 h-6 w-px self-center bg-border" />}
                     <button
-                      onClick={() => go(button.path)}
+                      onClick={() => (button.action ? button.action() : go(button.path))}
                       className="text-md flex items-center gap-2 bg-transparent px-4 py-2 uppercase text-foreground md:text-2xl"
                     >
                       {button.label}

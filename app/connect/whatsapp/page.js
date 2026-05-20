@@ -1,10 +1,15 @@
 "use client";
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import { useSearchParams } from "next/navigation";
 
 const FB_ORIGINS = new Set(["https://www.facebook.com", "https://web.facebook.com"]);
+const LOG = "[whatsapp connect]";
 
 export default function ConnectWhatsAppPage() {
+  const searchParams = useSearchParams();
+  const brand = String(searchParams.get("brand") || "").trim().toLowerCase();
+
   const initOnce = useRef(false);
   const [ready, setReady] = useState(false);
   const [status, setStatus] = useState("idle");
@@ -49,15 +54,15 @@ export default function ConnectWhatsAppPage() {
         return;
       }
       if (payload?.type !== "WA_EMBEDDED_SIGNUP") return;
-
+      console.log(LOG, "embedded_signup", { brand: brand || undefined, payload });
     }
     window.addEventListener("message", onMessage);
     return () => window.removeEventListener("message", onMessage);
-  }, []);
+  }, [brand]);
 
   const launch = useCallback(() => {
     if (typeof window !== "undefined" && window.location.protocol !== "https:") {
-      console.warn("[whatsapp connect] FB.login requires HTTPS");
+      console.warn(LOG, "FB.login requires HTTPS");
       setStatus("error");
       return;
     }
@@ -69,11 +74,14 @@ export default function ConnectWhatsAppPage() {
     setStatus("opening");
     window.FB.login(
       (response) => {
-
         const code = response?.authResponse?.code;
-        if (code) {
-
-        }
+        console.log(LOG, "fb_login", {
+          brand: brand || undefined,
+          status: response?.status,
+          hasCode: Boolean(code),
+          code: code || undefined,
+          authResponse: response?.authResponse || undefined,
+        });
         setStatus(response?.authResponse ? "done" : "cancelled");
       },
       {
@@ -83,7 +91,7 @@ export default function ConnectWhatsAppPage() {
         extras: { version: "v3", sessionInfoVersion: "3" },
       }
     );
-  }, []);
+  }, [brand]);
 
   const missingEnv =
     !process.env.NEXT_PUBLIC_META_APP_ID ||
@@ -94,9 +102,15 @@ export default function ConnectWhatsAppPage() {
       <div className="mx-auto max-w-md rounded-2xl border border-border bg-card p-6 shadow-sm">
         <h1 className="text-xl font-semibold tracking-tight">WhatsApp Business</h1>
         <p className="mt-2 text-sm text-muted">
-          Connect via Meta. Open the browser console to inspect the OAuth code and Embedded
-          Signup payloads.
+          Connect your number via Meta. Results are logged in the browser console (
+          <code className="text-xs">{LOG}</code>
+          ).
         </p>
+        {brand ? (
+          <p className="mt-2 text-sm text-foreground">
+            Brand: <span className="font-medium">{brand}</span>
+          </p>
+        ) : null}
 
         {missingEnv && (
           <p className="mt-4 rounded-lg border border-amber-500/40 bg-amber-500/10 px-3 py-2 text-sm text-amber-900 dark:text-amber-100">
@@ -124,7 +138,7 @@ export default function ConnectWhatsAppPage() {
         )}
         {status === "done" && (
           <p className="mt-3 text-center text-sm text-muted">
-            Login finished — check the console for code and postMessage data.
+            Done — check the console for OAuth code and embedded signup data.
           </p>
         )}
       </div>
