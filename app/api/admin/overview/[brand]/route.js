@@ -3,6 +3,7 @@ import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
+import { filterVisibleAssignedTo } from "@/app/lib/brandRepository";
 
 export async function GET(req, { params }) {
   return withAuth(req, {
@@ -54,7 +55,7 @@ export async function GET(req, { params }) {
             allDataCollected: !!session.allDataCollected,
             createdAt: session.createdAt,
             updatedAt: session.updatedAt,
-            assignedTo: session.assignedTo,
+            assignedTo: filterVisibleAssignedTo(session.assignedTo),
             comment: session.comment || "",
             totalInputTokens: inputTokens,
             totalOutputTokens: outputTokens,

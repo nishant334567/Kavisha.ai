@@ -4,6 +4,7 @@ import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import {
   getBrandBySubdomain,
   getBrandAdmins,
+  isReservedPlatformSuperadminEmail,
   updateBrandBySubdomain,
 } from "@/app/lib/brandRepository";
 import { Resend } from "resend";
@@ -60,13 +61,20 @@ export async function POST(req) {
       }
       const current = brandData.admins || [];
       const em = email.trim().toLowerCase();
+      if (isReservedPlatformSuperadminEmail(em)) {
+        return NextResponse.json(
+          { error: "This email cannot be added as a brand admin" },
+          { status: 400 }
+        );
+      }
       if (current.map((e) => e?.toLowerCase()).includes(em)) {
         return NextResponse.json({ error: "Already an admin" }, { status: 400 });
       }
       const next = [...current, em];
       await updateBrandBySubdomain(brand, { set: { admins: next } });
       sendAdminAccessEmail(em, (name || "").trim() || em, brand, req).catch(() => {});
-      return NextResponse.json({ ok: true, admins: next });
+      const admins = await getBrandAdmins(brand);
+      return NextResponse.json({ ok: true, admins });
     },
   });
 }
@@ -97,7 +105,8 @@ export async function DELETE(req) {
         return NextResponse.json({ error: "Admin not found" }, { status: 404 });
       }
       await updateBrandBySubdomain(brand, { set: { admins: next } });
-      return NextResponse.json({ ok: true, admins: next });
+      const admins = await getBrandAdmins(brand);
+      return NextResponse.json({ ok: true, admins });
     },
   });
 }

