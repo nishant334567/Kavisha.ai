@@ -163,14 +163,33 @@ export default function HomePage() {
         }
     }, [user, brandContext, router]);
 
+    const clientSiteUrl =
+        brandContext?.subdomain !== "kavisha"
+            ? String(brandContext?.clientWidgetUrl || "").trim()
+            : "";
+
+    useEffect(() => {
+        if (!clientSiteUrl || brandContext?.isBrandAdmin) return;
+        window.location.replace(clientSiteUrl);
+    }, [clientSiteUrl, brandContext?.isBrandAdmin]);
+
     if (loading) {
         return <Loader loadingMessage="Loading..." />;
     }
 
+    if (!brandContext) {
+        return <Loader loadingMessage="Loading..." />;
+    }
+
+    if (brandContext?.isBrandAdmin) {
+        return <Loader loadingMessage="Redirecting to admin dashboard..." />;
+    }
+
+    if (clientSiteUrl) {
+        return <Loader loadingMessage="Redirecting..." />;
+    }
+
     if (!user) {
-        if (!brandContext) {
-            return <Loader loadingMessage="Loading..." />;
-        }
         if (brandContext.subdomain === "kavisha") {
             return <Homepage />;
         }
@@ -179,11 +198,6 @@ export default function HomePage() {
                 <AvatarHomepage />
             </div>
         );
-    }
-
-    // Don't render chat interface for admins (they'll be redirected)
-    if (brandContext?.isBrandAdmin) {
-        return <Loader loadingMessage="Redirecting to admin dashboard..." />;
     }
 
     return (
