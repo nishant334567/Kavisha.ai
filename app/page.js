@@ -66,6 +66,16 @@ export default function HomePage() {
     }
   }, [user, loading, brandContext, router]);
 
+  const clientSiteUrl =
+    brandContext?.subdomain !== "kavisha"
+      ? String(brandContext?.clientWidgetUrl || "").trim()
+      : "";
+
+  useEffect(() => {
+    if (!clientSiteUrl || brandContext?.isBrandAdmin) return;
+    window.location.replace(clientSiteUrl);
+  }, [clientSiteUrl, brandContext?.isBrandAdmin]);
+
   useLayoutEffect(() => {
     if (loading || !user || !brandContext?.isBrandAdmin) return;
     const hasRedirect =
@@ -89,6 +99,10 @@ export default function HomePage() {
 
   if (brandContext?.isBrandAdmin) {
     return <Loader loadingMessage="Redirecting to admin dashboard..." />;
+  }
+
+  if (clientSiteUrl) {
+    return <Loader loadingMessage="Redirecting..." />;
   }
 
   const displayName = user?.name || "there";
