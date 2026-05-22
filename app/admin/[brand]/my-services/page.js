@@ -1,8 +1,9 @@
 "use client";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, Suspense } from "react";
 import { ArrowLeft, Edit2, Check, X, ArrowUpRight } from "lucide-react";
 import ServiceModal from "@/app/admin/components/ServiceModal";
+import ShopifyConnect from "@/app/admin/components/ShopifyConnect";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 
@@ -799,6 +800,20 @@ export default function MyServices() {
                       Store, cart &amp; order history
                     </span>
                   </div>
+                </div>
+
+                <div className="rounded-xl border border-border bg-card p-4">
+                  <div className="flex items-center justify-between gap-4">
+                    <span className="text-sm font-medium uppercase tracking-wider text-foreground">
+                      Shopify
+                    </span>
+                    <span className="text-xs text-muted">
+                      Train catalog for chat
+                    </span>
+                  </div>
+                  <Suspense fallback={null}>
+                    <ShopifyConnect inline />
+                  </Suspense>
                 </div>
 
                 <div className="rounded-xl border border-border bg-card p-4">

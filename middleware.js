@@ -8,6 +8,8 @@ const PUBLIC_PATHS = [
   "/widget",
   "/api/login",
   "/api/whatsapp/webhook",
+  "/api/shopify/install",
+  "/api/shopify/callback",
   "/api/brands",
   "/api/tasks/enrich-derived-profile",
   "/api/tasks/compute-matches",

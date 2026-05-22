@@ -5,7 +5,10 @@ import { getBrandOrigin } from "@/app/lib/kavishaSiteEnv";
 export const SHOPIFY_BRAND_COOKIE = "kavisha_shopify_brand";
 export const SHOPIFY_CALLBACK_PATH = "/api/shopify/callback";
 
-const SCOPES = [
+/** Shopify Admin REST API version for product fetch/list. */
+export const SHOPIFY_ADMIN_API_VERSION = "2026-01";
+
+export const SHOPIFY_SCOPES = [
   "read_products",
   "read_product_listings",
   "read_inventory",
@@ -47,7 +50,7 @@ export function getShopify(request) {
   return shopifyApi({
     apiKey,
     apiSecretKey,
-    scopes: SCOPES,
+    scopes: SHOPIFY_SCOPES,
     hostName,
     hostScheme,
     apiVersion: ApiVersion.January26,
@@ -96,7 +99,7 @@ export function clearBrandCookie(request) {
 export function getShopifySuccessRedirectUrl(brandSubdomain, request) {
   const brand = String(brandSubdomain || "").trim().toLowerCase();
   if (brand) {
-    return `${getBrandOrigin(brand, { request })}/admin/${encodeURIComponent(brand)}/v2?shopify=connected`;
+    return `${getBrandOrigin(brand, { request })}/admin/${encodeURIComponent(brand)}/my-services?shopify=connected`;
   }
-  return `${getBrandOrigin("kavisha", { request })}/admin/kavisha/v2?shopify=connected`;
+  return `${getBrandOrigin("kavisha", { request })}/admin/kavisha/my-services?shopify=connected`;
 }

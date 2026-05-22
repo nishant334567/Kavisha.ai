@@ -50,6 +50,9 @@ app/secrets/
 # vercel
 .vercel
 
+# Shopify CLI local project state
+.shopify/
+
 # Firebase Hosting (auth subdomain deploy from firebase-auth-hosting/)
 firebase-auth-hosting/.firebase/
 

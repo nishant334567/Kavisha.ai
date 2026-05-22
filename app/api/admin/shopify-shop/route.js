@@ -5,7 +5,29 @@ import {
   getBrandBySubdomain,
   updateBrandBySubdomain,
 } from "@/app/lib/brandRepository";
+import { loadShopifySessionByBrand } from "@/app/lib/shopifyRepository";
 import { normalizeShopifyShopDomain } from "@/app/lib/shopifyShopUrl";
+
+export async function GET(req) {
+  return withAuth(req, {
+    onAuthenticated: async ({ decodedToken }) => {
+      const brand = new URL(req.url).searchParams.get("brand");
+      if (!brand) {
+        return NextResponse.json({ error: "brand required" }, { status: 400 });
+      }
+      const ok = await isBrandAdmin(decodedToken.email, brand);
+      if (!ok) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      const doc = await getBrandBySubdomain(brand);
+      const session = await loadShopifySessionByBrand(brand);
+      return NextResponse.json({
+        shopifyShopUrl: doc?.shopifyShopUrl || "",
+        connected: Boolean(session?.accessToken),
+      });
+    },
+  });
+}
 
 export async function PATCH(req) {
   return withAuth(req, {
