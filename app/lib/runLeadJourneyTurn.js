@@ -553,12 +553,15 @@ export async function runLeadJourneyTurn({
         const updated = await Session.findOneAndUpdate(
           { _id: sessionId },
           { $inc: { summaryPendingCount: 2 } },
-          { new: true, select: "summaryPendingCount" }
+          { new: true, select: "summaryPendingCount summaryUpdatedAt" }
         ).lean();
 
         const pending = Number(updated?.summaryPendingCount || 0);
         const tasksSecret = process.env.TASKS_SECRET;
-        if (pending >= 6 && tasksSecret) {
+        if (
+          tasksSecret &&
+          (pending >= 6 || (pending >= 2 && !updated?.summaryUpdatedAt))
+        ) {
           const baseUrl = String(
             process.env.CLOUD_TASKS_BASE_URL ||
               process.env.PUBLIC_BASE_URL ||

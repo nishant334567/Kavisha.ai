@@ -73,8 +73,7 @@ export async function POST(request) {
     }
 
     const pending = Number(session.summaryPendingCount || 0);
-    // Matches lead-journey: enqueue after 3 user turns (3×2 log rows = 6).
-    if (pending < 6) {
+    if (pending < (session.summaryUpdatedAt ? 6 : 2)) {
       return NextResponse.json({ ok: true, skipped: true, reason: "pending<6" });
     }
 
