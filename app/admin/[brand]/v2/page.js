@@ -76,52 +76,52 @@ export default function AdminHome() {
   const featureButtons = [
     ...(brand?.enableBooking
       ? [
-          {
-            label: "Bookings",
-            path: `/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
-          },
-        ]
+        {
+          label: "Bookings",
+          path: `/admin/services?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
+        },
+      ]
       : []),
     ...(brand?.enableQuiz
       ? [
-          {
-            label: "Quizzes/Survey",
-            path: `/admin/quiz`,
-            count: countsLoading ? <LoadingDots /> : quizSurveyAttemptCount,
-          },
-        ]
+        {
+          label: "Quizzes/Survey",
+          path: `/admin/quiz`,
+          count: countsLoading ? <LoadingDots /> : quizSurveyAttemptCount,
+        },
+      ]
       : []),
     ...(brand?.enableProducts
       ? [
-          {
-            label: "Store",
-            path: `/admin/products?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
-          },
-        ]
+        {
+          label: "Store",
+          path: `/admin/products?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
+        },
+      ]
       : []),
     ...(brand?.enableJobs
       ? [
-          {
-            label: "My Jobs",
-            path: `/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
-          },
-        ]
+        {
+          label: "My Jobs",
+          path: `/admin/jobs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
+        },
+      ]
       : []),
     ...(brand?.enableBlogs
       ? [
-          {
-            label: "Blog",
-            path: `/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
-          },
-        ]
+        {
+          label: "Blog",
+          path: `/admin/blogs?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
+        },
+      ]
       : []),
     ...(brand?.enableLinks !== false
       ? [
-          {
-            label: "Links",
-            path: `/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
-          },
-        ]
+        {
+          label: "Links",
+          path: `/admin/links?subdomain=${encodeURIComponent(brand?.subdomain || "")}`,
+        },
+      ]
       : []),
     // { label: "Connect WhatsApp", action: goWhatsAppConnect },
   ];
@@ -152,7 +152,7 @@ export default function AdminHome() {
           </div>
           {featureButtons.length > 0 && (
             <>
- 
+
               <div className="flex flex-wrap items-center justify-center gap-y-3">
                 {featureButtons.map((button, index) => (
                   <div key={button.label} className="flex items-center">

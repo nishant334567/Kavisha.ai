@@ -244,6 +244,8 @@ export async function mapBrandToClientContext(brand, userEmail) {
     quizName: brand.quizName || "Take quiz/survey",
     enableJobs: brand.enableJobs || false,
     enableProducts: brand.enableProducts || false,
+    shopifyShopUrl:
+      typeof brand.shopifyShopUrl === "string" ? brand.shopifyShopUrl.trim() : "",
     enableBooking: brand.enableBooking || false,
     enableBlogs: brand.enableBlogs || false,
     enableLinks: brand.enableLinks !== false,
