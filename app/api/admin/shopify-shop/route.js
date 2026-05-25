@@ -5,7 +5,10 @@ import {
   getBrandBySubdomain,
   updateBrandBySubdomain,
 } from "@/app/lib/brandRepository";
-import { loadShopifySessionByBrand } from "@/app/lib/shopifyRepository";
+import {
+  loadShopifySessionByBrand,
+  disconnectShopifyByBrand,
+} from "@/app/lib/shopifyRepository";
 import { normalizeShopifyShopDomain } from "@/app/lib/shopifyShopUrl";
 
 export async function GET(req) {
@@ -66,6 +69,28 @@ export async function PATCH(req) {
       return NextResponse.json({
         ok: true,
         shopifyShopUrl: updated?.shopifyShopUrl || shopifyShopUrl,
+      });
+    },
+  });
+}
+
+export async function DELETE(req) {
+  return withAuth(req, {
+    onAuthenticated: async ({ decodedToken }) => {
+      const brand = new URL(req.url).searchParams.get("brand");
+      if (!brand) {
+        return NextResponse.json({ error: "brand required" }, { status: 400 });
+      }
+      const ok = await isBrandAdmin(decodedToken.email, brand);
+      if (!ok) {
+        return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+      }
+      await disconnectShopifyByBrand(brand);
+      const doc = await getBrandBySubdomain(brand);
+      return NextResponse.json({
+        ok: true,
+        connected: false,
+        shopifyShopUrl: doc?.shopifyShopUrl || "",
       });
     },
   });

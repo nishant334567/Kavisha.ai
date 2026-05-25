@@ -25,6 +25,7 @@ export default function ShopifyConnect({ inline = false }) {
   const [savedShop, setSavedShop] = useState("");
   const [oauthConnected, setOauthConnected] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [disconnecting, setDisconnecting] = useState(false);
   const [error, setError] = useState("");
 
   const sub = brand?.subdomain || "";
@@ -88,6 +89,28 @@ export default function ShopifyConnect({ inline = false }) {
     window.location.assign(`${origin}/api/shopify/install?${q}`);
   }, [sub, savedShop]);
 
+  const disconnectShopify = useCallback(async () => {
+    if (!sub || disconnecting) return;
+    setDisconnecting(true);
+    setError("");
+    try {
+      const res = await widgetAwareFetch(
+        `/api/admin/shopify-shop?brand=${encodeURIComponent(sub)}`,
+        { method: "DELETE" }
+      );
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        setError(data?.error || "Could not disconnect");
+        return;
+      }
+      setOauthConnected(false);
+    } catch {
+      setError("Could not disconnect");
+    } finally {
+      setDisconnecting(false);
+    }
+  }, [sub, disconnecting]);
+
   if (!brand?.isBrandAdmin) return null;
 
   const draftShop = normalizeShopifyShopDomain(input);
@@ -120,6 +143,14 @@ export default function ShopifyConnect({ inline = false }) {
               Sync products
             </button>
           ) : null}
+          <button
+            type="button"
+            onClick={disconnectShopify}
+            disabled={disconnecting}
+            className="rounded-lg border border-border px-4 py-2 text-sm text-foreground disabled:opacity-50"
+          >
+            {disconnecting ? "Disconnecting…" : "Disconnect"}
+          </button>
         </div>
       ) : (
         <>

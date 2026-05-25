@@ -71,6 +71,17 @@ export async function markShopifyUninstalled(shopDomain) {
   const shop = String(shopDomain || "").trim().toLowerCase();
   await ShopifyMerchant.updateOne(
     { shopDomain: shop },
-    { $set: { uninstalledAt: new Date() } }
+    { $set: { uninstalledAt: new Date(), accessToken: "" } }
   );
+}
+
+/** Admin disconnect (keeps brand shopifyShopUrl for easy reconnect). */
+export async function disconnectShopifyByBrand(brandSubdomain) {
+  await connectDB();
+  const brand = String(brandSubdomain || "").trim().toLowerCase();
+  const result = await ShopifyMerchant.updateOne(
+    { brandSubdomain: brand, uninstalledAt: null },
+    { $set: { uninstalledAt: new Date(), accessToken: "" } }
+  );
+  return result.modifiedCount > 0;
 }

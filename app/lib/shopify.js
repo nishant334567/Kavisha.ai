@@ -1,9 +1,31 @@
 import "@shopify/shopify-api/adapters/web-api";
-import { shopifyApi, ApiVersion } from "@shopify/shopify-api";
+import { shopifyApi, ApiVersion, DeliveryMethod } from "@shopify/shopify-api";
 import { getBrandOrigin } from "@/app/lib/kavishaSiteEnv";
 
 export const SHOPIFY_BRAND_COOKIE = "kavisha_shopify_brand";
 export const SHOPIFY_CALLBACK_PATH = "/api/shopify/callback";
+export const SHOPIFY_WEBHOOK_PATH = "/api/shopify/webhooks";
+
+const httpWebhook = {
+  deliveryMethod: DeliveryMethod.Http,
+  callbackUrl: SHOPIFY_WEBHOOK_PATH,
+  callback: async () => {},
+};
+
+/** Register product + uninstall webhooks for this shop (after OAuth). */
+export async function registerShopifyWebhooks(shopify, session) {
+  if (!session?.accessToken) return;
+  if (!shopify._webhooksReady) {
+    shopify.webhooks.addHandlers({
+      PRODUCTS_CREATE: [httpWebhook],
+      PRODUCTS_UPDATE: [httpWebhook],
+      PRODUCTS_DELETE: [httpWebhook],
+      APP_UNINSTALLED: [httpWebhook],
+    });
+    shopify._webhooksReady = true;
+  }
+  return shopify.webhooks.register({ session });
+}
 
 /** Shopify Admin REST API version for product fetch/list. */
 export const SHOPIFY_ADMIN_API_VERSION = "2026-01";

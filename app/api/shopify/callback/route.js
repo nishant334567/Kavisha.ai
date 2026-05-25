@@ -4,6 +4,7 @@ import {
   readBrandFromCookie,
   clearBrandCookie,
   getShopifySuccessRedirectUrl,
+  registerShopifyWebhooks,
 } from "@/app/lib/shopify";
 import { saveShopifySession } from "@/app/lib/shopifyRepository";
 
@@ -20,6 +21,11 @@ export async function GET(req) {
       "";
 
     await saveShopifySession(session, brand);
+    try {
+      await registerShopifyWebhooks(shopify, session);
+    } catch (webhookErr) {
+      console.error("[shopify callback] Febhook register", webhookErr);
+    }
 
     const redirectUrl = getShopifySuccessRedirectUrl(brand, req);
     const response = NextResponse.redirect(redirectUrl, 302);
