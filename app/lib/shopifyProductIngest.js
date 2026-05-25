@@ -349,18 +349,32 @@ export async function listShopifyProductsForBrand(brandSubdomain) {
   };
 }
 
-/** Train all store products that are not yet in TrainingData. */
-export async function syncUntrainedShopifyProductsForBrand(brandSubdomain) {
+/** Train one product, or all products not yet in TrainingData. */
+export async function syncShopifyProductsForBrand(brandSubdomain, productId) {
   const brand = String(brandSubdomain || "").trim().toLowerCase();
   const session = await loadShopifySessionByBrand(brand);
   if (!session?.accessToken) return null;
 
   const shop = session.shop;
+  const id = String(productId || "").replace(/\D/g, "");
+
+  if (id) {
+    try {
+      await syncShopifyProductCreateOrUpdate({
+        shopDomain: shop,
+        payload: { id },
+      });
+      return { synced: 1, failed: 0, attempted: 1 };
+    } catch (err) {
+      console.error("[shopify product sync]", { shop, productId: id, err });
+      return { synced: 0, failed: 1, attempted: 1 };
+    }
+  }
+
   const [raw, trainedIds] = await Promise.all([
     fetchAllShopifyProducts(shop, session.accessToken),
     loadTrainedShopifyProductIds(brand),
   ]);
-
   const untrained = raw.filter((p) => !trainedIds.has(String(p.id)));
   let synced = 0;
   let failed = 0;

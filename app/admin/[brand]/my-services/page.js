@@ -802,19 +802,9 @@ export default function MyServices() {
                   </div>
                 </div>
 
-                <div className="rounded-xl border border-border bg-card p-4">
-                  <div className="flex items-center justify-between gap-4">
-                    <span className="text-sm font-medium uppercase tracking-wider text-foreground">
-                      Shopify
-                    </span>
-                    <span className="text-xs text-muted">
-                      Train catalog for chat
-                    </span>
-                  </div>
-                  <Suspense fallback={null}>
-                    <ShopifyConnect inline />
-                  </Suspense>
-                </div>
+                <Suspense fallback={null}>
+                  <ShopifyConnect inline />
+                </Suspense>
 
                 <div className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between gap-4">

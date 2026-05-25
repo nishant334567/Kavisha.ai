@@ -2,9 +2,17 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { useSearchParams, useRouter } from "next/navigation";
+import { ArrowUpRight } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { widgetAwareFetch } from "@/app/lib/widget-session";
 import { normalizeShopifyShopDomain } from "@/app/lib/shopifyShopUrl";
+
+const btnPrimary =
+  "rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white transition-colors hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50";
+const btnSecondary =
+  "rounded-lg border border-border bg-card px-4 py-2 text-sm text-foreground transition-colors hover:bg-muted-bg disabled:opacity-50";
+const inputClass =
+  "mt-1 w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground disabled:opacity-50";
 
 function getOAuthOrigin() {
   const onStaging =
@@ -125,64 +133,76 @@ export default function ShopifyConnect({ inline = false }) {
         </p>
       )}
       {justConnected && (
-        <p className="mt-3 rounded-lg border border-green-500/40 bg-green-500/10 px-3 py-2 text-sm text-green-800 dark:text-green-200">
+        <p
+          className={`rounded-lg border border-border bg-muted-bg px-3 py-2 text-sm text-foreground ${inline ? "mt-3" : "mt-4"}`}
+        >
           Shopify connected successfully.
         </p>
       )}
       {oauthConnected ? (
-        <div className="mt-3 flex flex-wrap items-center gap-2">
+        <div className={`space-y-2 ${inline ? "mt-3" : "mt-4"}`}>
           <p className="text-sm text-muted">
             {savedShop ? `Connected to ${savedShop}` : "Store connected"}
           </p>
-          {productsPath ? (
+          <div className="flex flex-wrap items-center gap-2">
+            {productsPath ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => router.push(productsPath)}
+                  className="inline-flex h-9 w-9 items-center justify-center rounded-full text-highlight transition-colors hover:bg-muted-bg hover:text-foreground"
+                  aria-label="View Shopify products"
+                  title="View Shopify products"
+                >
+                  <ArrowUpRight className="h-4 w-4" />
+                </button>
+                <button
+                  type="button"
+                  onClick={() => router.push(productsPath)}
+                  className={btnPrimary}
+                >
+                  Sync products
+                </button>
+              </>
+            ) : null}
             <button
               type="button"
-              onClick={() => router.push(productsPath)}
-              className="rounded-lg bg-[#95bf47] px-4 py-2 text-sm font-medium text-[#1a3d0a]"
+              onClick={disconnectShopify}
+              disabled={disconnecting}
+              className={btnSecondary}
             >
-              Sync products
+              {disconnecting ? "Disconnecting…" : "Disconnect"}
             </button>
-          ) : null}
-          <button
-            type="button"
-            onClick={disconnectShopify}
-            disabled={disconnecting}
-            className="rounded-lg border border-border px-4 py-2 text-sm text-foreground disabled:opacity-50"
-          >
-            {disconnecting ? "Disconnecting…" : "Disconnect"}
-          </button>
+          </div>
         </div>
       ) : (
-        <>
-          <label
-            className={`block text-sm text-foreground ${inline ? "mt-3" : "mt-4"}`}
-            htmlFor="shopify-shop-url"
-          >
-            Store URL
-          </label>
-          <input
-            id="shopify-shop-url"
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            placeholder="your-store.myshopify.com"
-            className="mt-1 w-full rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground"
-            autoComplete="off"
-          />
+        <div className={inline ? "mt-3 space-y-2" : "mt-4 space-y-2"}>
+          <div>
+            <label className="text-xs font-medium text-muted" htmlFor="shopify-shop-url">
+              Store URL
+            </label>
+            <input
+              id="shopify-shop-url"
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              placeholder="your-store.myshopify.com"
+              className={inputClass}
+              autoComplete="off"
+            />
+          </div>
           {error ? (
-            <p className="mt-2 text-sm text-red-600 dark:text-red-400">{error}</p>
+            <p className="text-sm text-red-600 dark:text-red-400">{error}</p>
           ) : null}
           {dirty && draftShop ? (
-            <p className="mt-2 text-sm text-amber-700 dark:text-amber-200">
-              Save before connecting.
-            </p>
+            <p className="text-sm text-muted">Save before connecting.</p>
           ) : null}
-          <div className="mt-3 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             <button
               type="button"
               onClick={saveShop}
               disabled={saving || !draftShop}
-              className="rounded-lg border border-border bg-muted-bg px-4 py-2 text-sm font-medium text-foreground disabled:opacity-50"
+              className={btnSecondary}
             >
               {saving ? "Saving…" : "Save"}
             </button>
@@ -190,26 +210,31 @@ export default function ShopifyConnect({ inline = false }) {
               type="button"
               onClick={connectShopify}
               disabled={!canConnect}
-              className="rounded-lg bg-[#95bf47] px-4 py-2 text-sm font-medium text-[#1a3d0a] disabled:cursor-not-allowed disabled:opacity-50"
+              className={btnPrimary}
             >
               Connect Shopify
             </button>
           </div>
-        </>
+        </div>
       )}
     </>
   );
 
-  if (inline) {
-    return <div className="mt-3">{body}</div>;
-  }
+  const card = (
+    <div className="rounded-xl border border-border bg-card p-4">
+      <div className="flex items-center justify-between gap-4">
+        <span className="text-sm font-medium uppercase tracking-wider text-foreground">
+          Shopify
+        </span>
+        <span className="text-xs text-muted">Train catalog for chat</span>
+      </div>
+      {body}
+    </div>
+  );
+
+  if (inline) return card;
 
   return (
-    <section className="mt-8 w-full max-w-md rounded-2xl border border-border bg-card p-5 text-left shadow-sm">
-      <h2 className="font-baloo text-lg uppercase tracking-wide text-foreground">
-        Shopify
-      </h2>
-      {body}
-    </section>
+    <section className="mt-8 w-full max-w-md text-left">{card}</section>
   );
 }
