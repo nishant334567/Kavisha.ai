@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { Resend } from "resend";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
-import { createUnsubscribeToken } from "@/app/lib/unsubscribe-token";
-import { getKavishaFooterHtml, wrapCentered } from "@/app/lib/kavisha-email-utils";
+import { wrapCentered } from "@/app/lib/kavisha-email-utils";
 import { connectDB } from "@/app/lib/db";
 import EmailUnsubscribe from "@/app/models/EmailUnsubscribe";
 import SentEmailLog from "@/app/models/SentEmailLog";
@@ -69,15 +68,13 @@ export async function POST(req) {
         const fromName = brand ? brand.charAt(0).toUpperCase() + brand.slice(1) : null;
         const from = fromName ? `${fromName} <${fromEmail}>` : fromEmail;
         const bodyHtml = typeof body === "string" ? body : "";
-        const allEmails = toSend.map((r) => {
-          const token = createUnsubscribeToken({
-            email: r.email,
-            brand: brandVal,
-            avatarId: r.avatarId ?? null,
-          });
-          const html = wrapCentered(bodyHtml + getKavishaFooterHtml(token));
-          return { from, to: [r.email], subject, html };
-        });
+        const html = wrapCentered(bodyHtml);
+        const allEmails = toSend.map((r) => ({
+          from,
+          to: [r.email],
+          subject,
+          html,
+        }));
         const delay = (ms) => new Promise((r) => setTimeout(r, ms));
 
         function buildLogDocs(recipients, emailStatus) {

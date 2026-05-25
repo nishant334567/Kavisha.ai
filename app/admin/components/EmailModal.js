@@ -61,6 +61,13 @@ function buildEmailHtml({ title, subtitle, bodyHtml, brand = "kavisha", logoUrl 
       </tr>
     </table>`;
   const bodyBlock = bodyHtml?.trim() ? bodyHtml : "<p></p>";
+  const kavishaHomeUrl = "https://kavisha.ai";
+  const poweredByFooter = `
+<table width="100%" cellpadding="0" cellspacing="0" style="margin-top:32px;padding-top:24px;border-top:1px solid #e5e7eb;">
+  <tr><td align="center" style="padding:16px 0 8px;font-size:12px;color:#6b7280;">
+    Powered by <a href="${escapeAttr(kavishaHomeUrl)}" style="color:#004A4E;text-decoration:none;">kavisha.ai</a>
+  </td></tr>
+</table>`;
 
   return [
     "<table width=\"100%\" cellpadding=\"0\" cellspacing=\"0\" align=\"left\" style=\"max-width:600px;margin:0 auto;padding:24px;background:#f9fafb;border-radius:8px;border-top:2px solid #93c5fd;border-bottom:2px solid #93c5fd;text-align:left;\">",
@@ -72,6 +79,7 @@ function buildEmailHtml({ title, subtitle, bodyHtml, brand = "kavisha", logoUrl 
     "<div style=\"font-size:15px;font-weight:400;color:#374151;line-height:1.6;text-align:left;\">",
     bodyBlock,
     "</div>",
+    poweredByFooter,
     "</td></tr>",
     "</table>",
   ].join("");
