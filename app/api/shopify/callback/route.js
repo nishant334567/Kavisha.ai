@@ -24,7 +24,7 @@ export async function GET(req) {
     try {
       await registerShopifyWebhooks(shopify, session);
     } catch (webhookErr) {
-      console.error("[shopify callback] Febhook register", webhookErr);
+      console.error("[shopify callback] webhook register", webhookErr);
     }
 
     const redirectUrl = getShopifySuccessRedirectUrl(brand, req);

@@ -37,6 +37,36 @@ function stripHtml(html) {
   return cheerio.load(html).text().replace(/\s+/g, " ").trim();
 }
 
+function variantAvailability(v) {
+  if (v?.inventory_management !== "shopify") return "Inventory not tracked";
+  const qty = Number(v?.inventory_quantity);
+  if (!Number.isFinite(qty)) return "Stock unknown";
+  if (qty > 0) return `In stock (${qty} available)`;
+  if (String(v?.inventory_policy || "") === "continue") {
+    return "Out of stock (continue selling)";
+  }
+  return "Out of stock (not available to purchase)";
+}
+
+function formatVariantLine(v) {
+  const opts = [v?.option1, v?.option2, v?.option3]
+    .map((o) => String(o || "").trim())
+    .filter(Boolean);
+  const label = opts.length > 0 ? opts.join(" · ") : String(v?.title || "Default").trim();
+  const sale =
+    v?.compare_at_price != null &&
+    String(v.compare_at_price) !== "" &&
+    String(v.compare_at_price) !== String(v?.price ?? "");
+  const parts = [
+    label,
+    v?.price != null ? `$${v.price}` : "",
+    sale ? `was $${v.compare_at_price}` : "",
+    v?.sku ? `SKU ${v.sku}` : "",
+    variantAvailability(v),
+  ].filter(Boolean);
+  return `- ${parts.join(" · ")}`;
+}
+
 /** @param {Record<string, unknown>} product */
 export function formatShopifyProductText(product) {
   const lines = [];
@@ -57,17 +87,28 @@ export function formatShopifyProductText(product) {
     lines.push(body);
   }
 
+  const options = Array.isArray(product?.options) ? product.options : [];
+  const optionSummary = options
+    .map((o) => {
+      const name = String(o?.name || "").trim();
+      if (!name || name === "Title") return "";
+      const values = Array.isArray(o?.values)
+        ? o.values.map((x) => String(x || "").trim()).filter(Boolean)
+        : [];
+      return values.length ? `${name} (${values.join(", ")})` : "";
+    })
+    .filter(Boolean);
+  if (optionSummary.length > 0) {
+    lines.push("");
+    lines.push(`Options: ${optionSummary.join("; ")}`);
+  }
+
   const variants = Array.isArray(product?.variants) ? product.variants : [];
   if (variants.length > 0) {
     lines.push("");
     lines.push("Variants:");
     for (const v of variants) {
-      const parts = [
-        String(v?.title || "Default").trim(),
-        v?.price != null ? `$${v.price}` : "",
-        v?.sku ? `SKU ${v.sku}` : "",
-      ].filter(Boolean);
-      lines.push(`- ${parts.join(" · ")}`);
+      lines.push(formatVariantLine(v));
     }
   }
 
@@ -229,7 +270,7 @@ function shopifyNextPageUrl(linkHeader) {
 async function fetchAllShopifyProducts(shop, accessToken) {
   const headers = shopifyAdminHeaders(accessToken);
   const fields =
-    "id,title,status,vendor,product_type,handle,image,variants";
+    "id,title,status,vendor,product_type,handle,image,options,variants";
   let url = `https://${shop}/admin/api/${SHOPIFY_ADMIN_API_VERSION}/products.json?limit=250&fields=${fields}`;
   const all = [];
 
