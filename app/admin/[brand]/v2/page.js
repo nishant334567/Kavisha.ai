@@ -1,7 +1,7 @@
 "use client";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect } from "react";
 
 const LoadingDots = () => (
   <span className="inline-flex gap-0.5 items-center">
@@ -20,17 +20,17 @@ export default function AdminHome() {
   const [countsLoading, setCountsLoading] = useState(true);
   const go = (path) => router.push(path);
 
-  const goWhatsAppConnect = useCallback(() => {
-    const onStaging =
-      (typeof window !== "undefined" && window.location.hostname.includes(".staging.")) ||
-      process.env.NEXT_PUBLIC_KAVISHA_SITE_ENV === "staging";
-    const origin = onStaging
-      ? "https://kavisha.staging.kavisha.ai"
-      : process.env.NEXT_PUBLIC_APP_URL || "https://kavisha.ai";
-    window.location.assign(
-      `${origin}/connect/whatsapp?brand=${encodeURIComponent(brand?.subdomain || "")}`
-    );
-  }, [brand?.subdomain]);
+  // const goWhatsAppConnect = useCallback(() => {
+  //   const onStaging =
+  //     (typeof window !== "undefined" && window.location.hostname.includes(".staging.")) ||
+  //     process.env.NEXT_PUBLIC_KAVISHA_SITE_ENV === "staging";
+  //   const origin = onStaging
+  //     ? "https://kavisha.staging.kavisha.ai"
+  //     : process.env.NEXT_PUBLIC_APP_URL || "https://kavisha.ai";
+  //   window.location.assign(
+  //     `${origin}/connect/whatsapp?brand=${encodeURIComponent(brand?.subdomain || "")}`
+  //   );
+  // }, [brand?.subdomain]);
 
   useEffect(() => {
     const fetchCounts = async () => {
@@ -123,7 +123,7 @@ export default function AdminHome() {
           },
         ]
       : []),
-    { label: "Connect WhatsApp", action: goWhatsAppConnect },
+    // { label: "Connect WhatsApp", action: goWhatsAppConnect },
   ];
   return (
     <div className="relative flex h-[calc(100vh-56px)] flex-col bg-background text-foreground">
