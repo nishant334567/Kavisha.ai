@@ -24,6 +24,26 @@ const EMBEDDING_BATCH_DELAY_MS = 5000;
 const EMBEDDING_RETRY_ROUND_DELAY_MS = 8000;
 const EMBEDDING_MAX_RETRY_ROUNDS = 2;
 
+/** Website bulk import — faster than default, with gentler pacing to avoid rate limits. */
+export const BULK_EMBEDDING_OPTIONS = {
+  batchSize: Math.max(
+    1,
+    Number(process.env.WEBSITE_EMBEDDING_BATCH_SIZE) || 3
+  ),
+  batchDelayMs: Math.max(
+    0,
+    Number(process.env.WEBSITE_EMBEDDING_BATCH_DELAY_MS) || 2000
+  ),
+  retryRoundDelayMs: Math.max(
+    0,
+    Number(process.env.WEBSITE_EMBEDDING_RETRY_DELAY_MS) || 6000
+  ),
+  maxRetryRounds: Math.max(
+    1,
+    Number(process.env.WEBSITE_EMBEDDING_MAX_RETRIES) || 4
+  ),
+};
+
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export async function generateEmbedding(text, type) {
@@ -137,7 +157,13 @@ export async function generateEmbeddingWithDebug(text, type) {
   }
 }
 
-export async function generateEmbeddingsInBatches(chunks, type) {
+export async function generateEmbeddingsInBatches(chunks, type, options = {}) {
+  const batchSize = options.batchSize ?? EMBEDDING_BATCH_SIZE;
+  const batchDelayMs = options.batchDelayMs ?? EMBEDDING_BATCH_DELAY_MS;
+  const retryRoundDelayMs =
+    options.retryRoundDelayMs ?? EMBEDDING_RETRY_ROUND_DELAY_MS;
+  const maxRetryRounds = options.maxRetryRounds ?? EMBEDDING_MAX_RETRY_ROUNDS;
+
   const embeddingResults = new Array(chunks.length);
   let pendingChunks = chunks.map((chunkData, index) => ({
     ...chunkData,
@@ -148,8 +174,8 @@ export async function generateEmbeddingsInBatches(chunks, type) {
   while (pendingChunks.length > 0) {
     const failedChunks = [];
 
-    for (let i = 0; i < pendingChunks.length; i += EMBEDDING_BATCH_SIZE) {
-      const batch = pendingChunks.slice(i, i + EMBEDDING_BATCH_SIZE);
+    for (let i = 0; i < pendingChunks.length; i += batchSize) {
+      const batch = pendingChunks.slice(i, i + batchSize);
       const batchResults = await Promise.all(
         batch.map(({ chunk }) => generateEmbeddingWithDebug(chunk, type))
       );
@@ -166,8 +192,8 @@ export async function generateEmbeddingsInBatches(chunks, type) {
         }
       }
 
-      if (i + EMBEDDING_BATCH_SIZE < pendingChunks.length) {
-        await delay(EMBEDDING_BATCH_DELAY_MS);
+      if (i + batchSize < pendingChunks.length && batchDelayMs > 0) {
+        await delay(batchDelayMs);
       }
     }
 
@@ -175,13 +201,15 @@ export async function generateEmbeddingsInBatches(chunks, type) {
       break;
     }
 
-    if (retryRound >= EMBEDDING_MAX_RETRY_ROUNDS) {
+    if (retryRound >= maxRetryRounds) {
       break;
     }
 
     pendingChunks = failedChunks;
     retryRound += 1;
-    await delay(EMBEDDING_RETRY_ROUND_DELAY_MS);
+    if (retryRoundDelayMs > 0) {
+      await delay(retryRoundDelayMs);
+    }
   }
 
   return embeddingResults;

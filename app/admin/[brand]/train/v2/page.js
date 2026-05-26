@@ -9,10 +9,12 @@ import {
   Loader2,
   CheckCircle2,
   X,
+  CheckSquare,
 } from "lucide-react";
 import TextTrainingModal from "@/app/admin/components/TextTrainingModal";
 import DocumentViewModal from "@/app/admin/components/DocumentViewModal";
 import DocumentCard from "@/app/admin/components/DocumentCard";
+import WebsiteImportWizard from "@/app/admin/components/WebsiteImportWizard";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 
 export default function Train() {
@@ -43,9 +45,12 @@ export default function Train() {
   const [selectedDocs, setSelectedDocs] = useState(new Set());
   const [moveTargetFolderId, setMoveTargetFolderId] = useState("");
   const [moving, setMoving] = useState(false);
+  const [deleting, setDeleting] = useState(false);
   const [activeTraining, setActiveTraining] = useState(null);
   const [trainingResult, setTrainingResult] = useState(null);
   const isTraining = Boolean(activeTraining);
+  /** Virtual "All" view — not a deletable folder; block mass delete here. */
+  const viewingAllDocuments = selectedFolderId == null;
 
   const getResponsePayload = async (response) => {
     try {
@@ -166,6 +171,12 @@ export default function Train() {
     }
 
     return payload;
+  };
+
+  const handleWebsiteImportComplete = (result) => {
+    setTrainingResult(result);
+    setCurrentPage(1);
+    fetchDocuments(1, selectedFolderId);
   };
 
   const handleFileChange = async (e) => {
@@ -313,6 +324,23 @@ export default function Train() {
     });
   };
 
+  const selectAllOnPage = () => {
+    setSelectedDocs(new Set(documents.map((d) => d.docid)));
+  };
+
+  const clearSelection = () => {
+    setSelectedDocs(new Set());
+  };
+
+  const exitSelectionMode = () => {
+    setSelectionMode(false);
+    setSelectedDocs(new Set());
+    setMoveTargetFolderId("");
+  };
+
+  const allOnPageSelected =
+    documents.length > 0 && selectedDocs.size === documents.length;
+
   const handleMoveToFolder = async () => {
     const docids = [...selectedDocs];
     if (docids.length === 0) return;
@@ -332,9 +360,7 @@ export default function Train() {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || "Failed to move");
 
-      setSelectedDocs(new Set());
-      setSelectionMode(false)
-      setMoveTargetFolderId("")
+      exitSelectionMode();
       fetchDocuments(currentPage, selectedFolderId);
       alert(`Moved ${data.modifiedCount} document(s).`);
     } catch (err) {
@@ -407,6 +433,17 @@ export default function Train() {
   };
 
 
+  const refreshAfterDelete = (deletedCount) => {
+    const remainingOnPage = documents.length - deletedCount;
+    if (remainingOnPage <= 0 && currentPage > 1) {
+      const newPage = currentPage - 1;
+      setCurrentPage(newPage);
+      fetchDocuments(newPage, selectedFolderId);
+    } else {
+      fetchDocuments(currentPage, selectedFolderId);
+    }
+  };
+
   const handleDeleteDocument = async (docid) => {
     if (!confirm("Are you sure you want to delete this document?")) return;
     setOpenMenuId(null);
@@ -417,16 +454,54 @@ export default function Train() {
       );
       if (!res.ok) throw new Error((await res.json()).error);
       alert("Document deleted successfully!");
-      // If current page becomes empty, go to previous page, otherwise stay on current page
-      if (documents.length === 1 && currentPage > 1) {
-        const newPage = currentPage - 1;
-        setCurrentPage(newPage);
-        fetchDocuments(newPage, selectedFolderId);
-      } else {
-        fetchDocuments(currentPage, selectedFolderId);
-      }
+      refreshAfterDelete(1);
     } catch (error) {
       alert(`Error: ${error.message}`);
+    }
+  };
+
+  const handleDeleteSelected = async () => {
+    if (viewingAllDocuments) {
+      alert(
+        "Bulk delete is disabled while viewing All. Open a specific folder to delete documents."
+      );
+      return;
+    }
+    const docids = [...selectedDocs];
+    if (docids.length === 0) return;
+    const label =
+      docids.length === 1
+        ? "this document"
+        : `these ${docids.length} documents`;
+    if (
+      !confirm(
+        `Delete ${label} from your knowledge base? This cannot be undone.`
+      )
+    ) {
+      return;
+    }
+
+    setDeleting(true);
+    try {
+      const res = await fetch("/api/admin/training-documents", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand: brand?.subdomain,
+          docids,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || "Failed to delete");
+
+      const count = data.deletedCount ?? docids.length;
+      exitSelectionMode();
+      alert(data.message || `Deleted ${count} document(s).`);
+      refreshAfterDelete(count);
+    } catch (error) {
+      alert(`Error: ${error.message}`);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -451,14 +526,15 @@ export default function Train() {
             <div>
               <p className="font-semibold text-highlight">Training in progress</p>
               <p>
-                {activeTraining?.title || "Document"} is being trained. New
-                training is disabled until this completes.
+                {activeTraining?.type === "website"
+                  ? "Importing from website and training your knowledge base. This may take several minutes."
+                  : `${activeTraining?.title || "Document"} is being trained. New training is disabled until this completes.`}
               </p>
             </div>
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-12">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
           {/* PDF Document Card */}
           <div className="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-md transition-shadow hover:shadow-lg">
             <h3 className="mb-2 text-lg font-semibold text-foreground">
@@ -549,58 +625,95 @@ export default function Train() {
               {isTraining ? "Training..." : "Add text"}
             </button>
           </div>
+
+          {/* Website import */}
+          <div className="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-md transition-shadow hover:shadow-lg">
+            <h3 className="mb-2 text-lg font-semibold text-foreground">
+              Website
+            </h3>
+            <WebsiteImportWizard
+              brandSubdomain={brand?.subdomain}
+              folders={folders}
+              disabled={isTraining}
+              onTrainingChange={setActiveTraining}
+              onComplete={handleWebsiteImportComplete}
+              onDocumentsRefresh={() => {
+                fetchFolders();
+                fetchDocuments(1, selectedFolderId);
+              }}
+            />
+          </div>
         </div>
-        <div className="flex justify-between items-center my-4 flex-wrap gap-2">
-          <div className="flex items-center gap-2 flex-wrap">
+        <div className="my-4 flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-3">
             <p className="font-baloo font-semibold uppercase text-highlight">
               Knowledge base
             </p>
-            {documents.length > 0 && (
+            {documents.length > 0 && !selectionMode && (
               <button
-                onClick={() => {
-                  setSelectionMode((prev) => !prev);
-                  if (selectionMode) setSelectedDocs(new Set());
-                }}
-                className="rounded-lg border border-border bg-card px-3 py-1 text-sm text-foreground hover:bg-muted-bg"
+                type="button"
+                onClick={() => setSelectionMode(true)}
+                className="flex items-center gap-1.5 rounded-lg border border-border bg-card px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-muted-bg"
               >
-                {selectionMode ? "Cancel" : "Select"}
+                <CheckSquare className="h-4 w-4 text-muted" />
+                Select
               </button>
-            )}
-            {selectionMode && selectedDocs.size > 0 && (
-              <>
-                <select
-                  value={moveTargetFolderId}
-                  onChange={(e) => setMoveTargetFolderId(e.target.value)}
-                  className="rounded-lg border border-border bg-input px-3 py-1.5 text-sm text-foreground"
-                >
-                  <option value="">Unfiled</option>
-                  {folders.map((f) => (
-                    <option key={f._id} value={f._id}>
-                      {f.name}
-                    </option>
-                  ))}
-                </select>
-                <button
-                  onClick={handleMoveToFolder}
-                  disabled={moving}
-                  className="flex items-center gap-1.5 rounded-lg bg-highlight px-3 py-1.5 text-sm text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <FolderInput className="w-3.5 h-3.5" />
-                  Move to folder
-                </button>
-                <span className="text-sm text-muted">
-                  {selectedDocs.size} selected
-                </span>
-              </>
             )}
           </div>
           {totalCount > 0 && (
             <span className="text-sm text-muted">
-              Showing {documents.length} of {totalCount} documents (Page{" "}
-              {currentPage} of {totalPages})
+              {selectionMode && selectedDocs.size > 0
+                ? `${selectedDocs.size} of ${documents.length} on this page`
+                : null}
+              {selectionMode && selectedDocs.size > 0 ? " · " : null}
+              Showing {documents.length} of {totalCount}
+              {totalPages > 1 ? ` · Page ${currentPage} of ${totalPages}` : ""}
             </span>
           )}
         </div>
+
+        {selectionMode && (
+          <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-highlight/25 bg-highlight/5 px-4 py-3">
+            <p className="text-sm text-foreground">
+              <span className="font-medium text-highlight">Selection mode</span>
+              <span className="text-muted"> — click cards to select</span>
+              {viewingAllDocuments && (
+                <span className="text-muted">
+                  {" "}
+                  (bulk delete disabled in All)
+                </span>
+              )}
+            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={
+                  allOnPageSelected ? clearSelection : selectAllOnPage
+                }
+                disabled={documents.length === 0}
+                className="rounded-lg px-3 py-1.5 text-sm font-medium text-highlight hover:bg-highlight/10 disabled:cursor-not-allowed disabled:opacity-50"
+              >
+                {allOnPageSelected ? "Deselect all" : "Select all"}
+              </button>
+              {selectedDocs.size > 0 && (
+                <button
+                  type="button"
+                  onClick={clearSelection}
+                  className="rounded-lg px-3 py-1.5 text-sm text-muted hover:bg-muted-bg hover:text-foreground"
+                >
+                  Clear
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={exitSelectionMode}
+                className="rounded-lg border border-border bg-card px-3 py-1.5 text-sm font-medium text-foreground hover:bg-muted-bg"
+              >
+                Done
+              </button>
+            </div>
+          </div>
+        )}
         <div className="flex gap-6 mt-4">
           {/* Left: folders */}
           <div className="w-48 shrink-0 border-r border-border pr-4">
@@ -649,7 +762,9 @@ export default function Train() {
             ))}
           </div>
           {/* Right: documents */}
-          <div className="flex-1 min-w-0">
+          <div
+            className={`flex-1 min-w-0 ${selectionMode && selectedDocs.size > 0 ? "pb-24" : ""}`}
+          >
             {loading ? (
               <div className="py-8 text-center text-muted">Loading...</div>
             ) : documents.length === 0 ? (
@@ -712,6 +827,47 @@ export default function Train() {
           Powered by KAVISHA
         </div>
       </div>
+
+      {selectionMode && selectedDocs.size > 0 && (
+        <div className="fixed bottom-6 left-1/2 z-50 flex w-[min(100%,36rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-xl">
+          <span className="mr-1 text-sm font-medium text-highlight">
+            {selectedDocs.size} selected
+          </span>
+          <select
+            value={moveTargetFolderId}
+            onChange={(e) => setMoveTargetFolderId(e.target.value)}
+            className="max-w-[10rem] rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
+            aria-label="Destination folder"
+          >
+            <option value="">Unfiled</option>
+            {folders.map((f) => (
+              <option key={f._id} value={f._id}>
+                {f.name}
+              </option>
+            ))}
+          </select>
+          <button
+            type="button"
+            onClick={handleMoveToFolder}
+            disabled={moving || deleting}
+            className="flex items-center gap-1.5 rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+          >
+            <FolderInput className="h-4 w-4" />
+            {moving ? "Moving…" : "Move"}
+          </button>
+          {!viewingAllDocuments && (
+            <button
+              type="button"
+              onClick={handleDeleteSelected}
+              disabled={deleting || moving}
+              className="flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+            >
+              <Trash2 className="h-4 w-4" />
+              {deleting ? "Deleting…" : "Delete"}
+            </button>
+          )}
+        </div>
+      )}
 
       <TextTrainingModal
         isOpen={isModalOpen}
@@ -792,6 +948,34 @@ export default function Train() {
                   {trainingResult.chunkCount}
                 </p>
               </div>
+              {trainingResult.scrapedCount != null && (
+                <div>
+                  <p className="text-muted">Pages imported</p>
+                  <p className="font-medium text-foreground">
+                    {trainingResult.scrapedCount}
+                    {trainingResult.substantiveCount != null &&
+                      ` (${trainingResult.substantiveCount} with main content)`}
+                  </p>
+                </div>
+              )}
+              {Array.isArray(trainingResult.failed) &&
+                trainingResult.failed.length > 0 && (
+                  <div>
+                    <p className="text-muted">Failed pages</p>
+                    <ul className="mt-1 max-h-32 space-y-1 overflow-y-auto text-xs text-foreground">
+                      {trainingResult.failed.map((f, i) => (
+                        <li key={f.url || f.sourceUrl || i} className="break-words">
+                          <span className="font-medium">
+                            {f.sourceUrl || f.url || "Page"}
+                          </span>
+                          {f.error ? (
+                            <span className="text-red-600"> — {f.error}</span>
+                          ) : null}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
             </div>
 
             <div className="mt-5 flex justify-end">
