@@ -2,7 +2,11 @@
 
 import { useState } from "react";
 import { ExternalLink } from "lucide-react";
-import { productIdFromShopifyDocid } from "@/app/lib/shopifyProductIngest";
+
+function productIdFromShopifyDocid(docid) {
+  const m = String(docid || "").match(/^shopify-p-(\d+)$/);
+  return m ? m[1] : "";
+}
 
 /**
  * Single Shopify product citation with add-to-cart.
