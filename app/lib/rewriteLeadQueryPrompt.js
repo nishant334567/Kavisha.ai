@@ -4,7 +4,8 @@ export function buildLeadRewritePrompt(
   formattedHistory,
   userMessage,
   referenceNowIsoUtc = null,
-  referenceNowMsUtc = null
+  referenceNowMsUtc = null,
+  shopifyCommerceEnabled = false
 ) {
   const nowMs =
     referenceNowMsUtc != null && Number.isFinite(Number(referenceNowMsUtc))
@@ -56,12 +57,22 @@ ${nowLine}
 - **Rolling last 120 days:** When the user signals **recency** — including **recent**, **latest**, **new**, **newest**, **current**, **fresh**, **up to date**, **breaking**, or **what's new** — about **time-stamped content** (**news**, **articles**, **blogs**, **posts**, **stories**, **coverage**, **updates**, **write-ups**, **pieces**, or similar), and they did **not** name a **different** calendar window, you **must** set \`timeFilterPublishedAtMs\` to the **pre-computed** object shown above (same \`gte\` and \`lte\` integers). Typos ("th" for "the") do not change intent.
 - **Timeless** questions (e.g. "what is Flipkart", "how does X work") with **no** recency or date wording → \`timeFilterPublishedAtMs\`: \`null\`.
 - When you set \`timeFilterPublishedAtMs\`, **remove only** pure time/recency words you encoded in the filter from \`requery\` (e.g. "recent", "latest", "this year", "from year 2025", "in Q1 2025"). **Keep** topics and entities (e.g. "Flipkart", "startup funding").
-
+${
+  shopifyCommerceEnabled
+    ? `
+**SHOPIFY CATALOG (store connected):**
+- Set \`mode\` to \`"commerce"\` when the user is shopping: products, prices, buy, add to cart, recommendations, availability, variants, sizes, colors.
+- Set \`mode\` to \`"general"\` for FAQs, policies, returns, shipping, brand story, or non-product topics.
+`
+    : ""
+}
 **OUTPUT FORMAT:**
 Return **only** a single JSON object (no markdown, no backticks), exactly:
 {
   "requery": "the rewritten query string (or empty string if closing)",
-  "timeFilterPublishedAtMs": null | { "gte": <number optional>, "lte": <number optional> }
+  "timeFilterPublishedAtMs": null | { "gte": <number optional>, "lte": <number optional> }${
+    shopifyCommerceEnabled ? ',\n  "mode": "general" | "commerce"' : ""
+  }
 }
 
 **EXAMPLES:**

@@ -26,6 +26,7 @@ import {
 } from "@/app/lib/in-app-browser";
 import FormatText from "@/app/components/FormatText";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
+import ProductCards, { partitionCitationCards } from "@/app/components/ProductCards";
 import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton";
 import AssistantEngagementRow from "@/app/components/AssistantEngagementRow";
 import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
@@ -444,6 +445,7 @@ export default function ChatBoxWidget({
               requery: null,
               sourceUrls: row.sourceUrls,
               sourceCards: row.sourceCards,
+              productCards: row.productCards,
               liked: Boolean(row.liked),
               copied: Boolean(row.copied),
             }))
@@ -673,6 +675,7 @@ export default function ChatBoxWidget({
         message: data.reply ?? "",
         sourceUrls: data?.sourceUrls || [],
         sourceCards: data?.sourceCards || [],
+        productCards: data?.productCards || [],
         liked: false,
         copied: false,
       };
@@ -1132,14 +1135,35 @@ export default function ChatBoxWidget({
                             <div className="min-w-0 max-w-full overflow-hidden [word-break:break-word] [overflow-wrap:anywhere] [&_.prose]:max-w-none [&_.prose]:break-words [&_.prose_p]:leading-relaxed [&_a]:break-all [&_code]:break-all">
                               <FormatText text={m.message || ""} />
                             </div>
-                            {Array.isArray(m.sourceCards) &&
-                              m.sourceCards.length > 0 ? (
-                              <AssistantSourceCards
-                                items={m.sourceCards}
-                                primaryHex={primaryHex}
-                              />
-                            ) : Array.isArray(m.sourceUrls) &&
-                              m.sourceUrls.length > 0 ? (
+                            {(() => {
+                              const { sourceCards, productCards } =
+                                partitionCitationCards(
+                                  m.sourceCards,
+                                  m.productCards
+                                );
+                              return (
+                                <>
+                                  {productCards.length > 0 ? (
+                                    <ProductCards
+                                      items={productCards}
+                                      brand={brand}
+                                      fetchFn={widgetAwareFetch}
+                                      primaryHex={primaryHex}
+                                    />
+                                  ) : null}
+                                  {sourceCards.length > 0 ? (
+                                    <AssistantSourceCards
+                                      items={sourceCards}
+                                      primaryHex={primaryHex}
+                                    />
+                                  ) : null}
+                                </>
+                              );
+                            })()}
+                            {!m.sourceCards?.length &&
+                            !m.productCards?.length &&
+                            Array.isArray(m.sourceUrls) &&
+                            m.sourceUrls.length > 0 ? (
                               <div className="mt-2 flex flex-wrap items-center gap-1.5 border-t border-border/25 pt-2 dark:border-border/30">
                                 <span className="text-xs text-muted">Links:</span>
                                 {m.sourceUrls.map((url, idx) => (
@@ -1186,7 +1210,13 @@ export default function ChatBoxWidget({
                             />
                             <AssistantReplyCopyButton
                               message={m.message}
-                              sourceCards={m.sourceCards}
+                              sourceCards={(() => {
+                                const p = partitionCitationCards(
+                                  m.sourceCards,
+                                  m.productCards
+                                );
+                                return [...p.productCards, ...p.sourceCards];
+                              })()}
                               sourceUrls={m.sourceUrls}
                               readMoreUrl={readMoreCopyUrl}
                               brandSubdomain={brand}
