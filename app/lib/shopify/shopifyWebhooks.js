@@ -5,6 +5,11 @@ import {
   removeShopifyProductFromTraining,
 } from "@/app/lib/shopifyProductIngest";
 import { markShopifyUninstalled } from "@/app/lib/shopifyRepository";
+import {
+  handleCustomerDataRequest,
+  handleCustomerRedact,
+  handleShopRedact,
+} from "@/app/lib/shopify/gdprCompliance";
 
 export function verifyShopifyWebhookHmac(rawBody, hmacHeader) {
   const secret = process.env.SHOPIFY_API_SECRET || "";
@@ -42,6 +47,15 @@ export async function handleShopifyWebhook({ topic, shopDomain, payload }) {
     }
     case "app/uninstalled":
       await markShopifyUninstalled(shop);
+      break;
+    case "customers/data_request":
+      await handleCustomerDataRequest(data);
+      break;
+    case "customers/redact":
+      await handleCustomerRedact(data);
+      break;
+    case "shop/redact":
+      await handleShopRedact(data);
       break;
   }
 }

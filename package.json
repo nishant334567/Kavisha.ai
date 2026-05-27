@@ -12,7 +12,8 @@
     "blog:sync-and-ingest": "node scripts/blog-feed-sync-and-ingest.js",
     "import-brands": "node scripts/import-brands-from-sanity.js",
     "migrate-brand-images": "node scripts/migrate-brand-images-to-gcs.js",
-    "deploy:firebase-auth-hosting": "cd firebase-auth-hosting && npx --yes firebase-tools@latest deploy --only hosting"
+    "deploy:firebase-auth-hosting": "cd firebase-auth-hosting && npx --yes firebase-tools@latest deploy --only hosting",
+    "shopify:deploy": "npx --yes @shopify/cli app deploy --allow-updates"
   },
   "dependencies": {
     "@google-cloud/vertexai": "^1.10.0",
