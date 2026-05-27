@@ -4,7 +4,10 @@ import Logs from "../models/ChatLogs.js";
 import Session from "../models/ChatSessions.js";
 import { SYSTEM_PROMPT_LEAD } from "./systemPrompt.js";
 import { buildLeadRewritePrompt } from "./rewriteLeadQueryPrompt.js";
-import { getLeadPrompt } from "@/app/lib/brandRepository";
+import { getBrandBySubdomain, getLeadPrompt } from "@/app/lib/brandRepository";
+import { loadShopifySessionByBrand } from "@/app/lib/shopifyRepository";
+import { SHOPIFY_COMMERCE_PROMPT } from "@/app/lib/shopifyCart";
+import { isShopifyProductCard } from "@/app/lib/shopifyProductIngest";
 import {
   extractGeminiText,
   generateGeminiContentRest,
@@ -22,19 +25,51 @@ function sourcesFromUsedChunkIds(usedChunkIds, uniqueContext) {
   const seen = new Set();
   const sourceUrls = [];
   const sourceCards = [];
+  const productCards = [];
   for (const chunkId of usedChunkIds) {
     const d = uniqueContext.get(chunkId);
     const url = (d?.url || "").trim();
     if (!url || seen.has(url)) continue;
     seen.add(url);
     sourceUrls.push(url);
-    sourceCards.push({
+    const card = {
       url,
       title: String(d?.title ?? "").trim(),
       description: String(d?.description ?? "").trim(),
-    });
+      docid: String(d?.docid ?? "").trim(),
+    };
+    if (isShopifyProductCard(d) || isShopifyProductCard(card)) {
+      if (d?.shopifyProductId) card.shopifyProductId = d.shopifyProductId;
+      if (d?.defaultVariantId) card.defaultVariantId = d.defaultVariantId;
+      if (d?.price) card.price = d.price;
+      if (d?.imageUrl) card.imageUrl = d.imageUrl;
+      productCards.push(card);
+    } else {
+      sourceCards.push(card);
+    }
   }
-  return { sourceUrls, sourceCards };
+  return { sourceUrls, sourceCards, productCards };
+}
+
+function commerceMetaFromMatch(meta) {
+  return {
+    shopifyProductId: String(meta?.shopifyProductId || "").trim(),
+    defaultVariantId: String(meta?.defaultVariantId || "").trim(),
+    price: String(meta?.price || "").trim(),
+    imageUrl: String(meta?.imageUrl || "").trim(),
+  };
+}
+
+function contextEntryFromFields(fields, docid) {
+  const commerce = commerceMetaFromMatch(fields);
+  return {
+    text: fields?.text || "",
+    url: fields?.chunkSourceUrl || fields?.url || "",
+    title: String(fields?.title || "").trim(),
+    description: String(fields?.description || "").trim(),
+    docid: String(docid || fields?.docid || "").trim(),
+    ...commerce,
+  };
 }
 
 const PUBLISHED_AT_MS_MIN = Date.UTC(1995, 0, 1);
@@ -106,28 +141,24 @@ function extractChunkIdsFromPart4(chunkIdsPart) {
 
 function mergePineconeIntoUniqueContext(uniqueContext, results, results2) {
   results?.matches?.forEach((match) => {
+    const meta = match.metadata || {};
     uniqueContext.set(match.id, {
-      text: match.metadata?.text || "",
-      url: match.metadata?.chunkSourceUrl || "",
-      title: String(match.metadata?.title || "").trim(),
-      description: String(match.metadata?.description || "").trim(),
-      docid: String(match.metadata?.docid || "").trim(),
+      text: meta.text || "",
+      url: meta.chunkSourceUrl || "",
+      title: String(meta.title || "").trim(),
+      description: String(meta.description || "").trim(),
+      docid: String(meta.docid || "").trim(),
+      ...commerceMetaFromMatch(meta),
     });
   });
   results2?.result?.hits?.forEach((hit) => {
     const docid = String(hit.fields?.docid || "").trim();
     if (!uniqueContext.has(hit._id)) {
-      uniqueContext.set(hit._id, {
-        text: hit.fields?.text || "",
-        url: hit.fields?.chunkSourceUrl || hit.chunkSourceUrl || "",
-        title: String(hit.fields?.title || "").trim(),
-        description: String(hit.fields?.description || "").trim(),
-        docid,
-      });
+      uniqueContext.set(hit._id, contextEntryFromFields(hit.fields, docid));
     } else if (docid) {
       const cur = uniqueContext.get(hit._id);
       if (cur && !String(cur.docid || "").trim()) {
-        uniqueContext.set(hit._id, { ...cur, docid });
+        uniqueContext.set(hit._id, { ...cur, docid, ...commerceMetaFromMatch(hit.fields) });
       }
     }
   });
@@ -192,11 +223,20 @@ export async function runLeadJourneyTurn({
   try {
     await connectDB();
 
-    const prompt = await getLeadPrompt(brand, serviceKey);
+    const [prompt, brandDoc, shopifySession] = await Promise.all([
+      getLeadPrompt(brand, serviceKey),
+      getBrandBySubdomain(brand),
+      loadShopifySessionByBrand(brand),
+    ]);
+    const shopifyCommerceEnabled = Boolean(
+      shopifySession?.accessToken &&
+        String(brandDoc?.shopifyShopUrl || "").trim()
+    );
 
     let sourceChunkIds = [];
     let sourceUrls = [];
     let sourceCards = [];
+    let productCards = [];
     const modelName = process.env.AI_MODEL ?? "gemini-3.1-flash-lite";
 
     if (!modelName) {
@@ -227,7 +267,8 @@ export async function runLeadJourneyTurn({
       formattedHistory,
       userMessage,
       referenceNowIsoUtc,
-      referenceNowMsUtc
+      referenceNowMsUtc,
+      shopifyCommerceEnabled
     );
     const responseQuery = await generateLeadJourneyGeminiContent({
       modelName,
@@ -256,8 +297,16 @@ export async function runLeadJourneyTurn({
     try {
       parsedResponse = JSON.parse(jsonText);
     } catch {
-      parsedResponse = { requery: userMessage, timeFilterPublishedAtMs: null };
+      parsedResponse = {
+        requery: userMessage,
+        timeFilterPublishedAtMs: null,
+        mode: "general",
+      };
     }
+
+    const commerceMode =
+      shopifyCommerceEnabled &&
+      String(parsedResponse?.mode || "").toLowerCase() === "commerce";
 
     const requery = parsedResponse?.requery;
     let betterQuery =
@@ -270,6 +319,11 @@ export async function runLeadJourneyTurn({
     );
     const pineconePublishedAtFilter =
       buildPublishedAtMsMetadataFilter(timeFilterPublishedAtMs);
+    const shopifyProductFilter = commerceMode
+      ? { sourceType: { $eq: "shopify_product" } }
+      : null;
+    const pineconeMetadataFilter =
+      shopifyProductFilter || pineconePublishedAtFilter;
 
     let context = "";
     const uniqueContext = new Map();
@@ -326,20 +380,33 @@ export async function runLeadJourneyTurn({
           return map;
         };
 
-        if (pineconePublishedAtFilter) {
+        if (pineconeMetadataFilter) {
           try {
             const filteredMap = await runPineconeRetrieval(
-              pineconePublishedAtFilter
+              pineconeMetadataFilter
             );
             if (filteredMap.size > 0) {
               filteredMap.forEach((v, k) => uniqueContext.set(k, v));
+            } else if (commerceMode) {
+              const unfiltered = await runPineconeRetrieval(null);
+              unfiltered.forEach((v, k) => {
+                const docid = String(v?.docid || "");
+                if (docid.startsWith("shopify-p-")) uniqueContext.set(k, v);
+              });
             } else {
               const unfiltered = await runPineconeRetrieval(null);
               unfiltered.forEach((v, k) => uniqueContext.set(k, v));
             }
           } catch {
             const unfiltered = await runPineconeRetrieval(null);
-            unfiltered.forEach((v, k) => uniqueContext.set(k, v));
+            if (commerceMode) {
+              unfiltered.forEach((v, k) => {
+                const docid = String(v?.docid || "");
+                if (docid.startsWith("shopify-p-")) uniqueContext.set(k, v);
+              });
+            } else {
+              unfiltered.forEach((v, k) => uniqueContext.set(k, v));
+            }
           }
         } else {
           const m = await runPineconeRetrieval(null);
@@ -454,7 +521,11 @@ export async function runLeadJourneyTurn({
       ? `SUMMARY:\n${summaryStr}`
       : "SUMMARY:\n(empty)";
 
-    const finalPrompt = `${prompt}${nameInstruction}
+    const commerceBlock = shopifyCommerceEnabled
+      ? `\n\n${SHOPIFY_COMMERCE_PROMPT}\n`
+      : "";
+
+    const finalPrompt = `${prompt}${commerceBlock}${nameInstruction}
 
               ${summaryBlock}
 
@@ -509,10 +580,12 @@ export async function runLeadJourneyTurn({
         const next = sourcesFromUsedChunkIds(usedChunkIds, uniqueContext);
         sourceUrls = next.sourceUrls;
         sourceCards = next.sourceCards;
+        productCards = next.productCards;
         sourceChunkIds = usedChunkIds;
       } else {
         sourceUrls = [];
         sourceCards = [];
+        productCards = [];
         sourceChunkIds = [];
       }
 
@@ -533,6 +606,7 @@ export async function runLeadJourneyTurn({
           role: "assistant",
           sourceUrls: Array.isArray(sourceUrls) ? sourceUrls : [],
           sourceCards: Array.isArray(sourceCards) ? sourceCards : [],
+          productCards: Array.isArray(productCards) ? productCards : [],
           sourceChunkIds: Array.isArray(sourceChunkIds) ? sourceChunkIds : [],
         });
         assistantLogId = assistantLog?._id?.toString();
@@ -597,6 +671,7 @@ export async function runLeadJourneyTurn({
           requery: betterQuery,
           sourceUrls,
           sourceCards,
+          productCards,
           ...(assistantLogId ? { assistantLogId } : {}),
         },
       };

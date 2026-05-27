@@ -69,7 +69,13 @@ export default async function RootLayout({ children }) {
 
   return (
     <html lang="en" className={fontVariables} suppressHydrationWarning>
-      <head />
+      <head>
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var k="kavisha-chunk-reload";function ok(m){return/ChunkLoadError|Loading chunk .* failed/i.test(m||"")}function go(r){var m=(r&&r.message)||String(r||"");if(!ok(m)||sessionStorage.getItem(k))return;sessionStorage.setItem(k,"1");location.reload()}window.addEventListener("error",function(e){go(e.error)});window.addEventListener("unhandledrejection",function(e){go(e.reason)})})();`,
+          }}
+        />
+      </head>
       <body
         className="h-full"
         suppressHydrationWarning={true}

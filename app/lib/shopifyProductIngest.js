@@ -19,6 +19,37 @@ export function shopifyProductDocid(productId) {
   return id ? `shopify-p-${id}` : "";
 }
 
+export function productIdFromShopifyDocid(docid) {
+  const m = String(docid || "").match(/^shopify-p-(\d+)$/);
+  return m ? m[1] : "";
+}
+
+export function isShopifyProductCard(item) {
+  if (!item) return false;
+  if (item.shopifyProductId) return true;
+  return String(item.docid || "").startsWith("shopify-p-");
+}
+
+/** Metadata for Pinecone + source cards / cart. */
+export function extractShopifyCommerceMeta(product) {
+  const variants = Array.isArray(product?.variants) ? product.variants : [];
+  const pick =
+    variants.find((v) => {
+      if (v?.inventory_management !== "shopify") return true;
+      const qty = Number(v?.inventory_quantity);
+      if (Number.isFinite(qty) && qty > 0) return true;
+      return String(v?.inventory_policy || "") === "continue";
+    }) || variants[0];
+  const productId = parseShopifyProductId(product);
+  return {
+    sourceType: "shopify_product",
+    shopifyProductId: productId,
+    defaultVariantId: pick?.id != null ? String(pick.id) : "",
+    imageUrl: String(product?.image?.src || "").trim(),
+    price: pick?.price != null ? String(pick.price) : "",
+  };
+}
+
 /** Pinecone vector id for the product's single chunk. */
 function productVectorId(docid) {
   return `${docid}_0`;
@@ -192,6 +223,7 @@ export async function syncShopifyProductCreateOrUpdate({ shopDomain, payload }) 
   const title = String(product.title || "Shopify product").trim().slice(0, 512);
   const sourceUrl = productSourceUrl(shop, product);
   const descriptionValue = text.slice(0, 200);
+  const commerce = extractShopifyCommerceMeta(product);
   const createdAt = new Date();
   const createdAtISO = createdAt.toISOString();
 
@@ -221,6 +253,11 @@ export async function syncShopifyProductCreateOrUpdate({ shopDomain, payload }) 
           createdAt: createdAtISO,
           chunkIndex: "0",
           chunkSourceUrl: sourceUrl,
+          sourceType: commerce.sourceType,
+          shopifyProductId: commerce.shopifyProductId,
+          defaultVariantId: commerce.defaultVariantId,
+          imageUrl: commerce.imageUrl,
+          price: commerce.price,
         },
       },
     ]),
@@ -233,6 +270,11 @@ export async function syncShopifyProductCreateOrUpdate({ shopDomain, payload }) 
         chunkSourceUrl: sourceUrl,
         chunkIndex: "0",
         title,
+        sourceType: commerce.sourceType,
+        shopifyProductId: commerce.shopifyProductId,
+        defaultVariantId: commerce.defaultVariantId,
+        imageUrl: commerce.imageUrl,
+        price: commerce.price,
       },
     ]),
   ]);

@@ -16,6 +16,7 @@ import {
 import Matches from "@/app/components/Matches";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
+import ProductCards, { partitionCitationCards } from "@/app/components/ProductCards";
 import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton";
 import AssistantEngagementRow from "@/app/components/AssistantEngagementRow";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
@@ -568,6 +569,7 @@ export default function ChatBox({
       message: data.reply,
       sourceUrls: data?.sourceUrls || [],
       sourceCards: data?.sourceCards || [],
+      productCards: data?.productCards || [],
       intent: data?.intent || "",
     };
     if (
@@ -834,14 +836,37 @@ export default function ChatBox({
                   )} */}
                     {/* Show sources for assistant messages */}
                     {m.role === "assistant" &&
-                      (m.sourceCards?.length > 0 || m.sourceUrls?.length > 0) && (
+                      (m.sourceCards?.length > 0 ||
+                        m.productCards?.length > 0 ||
+                        m.sourceUrls?.length > 0) && (
                         <div className="mt-1.5 w-full min-w-0">
-                          {m.sourceCards?.length > 0 ? (
-                            <AssistantSourceCards
-                              items={m.sourceCards}
-                              primaryHex={primaryBrandHex}
-                            />
-                          ) : (
+                          {(() => {
+                            const { sourceCards, productCards } =
+                              partitionCitationCards(
+                                m.sourceCards,
+                                m.productCards
+                              );
+                            return (
+                              <>
+                                {productCards.length > 0 ? (
+                                  <ProductCards
+                                    items={productCards}
+                                    brand={brandContext?.subdomain || ""}
+                                    primaryHex={primaryBrandHex}
+                                  />
+                                ) : null}
+                                {sourceCards.length > 0 ? (
+                                  <AssistantSourceCards
+                                    items={sourceCards}
+                                    primaryHex={primaryBrandHex}
+                                  />
+                                ) : null}
+                              </>
+                            );
+                          })()}
+                          {!m.sourceCards?.length &&
+                          !m.productCards?.length &&
+                          m.sourceUrls?.length > 0 ? (
                             <div className="flex flex-wrap gap-1.5">
                               <span className="text-xs text-muted">
                                 📚 Links:
@@ -860,7 +885,7 @@ export default function ChatBox({
                                 </a>
                               ))}
                             </div>
-                          )}
+                          ) : null}
                         </div>
                       )}
                     {m.role === "assistant" &&
@@ -880,7 +905,13 @@ export default function ChatBox({
                           />
                           <AssistantReplyCopyButton
                             message={m.message}
-                            sourceCards={m.sourceCards}
+                            sourceCards={(() => {
+                              const p = partitionCitationCards(
+                                m.sourceCards,
+                                m.productCards
+                              );
+                              return [...p.productCards, ...p.sourceCards];
+                            })()}
                             sourceUrls={m.sourceUrls}
                             readMoreUrl={brandContext?.assistantCopyReadMoreUrl}
                             brandSubdomain={brandContext?.subdomain}

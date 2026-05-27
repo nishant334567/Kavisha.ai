@@ -7,6 +7,7 @@ import Loader from "@/app/components/Loader";
 import BrandHeroImageFrame from "@/app/components/BrandHeroImageFrame";
 import BrandActivatedServices from "@/app/admin/components/BrandActivatedServices";
 import BrandChatServicesSection from "@/app/admin/components/BrandChatServicesSection";
+import { getBrandOrigin } from "@/app/lib/kavishaSiteEnv";
 
 const PLATFORM = "kavisha";
 
@@ -179,18 +180,16 @@ export default function PlatformAdminPage() {
                     <button
                       type="button"
                       onClick={() => setSelectedSubdomain(b.subdomain)}
-                      className={`flex w-full items-center gap-2 px-2 py-2 text-left text-sm ${
-                        active ? "bg-muted-bg font-medium" : "hover:bg-muted-bg/60"
-                      }`}
+                      className={`flex w-full items-center gap-2 px-2 py-2 text-left text-sm ${active ? "bg-muted-bg font-medium" : "hover:bg-muted-bg/60"
+                        }`}
                     >
                       <BrandLogo brand={b} />
                       <span className="min-w-0 flex-1 truncate">{b.name}</span>
                       <span
-                        className={`h-2 w-2 shrink-0 rounded-full ${
-                          b.talkToAvatarPublished !== false
+                        className={`h-2 w-2 shrink-0 rounded-full ${b.talkToAvatarPublished !== false
                             ? "bg-emerald-500"
                             : "bg-amber-400"
-                        }`}
+                          }`}
                         aria-hidden
                       />
                     </button>
@@ -208,11 +207,19 @@ export default function PlatformAdminPage() {
         ) : (
           <>
             <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
-              <div className="flex items-center gap-3">
+              <div className="flex flex-wrap items-center gap-3">
                 <BrandLogo brand={selected} large />
                 <h1 className="font-baloo text-lg font-bold text-foreground">
                   {selected.name}
                 </h1>
+                <a
+                  href={`${getBrandOrigin(selected.subdomain)}/admin`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="rounded-full bg-black px-5 py-2 text-sm font-medium text-white shadow-[0_2px_4px_rgba(0,0,0,0.2)] transition-colors hover:bg-neutral-800"
+                >
+                  Admin access
+                </a>
               </div>
               <button
                 type="button"
@@ -221,9 +228,8 @@ export default function PlatformAdminPage() {
                 className="inline-flex items-center gap-2 rounded-lg border border-border px-3 py-2 text-sm disabled:opacity-60"
               >
                 <span
-                  className={`h-2 w-2 rounded-full ${
-                    talkToAvatarPublished ? "bg-emerald-500" : "bg-amber-400"
-                  }`}
+                  className={`h-2 w-2 rounded-full ${talkToAvatarPublished ? "bg-emerald-500" : "bg-amber-400"
+                    }`}
                   aria-hidden
                 />
                 {talkToAvatarPublished ? "Published" : "Unpublished"}

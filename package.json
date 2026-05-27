@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "dev": "node app/server.js",
-    "dev:clean": "node -e \"try{require('fs').rmSync('.next',{recursive:true,force:true})}catch(e){}\" && node app/server.js",
+    "dev:clean": "node scripts/kill-dev-port.js && node scripts/clean-next-cache.js && node app/server.js",
     "dev:next": "next dev --turbopack",
     "build": "next build",
     "start": "node app/server.js",

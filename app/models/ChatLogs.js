@@ -25,6 +25,21 @@ const LogsSchema = new mongoose.Schema(
       ],
       default: [],
     },
+    productCards: {
+      type: [
+        {
+          url: { type: String, required: true },
+          title: { type: String, default: "" },
+          description: { type: String, default: "" },
+          docid: { type: String, default: "" },
+          shopifyProductId: { type: String, default: "" },
+          defaultVariantId: { type: String, default: "" },
+          price: { type: String, default: "" },
+          imageUrl: { type: String, default: "" },
+        },
+      ],
+      default: [],
+    },
     sourceChunkIds: {
       type: [String],
       default: [],

@@ -10,7 +10,6 @@ function hostFromUrl(url) {
 
 /**
  * Horizontally scrollable source cards (KB title/description). Whole card is the link.
- * Row uses full width of the parent; cards keep a fixed max width and scroll sideways.
  */
 export default function AssistantSourceCards({ items, primaryHex = null }) {
   const list = Array.isArray(items)

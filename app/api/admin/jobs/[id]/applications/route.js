@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import mongoose from "mongoose";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
+import { filterVisibleAssignedTo } from "@/app/lib/brandRepository";
 import { connectDB } from "@/app/lib/db";
 import { refreshImageUrl } from "@/app/lib/gcs";
 import Job from "@/app/models/Job";
@@ -48,7 +49,7 @@ export async function GET(req, { params }) {
             applicantUserId: userByEmail.get((a.applicantEmail || "").toLowerCase()) || null,
             status: a.status || "",
             starred: !!a.starred,
-            assignedTo: Array.isArray(a.assignedTo) ? a.assignedTo : [],
+            assignedTo: filterVisibleAssignedTo(a.assignedTo),
             resumeLink,
             questionsAnswers: a.questionsAnswers || [],
             createdAt: a.createdAt,

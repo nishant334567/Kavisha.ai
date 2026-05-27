@@ -4,6 +4,7 @@ import Session from "@/app/models/ChatSessions";
 import User from "@/app/models/Users";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
+import { filterVisibleAssignedTo } from "@/app/lib/brandRepository";
 import { Resend } from "resend";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
@@ -70,11 +71,12 @@ export async function POST(request) {
           );
         }
 
-        const emails = Array.isArray(assignedTo)
+        const rawEmails = Array.isArray(assignedTo)
           ? assignedTo.filter((e) => typeof e === "string" && e.trim())
           : assignedTo != null && String(assignedTo).trim()
             ? [String(assignedTo).trim()]
             : [];
+        const emails = filterVisibleAssignedTo(rawEmails);
         const updatedSession = await Session.findByIdAndUpdate(
           sessionId,
           { assignedTo: emails },
@@ -148,7 +150,12 @@ export async function POST(request) {
         return NextResponse.json({
           success: true,
           message: "Session assignment updated successfully",
-          session: updatedSession,
+          session: updatedSession
+            ? {
+                ...updatedSession,
+                assignedTo: filterVisibleAssignedTo(updatedSession.assignedTo),
+              }
+            : updatedSession,
         });
       } catch (error) {
         console.error("Assign session error:", error);
