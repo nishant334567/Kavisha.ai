@@ -6,11 +6,33 @@ const { execSync } = require("child_process");
 const linkPath = path.join(process.cwd(), ".next");
 const externalPath = path.join(
   process.env.LOCALAPPDATA || os.tmpdir(),
-  "kavisha-next-cache",
+  "kavisha-next-cache"
 );
 
 function samePath(a, b) {
   return path.resolve(a).toLowerCase() === path.resolve(b).toLowerCase();
+}
+
+function removePathWin(target) {
+  if (!fs.existsSync(target)) return;
+  try {
+    execSync(`cmd /c rmdir /s /q "${target}"`, { stdio: "ignore" });
+  } catch {
+    try {
+      fs.rmSync(target, { recursive: true, force: true, maxRetries: 3 });
+    } catch {}
+  }
+}
+
+function removePath(target) {
+  if (!fs.existsSync(target)) return;
+  if (process.platform === "win32") {
+    removePathWin(target);
+    return;
+  }
+  try {
+    fs.rmSync(target, { recursive: true, force: true, maxRetries: 3 });
+  } catch {}
 }
 
 function isJunctionToExternal() {
@@ -22,18 +44,11 @@ function isJunctionToExternal() {
   }
 }
 
+// Remove .next (junction or folder) — fixes EINVAL readlink on OneDrive/Windows
 if (isJunctionToExternal()) {
-  try {
-    execSync(`cmd /c rmdir "${linkPath}"`, { stdio: "ignore" });
-  } catch {}
-} else if (fs.existsSync(linkPath)) {
-  try {
-    fs.rmSync(linkPath, { recursive: true, force: true });
-  } catch {}
+  removePathWin(linkPath);
+} else {
+  removePath(linkPath);
 }
 
-if (fs.existsSync(externalPath)) {
-  try {
-    fs.rmSync(externalPath, { recursive: true, force: true });
-  } catch {}
-}
+removePath(externalPath);

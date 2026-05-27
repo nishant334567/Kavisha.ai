@@ -9,6 +9,10 @@ import {
   resolveTrainingText,
 } from "@/app/lib/websiteScrapeContent";
 import { ensureWebsiteFolder } from "@/app/lib/websiteFolder";
+import {
+  MAX_WEBSITE_BATCH_PAGES,
+  websiteBatchLimitMessage,
+} from "@/app/lib/websiteScrapeLimits";
 
 export const maxDuration = 600;
 
@@ -33,9 +37,9 @@ export async function POST(req) {
           );
         }
 
-        if (pages.length > 50) {
+        if (pages.length > MAX_WEBSITE_BATCH_PAGES) {
           return NextResponse.json(
-            { error: "You can save at most 50 pages per batch" },
+            { error: websiteBatchLimitMessage("save") },
             { status: 400 }
           );
         }

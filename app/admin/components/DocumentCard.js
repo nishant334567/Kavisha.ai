@@ -29,11 +29,11 @@ export default function DocumentCard({
       role={selectionMode ? "checkbox" : undefined}
       aria-checked={selectionMode ? isSelected : undefined}
       onClick={handleCardClick}
-      className={`relative cursor-pointer overflow-visible rounded-lg border bg-card shadow-sm transition-all hover:shadow-md ${
+      className={`relative cursor-pointer overflow-visible rounded-lg border-2 bg-card shadow-sm transition-all hover:shadow-md ${
         selectionMode && isSelected
-          ? "border-highlight ring-2 ring-highlight/40"
+          ? "border-highlight/55 bg-highlight/[0.06] shadow-md ring-1 ring-highlight/25"
           : "border-border"
-      } ${selectionMode ? "hover:border-highlight/60" : ""}`}
+      } ${selectionMode && !isSelected ? "hover:border-highlight/35" : ""}`}
     >
       {selectionMode && (
         <div
@@ -44,13 +44,13 @@ export default function DocumentCard({
             type="button"
             onClick={onToggleSelect}
             aria-label={isSelected ? "Deselect document" : "Select document"}
-            className={`flex h-6 w-6 items-center justify-center rounded-md border-2 shadow-sm transition-colors ${
+            className={`flex h-6 w-6 items-center justify-center rounded-md border-2 transition-colors ${
               isSelected
-                ? "border-highlight bg-highlight text-white"
-                : "border-border bg-card text-transparent hover:border-highlight/70"
+                ? "border-highlight bg-highlight text-white shadow-sm"
+                : "border-highlight/40 bg-card text-transparent hover:border-highlight/70 hover:bg-highlight/5"
             }`}
           >
-            {isSelected && <Check className="h-4 w-4 stroke-[3]" />}
+            {isSelected && <Check className="h-3.5 w-3.5 stroke-[2.5]" />}
           </button>
         </div>
       )}

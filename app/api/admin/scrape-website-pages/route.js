@@ -5,6 +5,10 @@ import { scrapeSinglePage } from "@/app/lib/agenticScraper";
 import { trainDocument } from "@/app/lib/trainDocument";
 import { isSubstantiveContent } from "@/app/lib/scrapePageQuality";
 import { parseAndValidateScrapeUrl } from "@/app/lib/scrapeWebsiteUrl";
+import {
+  MAX_WEBSITE_BATCH_PAGES,
+  websiteBatchLimitMessage,
+} from "@/app/lib/websiteScrapeLimits";
 
 export const maxDuration = 600;
 
@@ -44,9 +48,9 @@ export async function POST(req) {
           );
         }
 
-        if (urls.length > 50) {
+        if (urls.length > MAX_WEBSITE_BATCH_PAGES) {
           return NextResponse.json(
-            { error: "You can scrape at most 50 pages per batch" },
+            { error: websiteBatchLimitMessage("scrape") },
             { status: 400 }
           );
         }

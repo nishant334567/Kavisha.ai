@@ -1,17 +1,16 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, X } from "lucide-react";
+import { Loader2, Minimize2, X } from "lucide-react";
 import TextTrainingModal from "@/app/admin/components/TextTrainingModal";
 import { normalizeWebsiteUrl } from "@/app/lib/websiteScrapeContent";
+import {
+  MAX_WEBSITE_BATCH_PAGES,
+  websiteBatchLimitMessage,
+} from "@/app/lib/websiteScrapeLimits";
 
-const BATCH_DELAY_MS = 1500;
 /** One page at a time — avoids overlapping embedding API bursts. */
 const SAVE_CONCURRENCY = 1;
-
-function delay(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
 
 function friendlyScrapeReason(message = "") {
   const m = String(message).toLowerCase();
@@ -20,6 +19,17 @@ function friendlyScrapeReason(message = "") {
     return "Connection problem";
   }
   return message || "Could not load this page";
+}
+
+function formatKbSavedHint(kbSaved) {
+  if (!kbSaved) return "In knowledge base";
+  const at = kbSaved.savedAt ? new Date(kbSaved.savedAt) : null;
+  if (!at || Number.isNaN(at.getTime())) return "In knowledge base";
+  return `In knowledge base · ${at.toLocaleDateString(undefined, {
+    month: "short",
+    day: "numeric",
+    year: "numeric",
+  })}`;
 }
 
 export default function WebsiteLinksDialog({
@@ -33,14 +43,18 @@ export default function WebsiteLinksDialog({
   onComplete,
   onDocumentsRefresh,
   onFoldersRefresh,
+  scrapeJob = null,
+  onScrapeJobChange,
+  onMinimize,
+  onCardActivity,
 }) {
   const [pageStates, setPageStates] = useState({});
   const [websiteFolderId, setWebsiteFolderId] = useState("");
   const [selected, setSelected] = useState(new Set());
   const [linkFilter, setLinkFilter] = useState("all");
   const [error, setError] = useState(null);
-  const [batchRunning, setBatchRunning] = useState(false);
-  const [batchProgress, setBatchProgress] = useState(null);
+  const [notice, setNotice] = useState(null);
+  const [startingJob, setStartingJob] = useState(false);
   const [saving, setSaving] = useState(false);
   const [saveProgress, setSaveProgress] = useState(null);
   const [viewPage, setViewPage] = useState(null);
@@ -59,8 +73,52 @@ export default function WebsiteLinksDialog({
     [linkFilter, postLinks, links]
   );
 
+  const loadKbHintsForLinks = useCallback(
+    async (linkList) => {
+      if (!brandSubdomain || !linkList.length) return;
+      try {
+        const res = await fetch("/api/admin/website-kb-urls", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            brand: brandSubdomain,
+            urls: linkList.map((l) => l.url),
+          }),
+        });
+        const data = await getPayload(res);
+        if (!res.ok || !data.savedByUrl) return;
+
+        setPageStates((prev) => {
+          const next = { ...prev };
+          for (const [url, info] of Object.entries(data.savedByUrl)) {
+            const row = next[url];
+            if (!row || row.status !== "idle") continue;
+            next[url] = {
+              ...row,
+              kbSaved: {
+                docid: info.docid,
+                title: info.title || "",
+                savedAt: info.savedAt || null,
+              },
+            };
+          }
+          return next;
+        });
+      } catch {
+        /* hints are optional */
+      }
+    },
+    [brandSubdomain]
+  );
+
   useEffect(() => {
     if (!open || links.length === 0) return;
+
+    if (scrapeJob?.pages?.length) {
+      setWebsiteFolderId(discoverMeta?.folderId || "");
+      return;
+    }
+
     const initial = {};
     for (const link of links) {
       initial[link.url] = {
@@ -74,15 +132,30 @@ export default function WebsiteLinksDialog({
     setSelected(new Set(links.map((l) => l.url)));
     setLinkFilter("all");
     setError(null);
-    setBatchRunning(false);
-    setBatchProgress(null);
+    setNotice(null);
+    setStartingJob(false);
     setSaveProgress(null);
     savedCanonicalKeys.current = new Set();
     setWebsiteFolderId(discoverMeta?.folderId || "");
     if (discoverMeta?.folderId) {
       setEditFolderId(discoverMeta.folderId);
     }
-  }, [open, links, discoverMeta?.folderId]);
+
+    let cancelled = false;
+    void loadKbHintsForLinks(links).then(() => {
+      if (cancelled) return;
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, [
+    open,
+    links,
+    discoverMeta?.folderId,
+    scrapeJob?.jobId,
+    scrapeJob?.pages?.length,
+    loadKbHintsForLinks,
+  ]);
 
   const getPayload = async (res) => {
     try {
@@ -94,6 +167,127 @@ export default function WebsiteLinksDialog({
 
   const getState = (url) => pageStates[url] || { status: "idle", url };
 
+  const isJobRunning =
+    scrapeJob &&
+    (scrapeJob.status === "pending" || scrapeJob.status === "running");
+
+  const jobUrlSet = useMemo(
+    () => new Set((scrapeJob?.pages || []).map((p) => p.url)),
+    [scrapeJob?.pages]
+  );
+
+  const updateJobSelection = useCallback(
+    async (urls, included) => {
+      if (!scrapeJob?.jobId || !brandSubdomain) return false;
+      const inJob = urls.filter((u) => jobUrlSet.has(u));
+      if (!inJob.length) return true;
+
+      try {
+        const res = await fetch("/api/admin/website-scrape-jobs", {
+          method: "PATCH",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            brand: brandSubdomain,
+            jobId: scrapeJob.jobId,
+            urls: inJob,
+            included,
+          }),
+        });
+        const data = await getPayload(res);
+        if (!res.ok) {
+          throw new Error(data.error || "Failed to update selection");
+        }
+        setError(null);
+        if (data.job) onScrapeJobChange?.(data.job);
+        return true;
+      } catch (e) {
+        setError(e?.message || "Failed to update selection");
+        setSelected((prev) => {
+          const next = new Set(prev);
+          for (const u of inJob) {
+            if (included) next.delete(u);
+            else next.add(u);
+          }
+          return next;
+        });
+        return false;
+      }
+    },
+    [brandSubdomain, jobUrlSet, onScrapeJobChange, scrapeJob?.jobId]
+  );
+
+  useEffect(() => {
+    if (!scrapeJob?.pages?.length) return;
+    setPageStates((prev) => {
+      const next = { ...prev };
+      for (const p of scrapeJob.pages) {
+        const existing = next[p.url] || { url: p.url };
+        let status = existing.status;
+        const savedKey = normalizeWebsiteUrl(p.url);
+        if (
+          existing.status === "saved" ||
+          (savedKey && savedCanonicalKeys.current.has(savedKey))
+        ) {
+          status = "saved";
+        } else if (p.status === "scraped") {
+          status = "scraped";
+        } else if (p.status === "error") {
+          status = "error";
+        } else if (p.status === "scraping") {
+          status = "scraping";
+        } else if (p.status === "skipped") {
+          status = "skipped";
+        } else if (p.status === "pending" && isJobRunning) {
+          status = "idle";
+        }
+
+        next[p.url] = {
+          ...existing,
+          url: p.url,
+          label: p.label || existing.label,
+          category: p.category ?? existing.category,
+          status,
+          error: p.error || null,
+          payload:
+            existing.status === "saved"
+              ? existing.payload
+              : p.payload || existing.payload,
+          docid: existing.docid,
+          saveError: existing.saveError,
+        };
+      }
+      return next;
+    });
+  }, [scrapeJob, isJobRunning]);
+
+  useEffect(() => {
+    if (!scrapeJob?.pages?.length) return;
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const p of scrapeJob.pages) {
+        if (p.status === "skipped") next.delete(p.url);
+        else next.add(p.url);
+      }
+      return next;
+    });
+  }, [scrapeJob?.pages]);
+
+  useEffect(() => {
+    if (!scrapeJob) return;
+    if (isJobRunning) {
+      onTrainingChange?.({
+        type: "website-scrape",
+        title: `${scrapeJob.totalCount || scrapeJob.pages?.length || 0} pages`,
+      });
+    } else if (scrapeJob.status === "completed" && !saving) {
+      onTrainingChange?.(null);
+    }
+  }, [scrapeJob, isJobRunning, saving, onTrainingChange]);
+
+  useEffect(() => {
+    onCardActivity?.({ saving, saveProgress });
+  }, [saving, saveProgress, onCardActivity]);
+
   const unsavedScrapedUrls = useMemo(
     () =>
       Object.values(pageStates)
@@ -102,10 +296,33 @@ export default function WebsiteLinksDialog({
     [pageStates]
   );
 
+  useEffect(() => {
+    if (!open) return;
+    if (saving && unsavedScrapedUrls.length === 0) {
+      setSaving(false);
+    }
+    if (!saving) {
+      setSaveProgress(null);
+    }
+  }, [open, saving, unsavedScrapedUrls.length]);
+
   const idleUrls = useMemo(
     () =>
       Object.values(pageStates)
         .filter((p) => p.status === "idle" || p.status === "error")
+        .map((p) => p.url),
+    [pageStates]
+  );
+
+  const remainingScrapeUrls = useMemo(
+    () =>
+      Object.values(pageStates)
+        .filter(
+          (p) =>
+            p.status === "skipped" ||
+            p.status === "idle" ||
+            p.status === "error"
+        )
         .map((p) => p.url),
     [pageStates]
   );
@@ -117,10 +334,6 @@ export default function WebsiteLinksDialog({
       ),
     [pageStates]
   );
-
-  const checkboxHint = hasAnyScraped
-    ? "When finished scraping, click Save all — nothing saves automatically"
-    : "Checked pages will be scraped";
 
   const updatePage = useCallback((url, patch) => {
     setPageStates((prev) => ({
@@ -189,6 +402,11 @@ export default function WebsiteLinksDialog({
 
       if (!pages.length) return null;
 
+      if (pages.length > MAX_WEBSITE_BATCH_PAGES) {
+        setError(websiteBatchLimitMessage("save"));
+        return null;
+      }
+
       setSaving(true);
       setSaveProgress({ done: 0, total: pages.length, label: "" });
       onTrainingChange?.({
@@ -213,6 +431,7 @@ export default function WebsiteLinksDialog({
             status: "saved",
             docid: row.docid,
             saveError: null,
+            kbSaved: undefined,
           });
         }
       };
@@ -242,7 +461,16 @@ export default function WebsiteLinksDialog({
           failed.push(f);
           markPageSaveFailed(page, f.error || "Save failed");
         }
-        for (const s of data.skipped || []) skipped.push(s);
+        for (const s of data.skipped || []) {
+          skipped.push(s);
+          const key = normalizeWebsiteUrl(s.sourceUrl || page.url);
+          if (key) savedCanonicalKeys.current.add(key);
+          updatePage(page.url, {
+            status: "saved",
+            saveError: null,
+            kbSaved: undefined,
+          });
+        }
 
         if (!res.ok && !(data.imported || []).length) {
           const errMsg =
@@ -355,94 +583,170 @@ export default function WebsiteLinksDialog({
     ]
   );
 
-  const runScrapeBatch = async (urls) => {
-    if (!urls.length || batchRunning) return;
+  const startBackgroundScrape = async (urls) => {
+    if (!urls.length || isJobRunning || startingJob) return;
 
-    setError(null);
-    setBatchRunning(true);
-    onTrainingChange?.({
-      type: "website-scrape",
-      title: `${urls.length} pages`,
-    });
-
-    for (let i = 0; i < urls.length; i++) {
-      const url = urls[i];
-      const label = pageStates[url]?.label || url;
-      setBatchProgress({ done: i, total: urls.length, label });
-      await scrapeOne(url);
-      if (i < urls.length - 1) await delay(BATCH_DELAY_MS);
+    if (urls.length > MAX_WEBSITE_BATCH_PAGES) {
+      setError(websiteBatchLimitMessage("scrape"));
+      return;
     }
 
-    setBatchProgress({ done: urls.length, total: urls.length, label: "" });
-    setBatchRunning(false);
-    onTrainingChange?.(null);
+    setError(null);
+    setNotice(null);
+    setStartingJob(true);
 
-    setTimeout(() => setBatchProgress(null), 300);
+    try {
+      const states = pageStatesRef.current;
+      const pages = urls.map((url) => ({
+        url,
+        label: states[url]?.label || "",
+        category: states[url]?.category || "",
+      }));
+
+      const res = await fetch("/api/admin/website-scrape-jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand: brandSubdomain,
+          pages,
+          seedUrl: discoverMeta?.seedUrl || "",
+          folderId: websiteFolderId || discoverMeta?.folderId || "",
+          folderName: discoverMeta?.folderName || "",
+        }),
+      });
+      const data = await getPayload(res);
+
+      if (res.status === 409 && data.job) {
+        onScrapeJobChange?.(data.job);
+        setError(data.error || "A scrape job is already running");
+        return;
+      }
+
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to start background scrape");
+      }
+
+      onScrapeJobChange?.(data.job);
+    } catch (e) {
+      setError(e?.message || "Failed to start scrape");
+    } finally {
+      setStartingJob(false);
+    }
   };
 
   const handleScrapeRow = async (url) => {
-    if (batchRunning || saving) return;
+    if (isJobRunning || startingJob || saving) return;
     setError(null);
     await scrapeOne(url);
   };
 
-  const handleScrapeSelected = () => {
-    const targets = [...selected].filter((u) => {
+  const scrapeRoundTargets = (urls) =>
+    urls.filter((u) => {
       const s = getState(u).status;
-      return s === "idle" || s === "error";
+      return s === "idle" || s === "error" || s === "skipped";
     });
-    runScrapeBatch(targets);
+
+  const continueSkippedInJob = async (urls) => {
+    if (!scrapeJob?.jobId || !urls.length) return false;
+    const skippedInJob = urls.filter((u) => {
+      const page = scrapeJob.pages?.find((p) => p.url === u);
+      return page?.status === "skipped";
+    });
+    if (!skippedInJob.length) return false;
+    return updateJobSelection(skippedInJob, true);
+  };
+
+  const handleScrapeSelected = async () => {
+    const targets = scrapeRoundTargets([...selected]);
+    if (!targets.length) {
+      setError("Select at least one page to scrape");
+      return;
+    }
+
+    if (!isJobRunning && scrapeJob?.status === "completed") {
+      const continued = await continueSkippedInJob(targets);
+      if (continued) return;
+    }
+
+    startBackgroundScrape(targets);
   };
 
   const handleScrapeAll = () => {
-    runScrapeBatch([...idleUrls]);
+    const targets = scrapeRoundTargets([...selected]);
+    if (!targets.length) {
+      setError("Select at least one page to scrape");
+      return;
+    }
+    startBackgroundScrape(targets);
   };
+
+  const handleScrapeRemaining = async () => {
+    const targets = remainingScrapeUrls;
+    if (!targets.length) return;
+
+    setSelected(new Set(targets));
+
+    if (!isJobRunning && scrapeJob?.status === "completed") {
+      const continued = await continueSkippedInJob(targets);
+      if (continued) return;
+    }
+
+    startBackgroundScrape(targets);
+  };
+
+  const finishImportIfDone = useCallback(
+    (data) => {
+      const remaining = Object.values(pageStatesRef.current).filter(
+        (p) => p.status === "scraped" && p.payload
+      ).length;
+      const jobStillRunning =
+        scrapeJob &&
+        (scrapeJob.status === "pending" || scrapeJob.status === "running");
+
+      if (!jobStillRunning && remaining === 0) {
+        onComplete?.({
+          title: discoverMeta?.seedUrl || "Website import",
+          docid: `${data.imported?.length || 0} documents`,
+          chunkCount: (data.imported || []).reduce(
+            (s, r) => s + (r.chunkCount || 0),
+            0
+          ),
+          message: data.message,
+          failed: data.failed,
+          scrapedCount: data.scrapedCount,
+          substantiveCount: data.substantiveCount,
+        });
+      } else if (data?.message) {
+        setNotice(data.message);
+        setError(null);
+      }
+    },
+    [discoverMeta?.seedUrl, onComplete, scrapeJob]
+  );
 
   const handleSaveSelected = async () => {
     const targets = [...selected].filter(
       (u) => getState(u).status === "scraped"
     );
-    if (!targets.length) return;
+    if (!targets.length || saving) return;
+    setNotice(null);
     try {
       const data = await savePages(targets);
-      if (data) {
-        onComplete?.({
-          title: discoverMeta?.seedUrl || "Website import",
-          docid: `${data.imported?.length || 0} documents`,
-          chunkCount: (data.imported || []).reduce(
-            (s, r) => s + (r.chunkCount || 0),
-            0
-          ),
-          message: data.message,
-          failed: data.failed,
-          scrapedCount: data.scrapedCount,
-          substantiveCount: data.substantiveCount,
-        });
-      }
+      if (data) finishImportIfDone(data);
     } catch (e) {
+      setNotice(null);
       setError(e?.message || "Save failed");
     }
   };
 
   const handleSaveAll = async () => {
-    if (!unsavedScrapedUrls.length) return;
+    if (!unsavedScrapedUrls.length || saving) return;
+    setNotice(null);
     try {
       const data = await savePages(unsavedScrapedUrls);
-      if (data) {
-        onComplete?.({
-          title: discoverMeta?.seedUrl || "Website import",
-          docid: `${data.imported?.length || 0} documents`,
-          chunkCount: (data.imported || []).reduce(
-            (s, r) => s + (r.chunkCount || 0),
-            0
-          ),
-          message: data.message,
-          failed: data.failed,
-          scrapedCount: data.scrapedCount,
-          substantiveCount: data.substantiveCount,
-        });
-      }
+      if (data) finishImportIfDone(data);
     } catch (e) {
+      setNotice(null);
       setError(e?.message || "Save failed");
     }
   };
@@ -569,22 +873,73 @@ export default function WebsiteLinksDialog({
   const toggleUrl = (url) => {
     const st = getState(url);
     if (st.status === "saved") return;
+
+    const willInclude = !selected.has(url);
+    const affectsQueue =
+      jobUrlSet.has(url) &&
+      (st.status === "idle" || st.status === "skipped") &&
+      (isJobRunning ||
+        (scrapeJob?.status === "completed" && st.status === "skipped"));
+
+    if (!affectsQueue) {
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (willInclude) next.add(url);
+        else next.delete(url);
+        return next;
+      });
+      return;
+    }
+
     setSelected((prev) => {
       const next = new Set(prev);
-      if (next.has(url)) next.delete(url);
-      else next.add(url);
+      if (willInclude) next.add(url);
+      else next.delete(url);
       return next;
     });
+    void updateJobSelection([url], willInclude);
   };
 
   const toggleAllVisible = () => {
+    if (isJobRunning) {
+      const queueEligible = visibleLinks
+        .map((l) => l.url)
+        .filter((u) => {
+          if (!jobUrlSet.has(u)) return false;
+          const s = getState(u).status;
+          return s === "idle" || s === "skipped";
+        });
+      if (!queueEligible.length) return;
+
+      const allIncluded = queueEligible.every((u) => {
+        const s = getState(u).status;
+        return s !== "skipped" && selected.has(u);
+      });
+
+      const willInclude = !allIncluded;
+      setSelected((prev) => {
+        const next = new Set(prev);
+        if (willInclude) {
+          for (const u of queueEligible) next.add(u);
+        } else {
+          for (const u of queueEligible) next.delete(u);
+        }
+        return next;
+      });
+
+      void updateJobSelection(queueEligible, willInclude);
+      return;
+    }
+
     const eligible = visibleLinks
       .map((l) => l.url)
       .filter((u) => {
         const s = getState(u).status;
         if (s === "saved") return false;
-        if (hasAnyScraped) return s === "scraped" || s === "idle" || s === "error";
-        return s === "idle" || s === "error";
+        if (hasAnyScraped) {
+          return s === "scraped" || s === "idle" || s === "error" || s === "skipped";
+        }
+        return s === "idle" || s === "error" || s === "skipped";
       });
     const allSelected = eligible.every((u) => selected.has(u));
     setSelected((prev) => {
@@ -598,16 +953,28 @@ export default function WebsiteLinksDialog({
     });
   };
 
-  const busy = batchRunning || saving;
-  const selectedScrapeCount = [...selected].filter((u) => {
-    const s = getState(u).status;
-    return s === "idle" || s === "error";
-  }).length;
+  const scrapeLocked = isJobRunning || startingJob;
+  const selectedScrapeCount = scrapeRoundTargets([...selected]).length;
+  const remainingScrapeCount = remainingScrapeUrls.length;
   const selectedSaveCount = [...selected].filter(
     (u) => getState(u).status === "scraped"
   ).length;
 
-  const showSaveAll = unsavedScrapedUrls.length > 0 && !batchRunning;
+  const showSaveActions = unsavedScrapedUrls.length > 0;
+  const canScrapeMore = remainingScrapeCount > 0 && !scrapeLocked;
+  const scrapeAllCount = selectedScrapeCount || idleUrls.length;
+  const showScrapeAllPrimary =
+    !hasAnyScraped && canScrapeMore && !showSaveActions;
+  const showOnlyScrapeRemaining =
+    hasAnyScraped && canScrapeMore && !showSaveActions;
+  const showScrapeActions =
+    hasAnyScraped && canScrapeMore && !showOnlyScrapeRemaining;
+  const batchProgress = isJobRunning
+    ? {
+        done: scrapeJob.doneCount ?? 0,
+        total: scrapeJob.totalCount ?? scrapeJob.pages?.length ?? 0,
+      }
+    : null;
   const batchPercent =
     batchProgress && batchProgress.total > 0
       ? Math.round((batchProgress.done / batchProgress.total) * 100)
@@ -649,18 +1016,35 @@ export default function WebsiteLinksDialog({
                 </p>
               )}
             </div>
-            <button
-              type="button"
-              onClick={handleClose}
-              disabled={batchRunning}
-              className="shrink-0 rounded-full p-2 text-muted transition-colors hover:bg-muted-bg hover:text-foreground disabled:opacity-50"
-              aria-label="Close"
-            >
-              <X className="h-5 w-5" />
-            </button>
+            <div className="flex shrink-0 gap-1">
+              {isJobRunning || startingJob || saving ? (
+                <button
+                  type="button"
+                  onClick={onMinimize}
+                  className="rounded-full p-2 text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
+                  aria-label="Minimize"
+                  title={
+                    saving
+                      ? "Minimize — saving continues; progress stays in the Website card"
+                      : "Minimize — scraping continues in the background"
+                  }
+                >
+                  <Minimize2 className="h-5 w-5" />
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  onClick={handleClose}
+                  className="rounded-full p-2 text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
+                  aria-label="Close"
+                >
+                  <X className="h-5 w-5" />
+                </button>
+              )}
+            </div>
           </div>
 
-          <div className="flex flex-wrap gap-1 border-b border-border px-6 py-2">
+          <div className="flex flex-wrap gap-1 px-6 py-2">
             <button
               type="button"
               onClick={() => setLinkFilter("all")}
@@ -685,16 +1069,15 @@ export default function WebsiteLinksDialog({
             )}
           </div>
 
-          <div className="flex items-center justify-between px-6 py-2">
+          <div className="px-6 py-2">
             <button
               type="button"
               onClick={toggleAllVisible}
-              disabled={busy}
+              disabled={saving}
               className="text-xs font-medium text-highlight hover:underline disabled:opacity-50"
             >
               Select all
             </button>
-            <span className="text-xs text-muted">{checkboxHint}</span>
           </div>
 
           <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4 pb-2">
@@ -703,11 +1086,17 @@ export default function WebsiteLinksDialog({
               const isSaved = st.status === "saved";
               const isScraped = st.status === "scraped";
               const isScraping = st.status === "scraping";
+              const isSkipped = st.status === "skipped";
+              const kbHint =
+                st.status === "idle" && st.kbSaved
+                  ? formatKbSavedHint(st.kbSaved)
+                  : null;
               const canCheck =
                 !isSaved &&
                 (st.status === "idle" ||
                   st.status === "error" ||
-                  st.status === "scraped");
+                  st.status === "scraped" ||
+                  st.status === "skipped");
 
               return (
                 <li
@@ -718,7 +1107,7 @@ export default function WebsiteLinksDialog({
                     type="checkbox"
                     checked={selected.has(link.url)}
                     onChange={() => toggleUrl(link.url)}
-                    disabled={busy || !canCheck}
+                    disabled={saving || !canCheck}
                     className="mt-1 shrink-0"
                   />
                   <div className="min-w-0 flex-1">
@@ -733,9 +1122,25 @@ export default function WebsiteLinksDialog({
                     )}
                   </div>
                   <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center">
+                    {kbHint ? (
+                      <span
+                        className="max-w-[11rem] text-right text-xs font-medium text-green-700 dark:text-green-400"
+                        title={
+                          st.kbSaved?.title
+                            ? `Document: ${st.kbSaved.title}`
+                            : undefined
+                        }
+                      >
+                        {kbHint}
+                      </span>
+                    ) : null}
                     {isSaved ? (
                       <span className="rounded-lg bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800 dark:bg-green-900/40 dark:text-green-300">
                         Saved
+                      </span>
+                    ) : isSkipped ? (
+                      <span className="rounded-lg bg-muted-bg px-2.5 py-1 text-xs font-medium text-muted">
+                        Skipped
                       </span>
                     ) : isScraped ? (
                       <span
@@ -751,7 +1156,7 @@ export default function WebsiteLinksDialog({
                       <button
                         type="button"
                         onClick={() => handleScrapeRow(link.url)}
-                        disabled={busy || isScraping}
+                        disabled={scrapeLocked || isScraping}
                         className="rounded-lg bg-highlight px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
                       >
                         {isScraping ? (
@@ -767,7 +1172,7 @@ export default function WebsiteLinksDialog({
                       <button
                         type="button"
                         onClick={() => handleViewDoc(link.url)}
-                        disabled={busy}
+                        disabled={saving}
                         className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted-bg disabled:opacity-50"
                       >
                         View doc
@@ -779,22 +1184,23 @@ export default function WebsiteLinksDialog({
             })}
           </ul>
 
+          {notice && (
+            <p className="mx-6 mb-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-900/50 dark:bg-green-950/30 dark:text-green-300">
+              {notice}
+            </p>
+          )}
+
           {error && (
             <p className="mx-6 mb-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
               {error}
             </p>
           )}
 
-          <div className="border-t border-border bg-muted-bg/30 px-6 py-4">
-            {batchRunning && batchProgress && (
+          <div className="bg-muted-bg/30 px-6 py-4">
+            {isJobRunning && batchProgress && (
               <div className="mb-3">
                 <div className="mb-1 flex justify-between text-xs text-muted">
-                  <span>
-                    Scraping {batchProgress.done} of {batchProgress.total}
-                    {batchProgress.label
-                      ? ` — ${batchProgress.label}`
-                      : ""}
-                  </span>
+                  <span>Scraping</span>
                   <span>{batchPercent}%</span>
                 </div>
                 <div className="h-2 overflow-hidden rounded-full bg-border">
@@ -826,12 +1232,12 @@ export default function WebsiteLinksDialog({
 
             <div className="flex flex-wrap items-center justify-between gap-3">
               <div className="flex flex-wrap gap-2">
-                {showSaveAll ? (
+                {showSaveActions ? (
                   <>
                     <button
                       type="button"
                       onClick={handleSaveAll}
-                      disabled={busy || saving}
+                      disabled={saving}
                       className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
                     >
                       {saving && saveProgress ? (
@@ -844,6 +1250,8 @@ export default function WebsiteLinksDialog({
                           <Loader2 className="h-4 w-4 animate-spin" />
                           Saving…
                         </span>
+                      ) : isJobRunning ? (
+                        `Save ready (${unsavedScrapedUrls.length})`
                       ) : (
                         `Save all (${unsavedScrapedUrls.length})`
                       )}
@@ -852,47 +1260,74 @@ export default function WebsiteLinksDialog({
                       <button
                         type="button"
                         onClick={handleSaveSelected}
-                        disabled={busy || saving}
+                        disabled={saving}
                         className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted-bg disabled:opacity-50"
                       >
                         Save selected ({selectedSaveCount})
                       </button>
                     )}
-                    {selectedScrapeCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleScrapeSelected}
-                        disabled={busy}
-                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted-bg disabled:opacity-50"
-                      >
-                        Scrape selected ({selectedScrapeCount})
-                      </button>
-                    )}
                   </>
-                ) : (
+                ) : null}
+                {showScrapeAllPrimary ? (
+                  <button
+                    type="button"
+                    onClick={handleScrapeAll}
+                    disabled={saving || scrapeAllCount === 0}
+                    className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+                  >
+                    Scrape all ({scrapeAllCount})
+                  </button>
+                ) : null}
+                {showOnlyScrapeRemaining ? (
+                  <button
+                    type="button"
+                    onClick={handleScrapeRemaining}
+                    disabled={saving}
+                    className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
+                  >
+                    Scrape remaining ({remainingScrapeCount})
+                  </button>
+                ) : null}
+                {showScrapeActions ? (
                   <>
-                    {selectedScrapeCount > 0 && (
+                    {remainingScrapeCount > 0 && (
                       <button
                         type="button"
-                        onClick={handleScrapeSelected}
-                        disabled={busy}
-                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted-bg disabled:opacity-50"
-                      >
-                        Scrape selected ({selectedScrapeCount})
-                      </button>
-                    )}
-                    {idleUrls.length > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleScrapeAll}
-                        disabled={busy}
+                        onClick={handleScrapeRemaining}
+                        disabled={saving}
                         className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
                       >
-                        Scrape all ({idleUrls.length})
+                        Scrape remaining ({remainingScrapeCount})
+                      </button>
+                    )}
+                    {selectedScrapeCount > 0 && (
+                      <button
+                        type="button"
+                        onClick={handleScrapeSelected}
+                        disabled={saving}
+                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted-bg disabled:opacity-50"
+                      >
+                        Scrape selected ({selectedScrapeCount})
                       </button>
                     )}
                   </>
-                )}
+                ) : null}
+                {scrapeLocked && !showSaveActions ? (
+                  <button
+                    type="button"
+                    disabled
+                    className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white opacity-50"
+                  >
+                    {startingJob ? (
+                      <span className="flex items-center gap-2">
+                        <Loader2 className="h-4 w-4 animate-spin" />
+                        Starting…
+                      </span>
+                    ) : (
+                      `Scraping… (${scrapeJob?.doneCount ?? 0}/${scrapeJob?.totalCount ?? 0})`
+                    )}
+                  </button>
+                ) : null}
               </div>
             </div>
           </div>

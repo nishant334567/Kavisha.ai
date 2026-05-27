@@ -23,8 +23,14 @@ if (process.env.NODE_ENV === "production") {
 }
 
 const dev = process.env.NODE_ENV !== "production";
+const PORT = Number(process.env.PORT) || 3000;
+
 const app = next({ dev });
 const handler = app.getRequestHandler();
+
+if (dev) {
+  console.log("Preparing Next.js (first start can take 30–60s)...");
+}
 
 app.prepare().then(() => {
   const expressApp = express();
@@ -151,9 +157,41 @@ app.prepare().then(() => {
     if (req.path.startsWith("/socket.io/")) {
       return next();
     }
-    return handler(req, res);
+    try {
+      const result = handler(req, res);
+      if (result && typeof result.catch === "function") {
+        result.catch((err) => {
+          console.error("[next handler]", req.method, req.url, err);
+          if (!res.headersSent) {
+            res.statusCode = 500;
+            res.end("Internal Server Error");
+          }
+        });
+      }
+    } catch (err) {
+      console.error("[next handler]", req.method, req.url, err);
+      if (!res.headersSent) {
+        res.statusCode = 500;
+        res.end("Internal Server Error");
+      }
+    }
   });
 
-  const PORT = process.env.PORT || 3000;
-  server.listen(PORT, () => {});
+  server.on("error", (err) => {
+    if (err.code === "EADDRINUSE") {
+      console.error(
+        `Port ${PORT} is already in use. Stop the other process or run: npm run dev:clean`
+      );
+    } else {
+      console.error("Server failed to start:", err.message);
+    }
+    process.exit(1);
+  });
+
+  server.listen(PORT, () => {
+    console.log(`> Ready on http://localhost:${PORT}`);
+  });
+}).catch((err) => {
+  console.error("Failed to prepare Next.js:", err);
+  process.exit(1);
 });

@@ -1,5 +1,5 @@
 "use client";
-import { useRef, useState, useEffect } from "react";
+import { useRef, useState, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import {
   ArrowLeft,
@@ -15,6 +15,7 @@ import TextTrainingModal from "@/app/admin/components/TextTrainingModal";
 import DocumentViewModal from "@/app/admin/components/DocumentViewModal";
 import DocumentCard from "@/app/admin/components/DocumentCard";
 import WebsiteImportWizard from "@/app/admin/components/WebsiteImportWizard";
+import ConfirmModal from "@/app/components/ConfirmModal";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 
 export default function Train() {
@@ -48,7 +49,13 @@ export default function Train() {
   const [deleting, setDeleting] = useState(false);
   const [activeTraining, setActiveTraining] = useState(null);
   const [trainingResult, setTrainingResult] = useState(null);
+  const [confirmDialog, setConfirmDialog] = useState(null);
+  const [noticeDialog, setNoticeDialog] = useState(null);
   const isTraining = Boolean(activeTraining);
+
+  const showNotice = useCallback((title, message, variant = "success") => {
+    setNoticeDialog({ title, message, variant });
+  }, []);
   /** Virtual "All" view — not a deletable folder; block mass delete here. */
   const viewingAllDocuments = selectedFolderId == null;
 
@@ -109,29 +116,38 @@ export default function Train() {
       if (!res.ok) throw new Error((await res.json()).error);
       fetchFolders();
     } catch (e) {
-      alert(e?.message || "Failed to create folder");
+      showNotice("Couldn't create folder", e?.message || "Failed to create folder", "error");
     }
   };
 
-  const handleDeleteFolder = async (folderId) => {
-    if (!confirm("Delete this folder? Documents in it will be moved to Unfiled."))
-      return;
-    try {
-      const res = await fetch(
-        `/api/admin/knowledge-folders?brand=${brand?.subdomain}&folderId=${folderId}`,
-        { method: "DELETE" }
-      );
-      if (!res.ok) throw new Error((await res.json()).error);
-      fetchFolders();
-      if (selectedFolderId === folderId) {
-        setSelectedFolderId(null);
-        setCurrentPage(1);
-      }
-      if (uploadFolderId === folderId) setUploadFolderId("");
-      if (textUploadFolderId === folderId) setTextUploadFolderId("");
-    } catch (e) {
-      alert(e?.message || "Failed to delete folder");
-    }
+  const handleDeleteFolder = (folderId) => {
+    const folder = folders.find((f) => String(f._id) === String(folderId));
+    setConfirmDialog({
+      title: "Delete folder?",
+      message: folder
+        ? `“${folder.name}” will be removed. Documents inside will move to Unfiled.`
+        : "This folder will be removed. Documents inside will move to Unfiled.",
+      confirmLabel: "Delete folder",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(
+            `/api/admin/knowledge-folders?brand=${brand?.subdomain}&folderId=${folderId}`,
+            { method: "DELETE" }
+          );
+          if (!res.ok) throw new Error((await res.json()).error);
+          fetchFolders();
+          if (selectedFolderId === folderId) {
+            setSelectedFolderId(null);
+            setCurrentPage(1);
+          }
+          if (uploadFolderId === folderId) setUploadFolderId("");
+          if (textUploadFolderId === folderId) setTextUploadFolderId("");
+        } catch (e) {
+          showNotice("Couldn't delete folder", e?.message || "Failed to delete folder", "error");
+        }
+      },
+    });
   };
 
   useEffect(() => {
@@ -232,7 +248,7 @@ export default function Train() {
       setUploadSourceUrl("");
       fetchDocuments(1, selectedFolderId);
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      showNotice("Upload failed", error.message, "error");
     } finally {
       setUploading(false);
       setActiveTraining(null);
@@ -264,7 +280,7 @@ export default function Train() {
       });
       fetchDocuments(1, selectedFolderId);
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      showNotice("Couldn't save text", error.message, "error");
     } finally {
       setUploading(false);
       setActiveTraining(null);
@@ -304,11 +320,11 @@ export default function Train() {
       if (res.ok && data.document) {
         setSelectedDocument(data.document);
       } else {
-        alert("Failed to load document");
+        showNotice("Couldn't open document", "Failed to load document.", "error");
         setIsViewModalOpen(false);
       }
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      showNotice("Couldn't open document", error.message, "error");
       setIsViewModalOpen(false);
     } finally {
       setLoadingDocumentId(null);
@@ -362,9 +378,13 @@ export default function Train() {
 
       exitSelectionMode();
       fetchDocuments(currentPage, selectedFolderId);
-      alert(`Moved ${data.modifiedCount} document(s).`);
+      showNotice(
+        "Documents moved",
+        `Moved ${data.modifiedCount} document${data.modifiedCount === 1 ? "" : "s"}.`,
+        "success"
+      );
     } catch (err) {
-      alert(err?.message || "Failed to move documents");
+      showNotice("Couldn't move documents", err?.message || "Failed to move documents", "error");
     } finally {
       setMoving(false);
     }
@@ -382,7 +402,7 @@ export default function Train() {
       setEditFolderId(data.document.folderId ? String(data.document.folderId) : "");
       setIsEditModalOpen(true);
     } else {
-      alert("Failed to load document");
+      showNotice("Couldn't open document", "Failed to load document.", "error");
     }
   };
 
@@ -425,7 +445,7 @@ export default function Train() {
       });
       fetchDocuments(currentPage, selectedFolderId);
     } catch (error) {
-      alert(`Error: ${error.message}`);
+      showNotice("Couldn't update document", error.message, "error");
     } finally {
       setUploading(false);
       setActiveTraining(null);
@@ -444,65 +464,86 @@ export default function Train() {
     }
   };
 
-  const handleDeleteDocument = async (docid) => {
-    if (!confirm("Are you sure you want to delete this document?")) return;
+  const handleDeleteDocument = (docid) => {
     setOpenMenuId(null);
-    try {
-      const res = await fetch(
-        `/api/admin/training-documents?docid=${docid}&brand=${brand?.subdomain}`,
-        { method: "DELETE" }
-      );
-      if (!res.ok) throw new Error((await res.json()).error);
-      alert("Document deleted successfully!");
-      refreshAfterDelete(1);
-    } catch (error) {
-      alert(`Error: ${error.message}`);
-    }
+    const doc = documents.find((d) => d.docid === docid);
+    setConfirmDialog({
+      title: "Delete document?",
+      message: doc
+        ? `“${doc.title}” will be permanently removed from your knowledge base. This cannot be undone.`
+        : "This document will be permanently removed from your knowledge base. This cannot be undone.",
+      confirmLabel: "Delete",
+      variant: "danger",
+      onConfirm: async () => {
+        try {
+          const res = await fetch(
+            `/api/admin/training-documents?docid=${docid}&brand=${brand?.subdomain}`,
+            { method: "DELETE" }
+          );
+          if (!res.ok) throw new Error((await res.json()).error);
+          showNotice(
+            "Document deleted",
+            "The document was removed from your knowledge base.",
+            "success"
+          );
+          refreshAfterDelete(1);
+        } catch (error) {
+          showNotice("Couldn't delete document", error.message, "error");
+        }
+      },
+    });
   };
 
-  const handleDeleteSelected = async () => {
+  const handleDeleteSelected = () => {
     if (viewingAllDocuments) {
-      alert(
-        "Bulk delete is disabled while viewing All. Open a specific folder to delete documents."
+      showNotice(
+        "Choose a folder",
+        "Bulk delete is disabled while viewing All. Open a specific folder to delete documents.",
+        "error"
       );
       return;
     }
     const docids = [...selectedDocs];
     if (docids.length === 0) return;
-    const label =
-      docids.length === 1
-        ? "this document"
-        : `these ${docids.length} documents`;
-    if (
-      !confirm(
-        `Delete ${label} from your knowledge base? This cannot be undone.`
-      )
-    ) {
-      return;
-    }
+    const count = docids.length;
+    setConfirmDialog({
+      title: count === 1 ? "Delete document?" : `Delete ${count} documents?`,
+      message:
+        count === 1
+          ? "This document will be permanently removed from your knowledge base. This cannot be undone."
+          : `${count} documents will be permanently removed from your knowledge base. This cannot be undone.`,
+      confirmLabel: count === 1 ? "Delete" : `Delete ${count}`,
+      variant: "danger",
+      onConfirm: async () => {
+        setDeleting(true);
+        try {
+          const res = await fetch("/api/admin/training-documents", {
+            method: "DELETE",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              brand: brand?.subdomain,
+              docids,
+            }),
+          });
+          const data = await res.json();
+          if (!res.ok) throw new Error(data.error || "Failed to delete");
 
-    setDeleting(true);
-    try {
-      const res = await fetch("/api/admin/training-documents", {
-        method: "DELETE",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          brand: brand?.subdomain,
-          docids,
-        }),
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || "Failed to delete");
-
-      const count = data.deletedCount ?? docids.length;
-      exitSelectionMode();
-      alert(data.message || `Deleted ${count} document(s).`);
-      refreshAfterDelete(count);
-    } catch (error) {
-      alert(`Error: ${error.message}`);
-    } finally {
-      setDeleting(false);
-    }
+          const deleted = data.deletedCount ?? docids.length;
+          exitSelectionMode();
+          showNotice(
+            deleted === 1 ? "Document deleted" : "Documents deleted",
+            data.message ||
+              `${deleted} document${deleted === 1 ? "" : "s"} removed from your knowledge base.`,
+            "success"
+          );
+          refreshAfterDelete(deleted);
+        } catch (error) {
+          showNotice("Couldn't delete documents", error.message, "error");
+        } finally {
+          setDeleting(false);
+        }
+      },
+    });
   };
 
   return (
@@ -528,7 +569,9 @@ export default function Train() {
               <p>
                 {activeTraining?.type === "website"
                   ? "Importing from website and training your knowledge base. This may take several minutes."
-                  : `${activeTraining?.title || "Document"} is being trained. New training is disabled until this completes.`}
+                  : activeTraining?.type === "website-scrape"
+                    ? `Scraping ${activeTraining?.title || "website pages"} on the server. You can minimize the dialog and keep working.`
+                    : `${activeTraining?.title || "Document"} is being trained. New training is disabled until this completes.`}
               </p>
             </div>
           </div>
@@ -829,14 +872,16 @@ export default function Train() {
       </div>
 
       {selectionMode && selectedDocs.size > 0 && (
-        <div className="fixed bottom-6 left-1/2 z-50 flex w-[min(100%,36rem)] -translate-x-1/2 flex-wrap items-center justify-center gap-2 rounded-2xl border border-border bg-card px-4 py-3 shadow-xl">
-          <span className="mr-1 text-sm font-medium text-highlight">
-            {selectedDocs.size} selected
+        <div className="fixed bottom-6 left-1/2 z-50 inline-flex w-max max-w-[calc(100%-2rem)] -translate-x-1/2 items-center gap-2 rounded-full bg-card py-2.5 pl-3.5 pr-3 shadow-[0_4px_14px_rgba(0,0,0,0.12),0_20px_48px_-6px_rgba(0,0,0,0.28)]">
+          <span className="shrink-0 pl-0.5 text-sm font-medium tabular-nums text-muted">
+            <span className="font-semibold text-foreground">{selectedDocs.size}</span>{" "}
+            selected
           </span>
+          <div className="h-5 w-px shrink-0 bg-border/70" aria-hidden />
           <select
             value={moveTargetFolderId}
             onChange={(e) => setMoveTargetFolderId(e.target.value)}
-            className="max-w-[10rem] rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground"
+            className="max-w-[8.5rem] shrink-0 rounded-full border border-border/70 bg-muted-bg/80 px-3 py-1.5 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-highlight/20"
             aria-label="Destination folder"
           >
             <option value="">Unfiled</option>
@@ -850,7 +895,7 @@ export default function Train() {
             type="button"
             onClick={handleMoveToFolder}
             disabled={moving || deleting}
-            className="flex items-center gap-1.5 rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+            className="flex shrink-0 items-center gap-1.5 rounded-full bg-highlight px-4 py-1.5 text-sm font-semibold text-white shadow-sm shadow-highlight/25 transition-[opacity,transform] hover:opacity-95 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50"
           >
             <FolderInput className="h-4 w-4" />
             {moving ? "Moving…" : "Move"}
@@ -860,7 +905,7 @@ export default function Train() {
               type="button"
               onClick={handleDeleteSelected}
               disabled={deleting || moving}
-              className="flex items-center gap-1.5 rounded-lg bg-red-600 px-4 py-2 text-sm font-medium text-white hover:bg-red-700 disabled:cursor-not-allowed disabled:opacity-50"
+              className="flex shrink-0 items-center gap-1.5 rounded-full border border-red-200/90 bg-red-50 px-4 py-1.5 text-sm font-semibold text-red-700 shadow-sm transition-[background-color,transform] hover:bg-red-100 active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-50 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300 dark:hover:bg-red-950/60"
             >
               <Trash2 className="h-4 w-4" />
               {deleting ? "Deleting…" : "Delete"}
@@ -904,6 +949,32 @@ export default function Train() {
           setSelectedDocument(null);
         }}
         document={selectedDocument}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(confirmDialog)}
+        title={confirmDialog?.title}
+        message={confirmDialog?.message ?? ""}
+        confirmLabel={confirmDialog?.confirmLabel ?? "Confirm"}
+        cancelLabel="Cancel"
+        variant={confirmDialog?.variant}
+        onCancel={() => setConfirmDialog(null)}
+        onConfirm={async () => {
+          const action = confirmDialog?.onConfirm;
+          setConfirmDialog(null);
+          await action?.();
+        }}
+      />
+
+      <ConfirmModal
+        isOpen={Boolean(noticeDialog)}
+        alertOnly
+        title={noticeDialog?.title}
+        message={noticeDialog?.message ?? ""}
+        confirmLabel="OK"
+        variant={noticeDialog?.variant ?? "success"}
+        onCancel={() => setNoticeDialog(null)}
+        onConfirm={() => setNoticeDialog(null)}
       />
 
       {trainingResult && (

@@ -25,7 +25,15 @@ export async function generateMetadata() {
     subdomain === "kavisha" ? brandTitle : `${brandTitle} | Kavisha.ai`;
   const description = trimText(brand?.subtitle || "AI platform", 100);
 
-  const siteUrl = `https://${host}`;
+  const siteUrl = host
+    ? `http${host.includes("localhost") ? "" : "s"}://${host}`
+    : "https://kavisha.ai";
+  let metadataBase;
+  try {
+    metadataBase = new URL(siteUrl);
+  } catch {
+    metadataBase = new URL("https://kavisha.ai");
+  }
   const ogImage =
     (await resolveBrandImageUrl(brand?.brandImageUrl)) ||
     "https://kavisha.ai/og-home.png";
@@ -37,7 +45,7 @@ export async function generateMetadata() {
   return {
     title: pageTitle,
     description,
-    metadataBase: new URL(siteUrl),
+    metadataBase,
     icons: {
       icon: favicon,
       shortcut: favicon,
