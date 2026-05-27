@@ -85,15 +85,42 @@ export async function GET(req) {
   });
 }
 
+async function deleteVectorsForDocids(brand, docids) {
+  const unique = [...new Set(docids.filter(Boolean))];
+  if (!unique.length) return;
+
+  const filter =
+    unique.length === 1
+      ? { docid: { $eq: unique[0] } }
+      : { docid: { $in: unique } };
+
+  await Promise.all([
+    pc.index("intelligent-kavisha").namespace(brand).deleteMany(filter),
+    pc.index("kavisha-sparse").namespace(brand).deleteMany(filter),
+  ]);
+}
+
 export async function DELETE(req) {
   try {
     const { searchParams } = new URL(req.url);
-    const docid = searchParams.get("docid");
-    const brand = searchParams.get("brand");
+    const singleDocid = searchParams.get("docid");
+    let brand = searchParams.get("brand");
+    let docids = singleDocid ? [singleDocid] : null;
 
-    if (!docid) {
+    if (!docids) {
+      const contentType = req.headers.get("content-type") || "";
+      if (contentType.includes("application/json")) {
+        const body = await req.json();
+        brand = body?.brand || brand;
+        if (Array.isArray(body?.docids) && body.docids.length > 0) {
+          docids = body.docids;
+        }
+      }
+    }
+
+    if (!docids?.length) {
       return NextResponse.json(
-        { error: "Document ID is required" },
+        { error: "Document ID or docids array is required" },
         { status: 400 }
       );
     }
@@ -102,45 +129,43 @@ export async function DELETE(req) {
       return NextResponse.json({ error: "Brand is required" }, { status: 400 });
     }
 
+    const uniqueDocids = [...new Set(docids.map((id) => String(id).trim()).filter(Boolean))];
     await connectDB();
 
     try {
-      await pc
-        .index("intelligent-kavisha")
-        .namespace(brand)
-        .deleteMany({
-          docid: { $eq: docid },
-        });
-
-      await pc
-        .index("kavisha-sparse")
-        .namespace(brand)
-        .deleteMany({
-          docid: { $eq: docid },
-        });
+      await deleteVectorsForDocids(brand, uniqueDocids);
     } catch (pineconeError) {
       return NextResponse.json(
-        { error: "Failed to delete chunk", details: pineconeError.message },
+        { error: "Failed to delete vectors", details: pineconeError.message },
         { status: 500 }
       );
     }
 
-    const deletedChunk = await TrainingData.findOneAndDelete({ docid });
+    const { deletedCount } = await TrainingData.deleteMany({
+      docid: { $in: uniqueDocids },
+      brand,
+    });
 
-    if (!deletedChunk) {
+    if (deletedCount === 0) {
       return NextResponse.json(
-        { error: "Document not found in database" },
+        { error: "No matching documents found" },
         { status: 404 }
       );
     }
+
+    const isBulk = uniqueDocids.length > 1;
     return NextResponse.json({
       success: true,
-      message: "Document deleted successfully",
-      deletedDocid: docid,
+      message: isBulk
+        ? `Deleted ${deletedCount} document(s)`
+        : "Document deleted successfully",
+      deletedCount,
+      deletedDocids: uniqueDocids,
+      ...(isBulk ? {} : { deletedDocid: uniqueDocids[0] }),
     });
   } catch (error) {
     return NextResponse.json(
-      { error: "Failed to delete chunk", details: error.message },
+      { error: "Failed to delete document(s)", details: error.message },
       { status: 500 }
     );
   }

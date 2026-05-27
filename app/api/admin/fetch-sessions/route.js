@@ -7,6 +7,7 @@ import Assessments from "@/app/models/Assessment";
 import Attempts from "@/app/models/Attempt";
 import SentEmailLog from "@/app/models/SentEmailLog";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
+import { filterVisibleAssignedTo } from "@/app/lib/brandRepository";
 
 export async function GET(request) {
   try {
@@ -203,7 +204,7 @@ export async function GET(request) {
         createdAt: session.createdAt,
         updatedAt: session.updatedAt,
         commentCount,
-        assignedTo: Array.isArray(session.assignedTo) ? session.assignedTo : (session.assignedTo ? [session.assignedTo] : []),
+        assignedTo: filterVisibleAssignedTo(session.assignedTo),
         messageCount: messageCount,
         totalInputTokens: inputTokens,
         totalOutputTokens: outputTokens,

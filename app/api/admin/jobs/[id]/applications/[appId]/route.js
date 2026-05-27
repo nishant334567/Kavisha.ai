@@ -9,6 +9,7 @@ import JobApplication from "@/app/models/JobApplication";
 import User from "@/app/models/Users";
 import { Resend } from "resend";
 import { getBrandOrigin } from "@/app/lib/kavishaSiteEnv";
+import { filterVisibleAssignedTo } from "@/app/lib/brandRepository";
 
 const resend = process.env.RESEND_API_KEY ? new Resend(process.env.RESEND_API_KEY) : null;
 
@@ -36,7 +37,7 @@ async function toApplicationResponse(app) {
     applicantUserId,
     status: app.status || "",
     starred: !!app.starred,
-    assignedTo: Array.isArray(app.assignedTo) ? app.assignedTo : [],
+    assignedTo: filterVisibleAssignedTo(app.assignedTo),
     resumeLink,
     questionsAnswers: app.questionsAnswers || [],
     createdAt: app.createdAt,
@@ -153,9 +154,11 @@ export async function PATCH(req, { params }) {
           : typeof body.assignedTo === "string" && body.assignedTo.trim()
             ? [body.assignedTo.trim()]
             : [];
-        updates.assignedTo = list
-          .filter((e) => typeof e === "string" && e.trim())
-          .map((e) => e.trim());
+        updates.assignedTo = filterVisibleAssignedTo(
+          list
+            .filter((e) => typeof e === "string" && e.trim())
+            .map((e) => e.trim())
+        );
       }
       if (body.starred !== undefined) {
         updates.starred = !!body.starred;

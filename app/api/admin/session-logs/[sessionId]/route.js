@@ -4,6 +4,7 @@ import Logs from "@/app/models/ChatLogs";
 import Session from "@/app/models/ChatSessions";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
+import { filterVisibleAssignedTo } from "@/app/lib/brandRepository";
 
 // GET /api/admin/session-logs/[sessionId]
 // Returns chat logs for a specific session (admin only)
@@ -50,7 +51,7 @@ export async function GET(req, { params }) {
           title: sessionDoc.title,
           chatSummary: sessionDoc.chatSummary,
           status: sessionDoc.status,
-          assignedTo: Array.isArray(sessionDoc.assignedTo) ? sessionDoc.assignedTo : (sessionDoc.assignedTo ? [sessionDoc.assignedTo] : []),
+          assignedTo: filterVisibleAssignedTo(sessionDoc.assignedTo),
           serviceKey: sessionDoc.serviceKey,
           createdAt: sessionDoc.createdAt,
           updatedAt: sessionDoc.updatedAt,
