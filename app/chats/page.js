@@ -163,16 +163,6 @@ export default function HomePage() {
         }
     }, [user, brandContext, router]);
 
-    const clientSiteUrl =
-        brandContext?.subdomain !== "kavisha"
-            ? String(brandContext?.clientWidgetUrl || "").trim()
-            : "";
-
-    useEffect(() => {
-        if (!clientSiteUrl || brandContext?.isBrandAdmin) return;
-        window.location.replace(clientSiteUrl);
-    }, [clientSiteUrl, brandContext?.isBrandAdmin]);
-
     if (loading) {
         return <Loader loadingMessage="Loading..." />;
     }
@@ -183,10 +173,6 @@ export default function HomePage() {
 
     if (brandContext?.isBrandAdmin) {
         return <Loader loadingMessage="Redirecting to admin dashboard..." />;
-    }
-
-    if (clientSiteUrl) {
-        return <Loader loadingMessage="Redirecting..." />;
     }
 
     if (!user) {
