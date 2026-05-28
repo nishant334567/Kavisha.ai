@@ -77,6 +77,11 @@ export function getShopify(request) {
     hostScheme,
     apiVersion: ApiVersion.January26,
     isEmbeddedApp: false,
+    /**
+     * Shopify Admin API now requires expiring offline tokens for new public apps.
+     * This enables refresh-token based offline sessions (60-min access token TTL).
+     */
+    expiringOfflineAccessTokens: true,
   });
 }
 
