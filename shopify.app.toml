@@ -3,11 +3,11 @@
 
 name = "Kavisha AI"
 client_id = "fed932215a401c375dcd1885b4896ca1"
-application_url = "https://kavisha.ai"
+application_url = "https://kavisha.ai/api/shopify/auth"
 embedded = false
 
 [access_scopes]
-scopes = "read_products,read_product_listings,read_inventory,write_checkouts"
+scopes = "read_products,read_product_listings,read_inventory"
 
 [auth]
 redirect_urls = [

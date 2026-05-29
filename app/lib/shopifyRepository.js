@@ -2,6 +2,7 @@ import { connectDB } from "@/app/lib/db";
 import { Session } from "@shopify/shopify-api";
 import ShopifyMerchant from "@/app/models/ShopifyMerchant";
 import { getShopify } from "@/app/lib/shopify";
+import { updateBrandBySubdomain } from "@/app/lib/brandRepository";
 
 const ACCESS_TOKEN_SKEW_MS = 2 * 60 * 1000; // refresh a little before expiry
 
@@ -151,6 +152,23 @@ export async function markShopifyUninstalled(shopDomain) {
       },
     }
   );
+}
+
+/** Attach an OAuth'd shop to a Kavisha brand (after install or reconnect). */
+export async function linkShopifyToBrand(shopDomain, brandSubdomain) {
+  const shop = String(shopDomain || "").trim().toLowerCase();
+  const brand = String(brandSubdomain || "").trim().toLowerCase();
+  if (!shop || !brand) return false;
+
+  await connectDB();
+  const result = await ShopifyMerchant.findOneAndUpdate(
+    { shopDomain: shop, uninstalledAt: null },
+    { $set: { brandSubdomain: brand } }
+  );
+  if (!result) return false;
+
+  await updateBrandBySubdomain(brand, { set: { shopifyShopUrl: shop } });
+  return true;
 }
 
 /** Admin disconnect (keeps brand shopifyShopUrl for easy reconnect). */

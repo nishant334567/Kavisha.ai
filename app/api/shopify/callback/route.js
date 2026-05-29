@@ -4,9 +4,13 @@ import {
   readBrandFromCookie,
   clearBrandCookie,
   getShopifySuccessRedirectUrl,
+  getShopifyWelcomeRedirectUrl,
   registerShopifyWebhooks,
 } from "@/app/lib/shopify";
-import { saveShopifySession } from "@/app/lib/shopifyRepository";
+import {
+  saveShopifySession,
+  linkShopifyToBrand,
+} from "@/app/lib/shopifyRepository";
 
 export async function GET(req) {
   try {
@@ -20,14 +24,21 @@ export async function GET(req) {
       new URL(req.url).searchParams.get("brand") ||
       "";
 
+    const shop = String(session.shop || "").trim().toLowerCase();
+
     await saveShopifySession(session, brand);
+    if (brand && shop) {
+      await linkShopifyToBrand(shop, brand);
+    }
     try {
       await registerShopifyWebhooks(shopify, session);
     } catch (webhookErr) {
       console.error("[shopify callback] webhook register", webhookErr);
     }
 
-    const redirectUrl = getShopifySuccessRedirectUrl(brand, req);
+    const redirectUrl = brand
+      ? getShopifySuccessRedirectUrl(brand, req, shop)
+      : getShopifyWelcomeRedirectUrl(req, shop);
     const response = NextResponse.redirect(redirectUrl, 302);
 
     if (oauthHeaders) {
