@@ -27,9 +27,6 @@ export async function registerShopifyWebhooks(shopify, session) {
   return shopify.webhooks.register({ session });
 }
 
-/** Shopify Admin REST API version for product fetch/list. */
-export const SHOPIFY_ADMIN_API_VERSION = "2026-01";
-
 export const SHOPIFY_SCOPES = [
   "read_products",
   "read_product_listings",
