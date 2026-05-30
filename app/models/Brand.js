@@ -21,6 +21,16 @@ const BrandServiceSchema = new mongoose.Schema(
         about: { type: String, default: "" },
         behaviour: { type: String, default: "" },
         rules: { type: String, default: "" },
+        /** "chat" (default) = lead-journey; "collect-data" = /api/collect-data intake */
+        type: { type: String, default: "chat", trim: true },
+        collectQuestions: {
+            type: [String],
+            default: [],
+            validate: {
+                validator: (v) => !Array.isArray(v) || v.length <= 20,
+                message: "Maximum 20 collect questions allowed.",
+            },
+        },
         introquestions: {
             type: [String],
             default: [],

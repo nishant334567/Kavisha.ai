@@ -1,5 +1,6 @@
 "use client";
 import { useState, useRef, useEffect, useCallback } from "react";
+import { useRouter } from "next/navigation";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 
 import Resume from "./Resume";
@@ -38,6 +39,7 @@ export default function ChatBox({
   const [input, setInput] = useState("");
   const [messageLoading, setMessageLoading] = useState(false);
   const brandContext = useBrandContext();
+  const router = useRouter();
   const { user } = useFirebaseSession();
   const [matches, setMatches] = useState([]);
   const [matchesLastSyncedAt, setMatchesLastSyncedAt] = useState(null);
@@ -70,6 +72,7 @@ export default function ChatBox({
   const [currentChatType, setCurrentChatType] = useState(null);
   const [sessionName, setSessionName] = useState(null);
   const [serviceKey, setServiceKey] = useState(null);
+  const [serviceType, setServiceType] = useState("chat");
   const [sessionMessageCount, setSessionMessageCount] = useState(0);
   const [sessionDetailsLoading, setSessionDetailsLoading] = useState(true);
   const [isCommunitySession, setIsCommunitySession] = useState(false);
@@ -81,6 +84,7 @@ export default function ChatBox({
     if (!currentChatId) {
       setCurrentChatType(null);
       setServiceKey(null);
+      setServiceType("chat");
       setSessionMessageCount(0);
       setIsCommunitySession(false);
       setIsJobsRequirementPost(false);
@@ -92,12 +96,22 @@ export default function ChatBox({
     setSessionDetailsLoading(true);
     const fetchChatType = async () => {
       try {
-        const response = await fetch(`/api/session/${currentChatId}`);
+        const subdomain = brandContext?.subdomain;
+        const brandQuery =
+          subdomain && subdomain !== "kavisha"
+            ? `?brand=${encodeURIComponent(subdomain)}`
+            : "";
+        const response = await fetch(`/api/session/${currentChatId}${brandQuery}`);
+        if (response.status === 403) {
+          router.replace("/chats");
+          return;
+        }
         if (response.ok) {
           const data = await response.json();
           setCurrentChatType(data.role || null);
           setSessionName(data.name || null);
           setServiceKey(data.serviceKey || null);
+          setServiceType(data.serviceType || "chat");
           setSessionMessageCount(
             typeof data.messageCount === "number" ? data.messageCount : 0,
           );
@@ -111,7 +125,9 @@ export default function ChatBox({
               : 0;
           setOnboardingPercent(data.allDataCollected ? 100 : pct);
           setHasDatacollected(Boolean(data.allDataCollected));
-          setEligibleForMatches(Boolean(data.allDataCollected) || pct >= 40);
+          setEligibleForMatches(
+            community && (Boolean(data.allDataCollected) || pct >= 40),
+          );
         }
       } catch (error) {
         console.error("Error fetching chat type:", error);
@@ -121,7 +137,7 @@ export default function ChatBox({
     };
 
     fetchChatType();
-  }, [currentChatId]);
+  }, [currentChatId, brandContext?.subdomain, router]);
 
   useEffect(() => {
     if (!isRecording) return;
@@ -514,7 +530,19 @@ export default function ChatBox({
     setMessageLoading(true);
     let response;
 
-    if (currentChatType !== "lead_journey") {
+    if (
+      serviceType === "collect-data" ||
+      currentChatType === "collect_data"
+    ) {
+      response = await fetch("/api/collect-data", {
+        method: "POST",
+        body: JSON.stringify({
+          history: historyToUse,
+          userMessage: messageText || "",
+          sessionId,
+        }),
+      });
+    } else if (currentChatType !== "lead_journey") {
       response = await fetch("/api/ai", {
         method: "POST",
         body: JSON.stringify({
@@ -588,24 +616,31 @@ export default function ChatBox({
       setRetryIndex(undefined);
     }
 
-    if (
-      data?.matchesWithObjectIds?.length > 0 &&
-      data?.allDataCollected === "true"
-    ) {
-      setMatches(data?.matchesWithObjectIds);
+    if (data?.allDataCollected === "true") {
       setHasDatacollected(true);
-      setMatchesLastSyncedAt(Date.now());
-    } else if (data?.allDataCollected === "true") {
-      setMatches([]);
-      setHasDatacollected(true);
-      setMatchesLastSyncedAt(Date.now());
     } else if (data?.allDataCollected === "false") {
       setHasDatacollected(false);
     }
 
+    if (isCommunitySession) {
+      if (
+        data?.matchesWithObjectIds?.length > 0 &&
+        data?.allDataCollected === "true"
+      ) {
+        setMatches(data?.matchesWithObjectIds);
+        setMatchesLastSyncedAt(Date.now());
+      } else if (data?.allDataCollected === "true") {
+        setMatches([]);
+        setMatchesLastSyncedAt(Date.now());
+      }
+    }
+
     if (
       currentChatType !== "lead_journey" &&
-      (isCommunitySession || isJobsRequirementPost)
+      (serviceType === "collect-data" ||
+        currentChatType === "collect_data" ||
+        isCommunitySession ||
+        isJobsRequirementPost)
     ) {
       const pct = data?.onboardingProgress?.percent;
       if (typeof pct === "number" && !Number.isNaN(pct)) {
@@ -614,20 +649,30 @@ export default function ChatBox({
     }
   };
   useEffect(() => {
-    if (!currentChatId) {
+    if (!currentChatId || !brandContext) {
       return;
     }
     setMessages([]);
     setChatLoading(true);
     const fetchChat = async () => {
-      const response = await fetch(`/api/logs/${currentChatId}`);
+      const subdomain = brandContext.subdomain;
+      const brandQuery =
+        subdomain && subdomain !== "kavisha"
+          ? `?brand=${encodeURIComponent(subdomain)}`
+          : "";
+      const response = await fetch(`/api/logs/${currentChatId}${brandQuery}`);
+      if (response.status === 403) {
+        router.replace("/chats");
+        setChatLoading(false);
+        return;
+      }
       const data = await response.json();
-      setMessages(data || []);
+      setMessages(Array.isArray(data) ? data : []);
       setChatLoading(false);
     };
 
     fetchChat();
-  }, [currentChatId]);
+  }, [currentChatId, brandContext, router]);
 
   const primaryBrandHex = normalizeBrandHex(brandContext?.primaryBrandColor);
   const secondaryBrandHex = normalizeBrandHex(
@@ -683,7 +728,10 @@ export default function ChatBox({
   const displayOnboardingPct = hasDatacollected ? 100 : onboardingPercent;
 
   const showOnboardingProgress =
-    (isCommunitySession || isJobsRequirementPost) &&
+    (serviceType === "collect-data" ||
+      currentChatType === "collect_data" ||
+      isCommunitySession ||
+      isJobsRequirementPost) &&
     currentChatType?.toLowerCase() !== "lead_journey";
 
   const isCommunityRoleType = [
@@ -951,7 +999,7 @@ export default function ChatBox({
                 />
               )}
 
-              {eligibleForMatches && (
+              {eligibleForMatches && isCommunitySession && (
                 <Matches
                   currentChatId={currentChatId}
                   matches={matches}
@@ -965,8 +1013,8 @@ export default function ChatBox({
               <div ref={endOfMessagesRef}></div>
               {/* </div> */}
             </div>
-            {/* Initial questions: ONLY for lead_journey */}
-            {currentChatType?.toLowerCase() === "lead_journey" &&
+            {/* Suggested intro questions — chat services only */}
+            {serviceType === "chat" &&
               messages.length <= 1 &&
               (() => {
                 const service = brandContext?.services?.find(

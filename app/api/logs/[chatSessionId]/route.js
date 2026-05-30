@@ -23,6 +23,23 @@ export async function GET(req, { params }) {
         if (String(session.userId) !== user.id) {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
+        const expectedBrand = String(
+          new URL(req.url).searchParams.get("brand") || "",
+        )
+          .trim()
+          .toLowerCase();
+        const sessionBrand = String(session.brand || "").trim().toLowerCase();
+        if (
+          expectedBrand &&
+          expectedBrand !== "kavisha" &&
+          sessionBrand &&
+          sessionBrand !== expectedBrand
+        ) {
+          return NextResponse.json(
+            { error: "Session belongs to another brand" },
+            { status: 403 },
+          );
+        }
         const logs = await Logs.find({ sessionId: chatSessionId }).sort({
           createdAt: 1,
         });

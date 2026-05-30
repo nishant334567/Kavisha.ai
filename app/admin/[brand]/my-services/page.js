@@ -44,7 +44,12 @@ export default function MyServices() {
       serviceTitle: "Talk to me",
       allowMultiple: true,
     },
-    { serviceName: "pitch_to_investor", serviceTitle: "Pitch to me" },
+    {
+      serviceName: "collect_data",
+      serviceTitle: "Collect data",
+      allowMultiple: true,
+      type: "collect-data",
+    },
     { serviceName: "job_seeker", serviceTitle: "Work with me" },
   ];
   const hasServicesToAdd = availableServices.some(
@@ -60,6 +65,7 @@ export default function MyServices() {
     setSelectedService({
       name: service.serviceName,
       title: service.serviceTitle,
+      type: service.type || "chat",
     });
     setAddnewservice(true);
     setshowAddserviceoptions(false);

@@ -24,10 +24,11 @@ export async function POST(request) {
       if (!user) return NextResponse.json({ error: "User not found" }, { status: 404 });
       if (!brand) return fail("Failed to create a session. Brand is required.", 400);
 
+      const brandKey = String(brand).trim().toLowerCase();
       const sk = String(serviceKey ?? "").trim();
       if (!sk) return fail("Failed to create a session. Service is required.", 400);
 
-      const serviceKeys = await getBrandServiceKeys(brand);
+      const serviceKeys = await getBrandServiceKeys(brandKey);
       if (!serviceKeys.includes(sk)) {
         return fail("Failed to create a session. Invalid service.", 400);
       }
@@ -36,7 +37,7 @@ export async function POST(request) {
         const session = await createSessionWithDefaultLog(
           user.id,
           role,
-          brand,
+          brandKey,
           initialmessage || null,
           isCommunityChat,
           chatName,

@@ -11,6 +11,7 @@ export async function GET(req, { params }) {
     onAuthenticated: async ({ decodedToken }) => {
       try {
         const { brand } = await params;
+        const brandKey = String(brand || "").trim().toLowerCase();
         const user = await getUserFromDB(decodedToken.email);
         if (!user) {
           return NextResponse.json(
@@ -22,7 +23,7 @@ export async function GET(req, { params }) {
         const { searchParams } = new URL(req.url);
         const communityOnly = searchParams.get("community") === "true";
         const leadJourneyOnly = searchParams.get("leadJourneyOnly") === "true";
-        const filter = { userId: user.id, brand };
+        const filter = { userId: user.id, brand: brandKey };
         if (communityOnly) filter.isCommunityChat = true;
         else if (leadJourneyOnly) {
           filter.role = "lead_journey";
