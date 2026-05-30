@@ -147,6 +147,29 @@ export async function filterAvailableSubdomains(subdomains) {
   return available;
 }
 
+const DNS_SUBDOMAIN_RE = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+
+export function slugSubdomainFromName(name) {
+  return String(name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 30);
+}
+
+/** First available `{slug}` or `{slug}-1`, … from a display name. */
+export async function resolveAvailableSubdomainFromName(name, { maxAttempts = 20 } = {}) {
+  const base = slugSubdomainFromName(name);
+  if (!base || !DNS_SUBDOMAIN_RE.test(base)) return null;
+  for (let i = 0; i < maxAttempts; i++) {
+    const candidate = i === 0 ? base : `${base}-${i}`;
+    if (!DNS_SUBDOMAIN_RE.test(candidate)) continue;
+    if (!(await subdomainExists(candidate))) return candidate;
+  }
+  return null;
+}
+
 export async function listPublicBrands({
   featuredOnly = false,
   talkToAvatarOnly = false,
@@ -267,6 +290,8 @@ export async function mapBrandToClientContext(brand, userEmail) {
     admins: filterVisibleAdmins(brand.admins || []),
     isBrandAdmin: isAdmin,
     subdomain,
+    publicDomain: brand.publicDomain || "",
+    domainMappingStatus: brand.domainMappingStatus || "",
     initialmessage: brand.initialmessage,
     enableCommunityOnboarding: true,
     enableProfessionalConnect: brand.enableProfessionalConnect || false,
