@@ -6,6 +6,14 @@ import ProductModal from "./ProductModal";
 import ServiceModalForBuy from "./ServiceModalForBuy";
 import { BEHAVIOUR_TEMPLATES } from "@/app/make-avatar/v2/behaviourTemplates";
 
+function isCollectDataService(service, serviceName) {
+  return (
+    String(service?.type || "").toLowerCase() === "collect-data" ||
+    service?.name === "collect_data" ||
+    serviceName === "collect_data"
+  );
+}
+
 export default function ServiceModal({
   isOpen,
   onClose,
@@ -32,14 +40,18 @@ export default function ServiceModal({
     behaviour: "",
     rules: "",
     introquestions: [],
+    collectQuestions: [],
   });
   const [loading, setLoading] = useState(false);
   const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState("");
 
+  const isCollectData = isCollectDataService(service, formData.serviceName);
+
   // Populate form when service is provided
   useEffect(() => {
     if (service) {
+      const collect = isCollectDataService(service, service.name);
       if (addNewservice) {
         setTemplateId("custom");
         setFormData({
@@ -50,9 +62,15 @@ export default function ServiceModal({
           behaviour: "",
           rules: "",
           introquestions: [],
+          collectQuestions: collect ? [""] : [],
         });
       } else {
-        const qs = Array.isArray(service.introquestions) ? service.introquestions.slice(0, 5) : [];
+        const qs = Array.isArray(service.introquestions)
+          ? service.introquestions.slice(0, 5)
+          : [];
+        const cqs = Array.isArray(service.collectQuestions)
+          ? service.collectQuestions
+          : [];
         setFormData({
           serviceTitle: service.title || "",
           serviceName: service.name || "",
@@ -61,6 +79,7 @@ export default function ServiceModal({
           behaviour: service.behaviour || "",
           rules: service.rules || "",
           introquestions: qs,
+          collectQuestions: cqs.length ? cqs : collect ? [""] : [],
         });
       }
     } else {
@@ -72,6 +91,7 @@ export default function ServiceModal({
         behaviour: "",
         rules: "",
         introquestions: [],
+        collectQuestions: [],
       });
     }
   }, [service, addNewservice]);
@@ -83,15 +103,28 @@ export default function ServiceModal({
     setError("");
 
     try {
-      const serviceData = {
-        name: service?.name || formData.serviceName,
-        title: formData.serviceTitle,
-        initialMessage: formData.welcomingMessage,
-        about: formData.about,
-        behaviour: formData.behaviour,
-        rules: formData.rules,
-        introquestions: (formData.introquestions || []).slice(0, 5).filter((q) => typeof q === "string" && q.trim() !== ""),
-      };
+      const serviceData = isCollectData
+        ? {
+            name: "collect_data",
+            type: "collect-data",
+            title: formData.serviceTitle,
+            initialMessage: formData.welcomingMessage,
+            behaviour: formData.behaviour,
+            collectQuestions: (formData.collectQuestions || [])
+              .map((q) => String(q).trim())
+              .filter(Boolean),
+          }
+        : {
+            name: service?.name || formData.serviceName,
+            title: formData.serviceTitle,
+            initialMessage: formData.welcomingMessage,
+            about: formData.about,
+            behaviour: formData.behaviour,
+            rules: formData.rules,
+            introquestions: (formData.introquestions || [])
+              .slice(0, 5)
+              .filter((q) => typeof q === "string" && q.trim() !== ""),
+          };
 
       const payload = {
         brandName: brand?.subdomain,
@@ -199,14 +232,16 @@ export default function ServiceModal({
               {/* Service title */}
               <div>
                 <label className="mb-2 block text-sm font-medium text-foreground">
-                  Service title
+                  {isCollectData ? "Service name" : "Service title"}
                 </label>
                 <input
                   type="text"
                   value={formData.serviceTitle}
                   onChange={(e) => handleChange("serviceTitle", e.target.value)}
                   className="w-full rounded border border-border bg-input px-4 py-2 text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
-                  placeholder="Enter service title"
+                  placeholder={
+                    isCollectData ? "e.g. Pitch to me, Apply here" : "Enter service title"
+                  }
                 />
               </div>
 
@@ -226,6 +261,78 @@ export default function ServiceModal({
                 />
               </div>
 
+              {isCollectData ? (
+                <>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-foreground">
+                      Questions to collect
+                    </label>
+                    <p className="mb-2 text-xs text-muted">
+                      The AI asks these one at a time until all are answered.
+                    </p>
+                    {(formData.collectQuestions || []).map((q, i) => (
+                      <div key={i} className="mb-2 flex gap-2">
+                        <input
+                          type="text"
+                          value={q}
+                          onChange={(e) =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              collectQuestions: prev.collectQuestions.map((v, j) =>
+                                j === i ? e.target.value : v
+                              ),
+                            }))
+                          }
+                          className="flex-1 rounded border border-border bg-input px-4 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                          placeholder={`Question ${i + 1}`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() =>
+                            setFormData((prev) => ({
+                              ...prev,
+                              collectQuestions: prev.collectQuestions.filter(
+                                (_, j) => j !== i
+                              ),
+                            }))
+                          }
+                          className="rounded p-2 text-red-600 transition-colors hover:bg-muted-bg"
+                          aria-label="Remove question"
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </button>
+                      </div>
+                    ))}
+                    {(formData.collectQuestions || []).length < 20 && (
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setFormData((prev) => ({
+                            ...prev,
+                            collectQuestions: [...(prev.collectQuestions || []), ""],
+                          }))
+                        }
+                        className="mt-1 rounded border border-border bg-card px-3 py-1.5 text-sm text-foreground transition-colors hover:bg-muted-bg"
+                      >
+                        + Add question
+                      </button>
+                    )}
+                  </div>
+                  <div>
+                    <label className="mb-2 block text-sm font-medium text-foreground">
+                      Conversation style
+                    </label>
+                    <textarea
+                      rows={4}
+                      value={formData.behaviour || ""}
+                      onChange={(e) => handleChange("behaviour", e.target.value)}
+                      placeholder="e.g. Professional and warm. One question at a time. Keep replies short."
+                      className="w-full resize-none rounded-lg border border-border bg-input px-4 py-3 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                    />
+                  </div>
+                </>
+              ) : (
+                <>
               {/* Template (only for new Talk to me) */}
               {addNewservice && service?.name === "lead_journey" && (
                 <div>
@@ -403,6 +510,8 @@ export default function ServiceModal({
                   </button>
                 )}
               </div>
+                </>
+              )}
 
               {/* Error message */}
               {error && <div className="text-red-600 text-sm">{error}</div>}

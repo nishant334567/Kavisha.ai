@@ -3,22 +3,52 @@ import { connectDB } from "@/app/lib/db";
 import Session from "@/app/models/ChatSessions";
 import Logs from "@/app/models/ChatLogs";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
+import { getUserFromDB } from "@/app/lib/firebase/get-user";
 import { getBrandService } from "@/app/lib/brandRepository";
+
+function normalizeBrand(value) {
+  return String(value || "").trim().toLowerCase();
+}
 
 export async function GET(req, { params }) {
   return withAuth(req, {
     onAuthenticated: async ({ decodedToken }) => {
       try {
         const { sessionId } = await params;
+        const { searchParams } = new URL(req.url);
+        const expectedBrand = normalizeBrand(searchParams.get("brand"));
+
+        const user = await getUserFromDB(decodedToken.email);
+        if (!user) {
+          return NextResponse.json({ error: "User not found" }, { status: 404 });
+        }
+
         await connectDB();
         const session = await Session.findById(sessionId).select(
-          "role title name brand serviceKey isCommunityChat onboardingPercent allDataCollected isWidget isJobsRequirementPost",
+          "role title name brand serviceKey userId isCommunityChat onboardingPercent allDataCollected isWidget isJobsRequirementPost",
         );
 
         if (!session) {
           return NextResponse.json(
             { error: "Session not found" },
             { status: 404 }
+          );
+        }
+
+        if (String(session.userId) !== String(user.id)) {
+          return NextResponse.json({ error: "Forbidden" }, { status: 403 });
+        }
+
+        const sessionBrand = normalizeBrand(session.brand);
+        if (
+          expectedBrand &&
+          expectedBrand !== "kavisha" &&
+          sessionBrand &&
+          sessionBrand !== expectedBrand
+        ) {
+          return NextResponse.json(
+            { error: "Session belongs to another brand" },
+            { status: 403 },
           );
         }
 
@@ -33,21 +63,27 @@ export async function GET(req, { params }) {
               );
 
         let introQuestions = [];
-        const brand = String(session.brand || "").trim();
+        let serviceType = "chat";
+        const brand = sessionBrand;
         const serviceKey = String(session.serviceKey || "").trim();
-        if (
-          String(session.role || "").toLowerCase() === "lead_journey" &&
-          brand &&
-          serviceKey
-        ) {
+        if (brand && serviceKey) {
           try {
             const service = await getBrandService(brand, serviceKey);
-            const raw = service?.introquestions;
-            if (Array.isArray(raw)) {
-              introQuestions = raw
-                .slice(0, 5)
-                .map((q) => String(q ?? "").trim())
-                .filter(Boolean);
+            if (service) {
+              serviceType =
+                String(service.type || "").toLowerCase() === "collect-data"
+                  ? "collect-data"
+                  : "chat";
+              const raw =
+                serviceType === "collect-data"
+                  ? service.collectQuestions
+                  : service.introquestions;
+              if (Array.isArray(raw)) {
+                introQuestions = raw
+                  .slice(0, 5)
+                  .map((q) => String(q ?? "").trim())
+                  .filter(Boolean);
+              }
             }
           } catch {
             introQuestions = [];
@@ -58,7 +94,9 @@ export async function GET(req, { params }) {
           role: session.role,
           title: session.title,
           name: session.name,
+          brand: sessionBrand,
           serviceKey: session.serviceKey || null,
+          serviceType,
           messageCount,
           isCommunityChat: Boolean(session.isCommunityChat),
           isWidget: Boolean(session.isWidget),
