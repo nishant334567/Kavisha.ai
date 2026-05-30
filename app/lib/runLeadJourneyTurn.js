@@ -2,13 +2,9 @@ import { generateEmbedding } from "./embeddings.js";
 import pc from "./pinecone.js";
 import Logs from "../models/ChatLogs.js";
 import Session from "../models/ChatSessions.js";
-import { PITCH_TO_ME_PROMPT, SYSTEM_PROMPT_LEAD } from "./systemPrompt.js";
+import { SYSTEM_PROMPT_LEAD } from "./systemPrompt.js";
 import { buildLeadRewritePrompt } from "./rewriteLeadQueryPrompt.js";
-import {
-  getBrandBySubdomain,
-  getBrandService,
-  getLeadPrompt,
-} from "@/app/lib/brandRepository";
+import { getBrandBySubdomain, getLeadPrompt } from "@/app/lib/brandRepository";
 import { loadShopifySessionByBrand } from "@/app/lib/shopifyRepository";
 import { SHOPIFY_COMMERCE_PROMPT } from "@/app/lib/shopifyCart";
 import { isShopifyProductCard } from "@/app/lib/shopifyProductIngest";
@@ -24,11 +20,6 @@ const LEAD_JOURNEY_GEMINI_MAX_429_RETRIES = 2;
 const LEAD_JOURNEY_GEMINI_RETRY_DELAY_MS = 1500;
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
-
-function isPitchToMeService(service) {
-  const name = String(service?.name || "").toLowerCase();
-  return name === "pitch_to_me" || name === "pitch_to_investor";
-}
 
 function sourcesFromUsedChunkIds(usedChunkIds, uniqueContext) {
   const seen = new Set();
@@ -232,13 +223,11 @@ export async function runLeadJourneyTurn({
   try {
     await connectDB();
 
-    const [prompt, brandDoc, shopifySession, service] = await Promise.all([
+    const [prompt, brandDoc, shopifySession] = await Promise.all([
       getLeadPrompt(brand, serviceKey),
       getBrandBySubdomain(brand),
       loadShopifySessionByBrand(brand),
-      getBrandService(brand, serviceKey),
     ]);
-    const isPitch = isPitchToMeService(service);
     const shopifyCommerceEnabled = Boolean(
       shopifySession?.accessToken &&
         String(brandDoc?.shopifyShopUrl || "").trim()
@@ -272,9 +261,6 @@ export async function runLeadJourneyTurn({
       .map((h) => `${h.role}: ${h.message || h.text || ""}`)
       .join("\n");
 
-    let betterQuery = userMessage;
-
-    if (!isPitch) {
     const referenceNowMsUtc = Date.now();
     const referenceNowIsoUtc = new Date(referenceNowMsUtc).toISOString();
     const rewritePrompt = buildLeadRewritePrompt(
@@ -323,7 +309,7 @@ export async function runLeadJourneyTurn({
       String(parsedResponse?.mode || "").toLowerCase() === "commerce";
 
     const requery = parsedResponse?.requery;
-    betterQuery =
+    let betterQuery =
       requery !== undefined && requery !== null
         ? String(requery).trim()
         : userMessage;
@@ -518,7 +504,6 @@ export async function runLeadJourneyTurn({
     } else {
       betterQuery = userMessage;
     }
-    }
 
     const citationAllowlistChunkIds =
       Array.isArray(sourceChunkIds) && sourceChunkIds.length > 0
@@ -540,18 +525,7 @@ export async function runLeadJourneyTurn({
       ? `\n\n${SHOPIFY_COMMERCE_PROMPT}\n`
       : "";
 
-    const mainPrompt = isPitch
-      ? `${PITCH_TO_ME_PROMPT}${nameInstruction}
-
-${summaryBlock}
-
-RECENT MESSAGES:
-${formattedHistory}
-
-USER MESSAGE: ${userMessage}
-
-Reply in plain text only (no //// separators).`
-      : `${prompt}${commerceBlock}${nameInstruction}
+    const finalPrompt = `${prompt}${commerceBlock}${nameInstruction}
 
               ${summaryBlock}
 
@@ -566,8 +540,9 @@ Reply in plain text only (no //// separators).`
               IMPORTANT: The [CHUNK_ID:...] prefixes in RELEVANT CONTEXT are for your internal tracking only.
               Your visible answer (Part 1 only) must contain **zero** retrieval identifiers: no \`[CHUNK_ID:...]\`, and no bracketed strings that look like chunk ids (e.g. long tokens with underscores and hex, ending in \`_0\`, \`_1\`, etc.).
               Extract facts into clean prose; attribute in words when helpful (e.g. publication name), never by pasting ids.
-              Follow the system instructions: respond as EXACTLY 2 parts separated by //// — Part 1 your reply, Part 2 a JSON array of the **full** chunk id strings you used from \`[CHUNK_ID:...]\` (use [] if none).` +
-        SYSTEM_PROMPT_LEAD;
+              Follow the system instructions: respond as EXACTLY 2 parts separated by //// — Part 1 your reply, Part 2 a JSON array of the **full** chunk id strings you used from \`[CHUNK_ID:...]\` (use [] if none).`;
+
+    const mainPrompt = finalPrompt + SYSTEM_PROMPT_LEAD;
 
     const geminiContents = [
       {
@@ -584,24 +559,21 @@ Reply in plain text only (no //// separators).`
       });
 
       const mainResponseText = extractGeminiText(responseGemini);
+      const reParts = mainResponseText.split("////").map((item) => item.trim());
+
       let reply = "";
       let usedChunkIds = [];
 
-      if (isPitch) {
-        reply = mainResponseText.trim();
+      if (reParts.length >= 2) {
+        reply = reParts[0] || "";
+        const chunkIdsPartRaw = reParts[1].trim();
+        usedChunkIds = extractChunkIdsFromPart4(chunkIdsPartRaw);
+        usedChunkIds = usedChunkIds.filter((id) =>
+          citationAllowlistChunkIds.includes(id)
+        );
       } else {
-        const reParts = mainResponseText.split("////").map((item) => item.trim());
-        if (reParts.length >= 2) {
-          reply = reParts[0] || "";
-          const chunkIdsPartRaw = reParts[1].trim();
-          usedChunkIds = extractChunkIdsFromPart4(chunkIdsPartRaw);
-          usedChunkIds = usedChunkIds.filter((id) =>
-            citationAllowlistChunkIds.includes(id)
-          );
-        } else {
-          reply = mainResponseText.trim();
-          usedChunkIds = [];
-        }
+        reply = mainResponseText.trim();
+        usedChunkIds = [];
       }
 
       if (usedChunkIds.length > 0) {
