@@ -514,7 +514,13 @@ export default function ChatBox({
     setMessageLoading(true);
     let response;
 
-    if (currentChatType !== "lead_journey") {
+    const usesLeadJourneyApi = [
+      "lead_journey",
+      "pitch_to_me",
+      "pitch_to_investor",
+    ].includes(String(currentChatType || "").toLowerCase());
+
+    if (!usesLeadJourneyApi) {
       response = await fetch("/api/ai", {
         method: "POST",
         body: JSON.stringify({
@@ -572,10 +578,7 @@ export default function ChatBox({
       productCards: data?.productCards || [],
       intent: data?.intent || "",
     };
-    if (
-      currentChatType?.toLowerCase() === "lead_journey" &&
-      data?.assistantLogId
-    ) {
+    if (usesLeadJourneyApi && data?.assistantLogId) {
       assistantMsg._id = data.assistantLogId;
       assistantMsg.liked = false;
       assistantMsg.copied = false;
@@ -604,7 +607,7 @@ export default function ChatBox({
     }
 
     if (
-      currentChatType !== "lead_journey" &&
+      !usesLeadJourneyApi &&
       (isCommunitySession || isJobsRequirementPost)
     ) {
       const pct = data?.onboardingProgress?.percent;
