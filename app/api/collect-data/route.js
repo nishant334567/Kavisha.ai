@@ -10,18 +10,31 @@ import getGeminiModel from "@/app/lib/getAiModel";
 function buildPrompt(service, questions, frozenSummary) {
   const list = questions.map((q, i) => `${i + 1}. ${q}`).join("\n");
   const n = questions.length;
-  let prompt = `Collect data for "${service.title || service.name}".
+  let prompt = `You collect structured answers for "${service.title || service.name}".
 Return JSON only: {"reply":"","summary":"","title":"","allDataCollected":false,"onboardingPercent":0}
 
-Questions (collect only these ${n}, in order):
+Questions (ask ONLY these ${n}, strictly in order — never skip or invent others):
 ${list}
 
-Ask one listed question per reply. Do not invent other questions.
-summary = collected answers only. title ≤20 chars.
-allDataCollected = true when all answered. onboardingPercent = round(answered/${n}*100).`;
+Opening message was already sent (greeting + question 1). Do NOT greet again or repeat question 1 unless the user's answer was too vague.
+
+When a question counts as answered:
+- The user must give a specific, usable answer to that exact question.
+- Vague, empty, or off-topic replies do NOT count (e.g. for "what is your idea", "I have an idea" or "crazy idea" is NOT enough — they must describe the idea).
+- If the latest reply is too vague: stay on the SAME question with a short follow-up. Do NOT advance.
+
+Progress:
+- onboardingPercent = round(substantively_answered_count / ${n} * 100)
+- allDataCollected = true only when all ${n} questions have substantive answers
+- summary = factual record of collected answers only. title ≤20 chars.
+
+Reply style (important):
+- Sound human and natural — not like a form, survey, or corporate bot.
+- 1–2 short sentences max. Optional brief ack ("Got it.", "Thanks.") then the question.
+- Either ask the next unanswered question OR gently re-ask the current one if the answer wasn't good enough.
+- No long thank-yous, no repeating what they said back at length.`;
 
   if (service.behaviour) prompt += `\nTone: ${service.behaviour}`;
-  if (service.initialMessage) prompt += `\nFirst turn greeting: ${service.initialMessage}`;
   if (frozenSummary) prompt += `\nKeep summary unless user updates: "${frozenSummary}"`;
   return prompt;
 }
