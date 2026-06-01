@@ -86,6 +86,74 @@ export function fixRunOnSpacing(text = "") {
     .join("\n");
 }
 
+/** Collapse extra blank lines and trim line whitespace (safe for all training text). */
+export function normalizeTrainingWhitespace(text = "") {
+  let normalized = String(text).replace(/\r\n/g, "\n").replace(/\r/g, "\n");
+  normalized = normalized
+    .split("\n")
+    .map((line) => line.replace(/[ \t]+$/g, "").trimEnd())
+    .join("\n");
+  normalized = normalized.replace(/\n{3,}/g, "\n\n");
+  return normalized.trim();
+}
+
+/** Remove decorative separator lines often produced by scrapers. */
+export function stripScraperBoilerplateLines(text = "") {
+  return String(text)
+    .split("\n")
+    .filter((line) => {
+      const trimmed = line.trim();
+      if (!trimmed) return true;
+      if (/^-{3,}$/.test(trimmed)) return false;
+      if (/^[*_]{3,}$/.test(trimmed)) return false;
+      if (/^[\s|·•*\-–—]+$/.test(trimmed)) return false;
+      return true;
+    })
+    .join("\n");
+}
+
+/**
+ * Glue very short paragraphs into the previous block so blank-line splits
+ * do not create extra embedding chunks.
+ */
+export function coalesceTrainingParagraphs(text = "", { minWords = 12 } = {}) {
+  const blocks = String(text)
+    .split(/\n\s*\n+/)
+    .map((p) => p.trim())
+    .filter(Boolean);
+
+  if (blocks.length <= 1) return blocks.join("\n\n");
+
+  const merged = [];
+  for (const block of blocks) {
+    const isHeading = /^#{1,6}\s/.test(block);
+    const wordCount = block.split(/\s+/).filter(Boolean).length;
+    const prev = merged[merged.length - 1];
+    const prevIsHeading = prev ? /^#{1,6}\s/.test(prev) : false;
+
+    if (
+      !isHeading &&
+      wordCount > 0 &&
+      wordCount < minWords &&
+      prev &&
+      !prevIsHeading
+    ) {
+      merged[merged.length - 1] = `${prev}\n\n${block}`;
+    } else {
+      merged.push(block);
+    }
+  }
+
+  return merged.join("\n\n");
+}
+
+/** Full cleanup pipeline used before chunking / embedding. */
+export function prepareTextForTrainingChunks(text = "") {
+  return coalesceTrainingParagraphs(
+    normalizeTrainingWhitespace(stripScraperBoilerplateLines(text)),
+  );
+}
+
 export function extractMarkdownSection(content = "", heading) {
   const re = new RegExp(
     `## ${heading}\\s*\\n([\\s\\S]*?)(?=\\n## |\\s*$)`,
@@ -111,28 +179,35 @@ export function isHomePage(url = "", seedUrl = "") {
 /**
  * Train on main content for inner pages; keep sections on homepage only.
  */
+function cleanSectionText(text = "") {
+  return prepareTextForTrainingChunks(fixRunOnSpacing(text));
+}
+
 export function prepareContentForTraining(rawContent = "", options = {}) {
   const { sourceUrl = "", seedUrl = "" } = options;
   const fixed = fixRunOnSpacing(rawContent);
   const main = extractMarkdownSection(fixed, "Main content");
-  const mainBody = fixRunOnSpacing(main || fixed);
+  const mainBody = cleanSectionText(main || fixed);
 
   if (isHomePage(sourceUrl, seedUrl)) {
     const parts = [];
     const nav = extractMarkdownSection(fixed, "Navigation");
     const footer = extractMarkdownSection(fixed, "Footer");
-    if (nav) parts.push(`## Navigation\n\n${fixRunOnSpacing(nav)}`);
+    if (nav) parts.push(`## Navigation\n\n${cleanSectionText(nav)}`);
     parts.push(`## Main content\n\n${mainBody}`);
-    if (footer) parts.push(`## Footer\n\n${fixRunOnSpacing(footer)}`);
-    const body = parts.join("\n\n");
+    if (footer) parts.push(`## Footer\n\n${cleanSectionText(footer)}`);
+    const body = prepareTextForTrainingChunks(parts.join("\n\n"));
     return sourceUrl
       ? `${body}\n\n## Source URL\n${sourceUrl}`
       : body;
   }
 
+  const innerBody = prepareTextForTrainingChunks(
+    `## Main content\n\n${mainBody}`,
+  );
   return sourceUrl
-    ? `## Main content\n\n${mainBody}\n\n## Source URL\n${sourceUrl}`
-    : `## Main content\n\n${mainBody}`;
+    ? `${innerBody}\n\n## Source URL\n${sourceUrl}`
+    : innerBody;
 }
 
 /**

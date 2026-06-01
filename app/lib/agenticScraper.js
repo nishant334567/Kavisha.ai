@@ -69,5 +69,6 @@ export async function scrapeSinglePage(url) {
     summary: page.summary || "",
     content: page.content.trim(),
     substantive: page.substantive === true,
+    html: typeof page.html === "string" ? page.html.trim() : "",
   };
 }

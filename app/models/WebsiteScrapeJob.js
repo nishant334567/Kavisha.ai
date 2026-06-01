@@ -60,7 +60,7 @@ const WebsiteScrapeJobSchema = new mongoose.Schema(
     seedUrl: { type: String, default: "" },
     mode: {
       type: String,
-      enum: ["generic", "blog"],
+      enum: ["generic", "blog", "ecommerce"],
       default: "generic",
       index: true,
     },

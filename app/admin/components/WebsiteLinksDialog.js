@@ -8,6 +8,7 @@ import {
   MAX_WEBSITE_BATCH_PAGES,
   websiteBatchLimitMessage,
 } from "@/app/lib/websiteScrapeLimits";
+import { websitePagesDialogTitle } from "@/app/lib/websiteImportMode";
 
 function formatKbSavedHint() {
   return "Already saved";
@@ -101,6 +102,18 @@ export default function WebsiteLinksDialog({
   const isJobRunning =
     scrapeJob &&
     (scrapeJob.status === "pending" || scrapeJob.status === "running");
+
+  const activeTrainingUrl = useMemo(() => {
+    const busy = scrapeJob?.pages?.find(
+      (p) => p.status === "training" || p.status === "scraping"
+    );
+    return busy?.url ?? null;
+  }, [scrapeJob?.pages]);
+
+  const isAnotherPageTraining = useCallback(
+    (url) => Boolean(activeTrainingUrl && activeTrainingUrl !== url),
+    [activeTrainingUrl]
+  );
 
   const selectionLocked = isJobRunning || startingJob || Boolean(rowTrainingUrl);
 
@@ -350,7 +363,7 @@ export default function WebsiteLinksDialog({
     });
 
   const handleTrainAll = async () => {
-    if (!scrapeJob?.jobId || selectionLocked) return;
+    if (!scrapeJob?.jobId) return;
 
     const selectedUrls = [...selected];
     const targets = trainableTargets(selectedUrls);
@@ -363,6 +376,13 @@ export default function WebsiteLinksDialog({
       setError(websiteBatchLimitMessage());
       return;
     }
+
+    if (targets.length === 1) {
+      await trainOne(targets[0]);
+      return;
+    }
+
+    if (selectionLocked) return;
 
     setStartingJob(true);
     setError(null);
@@ -610,8 +630,7 @@ export default function WebsiteLinksDialog({
 
   if (!open) return null;
 
-  const headerTitle =
-    discoverMeta?.mode === "blog" ? "Blog pages" : "Website pages";
+  const headerTitle = websitePagesDialogTitle(discoverMeta?.mode);
 
   const filterPill =
     "rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200";
@@ -832,7 +851,11 @@ export default function WebsiteLinksDialog({
                       <button
                         type="button"
                         onClick={() => trainOne(link.url)}
-                        disabled={selectionLocked || isTraining}
+                        disabled={
+                          startingJob ||
+                          isTraining ||
+                          isAnotherPageTraining(link.url)
+                        }
                         className="rounded-lg bg-highlight px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-highlight/90 hover:shadow disabled:opacity-50"
                       >
                         {isTraining ? (
@@ -893,17 +916,22 @@ export default function WebsiteLinksDialog({
                 type="button"
                 onClick={handleTrainAll}
                 disabled={
-                  selectionLocked || pendingTrainCount === 0 || !scrapeJob?.jobId
+                  pendingTrainCount === 0 ||
+                  !scrapeJob?.jobId ||
+                  startingJob ||
+                  (pendingTrainCount > 1 &&
+                    (isJobRunning || Boolean(rowTrainingUrl)))
                 }
                 className="rounded-xl bg-highlight px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-highlight/90 hover:shadow-lg active:scale-[0.99] disabled:opacity-50"
               >
-                {startingJob || isJobRunning ? (
+                {startingJob ||
+                (pendingTrainCount > 1 && isJobRunning) ? (
                   <span className="flex items-center gap-2">
                     <Loader2 className="h-4 w-4 animate-spin" />
                     {isJobRunning ? "Training…" : "Starting…"}
                   </span>
                 ) : (
-                  `Train ${pendingTrainCount} pages`
+                  `Train ${pendingTrainCount} page${pendingTrainCount === 1 ? "" : "s"}`
                 )}
               </button>
 

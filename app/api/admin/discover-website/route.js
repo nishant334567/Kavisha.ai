@@ -6,6 +6,7 @@ import { discoverBlogLinks } from "@/app/lib/blogDiscovery";
 import { parseAndValidateScrapeUrl } from "@/app/lib/scrapeWebsiteUrl";
 import { dedupeDiscoveredLinks } from "@/app/lib/websiteScrapeContent";
 import { ensureWebsiteFolder } from "@/app/lib/websiteFolder";
+import { normalizeWebsiteImportMode } from "@/app/lib/websiteImportMode";
 
 export const maxDuration = 180;
 
@@ -36,14 +37,17 @@ export async function POST(req) {
           );
         }
 
+        const importMode = normalizeWebsiteImportMode(mode);
+
         const result =
-          mode === "blog"
+          importMode === "blog"
             ? await discoverBlogLinks(parsed.href)
             : await discoverSiteLinks(parsed.href);
         const links = dedupeDiscoveredLinks(result.links);
         const { folderId, folderName } = await ensureWebsiteFolder(
           brand,
-          result.seedUrl || parsed.href
+          result.seedUrl || parsed.href,
+          { importMode },
         );
 
         if (!links.length) {
@@ -63,6 +67,7 @@ export async function POST(req) {
           total: links.length,
           folderId,
           folderName,
+          mode: importMode,
         });
       } catch (error) {
         console.error("[admin/discover-website]", error);

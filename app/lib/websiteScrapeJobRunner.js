@@ -5,6 +5,10 @@ import WebsiteScrapeJob from "@/app/models/WebsiteScrapeJob";
 import { scrapeSinglePage } from "@/app/lib/agenticScraper";
 import { enqueueCloudTask } from "@/app/lib/cloudTasks";
 import {
+  fetchProductPageHtml,
+  prepareContentForEcommerce,
+} from "@/app/lib/ecommerceScrapeContent";
+import {
   prepareContentForTraining,
   resolveDocumentTitle,
   resolveTrainingText,
@@ -61,6 +65,16 @@ function countActivePages(pages) {
 
 function isJobStopped(status) {
   return status === "stopped" || status === "failed";
+}
+
+/** True when another page is mid-scrape/train (single-page actions must wait). */
+export function isAnotherPageActivelyTraining(pages, pageIndex) {
+  if (!Array.isArray(pages)) return false;
+  return pages.some(
+    (p, i) =>
+      i !== pageIndex &&
+      (p?.status === "training" || p?.status === "scraping")
+  );
 }
 
 async function enqueuePageTask(jobId, pageIndex) {
@@ -183,12 +197,12 @@ export async function processTrainJobPage(jobId, pageIndex, { chain = true } = {
     return;
   }
 
-  if (page.status === "error") {
+  if (page.status === "error" && chain) {
     await finishOrContinue(job, pageIndex);
     return;
   }
 
-  if (page.status !== "pending" && page.status !== "scraped") {
+  if (page.status !== "pending" && page.status !== "scraped" && page.status !== "error") {
     await finishOrContinue(job, pageIndex);
     return;
   }
@@ -217,10 +231,26 @@ export async function processTrainJobPage(jobId, pageIndex, { chain = true } = {
       url: parsed.href,
       pageTitle: scraped.title,
     });
-    const content = prepareContentForTraining(scraped.content, {
-      sourceUrl,
-      seedUrl: job.seedUrl || parsed.href,
-    });
+
+    const isEcommerce = job.mode === "ecommerce";
+    let content;
+    if (isEcommerce) {
+      let html = scraped.html || "";
+      if (!html) {
+        html = await fetchProductPageHtml(sourceUrl);
+      }
+      content = prepareContentForEcommerce({
+        rawContent: scraped.content,
+        html,
+        sourceUrl,
+      });
+    } else {
+      content = prepareContentForTraining(scraped.content, {
+        sourceUrl,
+        seedUrl: job.seedUrl || parsed.href,
+      });
+    }
+
     const text = resolveTrainingText(content, {
       prepared: true,
       sourceUrl,
@@ -241,7 +271,8 @@ export async function processTrainJobPage(jobId, pageIndex, { chain = true } = {
       text,
       description: titleDb,
       sourceUrl,
-      embeddingProfile: "bulk",
+      // Single-page train/retry: slower embeddings (1 at a time) to avoid Vertex quota bursts.
+      embeddingProfile: chain ? "bulk" : "default",
       ...(job.folderId && { folderId: job.folderId }),
     });
 

@@ -1,3 +1,5 @@
+import { isWebsiteImportMode } from "@/app/lib/websiteImportMode";
+
 export function websiteScrapeJobStorageKey(brand) {
   return `kavisha-website-scrape-job-${brand || ""}`;
 }
@@ -32,7 +34,7 @@ export function readStoredWebsiteScrapeJobMode(brand) {
   if (typeof window === "undefined" || !brand) return null;
   try {
     const mode = sessionStorage.getItem(websiteScrapeJobModeStorageKey(brand));
-    return mode === "blog" || mode === "generic" ? mode : null;
+    return isWebsiteImportMode(mode) ? mode : null;
   } catch {
     return null;
   }
@@ -41,7 +43,7 @@ export function readStoredWebsiteScrapeJobMode(brand) {
 export function writeStoredWebsiteScrapeJobMode(brand, mode) {
   if (typeof window === "undefined" || !brand) return;
   try {
-    if (mode === "blog" || mode === "generic") {
+    if (isWebsiteImportMode(mode)) {
       sessionStorage.setItem(websiteScrapeJobModeStorageKey(brand), mode);
     } else {
       sessionStorage.removeItem(websiteScrapeJobModeStorageKey(brand));

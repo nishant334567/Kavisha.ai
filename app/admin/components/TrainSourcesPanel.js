@@ -8,6 +8,7 @@ import {
   Globe,
   Newspaper,
   PenLine,
+  ShoppingBag,
   Upload,
   Youtube,
 } from "lucide-react";
@@ -15,7 +16,6 @@ import {
   useWebsiteImport,
   WebsiteImportPanel,
 } from "@/app/admin/components/WebsiteImportWizard";
-
 const SOURCE_OPTIONS = [
   {
     id: "pdf",
@@ -50,6 +50,13 @@ const SOURCE_OPTIONS = [
     icon: Newspaper,
     importMode: "blog",
   },
+  {
+    id: "ecommerce",
+    label: "E-commerce",
+    description: "Product pages with JSON-LD and catalog cleanup",
+    icon: ShoppingBag,
+    importMode: "ecommerce",
+  },
 ];
 
 const fieldLabel =
@@ -64,7 +71,12 @@ function ScrapeJobSourceSync({ selectedSource, onSelectSource }) {
 
   useEffect(() => {
     if (!importInProgress || !activeMode) return;
-    const target = activeMode === "blog" ? "blog" : "website";
+    const target =
+      activeMode === "blog"
+        ? "blog"
+        : activeMode === "ecommerce"
+          ? "ecommerce"
+          : "website";
     if (selectedSource !== target) {
       onSelectSource(target);
     }
@@ -319,6 +331,10 @@ export default function TrainSourcesPanel({
 
                 {selectedSource === "blog" && (
                   <WebsiteImportPanel mode="blog" />
+                )}
+
+                {selectedSource === "ecommerce" && (
+                  <WebsiteImportPanel mode="ecommerce" />
                 )}
               </div>
             </div>

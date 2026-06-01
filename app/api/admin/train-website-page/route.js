@@ -4,6 +4,7 @@ import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { connectDB } from "@/app/lib/db";
 import WebsiteScrapeJob from "@/app/models/WebsiteScrapeJob";
 import {
+  isAnotherPageActivelyTraining,
   processTrainJobPage,
   serializeJob,
 } from "@/app/lib/websiteScrapeJobRunner";
@@ -35,19 +36,19 @@ export async function POST(req) {
           return NextResponse.json({ error: "Job not found" }, { status: 404 });
         }
 
-        if (job.status === "running") {
-          return NextResponse.json(
-            {
-              error:
-                "Batch training is running. Stop training or wait before training a single page.",
-            },
-            { status: 409 }
-          );
-        }
-
         const pageIndex = job.pages.findIndex((p) => p.url === url);
         if (pageIndex === -1) {
           return NextResponse.json({ error: "Page not in session" }, { status: 404 });
+        }
+
+        if (isAnotherPageActivelyTraining(job.pages, pageIndex)) {
+          return NextResponse.json(
+            {
+              error:
+                "Another page is still training. Wait for it to finish or press Stop.",
+            },
+            { status: 409 }
+          );
         }
 
         if (job.pages[pageIndex].status === "skipped") {
@@ -57,7 +58,23 @@ export async function POST(req) {
           );
         }
 
-        if (job.status === "discovered" || job.status === "stopped") {
+        if (job.pages[pageIndex].status === "error") {
+          await WebsiteScrapeJob.updateOne(
+            { jobId },
+            {
+              $set: {
+                [`pages.${pageIndex}.status`]: "pending",
+                [`pages.${pageIndex}.error`]: "",
+              },
+            }
+          );
+        }
+
+        if (
+          job.status === "discovered" ||
+          job.status === "stopped" ||
+          job.status === "completed"
+        ) {
           await WebsiteScrapeJob.updateOne(
             { jobId },
             { $set: { status: "running" }, $unset: { completedAt: 1 } }

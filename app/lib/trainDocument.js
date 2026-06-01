@@ -6,6 +6,7 @@ import {
 } from "@/app/lib/embeddings.js";
 import pc from "@/app/lib/pinecone.js";
 import TrainingData from "@/app/models/TrainingData.js";
+import { prepareTextForTrainingChunks } from "@/app/lib/websiteScrapeContent";
 
 const MIN_CHUNK_WORDS = 500;
 export const MAX_TRAINING_CHUNKS = 20;
@@ -166,7 +167,8 @@ export async function trainDocument({
   const titleSlug = titleValue.replace(/[^a-zA-Z0-9]/g, "").substring(0, 50);
   const docId = `${titleSlug}_${shortUuid}`;
   const embeddingVersion = 0;
-  const chunks = buildChunks(trimmedText, docId, embeddingVersion);
+  const textForChunking = prepareTextForTrainingChunks(trimmedText);
+  const chunks = buildChunks(textForChunking, docId, embeddingVersion);
 
   if (chunks.length > MAX_TRAINING_CHUNKS) {
     throw new Error(
@@ -214,7 +216,7 @@ export async function trainDocument({
       title: titleValue.substring(0, 50),
       description: descriptionValue,
       brand,
-      text: trimmedText,
+      text: textForChunking,
       totalChunks: chunks.length,
       embeddingVersion,
       createdAt,

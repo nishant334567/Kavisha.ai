@@ -11,6 +11,10 @@ import {
   startTrainingJob,
   stopTrainingJob,
 } from "@/app/lib/websiteScrapeJobRunner";
+import {
+  isWebsiteImportMode,
+  normalizeWebsiteImportMode,
+} from "@/app/lib/websiteImportMode";
 
 export const maxDuration = 60;
 
@@ -81,8 +85,9 @@ export async function GET(req) {
               $in: ["discovered", "pending", "running", "stopped", "completed"],
             },
           };
-          if (mode === "blog" || mode === "generic") {
-            query.mode = mode;
+          const queryMode = normalizeWebsiteImportMode(mode);
+          if (isWebsiteImportMode(queryMode)) {
+            query.mode = queryMode;
           }
           const job = await WebsiteScrapeJob.findOne(query)
             .sort({ updatedAt: -1 })
@@ -134,7 +139,7 @@ export async function POST(req) {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        const importMode = mode === "blog" ? "blog" : "generic";
+        const importMode = normalizeWebsiteImportMode(mode);
 
         if (startTraining && jobId) {
           try {

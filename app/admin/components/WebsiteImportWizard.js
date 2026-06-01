@@ -18,10 +18,18 @@ import {
   writeStoredWebsiteScrapeJobId,
   writeStoredWebsiteScrapeJobMode,
 } from "@/app/lib/websiteScrapeJobStorage";
+import {
+  normalizeWebsiteImportMode,
+  websiteImportModeLabel,
+} from "@/app/lib/websiteImportMode";
 
 const CARD_CONFIG = {
   generic: { placeholder: "https://yourbrand.com" },
   blog: { placeholder: "https://yourbrand.com/blog/" },
+  ecommerce: {
+    placeholder: "https://yourstore.com",
+    hint: "Product pages are cleaned with JSON-LD and catalog-focused stripping before training.",
+  },
 };
 
 const WebsiteImportContext = createContext(null);
@@ -43,8 +51,16 @@ export function WebsiteImportProvider({
   onDocumentsRefresh,
   children,
 }) {
-  const [urlByMode, setUrlByMode] = useState({ generic: "", blog: "" });
-  const [errorByMode, setErrorByMode] = useState({ generic: null, blog: null });
+  const [urlByMode, setUrlByMode] = useState({
+    generic: "",
+    blog: "",
+    ecommerce: "",
+  });
+  const [errorByMode, setErrorByMode] = useState({
+    generic: null,
+    blog: null,
+    ecommerce: null,
+  });
   const [activeMode, setActiveMode] = useState(null);
   const [discovering, setDiscovering] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -133,10 +149,7 @@ export function WebsiteImportProvider({
       const storedMode = readStoredWebsiteScrapeJobMode(brandSubdomain);
       if (storedMode) setActiveMode(storedMode);
 
-      const modeParam =
-        mode === "blog" || mode === "generic"
-          ? mode
-          : storedMode || "generic";
+      const modeParam = normalizeWebsiteImportMode(mode || storedMode);
 
       try {
         const res = await fetch(
@@ -222,7 +235,7 @@ export function WebsiteImportProvider({
         body: JSON.stringify({
           url: trimmed,
           brand: brandSubdomain,
-          mode: mode === "blog" ? "blog" : "generic",
+          mode: normalizeWebsiteImportMode(mode),
         }),
       });
       const data = await getPayload(res);
@@ -235,6 +248,7 @@ export function WebsiteImportProvider({
         throw new Error("No pages were found on this site");
       }
 
+      const importMode = normalizeWebsiteImportMode(data.mode || mode);
       setLinks(found);
       setDiscoverMeta({
         total: data.total ?? found.length,
@@ -243,7 +257,7 @@ export function WebsiteImportProvider({
         feedUrlCount: data.feedUrlCount ?? 0,
         folderId: data.folderId || "",
         folderName: data.folderName || "",
-        mode,
+        mode: importMode,
       });
 
       const sessionRes = await fetch("/api/admin/website-scrape-jobs", {
@@ -252,7 +266,7 @@ export function WebsiteImportProvider({
         body: JSON.stringify({
           brand: brandSubdomain,
           discoverOnly: true,
-          mode: mode === "blog" ? "blog" : "generic",
+          mode: importMode,
           pages: found,
           seedUrl: data.seedUrl || trimmed,
           folderId: data.folderId || "",
@@ -421,8 +435,8 @@ export function WebsiteImportPanel({ mode }) {
     <div className="flex flex-col">
       {blockedByOtherImport ? (
         <p className="mb-5 rounded-xl border border-amber-200/80 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
-          Import running on {activeMode === "blog" ? "Blog" : "Website"} —
-          switch source to continue.
+          Import running on {websiteImportModeLabel(activeMode)} — switch
+          source to continue.
         </p>
       ) : null}
 
@@ -458,10 +472,14 @@ export function WebsiteImportPanel({ mode }) {
           }}
           placeholder={config.placeholder}
           disabled={busy || blockedByOtherImport}
-          aria-label={mode === "blog" ? "Blog URL" : "Website URL"}
+          aria-label={`${websiteImportModeLabel(mode)} store URL`}
           className="w-full rounded-xl border-0 bg-card px-4 py-3.5 text-sm text-foreground shadow-sm transition-all duration-200 placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-highlight/20 disabled:cursor-not-allowed disabled:opacity-50"
         />
       </div>
+
+      {config.hint ? (
+        <p className="mb-5 text-sm leading-relaxed text-muted">{config.hint}</p>
+      ) : null}
 
       <button
         type="button"
