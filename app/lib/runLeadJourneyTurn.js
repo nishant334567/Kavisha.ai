@@ -1,4 +1,7 @@
-import { generateEmbedding } from "./embeddings.js";
+import {
+  generateRetrievalEmbedding,
+  getEmbeddingFailureUserMessage,
+} from "./embeddings.js";
 import pc from "./pinecone.js";
 import Logs from "../models/ChatLogs.js";
 import Session from "../models/ChatSessions.js";
@@ -329,28 +332,16 @@ export async function runLeadJourneyTurn({
     const uniqueContext = new Map();
 
     if (betterQuery && betterQuery !== '""' && betterQuery !== "''") {
-      const userMessageEmbedding = await generateEmbedding(
-        betterQuery,
-        "RETRIEVAL_QUERY"
-      );
-      if (
-        userMessageEmbedding === 0 ||
-        !Array.isArray(userMessageEmbedding)
-      ) {
-        return {
-          ok: false,
-          status: 500,
-          error: "Failed to generate embedding",
-          stage: "generate-embedding",
-        };
-      }
+      const { embedding: userMessageEmbedding, error: embeddingError } =
+        await generateRetrievalEmbedding(betterQuery, "RETRIEVAL_QUERY");
 
-      if (userMessageEmbedding.length === 0) {
+      if (!Array.isArray(userMessageEmbedding) || userMessageEmbedding.length === 0) {
         return {
           ok: false,
-          status: 500,
-          error: "Invalid embedding generated",
-          stage: "validate-embedding",
+          status: embeddingError?.code === "auth_not_configured" ? 503 : 500,
+          error: getEmbeddingFailureUserMessage(embeddingError),
+          stage: "generate-embedding",
+          details: embeddingError ?? undefined,
         };
       }
       try {

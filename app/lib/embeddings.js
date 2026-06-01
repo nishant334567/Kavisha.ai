@@ -46,40 +46,60 @@ export const BULK_EMBEDDING_OPTIONS = {
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
-export async function generateEmbedding(text, type) {
-  try {
-    if (!auth) {
-      return 0;
-    }
-    const client = await auth.getClient();
-    const accessToken = await client.getAccessToken();
+export function isEmbeddingConfigured() {
+  return Boolean(auth && String(process.env.GOOGLE_CLOUD_PROJECT || "").trim());
+}
 
-    const embeddingResponse = await fetch(
-      `https://us-central1-aiplatform.googleapis.com/v1/projects/${process.env.GOOGLE_CLOUD_PROJECT}/locations/us-central1/publishers/google/models/text-embedding-005:predict`,
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken.token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          instances: [{ content: text, task_type: type }],
-          parameters: {},
-        }),
-      }
-    );
-
-    if (!embeddingResponse.ok) {
-      return 0;
-    }
-
-    const embeddingData = await embeddingResponse.json();
-
-    const embedding = embeddingData.predictions[0].embeddings.values;
-    return embedding;
-  } catch (error) {
-    return 0;
+/** User-safe message when retrieval embedding fails (API surfaces this in chat). */
+export function getEmbeddingFailureUserMessage(error) {
+  if (error?.code === "auth_not_configured") {
+    return "The assistant search service is not configured. Please contact support.";
   }
+  return "Something went wrong while searching the knowledge base. Please try again.";
+}
+
+/**
+ * Retrieval embedding with retry + structured error (lead journey, enrich profile, etc.).
+ */
+export async function generateRetrievalEmbedding(
+  text,
+  type = "RETRIEVAL_QUERY",
+  { attempts = 2, retryDelayMs = 800 } = {},
+) {
+  if (!isEmbeddingConfigured()) {
+    const error = buildEmbeddingError(
+      "auth_not_configured",
+      "Set GCP_CLIENT_EMAIL, GCP_PRIVATE_KEY, and GOOGLE_CLOUD_PROJECT in .env.local",
+    );
+    console.error("[embeddings]", error.message);
+    return { embedding: null, error };
+  }
+
+  let lastError = null;
+  for (let i = 0; i < attempts; i++) {
+    const result = await generateEmbeddingWithDebug(text, type);
+    if (Array.isArray(result.embedding) && result.embedding.length > 0) {
+      return { embedding: result.embedding, error: null };
+    }
+    lastError = result.error;
+    if (i < attempts - 1 && retryDelayMs > 0) {
+      await delay(retryDelayMs);
+    }
+  }
+
+  console.error("[embeddings] retrieval embedding failed:", lastError, {
+    type,
+    preview: String(text || "").slice(0, 120),
+  });
+  return { embedding: null, error: lastError };
+}
+
+export async function generateEmbedding(text, type) {
+  const { embedding } = await generateRetrievalEmbedding(text, type, {
+    attempts: 1,
+    retryDelayMs: 0,
+  });
+  return embedding ?? 0;
 }
 
 export async function generateEmbeddingWithDebug(text, type) {

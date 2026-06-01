@@ -103,7 +103,7 @@ export default function CommunityChatPage() {
         </div>
         <div className="w-full h-full flex flex-col overflow-hidden">
           {currentChatId && (
-            <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center px-4 md:px-0">
+            <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden px-2 md:px-0">
               <ChatBox currentChatId={currentChatId} />
             </div>
           )}

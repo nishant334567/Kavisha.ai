@@ -6,14 +6,13 @@ import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import Resume from "./Resume";
 import FormatText from "./FormatText";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
+import { Send, Paperclip } from "lucide-react";
+import SuggestedQuestionsCarousel from "@/app/components/SuggestedQuestionsCarousel";
 import {
-  Mic,
-  MicOff,
-  Send,
-  Paperclip,
-  ChevronLeft,
-  ChevronRight,
-} from "lucide-react";
+  getServiceIntroQuestions,
+  isIntroChatWithSuggestions,
+  shouldShowIntroSuggestedQuestions,
+} from "@/app/lib/suggestedQuestions";
 import Matches from "@/app/components/Matches";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
@@ -23,6 +22,14 @@ import AssistantEngagementRow from "@/app/components/AssistantEngagementRow";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
 import LiveChat from "@/app/components/LiveChat";
 import { useCommunityConnect } from "@/app/hooks/useCommunityConnect";
+
+function toGracefulHeaderLabel(text) {
+  if (!text || typeof text !== "string") return "";
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function ChatBox({
   currentChatId,
@@ -34,7 +41,7 @@ export default function ChatBox({
   const endOfMessagesRef = useRef(null);
   const messagesScrollRef = useRef(null);
   const shouldStickToBottomRef = useRef(true);
-  const suggestedQuestionsScrollRef = useRef(null);
+  const introScrollHandledRef = useRef(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [messageLoading, setMessageLoading] = useState(false);
@@ -56,17 +63,6 @@ export default function ChatBox({
   const [connectionId, setConnectionId] = useState(null);
   const [liveChatOtherDisplayName, setLiveChatOtherDisplayName] =
     useState(null);
-  const [isRecording, setIsRecording] = useState(false);
-  const timerRef = useRef(null);
-  const [seconds, setSeconds] = useState(0);
-  const intervalRef = useRef(null);
-  const [audioUrl, setAudioUrl] = useState(null);
-  const mediaRecorderRef = useRef(null);
-  const audioChunksRef = useRef([]);
-  const [transcriptText, setTranscriptText] = useState("");
-  const [transcribeError, setTranscribeError] = useState("");
-  const [isTranscribing, setIsTranscribing] = useState(false);
-
   const [chatLoading, setChatLoading] = useState(false);
   const [summaryUptilnow, setSummaryUptilnow] = useState("");
   const [currentChatType, setCurrentChatType] = useState(null);
@@ -140,23 +136,6 @@ export default function ChatBox({
   }, [currentChatId, brandContext?.subdomain, router]);
 
   useEffect(() => {
-    if (!isRecording) return;
-    timerRef.current = 0;
-    setSeconds(0);
-    intervalRef.current = setInterval(() => {
-      timerRef.current += 1;
-      setSeconds((s) => {
-        const next = s + 1;
-        if (next >= 15) {
-          stopRecording();
-        }
-        return next;
-      });
-    }, 1000);
-    return () => clearInterval(intervalRef.current);
-  }, [isRecording]);
-
-  useEffect(() => {
     //fetch resume data initially - only for job_seeker, recruiter, or dating
     if (!currentChatId) return;
     const allowedTypes = ["job_seeker", "recruiter", "dating"];
@@ -212,6 +191,7 @@ export default function ChatBox({
 
   useEffect(() => {
     shouldStickToBottomRef.current = true;
+    introScrollHandledRef.current = false;
   }, [currentChatId]);
 
   useEffect(() => {
@@ -340,9 +320,45 @@ export default function ChatBox({
       setMatchesRefreshing(false);
     }
   }, [currentChatId, eligibleForMatches, refetchPaidConnections]);
+  const showIntroSuggestedQuestions = useMemo(
+    () =>
+      shouldShowIntroSuggestedQuestions({
+        chatType: currentChatType,
+        messages,
+        messageLoading,
+      }),
+    [currentChatType, messages, messageLoading],
+  );
+
+  const introSuggestedQuestions = useMemo(
+    () =>
+      showIntroSuggestedQuestions
+        ? getServiceIntroQuestions(brandContext, serviceKey)
+        : [],
+    [showIntroSuggestedQuestions, brandContext, serviceKey],
+  );
+
   useEffect(() => {
-    if (!shouldStickToBottomRef.current) return;
     const el = messagesScrollRef.current;
+    const isIntroWithSuggestions = isIntroChatWithSuggestions({
+      chatType: currentChatType,
+      messages,
+      messageLoading,
+    });
+
+    if (isIntroWithSuggestions) {
+      if (!introScrollHandledRef.current) {
+        introScrollHandledRef.current = true;
+        shouldStickToBottomRef.current = false;
+        requestAnimationFrame(() => {
+          if (el) el.scrollTop = 0;
+        });
+      }
+      return;
+    }
+    introScrollHandledRef.current = false;
+
+    if (!shouldStickToBottomRef.current) return;
     if (!el) {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "auto" });
       return;
@@ -350,68 +366,7 @@ export default function ChatBox({
     requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight;
     });
-  }, [messages, messageLoading]);
-
-  const uploadAudio = async (audioBlob) => {
-    setIsTranscribing(true);
-    setTranscribeError("");
-    const formData = new FormData();
-    formData.append("file", audioBlob, "recording.webm");
-    const res = await fetch("/api/transcribe", {
-      method: "POST",
-      body: formData,
-    });
-    try {
-      const data = await res.json();
-      if (!res.ok || data?.success === false) {
-        setTranscribeError(data?.message || "Transcription failed");
-        return;
-      }
-      const text = typeof data?.text === "string" ? data.text : "";
-      if (text.trim()) {
-        setTranscriptText(text.trim());
-      } else {
-        setTranscribeError("No transcription text returned.");
-      }
-    } catch (e) {
-      setTranscribeError("Failed to read transcription response.");
-    } finally {
-      setIsTranscribing(false);
-    }
-  };
-  const startRecording = async () => {
-    // reset previous artifacts for a fresh capture
-    setAudioUrl(null);
-    setTranscriptText("");
-    setTranscribeError("");
-    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-    const mediaRecorder = new MediaRecorder(stream);
-    mediaRecorderRef.current = mediaRecorder;
-    audioChunksRef.current = [];
-    mediaRecorder.ondataavailable = (event) => {
-      if (event.data.size > 0) {
-        audioChunksRef.current.push(event.data);
-      }
-    };
-    mediaRecorder.onstop = () => {
-      const audioBlob = new Blob(audioChunksRef.current, {
-        type: "audio/webm",
-      });
-      const url = URL.createObjectURL(audioBlob);
-      setAudioUrl(url);
-      uploadAudio(audioBlob);
-    };
-    mediaRecorder.start();
-    setIsRecording(true);
-  };
-
-  const stopRecording = () => {
-    if (!isRecording) return;
-    clearInterval(intervalRef.current);
-    intervalRef.current = null;
-    mediaRecorderRef.current?.stop();
-    setIsRecording(false);
-  };
+  }, [messages, messageLoading, currentChatType]);
 
   const formatMessage = (message) => {
     return message.split("*").join(" ");
@@ -494,11 +449,12 @@ export default function ChatBox({
   };
 
   const handleSubmit = async (voiceText = null, isRetry = false) => {
-    let sessionId = currentChatId;
-    let messageText, updatedMessages, historyToUse;
+    const sessionId = currentChatId;
+    let messageText;
+    let updatedMessages;
+    let historyToUse;
 
     if (isRetry) {
-      // Retry logic: remove last error message and get the message to retry
       const lastErrorRemoved = messages.filter((item, index) => {
         return index !== messages.length - 1;
       });
@@ -507,28 +463,22 @@ export default function ChatBox({
       updatedMessages = lastErrorRemoved;
       historyToUse = lastErrorRemoved.slice(0, retryIndex);
     } else {
-      // Normal submit logic
       messageText = (voiceText ?? input).trim();
       if (!messageText) return;
 
       setInput("");
-      setTranscriptText("");
-      setAudioUrl(null);
       const newUserMessage = {
         role: "user",
         message: messageText,
         requery: null,
-      }; // Will be updated after API response
+      };
       updatedMessages = [...messages, newUserMessage];
       historyToUse = updatedMessages;
     }
 
-    // User sent / retried — follow the thread to the bottom even if they had scrolled up.
     shouldStickToBottomRef.current = true;
-
     setMessages(updatedMessages);
     setMessageLoading(true);
-    let response;
 
     if (
       serviceType === "collect-data" ||
@@ -569,11 +519,7 @@ export default function ChatBox({
     if (!response.ok) {
       setMessages([
         ...updatedMessages,
-        {
-          role: "assistant",
-          message:
-            "Kavisha failed to respond to that. Can you please try again?",
-        },
+        { role: "assistant", message: assistantMessage },
       ]);
       setRetry(true);
       setRetryIndex(updatedMessages.length - 1);
@@ -600,21 +546,89 @@ export default function ChatBox({
       productCards: data?.productCards || [],
       intent: data?.intent || "",
     };
-    if (
-      currentChatType?.toLowerCase() === "lead_journey" &&
-      data?.assistantLogId
-    ) {
-      assistantMsg._id = data.assistantLogId;
-      assistantMsg.liked = false;
-      assistantMsg.copied = false;
-    }
-    setMessages([...updatedMessagesWithRequery, assistantMsg]);
-    setMessageLoading(false);
-    // Reset retry state on success
-    if (isRetry) {
+
+    try {
+      const fetchOpts = {
+        method: "POST",
+        credentials: "same-origin",
+        headers: { "Content-Type": "application/json" },
+      };
+
+      const isLeadJourney =
+        String(currentChatType || "").toLowerCase() === "lead_journey";
+
+      const response = isLeadJourney
+        ? await fetch("/api/lead-journey", {
+          ...fetchOpts,
+          body: JSON.stringify({
+            history: historyToUse,
+            userMessage: messageText,
+            sessionId,
+            summary: summaryUptilnow,
+          }),
+        })
+        : await fetch("/api/ai", {
+          ...fetchOpts,
+          body: JSON.stringify({
+            history: historyToUse,
+            userMessage: messageText || "",
+            sessionId,
+            resume: resumeData?.resumeSummary || "",
+            type: currentChatType,
+            userId: user?.id,
+          }),
+        });
+
+      const data = await response.json().catch(() => ({}));
+
+      if (!response.ok) {
+        const apiMsg =
+          typeof data?.error === "string" && data.error.trim()
+            ? data.error.trim()
+            : null;
+        failResponse(
+          apiMsg ||
+          `${brandContext?.brandName || "Kavisha"} failed to respond to that. Can you please try again?`
+        );
+        return;
+      }
+
+      if (data?.summary != null) setSummaryUptilnow(data.summary);
+
+      const updatedMessagesWithRequery = updatedMessages.map((msg, idx) => {
+        if (idx === updatedMessages.length - 1 && msg.role === "user") {
+          return { ...msg, requery: data?.requery || null };
+        }
+        return msg;
+      });
+
+      const replyText =
+        typeof data?.reply === "string" ? data.reply.trim() : "";
+      if (!replyText) {
+        failResponse(
+          `${brandContext?.brandName || "Kavisha"} returned an empty reply. Please try again.`
+        );
+        return;
+      }
+
+      const assistantMsg = {
+        role: "assistant",
+        message: replyText,
+        sourceUrls: data?.sourceUrls || [],
+        sourceCards: data?.sourceCards || [],
+        intent: data?.intent || "",
+      };
+      if (
+        currentChatType?.toLowerCase() === "lead_journey" &&
+        data?.assistantLogId
+      ) {
+        assistantMsg._id = data.assistantLogId;
+        assistantMsg.liked = false;
+        assistantMsg.copied = false;
+      }
+      setMessages([...updatedMessagesWithRequery, assistantMsg]);
       setRetry(false);
       setRetryIndex(undefined);
-    }
 
     if (data?.allDataCollected === "true") {
       setHasDatacollected(true);
@@ -646,6 +660,23 @@ export default function ChatBox({
       if (typeof pct === "number" && !Number.isNaN(pct)) {
         setOnboardingPercent(Math.max(0, Math.min(100, pct)));
       }
+
+      if (
+        !isLeadJourney &&
+        (isCommunitySession || isJobsRequirementPost)
+      ) {
+        const pct = data?.onboardingProgress?.percent;
+        if (typeof pct === "number" && !Number.isNaN(pct)) {
+          setOnboardingPercent(Math.max(0, Math.min(100, pct)));
+        }
+      }
+    } catch (err) {
+      console.error("[ChatBox] handleSubmit:", err);
+      failResponse(
+        `${brandContext?.brandName || "Kavisha"} failed to respond to that. Can you please try again?`
+      );
+    } finally {
+      setMessageLoading(false);
     }
   };
   useEffect(() => {
@@ -757,48 +788,34 @@ export default function ChatBox({
     );
   })();
 
-  const firstHeaderBadge =
-    isCommunitySession && isCommunityRoleType ? "COMMUNITY" : "SERVICE";
-  const secondHeaderBadge = isCommunityRoleType
+  const secondHeaderRaw = isCommunityRoleType
     ? communitySecondBadgeLabel
-    : sessionName
-      ? sessionName.toUpperCase()
-      : currentChatType?.split("_").join(" ").toUpperCase() || "";
+    : sessionName ||
+    currentChatType?.split("_").join(" ") ||
+    "";
+  const secondHeaderDisplay = toGracefulHeaderLabel(secondHeaderRaw);
 
   return (
     <>
-      <div className="font-baloo mx-auto flex h-full min-h-0 w-full max-w-full overflow-hidden rounded-xl bg-background p-2 md:w-3/5 md:p-4">
-        <div className="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
-          <div className="rounded-xl w-full p-1 md:p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
-            {/* Logo + role badges only (brand name is in the navbar on /chats and /community). */}
-            <div className="flex-2 my-4 flex min-h-0 flex-col items-center justify-center md:mb-8 md:mt-4 md:flex-row md:items-center md:gap-4 md:px-2">
+      <div className="font-baloo mx-auto flex h-full min-h-0 w-full max-w-full flex-1 overflow-hidden rounded-xl bg-background p-0 md:w-3/5 md:px-1">
+        <div className="relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
+          <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-xl font-light">
+            {/* Logo + session context */}
+            <div className="flex shrink-0 flex-row items-center justify-center gap-2.5 px-2 pb-3 pt-4 md:gap-3 md:pb-4 md:pt-5">
               <img
                 src={brandContext?.logoUrl}
                 alt=""
-                className="h-[65px] w-[65px] flex-shrink-0 rounded-full object-cover"
+                className="h-12 w-12 flex-shrink-0 rounded-full object-cover ring-1 ring-border/40 md:h-14 md:w-14"
               />
-              <div className="flex flex-col items-center md:items-start">
-                <div className="my-2 inline-flex items-stretch overflow-hidden border border-border font-baloo text-xs">
-                  <button
-                    type="button"
-                    className="flex cursor-default items-center bg-foreground px-2.5 py-1.5 font-medium text-background"
-                    disabled
-                  >
-                    {firstHeaderBadge}
-                  </button>
-                  <button
-                    type="button"
-                    className="flex cursor-default items-center border-l border-border bg-background px-2.5 py-1.5 font-medium text-foreground"
-                    disabled
-                  >
-                    {secondHeaderBadge}
-                  </button>
-                </div>
-              </div>
+              {secondHeaderDisplay ? (
+                <p className="min-w-0 max-w-[min(100%,14rem)] text-left font-baloo text-sm font-medium leading-tight text-foreground sm:max-w-xs md:max-w-sm md:text-[0.9375rem]">
+                  {secondHeaderDisplay}
+                </p>
+              ) : null}
             </div>
 
             {showOnboardingProgress && (
-              <div className="mb-2 flex w-full shrink-0 justify-start px-1 md:mb-3 md:px-2">
+              <div className="mb-1 flex w-full shrink-0 justify-start px-2 md:mb-1.5">
                 <div
                   className="inline-flex items-baseline gap-0.5 rounded-md border border-border/45 bg-muted/35 px-2.5 py-1 text-[13px] italic tabular-nums shadow-sm backdrop-blur-[2px] dark:border-border/35 dark:bg-muted/25"
                   style={
@@ -821,13 +838,13 @@ export default function ChatBox({
               </div>
             )}
 
-            {/* Messages Section - flex-2, scrollable */}
+            {/* Messages */}
             <div
               ref={messagesScrollRef}
               onScroll={updateStickyFromScroll}
               onWheel={updateStickyFromScroll}
               onTouchMove={updateStickyFromScroll}
-              className="flex-[4] min-h-0 overflow-y-scroll overflow-x-hidden scrollbar-none"
+              className="min-h-0 flex-1 overflow-y-scroll overflow-x-hidden scrollbar-none pt-2 md:pt-3"
             >
               {/* <div className="flex flex-col gap-2 min-h-full justify-end"> */}
               {currentChatId &&
@@ -1010,8 +1027,17 @@ export default function ChatBox({
                   refreshing={matchesRefreshing}
                 />
               )}
+              {showIntroSuggestedQuestions &&
+                introSuggestedQuestions.length > 0 && (
+                  <SuggestedQuestionsCarousel
+                    className="mb-2 mt-1 px-1 md:px-0"
+                    accentColor={primaryBrandHex}
+                    questions={introSuggestedQuestions}
+                    disabled={messageLoading}
+                    onSelect={(q) => handleSubmit(String(q).trim())}
+                  />
+                )}
               <div ref={endOfMessagesRef}></div>
-              {/* </div> */}
             </div>
             {/* Suggested intro questions — chat services only */}
             {serviceType === "chat" &&
@@ -1068,125 +1094,64 @@ export default function ChatBox({
             {/* Textarea Section - flex-1 */}
             <div className="flex-1 min-h-0 flex flex-col border-border pt-2">
               <form
-                className="relative w-full flex-1 flex flex-col min-h-0"
+                className="w-full"
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSubmit();
                 }}
               >
-                <textarea
-                  className="px-12 py-3 w-full flex-1 border border-border rounded-xl focus:outline-none focus:ring-0 focus:border-ring transition bg-input text-foreground leading-6 resize-none placeholder-transparent min-h-0"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                  placeholder={`Message ${brandContext?.brandName}…`}
-                  disabled={messageLoading}
-                />
-
-                {(!input || input.trim().length === 0) && (
-                  <div className="pointer-events-none absolute inset-y-0 left-12 right-20 flex items-center text-muted text-sm">
-                    Message {brandContext?.brandName}…
-                  </div>
-                )}
-
-                <label className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted hover:text-foreground transition-colors">
-                  <input
-                    type="file"
-                    accept=".pdf,.docx"
-                    onChange={(e) => setSelectedFile(e.target.files[0])}
-                    className="hidden"
-                  />
-                  <span
-                    className="hover:scale-110 transition-transform"
-                    title={
-                      resumeData?.filename
-                        ? "Reselect"
-                        : brandContext?.isBrandAdmin
-                          ? "Share JD"
-                          : "Upload Resume"
-                    }
-                  >
-                    <Paperclip className="w-5 h-5" />
-                  </span>
-                </label>
-
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                  <div className="relative">
-                    {isTranscribing && (
-                      <div className="absolute bottom-full mb-2 right-0 z-10">
-                        <div className="relative bg-card border border-border rounded-md shadow px-3 py-1.5 text-xs text-foreground">
-                          Transcribing…
-                          <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-border rotate-45"></div>
-                        </div>
-                      </div>
-                    )}
-                    {transcribeError && (
-                      <div className="absolute bottom-full mb-2 right-0 z-10">
-                        <div className="relative bg-card border border-red-300 rounded-md shadow px-3 py-1.5 text-xs text-red-600">
-                          {transcribeError}
-                          <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-red-300 rotate-45"></div>
-                        </div>
-                      </div>
-                    )}
-                    {transcriptText && (
-                      <div className="absolute bottom-full mb-2 right-0 z-10 w-[min(80vw,28rem)]">
-                        <div className="relative bg-card border border-border rounded-lg p-3 shadow">
-                          <div className="text-xs text-muted mb-1">
-                            Voice transcript
-                          </div>
-                          <div className="text-foreground text-sm whitespace-pre-wrap break-words max-h-40 overflow-auto">
-                            {transcriptText}
-                          </div>
-                          <div className="mt-2 flex gap-2 justify-end">
-                            <button
-                              onClick={() => handleSubmit(transcriptText)}
-                              className="px-3 py-1.5 rounded-md bg-orange-600 text-white hover:bg-orange-700 text-xs"
-                              type="button"
-                            >
-                              Send
-                            </button>
-                            <button
-                              onClick={() => setTranscriptText("")}
-                              className="px-3 py-1.5 rounded-md border border-border text-foreground hover:bg-muted-bg text-xs"
-                              type="button"
-                            >
-                              Discard
-                            </button>
-                          </div>
-                          <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-border rotate-45"></div>
-                        </div>
-                      </div>
-                    )}
-                    <button
-                      type="button"
-                      onClick={() =>
-                        isRecording ? stopRecording() : startRecording()
+                <div
+                  className="relative flex w-full items-end gap-0.5 rounded-full border border-border/50 bg-background py-1.5 pl-1.5 pr-2 shadow-md shadow-black/[0.06] ring-1 ring-black/[0.04] transition-[box-shadow,ring-color] focus-within:border-border focus-within:shadow-lg focus-within:ring-2 focus-within:ring-ring/40 dark:border-border/55 dark:bg-card dark:shadow-black/25 dark:ring-white/[0.06]"
+                >
+                  <label className="flex shrink-0 cursor-pointer items-center justify-center rounded-full p-2.5 text-muted transition-colors hover:bg-muted-bg/80 hover:text-foreground">
+                    <input
+                      type="file"
+                      accept=".pdf,.docx"
+                      onChange={(e) => setSelectedFile(e.target.files[0])}
+                      className="hidden"
+                    />
+                    <span
+                      className="transition-transform hover:scale-105"
+                      title={
+                        resumeData?.filename
+                          ? "Reselect"
+                          : brandContext?.isBrandAdmin
+                            ? "Share JD"
+                            : "Upload Resume"
                       }
-                      className="p-2 rounded-lg hover:bg-muted-bg transition-colors"
-                      title={isRecording ? "Stop recording" : "Start recording"}
                     >
-                      {isRecording ? (
-                        <Mic className="w-5 h-5 text-red-600" />
-                      ) : (
-                        <MicOff className="w-5 h-5 text-muted" />
-                      )}
-                    </button>
-                  </div>
+                      <Paperclip className="h-5 w-5" />
+                    </span>
+                  </label>
+
+                  <textarea
+                    rows={1}
+                    className="max-h-32 min-h-[2.75rem] min-w-0 flex-1 resize-none border-0 bg-transparent py-2.5 text-sm leading-6 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 disabled:opacity-60"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit();
+                      }
+                    }}
+                    placeholder={`Message ${brandContext?.brandName}…`}
+                    disabled={messageLoading}
+                  />
+
                   <button
                     type="submit"
                     disabled={!input.trim() || messageLoading}
-                    className={`inline-flex items-center justify-center p-2 rounded-lg ${!input.trim() || messageLoading
-                      ? "bg-muted-bg text-muted cursor-not-allowed"
-                      : "bg-[#59646F] text-[#FFEED8] hover:bg-[#4a5568] active:scale-95"
-                      } transition-all`}
+                    className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-foreground transition-all hover:opacity-75 active:scale-95 disabled:cursor-not-allowed disabled:opacity-35"
+                    style={
+                      input.trim() && !messageLoading && primaryBrandHex
+                        ? { color: primaryBrandHex }
+                        : undefined
+                    }
                     title="Send message"
+                    aria-label="Send message"
                   >
-                    <Send className="w-5 h-5" />
+                    <Send className="h-5 w-5" />
                   </button>
                 </div>
               </form>
