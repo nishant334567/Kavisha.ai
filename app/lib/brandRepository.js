@@ -479,25 +479,17 @@ const BRAND_IMAGE_UPLOAD = {
   paymentQr: { slug: "payment-qr", urlField: "paymentQrUrl" },
 };
 
-function extFromFilename(filename) {
-  const m = String(filename || "").match(/\.([a-z0-9]{2,5})$/i);
-  return m ? m[1].toLowerCase() : "jpg";
-}
-
 export async function uploadBrandImageToGcs(subdomain, imageType, buffer, filename) {
   const sub = normSubdomain(subdomain);
   const meta = BRAND_IMAGE_UPLOAD[imageType];
   if (!sub || !meta) throw new Error("Invalid subdomain or imageType");
 
-  const objectPath = `brands/${sub}/${meta.slug}.${extFromFilename(filename)}`;
-  const lower = String(filename || "").toLowerCase();
-  const contentType = lower.endsWith(".png")
-    ? "image/png"
-    : lower.endsWith(".webp")
-      ? "image/webp"
-      : "image/jpeg";
+  const { compressBrandImageBuffer } = await import("@/app/lib/compressBrandImage");
+  const compressed = await compressBrandImageBuffer(buffer, imageType);
+  const objectPath = `brands/${sub}/${meta.slug}.${compressed.extension}`;
+  const contentType = compressed.contentType;
 
-  const url = await uploadToBucket(objectPath, buffer, contentType);
+  const url = await uploadToBucket(objectPath, compressed.buffer, contentType);
   if (!url) throw new Error("GCS bucket not configured");
   if (url.includes("storage.googleapis.com/")) {
     const bucketName =

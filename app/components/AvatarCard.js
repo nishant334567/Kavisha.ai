@@ -69,6 +69,8 @@ export default function AvatarCard({
           <img
             src={image}
             alt=""
+            loading="lazy"
+            decoding="async"
             className="avatar-card-media h-full w-full object-cover transition-[filter,transform] duration-300 ease-out group-hover/card:scale-[1.02] group-hover/card:brightness-[0.72]"
             aria-hidden
           />

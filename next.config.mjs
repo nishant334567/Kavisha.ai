@@ -1,5 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  serverExternalPackages: ["sharp"],
   devIndicators: false,
   webpack: (config, { dev, isServer }) => {
     if (dev && !isServer) {

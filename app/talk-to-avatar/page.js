@@ -34,10 +34,10 @@ export default function TalkToAvatarPage() {
       try {
         setLoading(true);
         const res = await fetch("/api/brands?talkToAvatar=true");
+        const data = await res.json().catch(() => ({}));
         if (!res.ok) {
-          throw new Error("Failed to fetch avatars");
+          throw new Error(data.error || "Failed to fetch avatars");
         }
-        const data = await res.json();
         setAvatars(data.brands || []);
       } catch (err) {
         console.error("Error fetching avatars:", err);

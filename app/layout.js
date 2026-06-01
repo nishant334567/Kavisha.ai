@@ -80,7 +80,7 @@ export default async function RootLayout({ children }) {
       <head>
         <script
           dangerouslySetInnerHTML={{
-            __html: `(function(){var k="kavisha-chunk-retries";function isChunk(m){return/ChunkLoadError|Loading chunk .* failed/i.test(m||"")}function retry(r){var m=(r&&r.message)||String(r||"");if(!isChunk(m))return;var n=parseInt(sessionStorage.getItem(k)||"0",10);if(n>=2){sessionStorage.removeItem(k);return}sessionStorage.setItem(k,String(n+1));var u=new URL(location.href);u.searchParams.set("_chunk",Date.now());location.replace(u.toString())}window.addEventListener("load",function(){sessionStorage.removeItem(k)});window.addEventListener("error",function(e){retry(e.error)});window.addEventListener("unhandledrejection",function(e){retry(e.reason)})})();`,
+            __html: `(function(){var k="kavisha-chunk-retries";function isChunk(m){return/ChunkLoadError|Loading chunk .* failed/i.test(m||"")}function retry(r){if(!(r instanceof Error))return;var m=r.message||"";if(!isChunk(m))return;var n=parseInt(sessionStorage.getItem(k)||"0",10);if(n>=2){sessionStorage.removeItem(k);return}sessionStorage.setItem(k,String(n+1));var u=new URL(location.href);u.searchParams.set("_chunk",Date.now());location.replace(u.toString())}window.addEventListener("load",function(){sessionStorage.removeItem(k)});window.addEventListener("error",function(e){if(e.target&&e.target!==window)return;retry(e.error)});window.addEventListener("unhandledrejection",function(e){retry(e.reason)})})();`,
           }}
         />
       </head>
