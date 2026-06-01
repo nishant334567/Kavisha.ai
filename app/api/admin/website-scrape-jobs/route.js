@@ -1,21 +1,46 @@
 import { NextResponse } from "next/server";
-import { v4 as uuidv4 } from "uuid";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { connectDB } from "@/app/lib/db";
 import WebsiteScrapeJob from "@/app/models/WebsiteScrapeJob";
 import { parseAndValidateScrapeUrl } from "@/app/lib/scrapeWebsiteUrl";
 import {
+  createDiscoverSession,
   serializeJob,
   setJobPagesIncluded,
-  startScrapeJobProcessing,
+  startTrainingJob,
+  stopTrainingJob,
 } from "@/app/lib/websiteScrapeJobRunner";
-import {
-  MAX_WEBSITE_BATCH_PAGES,
-  websiteBatchLimitMessage,
-} from "@/app/lib/websiteScrapeLimits";
 
 export const maxDuration = 60;
+
+function validatePages(pages) {
+  const validatedPages = [];
+  for (const item of pages) {
+    const parsed = parseAndValidateScrapeUrl(item.url);
+    if (!parsed.ok) {
+      return { error: parsed.error || "Invalid page URL" };
+    }
+    validatedPages.push({
+      url: parsed.href,
+      label: typeof item.label === "string" ? item.label : "",
+      category: typeof item.category === "string" ? item.category : "",
+      status: "pending",
+      error: "",
+      docid: "",
+    });
+  }
+
+  const seen = new Set();
+  const uniquePages = [];
+  for (const p of validatedPages) {
+    if (seen.has(p.url)) continue;
+    seen.add(p.url);
+    uniquePages.push(p);
+  }
+
+  return { pages: uniquePages };
+}
 
 export async function GET(req) {
   return withAuth(req, {
@@ -25,6 +50,7 @@ export async function GET(req) {
         const brand = searchParams.get("brand");
         const jobId = searchParams.get("jobId");
         const active = searchParams.get("active") === "true";
+        const mode = searchParams.get("mode");
 
         if (!brand) {
           return NextResponse.json(
@@ -49,10 +75,16 @@ export async function GET(req) {
         }
 
         if (active) {
-          const job = await WebsiteScrapeJob.findOne({
+          const query = {
             brand,
-            status: { $in: ["pending", "running", "completed"] },
-          })
+            status: {
+              $in: ["discovered", "pending", "running", "stopped", "completed"],
+            },
+          };
+          if (mode === "blog" || mode === "generic") {
+            query.mode = mode;
+          }
+          const job = await WebsiteScrapeJob.findOne(query)
             .sort({ updatedAt: -1 })
             .lean();
           return NextResponse.json({ job: job ? serializeJob(job) : null });
@@ -78,25 +110,21 @@ export async function POST(req) {
     onAuthenticated: async ({ decodedToken }) => {
       try {
         const body = await req.json().catch(() => ({}));
-        const { brand, pages, seedUrl, folderId, folderName } = body;
+        const {
+          brand,
+          pages,
+          seedUrl,
+          folderId,
+          folderName,
+          mode,
+          discoverOnly,
+          startTraining,
+          jobId,
+        } = body;
 
         if (!brand) {
           return NextResponse.json(
             { error: "Brand is required" },
-            { status: 400 }
-          );
-        }
-
-        if (!Array.isArray(pages) || pages.length === 0) {
-          return NextResponse.json(
-            { error: "Select at least one page to scrape" },
-            { status: 400 }
-          );
-        }
-
-        if (pages.length > MAX_WEBSITE_BATCH_PAGES) {
-          return NextResponse.json(
-            { error: websiteBatchLimitMessage("scrape") },
             { status: 400 }
           );
         }
@@ -106,71 +134,56 @@ export async function POST(req) {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        const validatedPages = [];
-        for (const item of pages) {
-          const parsed = parseAndValidateScrapeUrl(item.url);
-          if (!parsed.ok) {
+        const importMode = mode === "blog" ? "blog" : "generic";
+
+        if (startTraining && jobId) {
+          try {
+            const job = await startTrainingJob(jobId);
+            return NextResponse.json({ success: true, job });
+          } catch (e) {
             return NextResponse.json(
-              { error: parsed.error || "Invalid page URL" },
+              { error: e?.message || "Failed to start training" },
               { status: 400 }
             );
           }
-          validatedPages.push({
-            url: parsed.href,
-            label: typeof item.label === "string" ? item.label : "",
-            category: typeof item.category === "string" ? item.category : "",
-            status: "pending",
-            error: "",
-          });
         }
 
-        const seen = new Set();
-        const uniquePages = [];
-        for (const p of validatedPages) {
-          if (seen.has(p.url)) continue;
-          seen.add(p.url);
-          uniquePages.push(p);
-        }
-
-        await connectDB();
-
-        const running = await WebsiteScrapeJob.findOne({
-          brand,
-          status: { $in: ["pending", "running"] },
-        }).lean();
-        if (running) {
+        if (!Array.isArray(pages) || pages.length === 0) {
           return NextResponse.json(
-            {
-              error:
-                "A scrape job is already running for this brand. Wait for it to finish or expand the progress bar.",
-              job: serializeJob(running),
-            },
-            { status: 409 }
+            { error: "Select at least one page" },
+            { status: 400 }
           );
         }
 
-        const jobId = uuidv4();
-        const job = await WebsiteScrapeJob.create({
-          jobId,
-          brand,
-          seedUrl: typeof seedUrl === "string" ? seedUrl : "",
-          folderId: typeof folderId === "string" ? folderId : "",
-          folderName: typeof folderName === "string" ? folderName : "",
-          createdBy: decodedToken.email || "",
-          status: "pending",
-          pages: uniquePages,
-        });
+        const validated = validatePages(pages);
+        if (validated.error) {
+          return NextResponse.json({ error: validated.error }, { status: 400 });
+        }
 
-        void startScrapeJobProcessing(jobId);
+        if (discoverOnly) {
+          const job = await createDiscoverSession({
+            brand,
+            mode: importMode,
+            pages: validated.pages,
+            seedUrl: typeof seedUrl === "string" ? seedUrl : "",
+            folderId: typeof folderId === "string" ? folderId : "",
+            folderName: typeof folderName === "string" ? folderName : "",
+            createdBy: decodedToken.email || "",
+          });
+          return NextResponse.json({ success: true, job });
+        }
 
-        return NextResponse.json({
-          success: true,
-          job: serializeJob(job.toObject ? job.toObject() : job),
-        });
+        return NextResponse.json(
+          {
+            error:
+              "Invalid request. Use discoverOnly to save links or startTraining with jobId.",
+          },
+          { status: 400 }
+        );
       } catch (error) {
         console.error("[admin/website-scrape-jobs POST]", error);
         return NextResponse.json(
-          { error: error?.message || "Failed to start scrape job" },
+          { error: error?.message || "Failed to save session" },
           { status: 500 }
         );
       }
@@ -183,7 +196,7 @@ export async function PATCH(req) {
     onAuthenticated: async ({ decodedToken }) => {
       try {
         const body = await req.json().catch(() => ({}));
-        const { brand, jobId, urls, url, included } = body;
+        const { brand, jobId, urls, url, included, cancel, stopTraining } = body;
 
         if (!brand || !jobId) {
           return NextResponse.json(
@@ -192,7 +205,9 @@ export async function PATCH(req) {
           );
         }
 
-        if (typeof included !== "boolean") {
+        const wantsStop = cancel === true || stopTraining === true;
+
+        if (!wantsStop && typeof included !== "boolean") {
           return NextResponse.json(
             { error: "included (boolean) is required" },
             { status: 400 }
@@ -204,11 +219,12 @@ export async function PATCH(req) {
           return NextResponse.json({ error: "Forbidden" }, { status: 403 });
         }
 
-        const targetUrls = Array.isArray(urls)
-          ? urls
-          : url
-            ? [url]
-            : [];
+        if (wantsStop) {
+          const job = await stopTrainingJob(jobId);
+          return NextResponse.json({ success: true, job });
+        }
+
+        const targetUrls = Array.isArray(urls) ? urls : url ? [url] : [];
         if (!targetUrls.length) {
           return NextResponse.json(
             { error: "Provide url or urls" },
@@ -258,7 +274,7 @@ export async function DELETE(req) {
       } catch (error) {
         console.error("[admin/website-scrape-jobs DELETE]", error);
         return NextResponse.json(
-          { error: error?.message || "Failed to dismiss job" },
+          { error: error?.message || "Failed to reset session" },
           { status: 500 }
         );
       }

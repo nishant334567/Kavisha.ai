@@ -1,40 +1,52 @@
 "use client";
 
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Loader2, Minimize2, X } from "lucide-react";
+import { ExternalLink, Loader2, Minimize2, X } from "lucide-react";
 import TextTrainingModal from "@/app/admin/components/TextTrainingModal";
-import { normalizeWebsiteUrl } from "@/app/lib/websiteScrapeContent";
 import {
+  friendlyScrapeReason,
   MAX_WEBSITE_BATCH_PAGES,
   websiteBatchLimitMessage,
 } from "@/app/lib/websiteScrapeLimits";
 
-/** One page at a time — avoids overlapping embedding API bursts. */
-const SAVE_CONCURRENCY = 1;
-
-function friendlyScrapeReason(message = "") {
-  const m = String(message).toLowerCase();
-  if (m.includes("timeout")) return "Page didn't load in time";
-  if (m.includes("network") || m.includes("econnreset")) {
-    return "Connection problem";
-  }
-  return message || "Could not load this page";
+function formatKbSavedHint() {
+  return "Already saved";
 }
 
-function formatKbSavedHint(kbSaved) {
-  if (!kbSaved) return "In knowledge base";
-  const at = kbSaved.savedAt ? new Date(kbSaved.savedAt) : null;
-  if (!at || Number.isNaN(at.getTime())) return "In knowledge base";
-  return `In knowledge base · ${at.toLocaleDateString(undefined, {
-    month: "short",
-    day: "numeric",
-    year: "numeric",
-  })}`;
+function mapJobPageToUiStatus(p, existing = {}) {
+  if (p.status === "trained") {
+    return {
+      status: "trained",
+      docid: p.docid || p.payload?.docid || existing.docid,
+      payload: p.payload || existing.payload,
+      error: null,
+    };
+  }
+  if (p.status === "training" || p.status === "scraping") {
+    return { status: "training", error: null };
+  }
+  if (p.status === "error") {
+    return { status: "error", error: p.error || "Training failed" };
+  }
+  if (p.status === "skipped") {
+    return { status: "skipped", error: null };
+  }
+  if (p.status === "scraped" && p.payload?.docid) {
+    return {
+      status: "trained",
+      docid: p.payload.docid,
+      payload: p.payload,
+      error: null,
+    };
+  }
+  return { status: "idle", error: null };
 }
 
 export default function WebsiteLinksDialog({
   open,
   onClose,
+  onMinimize,
+  onResetLinks,
   brandSubdomain,
   folders = [],
   discoverMeta,
@@ -45,7 +57,6 @@ export default function WebsiteLinksDialog({
   onFoldersRefresh,
   scrapeJob = null,
   onScrapeJobChange,
-  onMinimize,
   onCardActivity,
 }) {
   const [pageStates, setPageStates] = useState({});
@@ -55,11 +66,10 @@ export default function WebsiteLinksDialog({
   const [error, setError] = useState(null);
   const [notice, setNotice] = useState(null);
   const [startingJob, setStartingJob] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [saveProgress, setSaveProgress] = useState(null);
+  const [rowTrainingUrl, setRowTrainingUrl] = useState(null);
   const [viewPage, setViewPage] = useState(null);
   const [editFolderId, setEditFolderId] = useState("");
-  const savedCanonicalKeys = useRef(new Set());
+  const [selectionMenu, setSelectionMenu] = useState(null);
   const pageStatesRef = useRef(pageStates);
   pageStatesRef.current = pageStates;
 
@@ -71,6 +81,32 @@ export default function WebsiteLinksDialog({
   const visibleLinks = useMemo(
     () => (linkFilter === "posts" ? postLinks : links),
     [linkFilter, postLinks, links]
+  );
+
+  const getPayload = async (res) => {
+    try {
+      return await res.json();
+    } catch {
+      return {};
+    }
+  };
+
+  const getState = (url) => pageStates[url] || { status: "idle", url };
+
+  const isUrlSelectable = useCallback((url) => {
+    const s = pageStatesRef.current[url]?.status;
+    return s === "idle" || s === "error" || s === "skipped";
+  }, []);
+
+  const isJobRunning =
+    scrapeJob &&
+    (scrapeJob.status === "pending" || scrapeJob.status === "running");
+
+  const selectionLocked = isJobRunning || startingJob || Boolean(rowTrainingUrl);
+
+  const jobUrlSet = useMemo(
+    () => new Set((scrapeJob?.pages || []).map((p) => p.url)),
+    [scrapeJob?.pages]
   );
 
   const loadKbHintsForLinks = useCallback(
@@ -105,7 +141,7 @@ export default function WebsiteLinksDialog({
           return next;
         });
       } catch {
-        /* hints are optional */
+        /* optional */
       }
     },
     [brandSubdomain]
@@ -115,7 +151,7 @@ export default function WebsiteLinksDialog({
     if (!open || links.length === 0) return;
 
     if (scrapeJob?.pages?.length) {
-      setWebsiteFolderId(discoverMeta?.folderId || "");
+      setWebsiteFolderId(discoverMeta?.folderId || scrapeJob.folderId || "");
       return;
     }
 
@@ -129,17 +165,14 @@ export default function WebsiteLinksDialog({
       };
     }
     setPageStates(initial);
-    setSelected(new Set(links.map((l) => l.url)));
+    setSelected(
+      new Set(links.slice(0, MAX_WEBSITE_BATCH_PAGES).map((l) => l.url))
+    );
     setLinkFilter("all");
     setError(null);
     setNotice(null);
-    setStartingJob(false);
-    setSaveProgress(null);
-    savedCanonicalKeys.current = new Set();
     setWebsiteFolderId(discoverMeta?.folderId || "");
-    if (discoverMeta?.folderId) {
-      setEditFolderId(discoverMeta.folderId);
-    }
+    if (discoverMeta?.folderId) setEditFolderId(discoverMeta.folderId);
 
     let cancelled = false;
     void loadKbHintsForLinks(links).then(() => {
@@ -155,26 +188,66 @@ export default function WebsiteLinksDialog({
     scrapeJob?.jobId,
     scrapeJob?.pages?.length,
     loadKbHintsForLinks,
+    scrapeJob?.folderId,
   ]);
 
-  const getPayload = async (res) => {
-    try {
-      return await res.json();
-    } catch {
-      return {};
+  useEffect(() => {
+    if (!scrapeJob?.pages?.length) return;
+    setPageStates((prev) => {
+      const next = { ...prev };
+      for (const p of scrapeJob.pages) {
+        const existing = next[p.url] || { url: p.url };
+        const mapped = mapJobPageToUiStatus(p, existing);
+        next[p.url] = {
+          ...existing,
+          url: p.url,
+          label: p.label || existing.label,
+          category: p.category ?? existing.category,
+          ...mapped,
+        };
+      }
+      return next;
+    });
+  }, [scrapeJob]);
+
+  useEffect(() => {
+    if (!scrapeJob?.pages?.length || selectionLocked) return;
+    setSelected((prev) => {
+      const next = new Set(prev);
+      for (const p of scrapeJob.pages) {
+        if (p.status === "skipped") next.delete(p.url);
+        else if (p.status === "pending" || p.status === "idle") next.add(p.url);
+      }
+      return next;
+    });
+  }, [scrapeJob?.pages, selectionLocked]);
+
+  useEffect(() => {
+    if (!scrapeJob) return;
+    if (isJobRunning) {
+      onTrainingChange?.({
+        type: "website-scrape",
+        title: `${scrapeJob.trainedCount ?? 0}/${scrapeJob.totalCount || scrapeJob.pages?.length || 0} trained`,
+      });
+      onCardActivity?.({ saving: true });
+    } else {
+      onCardActivity?.({ saving: false });
+      if (scrapeJob.status === "completed") {
+        onTrainingChange?.(null);
+      }
     }
+  }, [scrapeJob, isJobRunning, onTrainingChange, onCardActivity]);
+
+  const updatePage = useCallback((url, patch) => {
+    setPageStates((prev) => ({
+      ...prev,
+      [url]: { ...prev[url], ...patch },
+    }));
+  }, []);
+
+  const syncJobFromResponse = (job) => {
+    if (job) onScrapeJobChange?.(job);
   };
-
-  const getState = (url) => pageStates[url] || { status: "idle", url };
-
-  const isJobRunning =
-    scrapeJob &&
-    (scrapeJob.status === "pending" || scrapeJob.status === "running");
-
-  const jobUrlSet = useMemo(
-    () => new Set((scrapeJob?.pages || []).map((p) => p.url)),
-    [scrapeJob?.pages]
-  );
 
   const updateJobSelection = useCallback(
     async (urls, included) => {
@@ -194,785 +267,335 @@ export default function WebsiteLinksDialog({
           }),
         });
         const data = await getPayload(res);
-        if (!res.ok) {
-          throw new Error(data.error || "Failed to update selection");
-        }
-        setError(null);
-        if (data.job) onScrapeJobChange?.(data.job);
+        if (!res.ok) throw new Error(data.error || "Failed to update selection");
+        syncJobFromResponse(data.job);
         return true;
       } catch (e) {
         setError(e?.message || "Failed to update selection");
-        setSelected((prev) => {
-          const next = new Set(prev);
-          for (const u of inJob) {
-            if (included) next.delete(u);
-            else next.add(u);
-          }
-          return next;
-        });
         return false;
       }
     },
     [brandSubdomain, jobUrlSet, onScrapeJobChange, scrapeJob?.jobId]
   );
 
-  useEffect(() => {
-    if (!scrapeJob?.pages?.length) return;
-    setPageStates((prev) => {
-      const next = { ...prev };
-      for (const p of scrapeJob.pages) {
-        const existing = next[p.url] || { url: p.url };
-        let status = existing.status;
-        const savedKey = normalizeWebsiteUrl(p.url);
-        if (
-          existing.status === "saved" ||
-          (savedKey && savedCanonicalKeys.current.has(savedKey))
-        ) {
-          status = "saved";
-        } else if (p.status === "scraped") {
-          status = "scraped";
-        } else if (p.status === "error") {
-          status = "error";
-        } else if (p.status === "scraping") {
-          status = "scraping";
-        } else if (p.status === "skipped") {
-          status = "skipped";
-        } else if (p.status === "pending" && isJobRunning) {
-          status = "idle";
-        }
-
-        next[p.url] = {
-          ...existing,
-          url: p.url,
-          label: p.label || existing.label,
-          category: p.category ?? existing.category,
-          status,
-          error: p.error || null,
-          payload:
-            existing.status === "saved"
-              ? existing.payload
-              : p.payload || existing.payload,
-          docid: existing.docid,
-          saveError: existing.saveError,
-        };
-      }
-      return next;
-    });
-  }, [scrapeJob, isJobRunning]);
-
-  useEffect(() => {
-    if (!scrapeJob?.pages?.length) return;
-    setSelected((prev) => {
-      const next = new Set(prev);
-      for (const p of scrapeJob.pages) {
-        if (p.status === "skipped") next.delete(p.url);
-        else next.add(p.url);
-      }
-      return next;
-    });
-  }, [scrapeJob?.pages]);
-
-  useEffect(() => {
-    if (!scrapeJob) return;
-    if (isJobRunning) {
-      onTrainingChange?.({
-        type: "website-scrape",
-        title: `${scrapeJob.totalCount || scrapeJob.pages?.length || 0} pages`,
-      });
-    } else if (scrapeJob.status === "completed" && !saving) {
-      onTrainingChange?.(null);
-    }
-  }, [scrapeJob, isJobRunning, saving, onTrainingChange]);
-
-  useEffect(() => {
-    onCardActivity?.({ saving, saveProgress });
-  }, [saving, saveProgress, onCardActivity]);
-
-  const unsavedScrapedUrls = useMemo(
-    () =>
-      Object.values(pageStates)
-        .filter((p) => p.status === "scraped" && p.payload)
-        .map((p) => p.url),
-    [pageStates]
-  );
-
-  useEffect(() => {
-    if (!open) return;
-    if (saving && unsavedScrapedUrls.length === 0) {
-      setSaving(false);
-    }
-    if (!saving) {
-      setSaveProgress(null);
-    }
-  }, [open, saving, unsavedScrapedUrls.length]);
-
-  const idleUrls = useMemo(
-    () =>
-      Object.values(pageStates)
-        .filter((p) => p.status === "idle" || p.status === "error")
-        .map((p) => p.url),
-    [pageStates]
-  );
-
-  const remainingScrapeUrls = useMemo(
-    () =>
-      Object.values(pageStates)
-        .filter(
-          (p) =>
-            p.status === "skipped" ||
-            p.status === "idle" ||
-            p.status === "error"
-        )
-        .map((p) => p.url),
-    [pageStates]
-  );
-
-  const hasAnyScraped = useMemo(
-    () =>
-      Object.values(pageStates).some(
-        (p) => p.status === "scraped" || p.status === "saved"
-      ),
-    [pageStates]
-  );
-
-  const updatePage = useCallback((url, patch) => {
-    setPageStates((prev) => ({
-      ...prev,
-      [url]: { ...prev[url], ...patch },
-    }));
-  }, []);
-
-  const scrapeOne = async (url) => {
-    updatePage(url, { status: "scraping", error: null });
+  const stopTraining = useCallback(async () => {
+    if (!scrapeJob?.jobId || !brandSubdomain) return;
     try {
-      const st = pageStatesRef.current[url] || {};
-      const res = await fetch("/api/admin/scrape-website-page", {
+      const res = await fetch("/api/admin/website-scrape-jobs", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand: brandSubdomain,
+          jobId: scrapeJob.jobId,
+          stopTraining: true,
+        }),
+      });
+      const data = await getPayload(res);
+      if (!res.ok) throw new Error(data.error || "Failed to stop training");
+      syncJobFromResponse(data.job);
+      setNotice("Training stopped.");
+      setError(null);
+    } catch (e) {
+      setError(e?.message || "Failed to stop training");
+    }
+  }, [brandSubdomain, scrapeJob?.jobId]);
+
+  const trainOne = async (url) => {
+    if (!scrapeJob?.jobId || selectionLocked) return;
+    setRowTrainingUrl(url);
+    setError(null);
+    updatePage(url, { status: "training", error: null });
+
+    try {
+      const res = await fetch("/api/admin/train-website-page", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brand: brandSubdomain,
+          jobId: scrapeJob.jobId,
           url,
-          label: st.label,
-          seedUrl: discoverMeta?.seedUrl || "",
         }),
       });
       const data = await getPayload(res);
-      if (!res.ok) {
-        throw new Error(data.error || "Scrape failed");
+      syncJobFromResponse(data.job);
+
+      if (data.page?.status === "trained") {
+        updatePage(url, {
+          status: "trained",
+          docid: data.page.docid,
+          error: null,
+        });
+        onDocumentsRefresh?.();
+        setNotice("Page saved.");
+      } else {
+        updatePage(url, {
+          status: "error",
+          error: friendlyScrapeReason(data.page?.error || data.error),
+        });
       }
-      const page = data.page;
-      updatePage(url, {
-        status: "scraped",
-        payload: {
-          title: page.title,
-          content: page.content,
-          sourceUrl: page.sourceUrl || page.url || url,
-          prepared: true,
-        },
-        error: null,
-      });
-      return true;
     } catch (e) {
       updatePage(url, {
         status: "error",
         error: friendlyScrapeReason(e?.message),
       });
-      return false;
+    } finally {
+      setRowTrainingUrl(null);
     }
   };
 
-  const savePages = useCallback(
-    async (urlsToSave) => {
-      const states = pageStatesRef.current;
-      const pages = [];
-      for (const url of urlsToSave) {
-        const p = states[url];
-        if (p?.status !== "scraped" || !p.payload) continue;
-        const key = normalizeWebsiteUrl(p.payload.sourceUrl || p.url);
-        if (key && savedCanonicalKeys.current.has(key)) continue;
-        pages.push({
-          url: p.url,
-          label: p.label,
-          title: p.payload.title,
-          content: p.payload.content,
-          sourceUrl: p.payload.sourceUrl,
-          prepared: p.payload.prepared !== false,
-        });
-      }
+  const trainableTargets = (urls) =>
+    urls.filter((u) => {
+      const s = getState(u).status;
+      return s === "idle" || s === "error";
+    });
 
-      if (!pages.length) return null;
+  const handleTrainAll = async () => {
+    if (!scrapeJob?.jobId || selectionLocked) return;
 
-      if (pages.length > MAX_WEBSITE_BATCH_PAGES) {
-        setError(websiteBatchLimitMessage("save"));
-        return null;
-      }
-
-      setSaving(true);
-      setSaveProgress({ done: 0, total: pages.length, label: "" });
-      onTrainingChange?.({
-        type: "website-save",
-        title: `${pages.length} page${pages.length === 1 ? "" : "s"}`,
-      });
-
-      const folderId = websiteFolderId || editFolderId;
-      const imported = [];
-      const failed = [];
-      const skipped = [];
-      let substantiveCount = 0;
-
-      const applyImportedRow = (row) => {
-        imported.push(row);
-        if (row.substantive) substantiveCount += 1;
-        const pageUrl = row.url || row.sourceUrl;
-        const key = normalizeWebsiteUrl(row.sourceUrl || pageUrl);
-        if (key) savedCanonicalKeys.current.add(key);
-        if (pageUrl) {
-          updatePage(pageUrl, {
-            status: "saved",
-            docid: row.docid,
-            saveError: null,
-            kbSaved: undefined,
-          });
-        }
-      };
-
-      const markPageSaveFailed = (page, errorMsg) => {
-        updatePage(page.url, {
-          status: "scraped",
-          saveError: errorMsg,
-        });
-      };
-
-      const saveOnePage = async (page) => {
-        const res = await fetch("/api/admin/save-website-pages", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            brand: brandSubdomain,
-            pages: [page],
-            seedUrl: discoverMeta?.seedUrl || "",
-            ...(folderId && { folderId }),
-          }),
-        });
-        const data = await getPayload(res);
-
-        for (const row of data.imported || []) applyImportedRow(row);
-        for (const f of data.failed || []) {
-          failed.push(f);
-          markPageSaveFailed(page, f.error || "Save failed");
-        }
-        for (const s of data.skipped || []) {
-          skipped.push(s);
-          const key = normalizeWebsiteUrl(s.sourceUrl || page.url);
-          if (key) savedCanonicalKeys.current.add(key);
-          updatePage(page.url, {
-            status: "saved",
-            saveError: null,
-            kbSaved: undefined,
-          });
-        }
-
-        if (!res.ok && !(data.imported || []).length) {
-          const errMsg =
-            data.error ||
-            data.failed?.[0]?.error ||
-            "Save failed";
-          if (!data.failed?.length) {
-            failed.push({
-              sourceUrl: page.sourceUrl || page.url,
-              url: page.url,
-              error: errMsg,
-            });
-          }
-          markPageSaveFailed(page, errMsg);
-        }
-      };
-
-      try {
-        let nextIndex = 0;
-        let completedCount = 0;
-
-        const workers = Array.from(
-          { length: Math.min(SAVE_CONCURRENCY, pages.length) },
-          async () => {
-            while (true) {
-              const i = nextIndex;
-              nextIndex += 1;
-              if (i >= pages.length) break;
-              const page = pages[i];
-              try {
-                await saveOnePage(page);
-              } catch (e) {
-                failed.push({
-                  sourceUrl: page.sourceUrl || page.url,
-                  error: e?.message || "Save failed",
-                });
-              }
-              completedCount += 1;
-              setSaveProgress({
-                done: completedCount,
-                total: pages.length,
-                label: page.label || page.url,
-              });
-            }
-          }
-        );
-
-        await Promise.all(workers);
-
-        onDocumentsRefresh?.();
-        onFoldersRefresh?.();
-
-        if (imported.length === 0) {
-          throw new Error(
-            failed[0]?.error ||
-              "No pages could be saved to the knowledge base"
-          );
-        }
-
-        let message = `Saved ${imported.length} page${imported.length === 1 ? "" : "s"} to your knowledge base`;
-        if (failed.length) message += ` (${failed.length} failed)`;
-        if (skipped.length) {
-          message += ` (${skipped.length} duplicate${skipped.length === 1 ? "" : "s"} skipped)`;
-        }
-
-        const data = {
-          success: true,
-          message,
-          imported,
-          failed,
-          skipped,
-          scrapedCount: imported.length,
-          substantiveCount,
-          folderId,
-        };
-
-        if (failed.length) {
-          const failDetail = failed
-            .slice(0, 3)
-            .map((f) => {
-              const label =
-                pageStatesRef.current[f.url || f.sourceUrl]?.label ||
-                f.sourceUrl ||
-                "page";
-              return `${label}: ${f.error || "unknown"}`;
-            })
-            .join("; ");
-          setError(
-            `${message}. ${failDetail}${failed.length > 3 ? ` (+${failed.length - 3} more)` : ""}. Failed pages stay as Scraped — click Save all to retry.`
-          );
-        }
-
-        setSaveProgress({ done: pages.length, total: pages.length, label: "" });
-        return data;
-      } finally {
-        setSaving(false);
-        setSaveProgress(null);
-        onTrainingChange?.(null);
-      }
-    },
-    [
-      brandSubdomain,
-      discoverMeta?.seedUrl,
-      editFolderId,
-      onDocumentsRefresh,
-      onFoldersRefresh,
-      onTrainingChange,
-      updatePage,
-      websiteFolderId,
-    ]
-  );
-
-  const startBackgroundScrape = async (urls) => {
-    if (!urls.length || isJobRunning || startingJob) return;
-
-    if (urls.length > MAX_WEBSITE_BATCH_PAGES) {
-      setError(websiteBatchLimitMessage("scrape"));
+    const selectedUrls = [...selected];
+    const targets = trainableTargets(selectedUrls);
+    if (!targets.length) {
+      setError("Select at least one page to train");
       return;
     }
 
+    if (selectedUrls.length > MAX_WEBSITE_BATCH_PAGES) {
+      setError(websiteBatchLimitMessage());
+      return;
+    }
+
+    setStartingJob(true);
     setError(null);
     setNotice(null);
-    setStartingJob(true);
 
     try {
-      const states = pageStatesRef.current;
-      const pages = urls.map((url) => ({
-        url,
-        label: states[url]?.label || "",
-        category: states[url]?.category || "",
-      }));
+      const unchecked = links
+        .map((l) => l.url)
+        .filter((u) => selected.has(u) === false && jobUrlSet.has(u));
+      if (unchecked.length) {
+        await updateJobSelection(unchecked, false);
+      }
 
       const res = await fetch("/api/admin/website-scrape-jobs", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           brand: brandSubdomain,
-          pages,
-          seedUrl: discoverMeta?.seedUrl || "",
-          folderId: websiteFolderId || discoverMeta?.folderId || "",
-          folderName: discoverMeta?.folderName || "",
+          startTraining: true,
+          jobId: scrapeJob.jobId,
         }),
       });
       const data = await getPayload(res);
-
-      if (res.status === 409 && data.job) {
-        onScrapeJobChange?.(data.job);
-        setError(data.error || "A scrape job is already running");
-        return;
-      }
-
       if (!res.ok) {
-        throw new Error(data.error || "Failed to start background scrape");
+        throw new Error(data.error || "Failed to start training");
       }
-
-      onScrapeJobChange?.(data.job);
+      syncJobFromResponse(data.job);
+      setNotice("Training started — you can minimize this window.");
     } catch (e) {
-      setError(e?.message || "Failed to start scrape");
+      setError(e?.message || "Failed to start training");
     } finally {
       setStartingJob(false);
     }
   };
 
-  const handleScrapeRow = async (url) => {
-    if (isJobRunning || startingJob || saving) return;
-    setError(null);
-    await scrapeOne(url);
-  };
-
-  const scrapeRoundTargets = (urls) =>
-    urls.filter((u) => {
-      const s = getState(u).status;
-      return s === "idle" || s === "error" || s === "skipped";
-    });
-
-  const continueSkippedInJob = async (urls) => {
-    if (!scrapeJob?.jobId || !urls.length) return false;
-    const skippedInJob = urls.filter((u) => {
-      const page = scrapeJob.pages?.find((p) => p.url === u);
-      return page?.status === "skipped";
-    });
-    if (!skippedInJob.length) return false;
-    return updateJobSelection(skippedInJob, true);
-  };
-
-  const handleScrapeSelected = async () => {
-    const targets = scrapeRoundTargets([...selected]);
-    if (!targets.length) {
-      setError("Select at least one page to scrape");
-      return;
-    }
-
-    if (!isJobRunning && scrapeJob?.status === "completed") {
-      const continued = await continueSkippedInJob(targets);
-      if (continued) return;
-    }
-
-    startBackgroundScrape(targets);
-  };
-
-  const handleScrapeAll = () => {
-    const targets = scrapeRoundTargets([...selected]);
-    if (!targets.length) {
-      setError("Select at least one page to scrape");
-      return;
-    }
-    startBackgroundScrape(targets);
-  };
-
-  const handleScrapeRemaining = async () => {
-    const targets = remainingScrapeUrls;
-    if (!targets.length) return;
-
-    setSelected(new Set(targets));
-
-    if (!isJobRunning && scrapeJob?.status === "completed") {
-      const continued = await continueSkippedInJob(targets);
-      if (continued) return;
-    }
-
-    startBackgroundScrape(targets);
-  };
-
-  const finishImportIfDone = useCallback(
-    (data) => {
-      const remaining = Object.values(pageStatesRef.current).filter(
-        (p) => p.status === "scraped" && p.payload
-      ).length;
-      const jobStillRunning =
-        scrapeJob &&
-        (scrapeJob.status === "pending" || scrapeJob.status === "running");
-
-      if (!jobStillRunning && remaining === 0) {
-        onComplete?.({
-          title: discoverMeta?.seedUrl || "Website import",
-          docid: `${data.imported?.length || 0} documents`,
-          chunkCount: (data.imported || []).reduce(
-            (s, r) => s + (r.chunkCount || 0),
-            0
-          ),
-          message: data.message,
-          failed: data.failed,
-          scrapedCount: data.scrapedCount,
-          substantiveCount: data.substantiveCount,
-        });
-      } else if (data?.message) {
-        setNotice(data.message);
-        setError(null);
-      }
-    },
-    [discoverMeta?.seedUrl, onComplete, scrapeJob]
-  );
-
-  const handleSaveSelected = async () => {
-    const targets = [...selected].filter(
-      (u) => getState(u).status === "scraped"
-    );
-    if (!targets.length || saving) return;
-    setNotice(null);
-    try {
-      const data = await savePages(targets);
-      if (data) finishImportIfDone(data);
-    } catch (e) {
-      setNotice(null);
-      setError(e?.message || "Save failed");
-    }
-  };
-
-  const handleSaveAll = async () => {
-    if (!unsavedScrapedUrls.length || saving) return;
-    setNotice(null);
-    try {
-      const data = await savePages(unsavedScrapedUrls);
-      if (data) finishImportIfDone(data);
-    } catch (e) {
-      setNotice(null);
-      setError(e?.message || "Save failed");
-    }
-  };
-
   const handleViewDoc = (url) => {
     const st = getState(url);
-    if (st.status !== "scraped" && st.status !== "saved") return;
-    const payload = st.payload;
-    if (!payload && st.status !== "saved") return;
+    if (st.status !== "trained" || !st.docid) return;
 
-    if (st.status === "saved" && st.docid) {
-      fetch(
-        `/api/admin/training-documents?brand=${brandSubdomain}&docid=${st.docid}`
-      )
-        .then((r) => r.json())
-        .then((data) => {
-          if (data.document) {
-            setEditFolderId(
-              data.document.folderId ? String(data.document.folderId) : ""
-            );
-            setViewPage({
-              url,
-              docid: st.docid,
-              title: data.document.title,
-              content: data.document.text,
-              sourceUrl: data.document.sourceUrl || url,
-            });
-          }
-        });
-      return;
-    }
-
-    setEditFolderId(websiteFolderId || "");
-    setViewPage({
-      url,
-      docid: st.docid || null,
-      title: payload.title,
-      content: payload.content,
-      sourceUrl: payload.sourceUrl || url,
-    });
+    fetch(
+      `/api/admin/training-documents?brand=${brandSubdomain}&docid=${st.docid}`
+    )
+      .then((r) => r.json())
+      .then((data) => {
+        if (data.document) {
+          setEditFolderId(
+            data.document.folderId ? String(data.document.folderId) : ""
+          );
+          setViewPage({
+            url,
+            docid: st.docid,
+            title: data.document.title,
+            content: data.document.text,
+            sourceUrl: data.document.sourceUrl || url,
+          });
+        }
+      });
   };
 
   const handleModalSave = async (updateData) => {
-    if (!viewPage) return;
-
-    setSaving(true);
-
+    if (!viewPage?.docid) return;
     try {
-      if (viewPage.docid) {
-        const res = await fetch("/api/embeddings", {
-          method: "PATCH",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            docid: viewPage.docid,
-            text: updateData.content,
-            brand: brandSubdomain,
-            title: updateData.title,
-            folderId:
-              (updateData.folderId ?? editFolderId) || websiteFolderId || null,
-            ...(updateData.sourceUrl && { sourceUrl: updateData.sourceUrl }),
-          }),
-        });
-        const data = await getPayload(res);
-        if (!res.ok) throw new Error(data.error || "Update failed");
-        updatePage(viewPage.url, {
-          status: "saved",
+      const res = await fetch("/api/embeddings", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
           docid: viewPage.docid,
-          payload: {
-            title: updateData.title,
-            content: updateData.content,
-            sourceUrl: updateData.sourceUrl,
-          },
-        });
-      } else {
-        const res = await fetch("/api/embeddings", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            text: updateData.content,
-            brand: brandSubdomain,
-            title: updateData.title,
-            description: updateData.title,
-            sourceUrl: updateData.sourceUrl || viewPage.url,
-            folderId:
-              (updateData.folderId ?? editFolderId) ||
-              websiteFolderId ||
-              null,
-          }),
-        });
-        const data = await getPayload(res);
-        if (!res.ok) throw new Error(data.error || "Save failed");
-        const key = normalizeWebsiteUrl(
-          updateData.sourceUrl || viewPage.url
-        );
-        if (key) savedCanonicalKeys.current.add(key);
-        updatePage(viewPage.url, {
-          status: "saved",
-          docid: data.docid,
-          payload: {
-            title: updateData.title,
-            content: updateData.content,
-            sourceUrl: updateData.sourceUrl,
-            prepared: true,
-          },
-        });
-      }
-
+          text: updateData.content,
+          brand: brandSubdomain,
+          title: updateData.title,
+          folderId:
+            (updateData.folderId ?? editFolderId) || websiteFolderId || null,
+          ...(updateData.sourceUrl && { sourceUrl: updateData.sourceUrl }),
+        }),
+      });
+      const data = await getPayload(res);
+      if (!res.ok) throw new Error(data.error || "Update failed");
       onDocumentsRefresh?.();
       onFoldersRefresh?.();
       setViewPage(null);
     } catch (e) {
       setError(e?.message || "Could not save document");
       throw e;
-    } finally {
-      setSaving(false);
     }
   };
 
-  const handleClose = () => {
-    setViewPage(null);
-    onClose();
+  const applySelection = useCallback(
+    async (nextUrls) => {
+      if (selectionLocked) return;
+      const nextSet = new Set(nextUrls);
+      setSelected(nextSet);
+
+      if (!scrapeJob?.jobId) return;
+
+      const toExclude = [...jobUrlSet].filter((u) => !nextSet.has(u));
+      const toInclude = [...nextSet].filter((u) => jobUrlSet.has(u));
+      if (toExclude.length) {
+        await updateJobSelection(toExclude, false);
+      }
+      if (toInclude.length) {
+        await updateJobSelection(toInclude, true);
+      }
+    },
+    [selectionLocked, scrapeJob?.jobId, jobUrlSet, updateJobSelection]
+  );
+
+  const selectOnlyThis = useCallback(
+    (url) => {
+      if (!isUrlSelectable(url)) return;
+      void applySelection([url]);
+      setSelectionMenu(null);
+    },
+    [applySelection, isUrlSelectable]
+  );
+
+  const selectBlockFromHere = useCallback(
+    (anchorUrl) => {
+      const start = visibleLinks.findIndex((l) => l.url === anchorUrl);
+      if (start === -1) return;
+
+      const block = [];
+      for (
+        let i = start;
+        i < visibleLinks.length && block.length < MAX_WEBSITE_BATCH_PAGES;
+        i++
+      ) {
+        const u = visibleLinks[i].url;
+        if (isUrlSelectable(u)) block.push(u);
+      }
+      if (!block.length) return;
+
+      void applySelection(block);
+      setSelectionMenu(null);
+    },
+    [visibleLinks, applySelection, isUrlSelectable]
+  );
+
+  const handleCheckboxContextMenu = (e, url, canCheck) => {
+    if (!canCheck) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectionMenu({ x: e.clientX, y: e.clientY, url });
   };
+
+  useEffect(() => {
+    if (!selectionMenu) return;
+    const close = () => setSelectionMenu(null);
+    const onKey = (e) => {
+      if (e.key === "Escape") close();
+    };
+    window.addEventListener("keydown", onKey);
+    window.addEventListener("scroll", close, true);
+    return () => {
+      window.removeEventListener("keydown", onKey);
+      window.removeEventListener("scroll", close, true);
+    };
+  }, [selectionMenu]);
+
+  useEffect(() => {
+    if (selectionLocked) setSelectionMenu(null);
+  }, [selectionLocked]);
 
   const toggleUrl = (url) => {
+    if (selectionLocked) return;
     const st = getState(url);
-    if (st.status === "saved") return;
+    if (st.status === "trained" || st.status === "training") return;
 
     const willInclude = !selected.has(url);
-    const affectsQueue =
-      jobUrlSet.has(url) &&
-      (st.status === "idle" || st.status === "skipped") &&
-      (isJobRunning ||
-        (scrapeJob?.status === "completed" && st.status === "skipped"));
-
-    if (!affectsQueue) {
-      setSelected((prev) => {
-        const next = new Set(prev);
-        if (willInclude) next.add(url);
-        else next.delete(url);
-        return next;
-      });
-      return;
-    }
-
     setSelected((prev) => {
       const next = new Set(prev);
       if (willInclude) next.add(url);
       else next.delete(url);
       return next;
     });
-    void updateJobSelection([url], willInclude);
+
+    if (jobUrlSet.has(url) && scrapeJob?.jobId) {
+      void updateJobSelection([url], willInclude);
+    }
   };
 
   const toggleAllVisible = () => {
-    if (isJobRunning) {
-      const queueEligible = visibleLinks
-        .map((l) => l.url)
-        .filter((u) => {
-          if (!jobUrlSet.has(u)) return false;
-          const s = getState(u).status;
-          return s === "idle" || s === "skipped";
-        });
-      if (!queueEligible.length) return;
-
-      const allIncluded = queueEligible.every((u) => {
-        const s = getState(u).status;
-        return s !== "skipped" && selected.has(u);
-      });
-
-      const willInclude = !allIncluded;
-      setSelected((prev) => {
-        const next = new Set(prev);
-        if (willInclude) {
-          for (const u of queueEligible) next.add(u);
-        } else {
-          for (const u of queueEligible) next.delete(u);
-        }
-        return next;
-      });
-
-      void updateJobSelection(queueEligible, willInclude);
-      return;
-    }
-
+    if (selectionLocked) return;
     const eligible = visibleLinks
       .map((l) => l.url)
       .filter((u) => {
         const s = getState(u).status;
-        if (s === "saved") return false;
-        if (hasAnyScraped) {
-          return s === "scraped" || s === "idle" || s === "error" || s === "skipped";
-        }
         return s === "idle" || s === "error" || s === "skipped";
       });
     const allSelected = eligible.every((u) => selected.has(u));
+    const willInclude = !allSelected;
+
     setSelected((prev) => {
       const next = new Set(prev);
-      if (allSelected) {
-        for (const u of eligible) next.delete(u);
-      } else {
+      if (willInclude) {
         for (const u of eligible) next.add(u);
+      } else {
+        for (const u of eligible) next.delete(u);
       }
       return next;
     });
+
+    if (scrapeJob?.jobId && eligible.length) {
+      void updateJobSelection(eligible, willInclude);
+    }
   };
 
-  const scrapeLocked = isJobRunning || startingJob;
-  const selectedScrapeCount = scrapeRoundTargets([...selected]).length;
-  const remainingScrapeCount = remainingScrapeUrls.length;
-  const selectedSaveCount = [...selected].filter(
-    (u) => getState(u).status === "scraped"
-  ).length;
+  const selectQueuedBatch = () => {
+    if (selectionLocked) return;
+    const queued = links
+      .map((l) => l.url)
+      .filter((u) => isUrlSelectable(u))
+      .slice(0, MAX_WEBSITE_BATCH_PAGES);
+    void applySelection(queued);
+  };
 
-  const showSaveActions = unsavedScrapedUrls.length > 0;
-  const canScrapeMore = remainingScrapeCount > 0 && !scrapeLocked;
-  const scrapeAllCount = selectedScrapeCount || idleUrls.length;
-  const showScrapeAllPrimary =
-    !hasAnyScraped && canScrapeMore && !showSaveActions;
-  const showOnlyScrapeRemaining =
-    hasAnyScraped && canScrapeMore && !showSaveActions;
-  const showScrapeActions =
-    hasAnyScraped && canScrapeMore && !showOnlyScrapeRemaining;
+  const trainedCount = useMemo(
+    () => Object.values(pageStates).filter((p) => p.status === "trained").length,
+    [pageStates]
+  );
+
+  const pendingTrainCount = useMemo(
+    () =>
+      [...selected].filter((u) => {
+        const s = getState(u).status;
+        return s === "idle" || s === "error";
+      }).length,
+    [selected, pageStates]
+  );
+
   const batchProgress = isJobRunning
     ? {
-        done: scrapeJob.doneCount ?? 0,
-        total: scrapeJob.totalCount ?? scrapeJob.pages?.length ?? 0,
+        done: scrapeJob?.trainedCount ?? trainedCount,
+        total: scrapeJob?.totalCount ?? links.length,
       }
     : null;
   const batchPercent =
@@ -980,54 +603,64 @@ export default function WebsiteLinksDialog({
       ? Math.round((batchProgress.done / batchProgress.total) * 100)
       : 0;
 
-  const savePercent =
-    saveProgress && saveProgress.total > 0
-      ? Math.round((saveProgress.done / saveProgress.total) * 100)
-      : 0;
+  const handleClose = () => {
+    setViewPage(null);
+    onClose();
+  };
 
   if (!open) return null;
 
+  const headerTitle =
+    discoverMeta?.mode === "blog" ? "Blog pages" : "Website pages";
+
+  const filterPill =
+    "rounded-full px-3 py-1.5 text-xs font-medium transition-all duration-200";
+  const toolbarBtn =
+    "rounded-lg px-2.5 py-1.5 text-xs font-medium transition-all duration-200 disabled:opacity-50";
+
   return (
     <>
-      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
-        <div className="flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border bg-card shadow-2xl">
-          <div className="flex items-start justify-between gap-4 border-b border-border px-6 py-5">
-            <div className="min-w-0">
-              <h2 className="text-lg font-semibold text-highlight">Website pages</h2>
-              {discoverMeta && (
-                <p className="mt-1 text-sm text-muted">
-                  Found{" "}
-                  <span className="font-medium text-foreground">
-                    {discoverMeta.total}
-                  </span>{" "}
-                  pages on{" "}
-                  <span className="break-all text-foreground">
+      <div className="website-dialog-backdrop fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4 backdrop-blur-md">
+        <div
+          className="website-dialog-panel flex max-h-[90vh] w-full max-w-2xl flex-col overflow-hidden rounded-2xl border border-border/80 bg-card shadow-[0_24px_80px_-16px_rgba(45,84,94,0.35)]"
+          role="dialog"
+          aria-labelledby="website-links-title"
+        >
+          <div className="flex items-start justify-between gap-4 border-b border-border/60 bg-gradient-to-b from-muted-bg/40 to-card px-6 py-5">
+            <div className="min-w-0 flex-1">
+              <h2
+                id="website-links-title"
+                className="text-lg font-semibold text-highlight"
+              >
+                {headerTitle}
+              </h2>
+              {discoverMeta ? (
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <span className="rounded-full bg-highlight/10 px-2.5 py-0.5 text-xs font-medium text-highlight">
+                    {discoverMeta.total} pages
+                  </span>
+                  {discoverMeta.folderName ? (
+                    <span className="rounded-full bg-muted-bg px-2.5 py-0.5 text-xs text-muted">
+                      {discoverMeta.folderName}
+                    </span>
+                  ) : null}
+                  <span
+                    className="max-w-full truncate text-xs text-muted"
+                    title={discoverMeta.seedUrl}
+                  >
                     {discoverMeta.seedUrl}
                   </span>
-                  {discoverMeta.folderName && (
-                    <>
-                      {" "}
-                      · Folder:{" "}
-                      <span className="font-medium text-foreground">
-                        {discoverMeta.folderName}
-                      </span>
-                    </>
-                  )}
-                </p>
-              )}
+                </div>
+              ) : null}
             </div>
-            <div className="flex shrink-0 gap-1">
-              {isJobRunning || startingJob || saving ? (
+            <div className="flex shrink-0">
+              {isJobRunning || startingJob ? (
                 <button
                   type="button"
                   onClick={onMinimize}
-                  className="rounded-full p-2 text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
+                  className="rounded-xl p-2 text-muted transition-all duration-200 hover:bg-muted-bg hover:text-foreground hover:shadow-sm"
                   aria-label="Minimize"
-                  title={
-                    saving
-                      ? "Minimize — saving continues; progress stays in the Website card"
-                      : "Minimize — scraping continues in the background"
-                  }
+                  title="Minimize"
                 >
                   <Minimize2 className="h-5 w-5" />
                 </button>
@@ -1035,7 +668,7 @@ export default function WebsiteLinksDialog({
                 <button
                   type="button"
                   onClick={handleClose}
-                  className="rounded-full p-2 text-muted transition-colors hover:bg-muted-bg hover:text-foreground"
+                  className="rounded-xl p-2 text-muted transition-all duration-200 hover:bg-muted-bg hover:text-foreground hover:shadow-sm"
                   aria-label="Close"
                 >
                   <X className="h-5 w-5" />
@@ -1044,138 +677,171 @@ export default function WebsiteLinksDialog({
             </div>
           </div>
 
-          <div className="flex flex-wrap gap-1 px-6 py-2">
-            <button
-              type="button"
-              onClick={() => setLinkFilter("all")}
-              className={`rounded-lg px-2.5 py-1 text-xs font-medium ${linkFilter === "all"
-                  ? "bg-muted-bg text-foreground"
-                  : "text-muted hover:bg-muted-bg"
-                }`}
-            >
-              All ({links.length})
-            </button>
-            {postLinks.length > 0 && (
+          <div className="flex flex-wrap items-center justify-between gap-3 border-b border-border/50 px-6 py-3">
+            <div className="flex flex-wrap gap-1.5">
               <button
                 type="button"
-                onClick={() => setLinkFilter("posts")}
-                className={`rounded-lg px-2.5 py-1 text-xs font-medium ${linkFilter === "posts"
-                    ? "bg-highlight/15 text-highlight"
-                    : "text-muted hover:bg-muted-bg"
-                  }`}
+                onClick={() => setLinkFilter("all")}
+                className={`${filterPill} ${
+                  linkFilter === "all"
+                    ? "bg-highlight text-white shadow-sm"
+                    : "bg-muted-bg text-muted hover:text-foreground"
+                }`}
               >
-                Posts ({postLinks.length})
+                All {links.length}
               </button>
-            )}
+              {postLinks.length > 0 ? (
+                <button
+                  type="button"
+                  onClick={() => setLinkFilter("posts")}
+                  className={`${filterPill} ${
+                    linkFilter === "posts"
+                      ? "bg-highlight text-white shadow-sm"
+                      : "bg-muted-bg text-muted hover:text-foreground"
+                  }`}
+                >
+                  Posts {postLinks.length}
+                </button>
+              ) : null}
+            </div>
+            <span className="text-xs text-muted">
+              {selected.size} selected
+              {selected.size > MAX_WEBSITE_BATCH_PAGES
+                ? ` · max ${MAX_WEBSITE_BATCH_PAGES}/batch`
+                : null}
+            </span>
           </div>
 
-          <div className="px-6 py-2">
+          <div className="flex flex-wrap items-center gap-2 px-6 py-2.5">
             <button
               type="button"
               onClick={toggleAllVisible}
-              disabled={saving}
-              className="text-xs font-medium text-highlight hover:underline disabled:opacity-50"
+              disabled={selectionLocked}
+              className={`${toolbarBtn} text-highlight hover:bg-highlight/10`}
             >
               Select all
             </button>
+            {links.length > MAX_WEBSITE_BATCH_PAGES ? (
+              <button
+                type="button"
+                onClick={selectQueuedBatch}
+                disabled={selectionLocked}
+                className={`${toolbarBtn} text-muted hover:bg-muted-bg hover:text-foreground`}
+              >
+                First {MAX_WEBSITE_BATCH_PAGES}
+              </button>
+            ) : null}
+            {onResetLinks ? (
+              <button
+                type="button"
+                onClick={onResetLinks}
+                disabled={selectionLocked}
+                className={`${toolbarBtn} ml-auto text-red-600 hover:bg-red-50 dark:hover:bg-red-950/30`}
+              >
+                Reset
+              </button>
+            ) : null}
           </div>
 
-          <ul className="min-h-0 flex-1 space-y-1 overflow-y-auto px-4 pb-2">
+          <ul className="scrollbar-thin min-h-0 flex-1 space-y-2 overflow-y-auto px-4 py-2">
             {visibleLinks.map((link) => {
               const st = getState(link.url);
-              const isSaved = st.status === "saved";
-              const isScraped = st.status === "scraped";
-              const isScraping = st.status === "scraping";
+              const isTrained = st.status === "trained";
+              const isTraining =
+                st.status === "training" || rowTrainingUrl === link.url;
               const isSkipped = st.status === "skipped";
               const kbHint =
-                st.status === "idle" && st.kbSaved
-                  ? formatKbSavedHint(st.kbSaved)
-                  : null;
+                st.status === "idle" && st.kbSaved ? formatKbSavedHint() : null;
               const canCheck =
-                !isSaved &&
+                !selectionLocked &&
                 (st.status === "idle" ||
                   st.status === "error" ||
-                  st.status === "scraped" ||
                   st.status === "skipped");
+              const isSelected = selected.has(link.url);
 
               return (
                 <li
                   key={link.url}
-                  className="flex items-start gap-3 rounded-xl border border-border bg-background px-3 py-3"
+                  className={`website-link-row flex items-start gap-3 rounded-xl border px-3 py-3 ${
+                    isSelected && canCheck
+                      ? "border-highlight/35 bg-highlight/[0.04] shadow-sm ring-1 ring-highlight/15"
+                      : "border-border/70 bg-background"
+                  } ${isTraining ? "opacity-90" : ""}`}
                 >
                   <input
                     type="checkbox"
-                    checked={selected.has(link.url)}
+                    checked={isSelected}
                     onChange={() => toggleUrl(link.url)}
-                    disabled={saving || !canCheck}
-                    className="mt-1 shrink-0"
+                    onContextMenu={(e) =>
+                      handleCheckboxContextMenu(e, link.url, canCheck)
+                    }
+                    disabled={!canCheck}
+                    className="mt-1 h-4 w-4 shrink-0 accent-highlight"
+                    title={canCheck ? "Right-click for more options" : undefined}
                   />
                   <div className="min-w-0 flex-1">
-                    <p className="text-sm font-medium text-foreground">
-                      {link.label || link.url}
-                    </p>
-                    <p className="truncate text-xs text-muted">{link.url}</p>
-                    {(st.error || st.saveError) && (
-                      <p className="mt-1 text-xs text-red-600">
-                        {st.saveError || st.error}
+                    <div className="flex items-start justify-between gap-2">
+                      <p className="line-clamp-2 text-sm font-medium leading-snug text-foreground">
+                        {link.label || link.url}
                       </p>
-                    )}
+                      <a
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="shrink-0 rounded-lg p-1.5 text-muted transition-colors duration-200 hover:bg-muted-bg hover:text-foreground"
+                        aria-label="Open page"
+                        title="Open in new tab"
+                      >
+                        <ExternalLink className="h-3.5 w-3.5" />
+                      </a>
+                    </div>
+                    <p className="mt-0.5 truncate text-xs text-muted">{link.url}</p>
+                    {st.error ? (
+                      <p className="mt-1 text-xs text-red-600">{st.error}</p>
+                    ) : null}
                   </div>
-                  <div className="flex shrink-0 flex-col items-end gap-1.5 sm:flex-row sm:items-center">
+                  <div className="flex shrink-0 flex-col items-end gap-1.5">
                     {kbHint ? (
                       <span
-                        className="max-w-[11rem] text-right text-xs font-medium text-green-700 dark:text-green-400"
+                        className="rounded-full bg-amber-100/90 px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-amber-900 dark:bg-amber-900/35 dark:text-amber-200"
                         title={
-                          st.kbSaved?.title
-                            ? `Document: ${st.kbSaved.title}`
-                            : undefined
+                          st.kbSaved?.title ? st.kbSaved.title : undefined
                         }
                       >
                         {kbHint}
                       </span>
                     ) : null}
-                    {isSaved ? (
-                      <span className="rounded-lg bg-green-100 px-2.5 py-1 text-xs font-medium text-green-800 dark:bg-green-900/40 dark:text-green-300">
-                        Saved
-                      </span>
+                    {isTrained ? (
+                      <div className="flex items-center gap-1.5">
+                        <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300">
+                          Done
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => handleViewDoc(link.url)}
+                          className="rounded-lg border border-border/80 px-2.5 py-1 text-xs font-medium text-foreground transition-colors duration-200 hover:bg-muted-bg"
+                        >
+                          View
+                        </button>
+                      </div>
                     ) : isSkipped ? (
-                      <span className="rounded-lg bg-muted-bg px-2.5 py-1 text-xs font-medium text-muted">
-                        Skipped
-                      </span>
-                    ) : isScraped ? (
-                      <span
-                        className={`rounded-lg px-2.5 py-1 text-xs font-medium ${
-                          st.saveError
-                            ? "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300"
-                            : "bg-muted-bg text-muted"
-                        }`}
-                      >
-                        {st.saveError ? "Save failed" : "Scraped"}
+                      <span className="rounded-full bg-muted-bg px-2 py-0.5 text-[10px] font-medium uppercase tracking-wide text-muted">
+                        Off
                       </span>
                     ) : (
                       <button
                         type="button"
-                        onClick={() => handleScrapeRow(link.url)}
-                        disabled={scrapeLocked || isScraping}
-                        className="rounded-lg bg-highlight px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-50"
+                        onClick={() => trainOne(link.url)}
+                        disabled={selectionLocked || isTraining}
+                        className="rounded-lg bg-highlight px-3 py-1.5 text-xs font-medium text-white shadow-sm transition-all duration-200 hover:bg-highlight/90 hover:shadow disabled:opacity-50"
                       >
-                        {isScraping ? (
+                        {isTraining ? (
                           <Loader2 className="h-3.5 w-3.5 animate-spin" />
                         ) : st.status === "error" ? (
                           "Retry"
                         ) : (
-                          "Scrape"
+                          "Train"
                         )}
-                      </button>
-                    )}
-                    {(isScraped || isSaved) && (
-                      <button
-                        type="button"
-                        onClick={() => handleViewDoc(link.url)}
-                        disabled={saving}
-                        className="rounded-lg border border-border px-3 py-1.5 text-xs font-medium text-foreground hover:bg-muted-bg disabled:opacity-50"
-                      >
-                        View doc
                       </button>
                     )}
                   </div>
@@ -1184,155 +850,128 @@ export default function WebsiteLinksDialog({
             })}
           </ul>
 
-          {notice && (
-            <p className="mx-6 mb-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2 text-sm text-green-800 dark:border-green-900/50 dark:bg-green-950/30 dark:text-green-300">
-              {notice}
-            </p>
+          {(notice || error) && (
+            <div className="space-y-2 px-6 pb-2">
+              {notice ? (
+                <p className="rounded-xl border border-emerald-200/80 bg-emerald-50/90 px-3 py-2 text-sm text-emerald-800 shadow-sm dark:border-emerald-900/50 dark:bg-emerald-950/40 dark:text-emerald-300">
+                  {notice}
+                </p>
+              ) : null}
+              {error ? (
+                <p
+                  className="rounded-xl border border-red-200/80 bg-red-50/90 px-3 py-2 text-sm text-red-700 shadow-sm dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
+                  role="alert"
+                >
+                  {error}
+                </p>
+              ) : null}
+            </div>
           )}
 
-          {error && (
-            <p className="mx-6 mb-2 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
-              {error}
-            </p>
-          )}
-
-          <div className="bg-muted-bg/30 px-6 py-4">
-            {isJobRunning && batchProgress && (
-              <div className="mb-3">
-                <div className="mb-1 flex justify-between text-xs text-muted">
-                  <span>Scraping</span>
-                  <span>{batchPercent}%</span>
+          <div className="border-t border-border/60 bg-card/95 px-6 py-4 shadow-[0_-12px_32px_-12px_rgba(45,84,94,0.12)] backdrop-blur-sm">
+            {isJobRunning && batchProgress ? (
+              <div className="mb-4">
+                <div className="mb-1.5 flex justify-between text-xs text-muted">
+                  <span>
+                    {batchProgress.done} / {batchProgress.total}
+                  </span>
+                  <span className="font-medium text-highlight">
+                    {batchPercent}%
+                  </span>
                 </div>
-                <div className="h-2 overflow-hidden rounded-full bg-border">
+                <div className="h-2.5 overflow-hidden rounded-full bg-border/80">
                   <div
-                    className="h-full rounded-full bg-highlight transition-all duration-300"
+                    className="website-progress-bar h-full rounded-full bg-gradient-to-r from-highlight/75 to-highlight"
                     style={{ width: `${batchPercent}%` }}
                   />
                 </div>
               </div>
-            )}
+            ) : null}
 
-            {saving && saveProgress && (
-              <div className="mb-3">
-                <div className="mb-1 flex justify-between text-xs text-muted">
-                  <span className="min-w-0 truncate pr-2">
-                    Saving {saveProgress.done} of {saveProgress.total}
-                    {saveProgress.label ? ` — ${saveProgress.label}` : ""}
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                type="button"
+                onClick={handleTrainAll}
+                disabled={
+                  selectionLocked || pendingTrainCount === 0 || !scrapeJob?.jobId
+                }
+                className="rounded-xl bg-highlight px-5 py-2.5 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-highlight/90 hover:shadow-lg active:scale-[0.99] disabled:opacity-50"
+              >
+                {startingJob || isJobRunning ? (
+                  <span className="flex items-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    {isJobRunning ? "Training…" : "Starting…"}
                   </span>
-                  <span className="shrink-0">{savePercent}%</span>
-                </div>
-                <div className="h-2 overflow-hidden rounded-full bg-border">
-                  <div
-                    className="h-full rounded-full bg-green-600 transition-all duration-300"
-                    style={{ width: `${savePercent}%` }}
-                  />
-                </div>
-              </div>
-            )}
+                ) : (
+                  `Train ${pendingTrainCount} pages`
+                )}
+              </button>
 
-            <div className="flex flex-wrap items-center justify-between gap-3">
-              <div className="flex flex-wrap gap-2">
-                {showSaveActions ? (
-                  <>
-                    <button
-                      type="button"
-                      onClick={handleSaveAll}
-                      disabled={saving}
-                      className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-                    >
-                      {saving && saveProgress ? (
-                        <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Saving {saveProgress.done}/{saveProgress.total}…
-                        </span>
-                      ) : saving ? (
-                        <span className="flex items-center gap-2">
-                          <Loader2 className="h-4 w-4 animate-spin" />
-                          Saving…
-                        </span>
-                      ) : isJobRunning ? (
-                        `Save ready (${unsavedScrapedUrls.length})`
-                      ) : (
-                        `Save all (${unsavedScrapedUrls.length})`
-                      )}
-                    </button>
-                    {selectedSaveCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleSaveSelected}
-                        disabled={saving}
-                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted-bg disabled:opacity-50"
-                      >
-                        Save selected ({selectedSaveCount})
-                      </button>
-                    )}
-                  </>
-                ) : null}
-                {showScrapeAllPrimary ? (
-                  <button
-                    type="button"
-                    onClick={handleScrapeAll}
-                    disabled={saving || scrapeAllCount === 0}
-                    className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-                  >
-                    Scrape all ({scrapeAllCount})
-                  </button>
-                ) : null}
-                {showOnlyScrapeRemaining ? (
-                  <button
-                    type="button"
-                    onClick={handleScrapeRemaining}
-                    disabled={saving}
-                    className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-                  >
-                    Scrape remaining ({remainingScrapeCount})
-                  </button>
-                ) : null}
-                {showScrapeActions ? (
-                  <>
-                    {remainingScrapeCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleScrapeRemaining}
-                        disabled={saving}
-                        className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
-                      >
-                        Scrape remaining ({remainingScrapeCount})
-                      </button>
-                    )}
-                    {selectedScrapeCount > 0 && (
-                      <button
-                        type="button"
-                        onClick={handleScrapeSelected}
-                        disabled={saving}
-                        className="rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-foreground hover:bg-muted-bg disabled:opacity-50"
-                      >
-                        Scrape selected ({selectedScrapeCount})
-                      </button>
-                    )}
-                  </>
-                ) : null}
-                {scrapeLocked && !showSaveActions ? (
-                  <button
-                    type="button"
-                    disabled
-                    className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white opacity-50"
-                  >
-                    {startingJob ? (
-                      <span className="flex items-center gap-2">
-                        <Loader2 className="h-4 w-4 animate-spin" />
-                        Starting…
-                      </span>
-                    ) : (
-                      `Scraping… (${scrapeJob?.doneCount ?? 0}/${scrapeJob?.totalCount ?? 0})`
-                    )}
-                  </button>
-                ) : null}
-              </div>
+              {isJobRunning ? (
+                <button
+                  type="button"
+                  onClick={stopTraining}
+                  className="rounded-xl border border-border/80 bg-card px-4 py-2.5 text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted-bg"
+                >
+                  Stop
+                </button>
+              ) : null}
+
+              {scrapeJob?.status === "completed" && trainedCount > 0 ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    onComplete?.({
+                      title: discoverMeta?.seedUrl || "Website import",
+                      message: `${trainedCount} page${trainedCount === 1 ? "" : "s"} trained`,
+                    })
+                  }
+                  className="rounded-xl border border-border/80 px-4 py-2.5 text-sm font-medium text-foreground transition-all duration-200 hover:bg-muted-bg"
+                >
+                  Done
+                </button>
+              ) : null}
             </div>
           </div>
         </div>
       </div>
+
+      {selectionMenu ? (
+        <>
+          <button
+            type="button"
+            className="fixed inset-0 z-[60] cursor-default border-0 bg-transparent p-0"
+            aria-label="Close selection menu"
+            onClick={() => setSelectionMenu(null)}
+            onContextMenu={(e) => {
+              e.preventDefault();
+              setSelectionMenu(null);
+            }}
+          />
+          <div
+            role="menu"
+            className="fixed z-[61] min-w-[14rem] overflow-hidden rounded-xl border border-border/80 bg-card py-1 shadow-[0_12px_40px_-8px_rgba(45,84,94,0.25)]"
+            style={{ left: selectionMenu.x, top: selectionMenu.y }}
+          >
+            <button
+              type="button"
+              role="menuitem"
+              className="block w-full px-3.5 py-2.5 text-left text-sm text-foreground transition-colors duration-150 hover:bg-muted-bg"
+              onClick={() => selectOnlyThis(selectionMenu.url)}
+            >
+              Select only this
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              className="block w-full px-3.5 py-2.5 text-left text-sm text-foreground transition-colors duration-150 hover:bg-muted-bg"
+              onClick={() => selectBlockFromHere(selectionMenu.url)}
+            >
+              Next {MAX_WEBSITE_BATCH_PAGES} from here
+            </button>
+          </div>
+        </>
+      ) : null}
 
       <TextTrainingModal
         isOpen={Boolean(viewPage)}
@@ -1342,7 +981,6 @@ export default function WebsiteLinksDialog({
         initialContent={viewPage?.content || ""}
         initialSourceUrl={viewPage?.sourceUrl || ""}
         isEditMode={true}
-        isSaving={saving}
         folders={folders}
         folderId={editFolderId}
         onFolderChange={setEditFolderId}

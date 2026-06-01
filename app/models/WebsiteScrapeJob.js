@@ -1,6 +1,14 @@
 import mongoose from "mongoose";
 
-const PAGE_STATUS = ["pending", "scraping", "scraped", "error", "skipped"];
+const PAGE_STATUS = [
+  "pending",
+  "training",
+  "trained",
+  "scraping",
+  "scraped",
+  "error",
+  "skipped",
+];
 
 const WebsiteScrapeJobPageSchema = new mongoose.Schema(
   {
@@ -13,6 +21,7 @@ const WebsiteScrapeJobPageSchema = new mongoose.Schema(
       default: "pending",
     },
     error: { type: String, default: "" },
+    docid: { type: String, default: "" },
     payload: {
       title: String,
       content: String,
@@ -20,12 +29,20 @@ const WebsiteScrapeJobPageSchema = new mongoose.Schema(
       prepared: Boolean,
       substantive: Boolean,
       pageTitle: String,
+      docid: String,
     },
   },
   { _id: false }
 );
 
-const JOB_STATUS = ["pending", "running", "completed", "failed"];
+const JOB_STATUS = [
+  "discovered",
+  "pending",
+  "running",
+  "completed",
+  "failed",
+  "stopped",
+];
 
 const WebsiteScrapeJobSchema = new mongoose.Schema(
   {
@@ -41,6 +58,12 @@ const WebsiteScrapeJobSchema = new mongoose.Schema(
       index: true,
     },
     seedUrl: { type: String, default: "" },
+    mode: {
+      type: String,
+      enum: ["generic", "blog"],
+      default: "generic",
+      index: true,
+    },
     folderId: { type: String, default: "" },
     folderName: { type: String, default: "" },
     createdBy: { type: String, default: "" },
@@ -59,7 +82,7 @@ const WebsiteScrapeJobSchema = new mongoose.Schema(
   { timestamps: true, collection: "websitescrapejobs" }
 );
 
-WebsiteScrapeJobSchema.index({ brand: 1, status: 1, updatedAt: -1 });
+WebsiteScrapeJobSchema.index({ brand: 1, mode: 1, updatedAt: -1 });
 
 // Hot-reload in dev can cache an older schema without newer page statuses.
 if (mongoose.models.WebsiteScrapeJob) {

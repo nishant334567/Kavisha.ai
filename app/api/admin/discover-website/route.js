@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import { discoverSiteLinks } from "@/app/lib/agenticScraper";
+import { discoverBlogLinks } from "@/app/lib/blogDiscovery";
 import { parseAndValidateScrapeUrl } from "@/app/lib/scrapeWebsiteUrl";
 import { dedupeDiscoveredLinks } from "@/app/lib/websiteScrapeContent";
 import { ensureWebsiteFolder } from "@/app/lib/websiteFolder";
@@ -13,7 +14,7 @@ export async function POST(req) {
     onAuthenticated: async ({ decodedToken }) => {
       try {
         const body = await req.json().catch(() => ({}));
-        const { url, brand } = body;
+        const { url, brand, mode } = body;
 
         if (!brand) {
           return NextResponse.json(
@@ -35,7 +36,10 @@ export async function POST(req) {
           );
         }
 
-        const result = await discoverSiteLinks(parsed.href);
+        const result =
+          mode === "blog"
+            ? await discoverBlogLinks(parsed.href)
+            : await discoverSiteLinks(parsed.href);
         const links = dedupeDiscoveredLinks(result.links);
         const { folderId, folderName } = await ensureWebsiteFolder(
           brand,

@@ -40,8 +40,12 @@ export default function AdminHome() {
           const response = await fetch(
             `/api/admin/fetch-sessions?brand=${brand.subdomain}&count=true`
           );
-          const data = await response.json();
-          if (data.success) {
+          if (!response.ok) {
+            setCountsLoading(false);
+            return;
+          }
+          const data = await response.json().catch(() => null);
+          if (data?.success) {
             setChatRequestCount(data.chatRequestCount || 0);
             setCommunityCount(data.communityCount || 0);
             setQuizSurveyAttemptCount(data.quizSurveyAttemptCount || 0);

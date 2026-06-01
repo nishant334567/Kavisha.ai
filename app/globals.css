@@ -82,7 +82,79 @@ body {
   scrollbar-color: var(--border) var(--muted-bg);
 }
 
-/* Widget intro — animated gradient text on CTA (replaces inline <style>) */
+.train-panel-enter {
+  animation: train-panel-enter 0.32s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes train-panel-enter {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.train-sources-shell {
+  box-shadow:
+    0 1px 2px rgba(45, 84, 94, 0.04),
+    0 12px 40px -12px rgba(45, 84, 94, 0.14);
+}
+
+.website-dialog-backdrop {
+  animation: website-fade-in 0.22s ease-out;
+}
+
+.website-dialog-panel {
+  animation: website-dialog-enter 0.38s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.website-scrape-card {
+  box-shadow:
+    0 1px 2px rgba(45, 84, 94, 0.05),
+    0 8px 28px -10px rgba(45, 84, 94, 0.18);
+}
+
+.website-link-row {
+  transition:
+    box-shadow 0.22s ease,
+    border-color 0.22s ease,
+    background-color 0.22s ease,
+    transform 0.18s ease;
+}
+
+.website-link-row:hover:not(:has(input:disabled)) {
+  transform: translateY(-1px);
+  box-shadow:
+    0 2px 8px rgba(45, 84, 94, 0.06),
+    0 1px 2px rgba(45, 84, 94, 0.04);
+}
+
+.website-progress-bar {
+  transition: width 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+@keyframes website-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes website-dialog-enter {
+  from {
+    opacity: 0;
+    transform: scale(0.98) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
+}
 @keyframes widget-intro-shine {
   to {
     background-position: 200% center;

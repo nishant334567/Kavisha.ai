@@ -1,4 +1,5 @@
 import mongoose from "mongoose";
+import { v4 as uuidv4 } from "uuid";
 import { connectDB } from "@/app/lib/db";
 import WebsiteScrapeJob from "@/app/models/WebsiteScrapeJob";
 import { scrapeSinglePage } from "@/app/lib/agenticScraper";
@@ -6,22 +7,21 @@ import { enqueueCloudTask } from "@/app/lib/cloudTasks";
 import {
   prepareContentForTraining,
   resolveDocumentTitle,
+  resolveTrainingText,
 } from "@/app/lib/websiteScrapeContent";
+import { trainDocument } from "@/app/lib/trainDocument";
+import { isSubstantiveContent } from "@/app/lib/scrapePageQuality";
 import { parseAndValidateScrapeUrl } from "@/app/lib/scrapeWebsiteUrl";
+import {
+  friendlyScrapeReason,
+  MAX_WEBSITE_BATCH_PAGES,
+  websiteBatchLimitMessage,
+} from "@/app/lib/websiteScrapeLimits";
 
 const BATCH_DELAY_MS = 1500;
 
 function delay(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-export function friendlyScrapeReason(message = "") {
-  const m = String(message).toLowerCase();
-  if (m.includes("timeout")) return "Page didn't load in time";
-  if (m.includes("network") || m.includes("econnreset")) {
-    return "Connection problem";
-  }
-  return message || "Could not load this page";
 }
 
 export function getTasksBaseUrl() {
@@ -57,6 +57,10 @@ function findNextPendingIndex(pages, afterIndex = -1) {
 
 function countActivePages(pages) {
   return (pages || []).filter((p) => p.status !== "skipped");
+}
+
+function isJobStopped(status) {
+  return status === "stopped" || status === "failed";
 }
 
 async function enqueuePageTask(jobId, pageIndex) {
@@ -111,8 +115,10 @@ async function maybeCompleteJobIfDone(jobId) {
   if (!job || job.status !== "running") return;
 
   const hasPending = job.pages.some((p) => p.status === "pending");
-  const hasScraping = job.pages.some((p) => p.status === "scraping");
-  if (!hasPending && !hasScraping) {
+  const hasTraining = job.pages.some(
+    (p) => p.status === "training" || p.status === "scraping"
+  );
+  if (!hasPending && !hasTraining) {
     await markJobCompleted(jobId);
   }
 }
@@ -134,13 +140,19 @@ async function resumeJobIfNeeded(jobId) {
     );
   }
 
-  const hasScraping = job.pages.some((p) => p.status === "scraping");
+  const hasScraping = job.pages.some(
+    (p) => p.status === "scraping" || p.status === "training"
+  );
   if (!hasScraping) {
     await dispatchScrapeJobPage(jobId, first);
   }
 }
 
-async function finishOrContinue(job, fromIndex) {
+async function finishOrContinue(job, fromIndex, { chain = true } = {}) {
+  if (!chain || isJobStopped(job.status)) {
+    await maybeCompleteJobIfDone(job.jobId);
+    return;
+  }
   const nextIndex = findNextPendingIndex(job.pages, fromIndex);
   if (nextIndex === -1) {
     await maybeCompleteJobIfDone(job.jobId);
@@ -149,12 +161,16 @@ async function finishOrContinue(job, fromIndex) {
   await dispatchScrapeJobPage(job.jobId, nextIndex);
 }
 
-export async function processScrapeJobPage(jobId, pageIndex) {
+export async function processScrapeJobPage(jobId, pageIndex, options = {}) {
+  return processTrainJobPage(jobId, pageIndex, options);
+}
+
+export async function processTrainJobPage(jobId, pageIndex, { chain = true } = {}) {
   await connectDB();
 
   const job = await WebsiteScrapeJob.findOne({ jobId }).lean();
   if (!job) return;
-  if (job.status === "failed") return;
+  if (isJobStopped(job.status)) return;
 
   const page = job.pages[pageIndex];
   if (!page) {
@@ -162,7 +178,7 @@ export async function processScrapeJobPage(jobId, pageIndex) {
     return;
   }
 
-  if (page.status === "skipped" || page.status === "scraped") {
+  if (page.status === "skipped" || page.status === "trained") {
     await finishOrContinue(job, pageIndex);
     return;
   }
@@ -172,7 +188,7 @@ export async function processScrapeJobPage(jobId, pageIndex) {
     return;
   }
 
-  if (page.status !== "pending") {
+  if (page.status !== "pending" && page.status !== "scraped") {
     await finishOrContinue(job, pageIndex);
     return;
   }
@@ -182,7 +198,7 @@ export async function processScrapeJobPage(jobId, pageIndex) {
     {
       $set: {
         status: "running",
-        [`pages.${pageIndex}.status`]: "scraping",
+        [`pages.${pageIndex}.status`]: "training",
         [`pages.${pageIndex}.error`]: "",
       },
     }
@@ -205,20 +221,45 @@ export async function processScrapeJobPage(jobId, pageIndex) {
       sourceUrl,
       seedUrl: job.seedUrl || parsed.href,
     });
+    const text = resolveTrainingText(content, {
+      prepared: true,
+      sourceUrl,
+      seedUrl: job.seedUrl || "",
+    });
+
+    if (!text) {
+      throw new Error("Empty content after preparation");
+    }
+
+    const fullTitle = title.trim();
+    const titleDb =
+      fullTitle.length > 50 ? fullTitle.substring(0, 50) : fullTitle;
+
+    const trainResult = await trainDocument({
+      brand: job.brand,
+      title: titleDb,
+      text,
+      description: titleDb,
+      sourceUrl,
+      embeddingProfile: "bulk",
+      ...(job.folderId && { folderId: job.folderId }),
+    });
 
     await WebsiteScrapeJob.updateOne(
       { jobId },
       {
         $set: {
-          [`pages.${pageIndex}.status`]: "scraped",
+          [`pages.${pageIndex}.status`]: "trained",
           [`pages.${pageIndex}.error`]: "",
+          [`pages.${pageIndex}.docid`]: trainResult.docid || "",
           [`pages.${pageIndex}.payload`]: {
-            title,
-            content,
+            title: titleDb,
+            content: text,
             sourceUrl,
             prepared: true,
-            substantive: scraped.substantive === true,
+            substantive: isSubstantiveContent(text),
             pageTitle: scraped.title,
+            docid: trainResult.docid || "",
           },
         },
       }
@@ -236,26 +277,28 @@ export async function processScrapeJobPage(jobId, pageIndex) {
   }
 
   const updated = await WebsiteScrapeJob.findOne({ jobId }).lean();
-  if (!updated) return;
-  await finishOrContinue(updated, pageIndex);
-}
+  if (!updated || isJobStopped(updated.status)) return;
 
-export async function startScrapeJobProcessing(jobId) {
-  await connectDB();
-  const job = await WebsiteScrapeJob.findOne({ jobId }).lean();
-  if (!job) return;
-
-  const first = findNextPendingIndex(job.pages, -1);
-  if (first === -1) {
-    await WebsiteScrapeJob.updateOne(
-      { jobId },
-      { $set: { status: "completed", completedAt: new Date() } }
+  if (!chain) {
+    const hasPending = updated.pages.some((p) => p.status === "pending");
+    const hasTraining = updated.pages.some(
+      (p) => p.status === "training" || p.status === "scraping"
     );
+    if (!hasTraining) {
+      await WebsiteScrapeJob.updateOne(
+        { jobId },
+        {
+          $set: {
+            status: hasPending ? "stopped" : "completed",
+            ...(hasPending ? {} : { completedAt: new Date() }),
+          },
+        }
+      );
+    }
     return;
   }
 
-  await WebsiteScrapeJob.updateOne({ jobId }, { $set: { status: "running" } });
-  await dispatchScrapeJobPage(jobId, first);
+  await finishOrContinue(updated, pageIndex, { chain: true });
 }
 
 /** @param {string} jobId @param {string[]} urls @param {boolean} included */
@@ -299,8 +342,12 @@ export function serializeJob(job) {
   const pages = job.pages || [];
   const activePages = countActivePages(pages);
   const doneCount = activePages.filter(
-    (p) => p.status === "scraped" || p.status === "error"
+    (p) =>
+      p.status === "trained" ||
+      p.status === "scraped" ||
+      p.status === "error"
   ).length;
+  const trainedCount = pages.filter((p) => p.status === "trained").length;
   const scrapedCount = pages.filter((p) => p.status === "scraped").length;
   const errorCount = pages.filter((p) => p.status === "error").length;
   const skippedCount = pages.filter((p) => p.status === "skipped").length;
@@ -309,12 +356,14 @@ export function serializeJob(job) {
     jobId: job.jobId,
     brand: job.brand,
     seedUrl: job.seedUrl,
+    mode: job.mode || "generic",
     folderId: job.folderId,
     folderName: job.folderName,
     status: job.status,
     pages,
     doneCount,
     totalCount: activePages.length,
+    trainedCount,
     scrapedCount,
     errorCount,
     skippedCount,
@@ -322,4 +371,94 @@ export function serializeJob(job) {
     updatedAt: job.updatedAt,
     createdAt: job.createdAt,
   };
+}
+
+export async function createDiscoverSession({
+  brand,
+  mode = "generic",
+  pages,
+  seedUrl,
+  folderId,
+  folderName,
+  createdBy,
+}) {
+  await connectDB();
+
+  await WebsiteScrapeJob.deleteMany({
+    brand,
+    mode,
+    status: { $in: ["discovered", "stopped", "completed", "failed"] },
+  });
+
+  const running = await WebsiteScrapeJob.findOne({
+    brand,
+    status: { $in: ["pending", "running"] },
+  }).lean();
+  if (running) {
+    throw new Error(
+      "Training is already running. Stop it before starting a new link discovery."
+    );
+  }
+
+  const jobId = uuidv4();
+
+  const job = await WebsiteScrapeJob.create({
+    jobId,
+    brand,
+    mode,
+    seedUrl: seedUrl || "",
+    folderId: folderId || "",
+    folderName: folderName || "",
+    createdBy: createdBy || "",
+    status: "discovered",
+    pages,
+  });
+
+  return serializeJob(job.toObject ? job.toObject() : job);
+}
+
+export async function startTrainingJob(jobId) {
+  await connectDB();
+  const job = await WebsiteScrapeJob.findOne({ jobId }).lean();
+  if (!job) throw new Error("Job not found");
+  if (job.status === "running" || job.status === "pending") {
+    await resumeJobIfNeeded(jobId);
+    return serializeJob(await WebsiteScrapeJob.findOne({ jobId }).lean());
+  }
+  if (job.status !== "discovered" && job.status !== "stopped") {
+    throw new Error("This session cannot be started");
+  }
+
+  const pendingCount = (job.pages || []).filter(
+    (p) => p.status === "pending"
+  ).length;
+  if (pendingCount > MAX_WEBSITE_BATCH_PAGES) {
+    throw new Error(websiteBatchLimitMessage());
+  }
+
+  const first = findNextPendingIndex(job.pages, -1);
+  if (first === -1) {
+    await WebsiteScrapeJob.updateOne(
+      { jobId },
+      { $set: { status: "completed", completedAt: new Date() } }
+    );
+    return serializeJob(await WebsiteScrapeJob.findOne({ jobId }).lean());
+  }
+
+  await WebsiteScrapeJob.updateOne(
+    { jobId },
+    { $set: { status: "running" }, $unset: { completedAt: 1 } }
+  );
+  await dispatchScrapeJobPage(jobId, first);
+  return serializeJob(await WebsiteScrapeJob.findOne({ jobId }).lean());
+}
+
+export async function stopTrainingJob(jobId) {
+  await connectDB();
+  await WebsiteScrapeJob.updateOne(
+    { jobId },
+    { $set: { status: "stopped" } }
+  );
+  const job = await WebsiteScrapeJob.findOne({ jobId }).lean();
+  return serializeJob(job);
 }

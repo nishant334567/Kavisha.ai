@@ -1,6 +1,12 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useState,
+} from "react";
 import { Loader2, Search } from "lucide-react";
 import WebsiteLinksDialog from "@/app/admin/components/WebsiteLinksDialog";
 import WebsiteScrapeJobBar from "@/app/admin/components/WebsiteScrapeJobBar";
@@ -8,26 +14,44 @@ import {
   discoverMetaFromScrapeJob,
   linksFromScrapeJob,
   readStoredWebsiteScrapeJobId,
+  readStoredWebsiteScrapeJobMode,
   writeStoredWebsiteScrapeJobId,
+  writeStoredWebsiteScrapeJobMode,
 } from "@/app/lib/websiteScrapeJobStorage";
 
-export default function WebsiteImportWizard({
+const CARD_CONFIG = {
+  generic: { placeholder: "https://yourbrand.com" },
+  blog: { placeholder: "https://yourbrand.com/blog/" },
+};
+
+const WebsiteImportContext = createContext(null);
+
+export function useWebsiteImport() {
+  const ctx = useContext(WebsiteImportContext);
+  if (!ctx) {
+    throw new Error("useWebsiteImport must be used within WebsiteImportProvider");
+  }
+  return ctx;
+}
+
+export function WebsiteImportProvider({
   brandSubdomain,
   folders = [],
   disabled,
   onTrainingChange,
   onComplete,
   onDocumentsRefresh,
+  children,
 }) {
-  const [websiteUrl, setWebsiteUrl] = useState("");
-  const [error, setError] = useState(null);
+  const [urlByMode, setUrlByMode] = useState({ generic: "", blog: "" });
+  const [errorByMode, setErrorByMode] = useState({ generic: null, blog: null });
+  const [activeMode, setActiveMode] = useState(null);
   const [discovering, setDiscovering] = useState(false);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [discoverMeta, setDiscoverMeta] = useState(null);
   const [links, setLinks] = useState([]);
   const [scrapeJob, setScrapeJob] = useState(null);
   const [cardSaving, setCardSaving] = useState(false);
-  const [cardSaveProgress, setCardSaveProgress] = useState(null);
   const [dialogSessionKey, setDialogSessionKey] = useState(0);
 
   const getPayload = async (res) => {
@@ -38,15 +62,22 @@ export default function WebsiteImportWizard({
     }
   };
 
-  const applyJobToWizard = useCallback((job) => {
-    if (!job) return;
-    setScrapeJob(job);
-    writeStoredWebsiteScrapeJobId(brandSubdomain, job.jobId);
-    const meta = discoverMetaFromScrapeJob(job);
-    const jobLinks = linksFromScrapeJob(job);
-    if (meta) setDiscoverMeta(meta);
-    if (jobLinks.length) setLinks(jobLinks);
-  }, [brandSubdomain]);
+  const applyJobToWizard = useCallback(
+    (job) => {
+      if (!job) return;
+      setScrapeJob(job);
+      writeStoredWebsiteScrapeJobId(brandSubdomain, job.jobId);
+      if (job.mode) {
+        setActiveMode(job.mode);
+        writeStoredWebsiteScrapeJobMode(brandSubdomain, job.mode);
+      }
+      const meta = discoverMetaFromScrapeJob(job);
+      const jobLinks = linksFromScrapeJob(job);
+      if (meta) setDiscoverMeta(meta);
+      if (jobLinks.length) setLinks(jobLinks);
+    },
+    [brandSubdomain]
+  );
 
   const deleteScrapeJobOnServer = useCallback(
     async (jobId) => {
@@ -70,9 +101,10 @@ export default function WebsiteImportWizard({
       await deleteScrapeJobOnServer(jobId);
     }
     writeStoredWebsiteScrapeJobId(brandSubdomain, null);
+    writeStoredWebsiteScrapeJobMode(brandSubdomain, null);
     setScrapeJob(null);
+    setActiveMode(null);
     setCardSaving(false);
-    setCardSaveProgress(null);
     setLinks([]);
     setDiscoverMeta(null);
     setDialogOpen(false);
@@ -95,34 +127,49 @@ export default function WebsiteImportWizard({
     }
   }, [brandSubdomain, scrapeJob?.jobId, applyJobToWizard]);
 
-  const loadActiveJob = useCallback(async () => {
-    if (!brandSubdomain) return;
-    try {
-      const res = await fetch(
-        `/api/admin/website-scrape-jobs?brand=${encodeURIComponent(brandSubdomain)}&active=true`
-      );
-      let data = await getPayload(res);
-      if (res.ok && data.job) {
-        applyJobToWizard(data.job);
-        return;
-      }
+  const loadActiveJob = useCallback(
+    async (mode) => {
+      if (!brandSubdomain) return;
+      const storedMode = readStoredWebsiteScrapeJobMode(brandSubdomain);
+      if (storedMode) setActiveMode(storedMode);
 
-      const storedId = readStoredWebsiteScrapeJobId(brandSubdomain);
-      if (storedId) {
-        const res2 = await fetch(
-          `/api/admin/website-scrape-jobs?brand=${encodeURIComponent(brandSubdomain)}&jobId=${encodeURIComponent(storedId)}`
+      const modeParam =
+        mode === "blog" || mode === "generic"
+          ? mode
+          : storedMode || "generic";
+
+      try {
+        const res = await fetch(
+          `/api/admin/website-scrape-jobs?brand=${encodeURIComponent(brandSubdomain)}&active=true&mode=${encodeURIComponent(modeParam)}`
         );
-        data = await getPayload(res2);
-        if (res2.ok && data.job) {
+        let data = await getPayload(res);
+        if (res.ok && data.job) {
           applyJobToWizard(data.job);
-        } else {
-          writeStoredWebsiteScrapeJobId(brandSubdomain, null);
+          if (data.job.mode) setActiveMode(data.job.mode);
+          return;
         }
+
+        const storedId = readStoredWebsiteScrapeJobId(brandSubdomain);
+        if (storedId) {
+          const res2 = await fetch(
+            `/api/admin/website-scrape-jobs?brand=${encodeURIComponent(brandSubdomain)}&jobId=${encodeURIComponent(storedId)}`
+          );
+          data = await getPayload(res2);
+          if (res2.ok && data.job) {
+            applyJobToWizard(data.job);
+            if (data.job.mode) setActiveMode(data.job.mode);
+          } else {
+            writeStoredWebsiteScrapeJobId(brandSubdomain, null);
+            writeStoredWebsiteScrapeJobMode(brandSubdomain, null);
+            setActiveMode(null);
+          }
+        }
+      } catch {
+        /* ignore */
       }
-    } catch {
-      /* ignore */
-    }
-  }, [brandSubdomain, applyJobToWizard]);
+    },
+    [brandSubdomain, applyJobToWizard]
+  );
 
   useEffect(() => {
     loadActiveJob();
@@ -132,10 +179,13 @@ export default function WebsiteImportWizard({
     scrapeJob &&
     (scrapeJob.status === "pending" || scrapeJob.status === "running");
 
-  const jobComplete = scrapeJob?.status === "completed";
+  const hasLinkSession =
+    Boolean(scrapeJob?.pages?.length) &&
+    ["discovered", "stopped", "pending", "running", "completed"].includes(
+      scrapeJob?.status
+    );
 
-  const showJobInCard =
-    scrapeJob && (jobRunning || jobComplete || cardSaving);
+  const importInProgress = hasLinkSession;
 
   useEffect(() => {
     if (!scrapeJob?.jobId || !jobRunning) return;
@@ -144,31 +194,36 @@ export default function WebsiteImportWizard({
     return () => clearInterval(interval);
   }, [scrapeJob?.jobId, jobRunning, pollJob]);
 
-  const handleDiscover = async () => {
-    const trimmed = websiteUrl.trim();
+  const handleDiscover = async (mode) => {
+    const trimmed = (urlByMode[mode] || "").trim();
     if (!trimmed || !brandSubdomain || disabled) return;
 
-    setError(null);
+    if (hasLinkSession && activeMode === mode) {
+      setErrorByMode((prev) => ({
+        ...prev,
+        [mode]: "Reset links before discovering a new URL.",
+      }));
+      setDialogOpen(true);
+      return;
+    }
+
+    if (jobRunning) return;
+
+    setErrorByMode((prev) => ({ ...prev, [mode]: null }));
     setDiscovering(true);
+    setActiveMode(mode);
+    writeStoredWebsiteScrapeJobMode(brandSubdomain, mode);
     onTrainingChange?.({ type: "website-discover", title: trimmed });
 
-    const jobRunningNow =
-      scrapeJob &&
-      (scrapeJob.status === "pending" || scrapeJob.status === "running");
-
     try {
-      if (scrapeJob?.jobId && !jobRunningNow) {
-        await deleteScrapeJobOnServer(scrapeJob.jobId);
-        writeStoredWebsiteScrapeJobId(brandSubdomain, null);
-        setScrapeJob(null);
-        setCardSaving(false);
-        setCardSaveProgress(null);
-      }
-
       const res = await fetch("/api/admin/discover-website", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ url: trimmed, brand: brandSubdomain }),
+        body: JSON.stringify({
+          url: trimmed,
+          brand: brandSubdomain,
+          mode: mode === "blog" ? "blog" : "generic",
+        }),
       });
       const data = await getPayload(res);
       if (!res.ok) {
@@ -188,11 +243,41 @@ export default function WebsiteImportWizard({
         feedUrlCount: data.feedUrlCount ?? 0,
         folderId: data.folderId || "",
         folderName: data.folderName || "",
+        mode,
       });
+
+      const sessionRes = await fetch("/api/admin/website-scrape-jobs", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          brand: brandSubdomain,
+          discoverOnly: true,
+          mode: mode === "blog" ? "blog" : "generic",
+          pages: found,
+          seedUrl: data.seedUrl || trimmed,
+          folderId: data.folderId || "",
+          folderName: data.folderName || "",
+        }),
+      });
+      const sessionData = await getPayload(sessionRes);
+      if (!sessionRes.ok) {
+        throw new Error(
+          sessionData.error ||
+            sessionData.details?.message ||
+            "Could not save link session"
+        );
+      }
+      if (sessionData.job) {
+        applyJobToWizard(sessionData.job);
+      }
+
       setDialogSessionKey((k) => k + 1);
       setDialogOpen(true);
     } catch (e) {
-      setError(e?.message || "Discovery failed");
+      setErrorByMode((prev) => ({
+        ...prev,
+        [mode]: e?.message || "Discovery failed",
+      }));
     } finally {
       setDiscovering(false);
       onTrainingChange?.(null);
@@ -201,11 +286,15 @@ export default function WebsiteImportWizard({
 
   const handleDialogClose = () => {
     setDialogOpen(false);
-    if (!jobRunning && !jobComplete && !cardSaving) {
-      setLinks([]);
-      setDiscoverMeta(null);
-    }
   };
+
+  const handleResetLinks = useCallback(async () => {
+    await dismissJob();
+    setUrlByMode((prev) => ({
+      ...prev,
+      ...(activeMode ? { [activeMode]: prev[activeMode] } : {}),
+    }));
+  }, [dismissJob, activeMode]);
 
   const handleMinimize = () => {
     setDialogOpen(false);
@@ -224,88 +313,44 @@ export default function WebsiteImportWizard({
   };
 
   const handleImportComplete = async (result) => {
+    const completedMode = activeMode;
     await dismissJob();
     onComplete?.(result);
-    setWebsiteUrl("");
+    if (completedMode) {
+      setUrlByMode((prev) => ({ ...prev, [completedMode]: "" }));
+    }
   };
 
   const handleCardActivity = useCallback(
-    ({ saving, saveProgress }) => {
+    ({ saving }) => {
       setCardSaving(Boolean(saving));
-      setCardSaveProgress(saveProgress || null);
-      if (saving) {
-        onTrainingChange?.({
-          type: "website-save",
-          title: saveProgress?.label || "Website pages",
-        });
-      } else if (!jobRunning) {
-        onTrainingChange?.(null);
-      }
     },
-    [jobRunning, onTrainingChange]
+    []
   );
 
-  const busy = discovering || disabled;
+  const setUrlForMode = useCallback((mode, value) => {
+    setUrlByMode((prev) => ({ ...prev, [mode]: value }));
+  }, []);
+
+  const contextValue = {
+    urlByMode,
+    setUrlForMode,
+    errorByMode,
+    discovering,
+    disabled,
+    activeMode,
+    importInProgress,
+    scrapeJob,
+    jobRunning,
+    hasLinkSession,
+    cardSaving,
+    handleDiscover,
+    handleExpandJob,
+  };
 
   return (
-    <>
-      {showJobInCard ? (
-        <WebsiteScrapeJobBar
-          job={scrapeJob}
-          saving={cardSaving}
-          saveProgress={cardSaveProgress}
-          onExpand={handleExpandJob}
-          onDismiss={jobComplete && !cardSaving ? dismissJob : undefined}
-        />
-      ) : (
-        <>
-          <p className="mb-4 flex-1 text-sm text-muted">
-            Find links on your site, scrape pages in the background, then save to
-            your knowledge base.
-          </p>
-          <div className="mb-4">
-            <input
-              type="url"
-              value={websiteUrl}
-              onChange={(e) => setWebsiteUrl(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleDiscover();
-                }
-              }}
-              placeholder="https://yourbrand.com"
-              disabled={busy}
-              className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
-            />
-          </div>
-          <button
-            type="button"
-            onClick={handleDiscover}
-            disabled={busy || !websiteUrl.trim()}
-            className="mt-auto flex w-full items-center justify-center gap-2 rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-highlight transition-colors hover:bg-muted-bg disabled:cursor-not-allowed disabled:opacity-50"
-          >
-            {discovering ? (
-              <>
-                <Loader2 className="h-4 w-4 animate-spin" />
-                Finding links…
-              </>
-            ) : (
-              <>
-                <Search className="h-4 w-4" />
-                Find links
-              </>
-            )}
-          </button>
-        </>
-      )}
-
-      {error && !showJobInCard ? (
-        <p className="mt-3 rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/30 dark:text-red-300">
-          {error}
-        </p>
-      ) : null}
-
+    <WebsiteImportContext.Provider value={contextValue}>
+      {children}
       <WebsiteLinksDialog
         key={`website-links-${dialogSessionKey}`}
         open={dialogOpen}
@@ -327,8 +372,126 @@ export default function WebsiteImportWizard({
           }
         }}
         onMinimize={handleMinimize}
+        onResetLinks={handleResetLinks}
         onCardActivity={handleCardActivity}
       />
-    </>
+    </WebsiteImportContext.Provider>
   );
 }
+
+export function WebsiteImportPanel({ mode }) {
+  const config = CARD_CONFIG[mode] || CARD_CONFIG.generic;
+  const {
+    urlByMode,
+    setUrlForMode,
+    errorByMode,
+    discovering,
+    disabled,
+    activeMode,
+    importInProgress,
+    scrapeJob,
+    jobRunning,
+    hasLinkSession,
+    cardSaving,
+    handleDiscover,
+    handleExpandJob,
+  } = useWebsiteImport();
+
+  const isOwnerCard =
+    !importInProgress ||
+    (activeMode ? activeMode === mode : mode === "generic");
+  const showJobInCard = isOwnerCard && hasLinkSession;
+
+  const busy = discovering || disabled;
+  const blockedByOtherImport = importInProgress && !isOwnerCard;
+  const error = errorByMode[mode];
+  const websiteUrl = urlByMode[mode] || "";
+
+  if (showJobInCard) {
+    return (
+      <WebsiteScrapeJobBar
+        job={scrapeJob}
+        saving={jobRunning || cardSaving}
+        onExpand={handleExpandJob}
+      />
+    );
+  }
+
+  return (
+    <div className="flex flex-col">
+      {blockedByOtherImport ? (
+        <p className="mb-5 rounded-xl border border-amber-200/80 bg-amber-50/80 px-4 py-3 text-sm text-amber-900 dark:border-amber-900/40 dark:bg-amber-950/30 dark:text-amber-200">
+          Import running on {activeMode === "blog" ? "Blog" : "Website"} —
+          switch source to continue.
+        </p>
+      ) : null}
+
+      <div className="mb-5 flex items-center gap-2 text-xs text-muted">
+        {["URL", "Select", "Train"].map((step, i) => (
+          <span key={step} className="flex items-center gap-2">
+            {i > 0 ? (
+              <span className="h-px w-4 bg-border" aria-hidden />
+            ) : null}
+            <span
+              className={`rounded-full px-2.5 py-1 transition-colors duration-200 ${
+                i === 0
+                  ? "bg-highlight/10 font-medium text-highlight"
+                  : "bg-muted-bg/80"
+              }`}
+            >
+              {i + 1}. {step}
+            </span>
+          </span>
+        ))}
+      </div>
+
+      <div className="website-scrape-card mb-5 rounded-2xl border border-border/70 bg-muted-bg/20 p-1">
+        <input
+          type="url"
+          value={websiteUrl}
+          onChange={(e) => setUrlForMode(mode, e.target.value)}
+          onKeyDown={(e) => {
+            if (e.key === "Enter") {
+              e.preventDefault();
+              handleDiscover(mode);
+            }
+          }}
+          placeholder={config.placeholder}
+          disabled={busy || blockedByOtherImport}
+          aria-label={mode === "blog" ? "Blog URL" : "Website URL"}
+          className="w-full rounded-xl border-0 bg-card px-4 py-3.5 text-sm text-foreground shadow-sm transition-all duration-200 placeholder:text-muted focus:outline-none focus:ring-2 focus:ring-highlight/20 disabled:cursor-not-allowed disabled:opacity-50"
+        />
+      </div>
+
+      <button
+        type="button"
+        onClick={() => handleDiscover(mode)}
+        disabled={busy || blockedByOtherImport || !websiteUrl.trim()}
+        className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-highlight px-6 py-3 text-sm font-semibold text-white shadow-md transition-all duration-200 hover:bg-highlight/90 hover:shadow-lg active:scale-[0.99] focus:outline-none focus:ring-0 disabled:cursor-not-allowed disabled:opacity-50 sm:w-auto"
+      >
+        {discovering && activeMode === mode ? (
+          <>
+            <Loader2 className="h-4 w-4 animate-spin" />
+            Finding links…
+          </>
+        ) : (
+          <>
+            <Search className="h-4 w-4" />
+            Find links
+          </>
+        )}
+      </button>
+
+      {error ? (
+        <p
+          className="mt-4 rounded-xl border border-red-200/80 bg-red-50/90 px-4 py-3 text-sm text-red-700 shadow-sm dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300"
+          role="alert"
+        >
+          {error}
+        </p>
+      ) : null}
+    </div>
+  );
+}
+
+export default WebsiteImportProvider;

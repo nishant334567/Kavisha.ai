@@ -14,7 +14,8 @@ import {
 import TextTrainingModal from "@/app/admin/components/TextTrainingModal";
 import DocumentViewModal from "@/app/admin/components/DocumentViewModal";
 import DocumentCard from "@/app/admin/components/DocumentCard";
-import WebsiteImportWizard from "@/app/admin/components/WebsiteImportWizard";
+import TrainSourcesPanel from "@/app/admin/components/TrainSourcesPanel";
+import WebsiteImportProvider from "@/app/admin/components/WebsiteImportWizard";
 import ConfirmModal from "@/app/components/ConfirmModal";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 
@@ -577,116 +578,32 @@ export default function Train() {
           </div>
         )}
 
-        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-4 gap-6 mb-12">
-          {/* PDF Document Card */}
-          <div className="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-md transition-shadow hover:shadow-lg">
-            <h3 className="mb-2 text-lg font-semibold text-foreground">
-              PDF document
-            </h3>
-            <p className="mb-4 text-sm text-muted">
-              Upload and extract text from PDFs
-            </p>
-            <select
-              value={uploadFolderId}
-              onChange={(e) => setUploadFolderId(e.target.value)}
-              disabled={isTraining}
-              className="mb-2 w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              <option value="">Unfiled</option>
-              {folders.map((f) => (
-                <option key={f._id} value={f._id}>
-                  {f.name}
-                </option>
-              ))}
-            </select>
-            <input
-              type="url"
-              value={uploadSourceUrl}
-              onChange={(e) => setUploadSourceUrl(e.target.value)}
-              placeholder="Source URL (optional)"
-              disabled={isTraining}
-              className="mb-2 w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground placeholder:text-muted disabled:cursor-not-allowed disabled:opacity-50"
-            />
-            <input
-              type="file"
-              ref={fileInputRef}
-              onChange={handleFileChange}
-              accept=".pdf"
-              className="hidden"
-            />
-            <div className="mb-4 flex-1">
-              <p className="text-xs text-muted">
-                {selectedFileName || "No file chosen"}
-              </p>
-            </div>
-            <button
-              onClick={() => fileInputRef.current?.click()}
-              disabled={uploading || isTraining}
-              className="mt-auto w-full rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-highlight transition-colors hover:bg-muted-bg disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isTraining ? "Training..." : uploading ? "Uploading..." : "Choose file"}
-            </button>
-          </div>
-
-          {/* YouTube Video Card */}
-          <div className="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-md transition-shadow hover:shadow-lg">
-            <h3 className="mb-2 text-lg font-semibold text-foreground">
-              Youtube video
-            </h3>
-            <p className="mb-4 text-sm text-muted">
-              Transcribe and train from videos
-            </p>
-            <div className="mb-4 flex-1">
-              <input
-                type="url"
-                placeholder="https://www.youtube.com/watch?v=..."
-                className="w-full rounded-lg border border-border bg-input px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-ring/30 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled
-              />
-            </div>
-            <button
-              disabled
-              className="mt-auto w-full cursor-not-allowed rounded-lg bg-muted-bg px-4 py-2 text-sm font-medium text-muted opacity-50 transition-colors"
-            >
-              Upload and transcribe
-            </button>
-          </div>
-
-          {/* Direct Text Card */}
-          <div className="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-md transition-shadow hover:shadow-lg">
-            <h3 className="mb-2 text-lg font-semibold text-foreground">
-              Direct text
-            </h3>
-            <p className="mb-4 flex-1 text-sm text-muted">
-              Type or paste directly
-            </p>
-            <button
-              onClick={() => setIsModalOpen(true)}
-              disabled={isTraining}
-              className="mt-auto w-full rounded-lg border border-border bg-card px-4 py-2 text-sm font-medium text-highlight transition-colors hover:bg-muted-bg disabled:cursor-not-allowed disabled:opacity-50"
-            >
-              {isTraining ? "Training..." : "Add text"}
-            </button>
-          </div>
-
-          {/* Website import */}
-          <div className="flex h-full flex-col rounded-xl border border-border bg-card p-6 shadow-md transition-shadow hover:shadow-lg">
-            <h3 className="mb-2 text-lg font-semibold text-foreground">
-              Website
-            </h3>
-            <WebsiteImportWizard
-              brandSubdomain={brand?.subdomain}
-              folders={folders}
-              disabled={isTraining}
-              onTrainingChange={setActiveTraining}
-              onComplete={handleWebsiteImportComplete}
-              onDocumentsRefresh={() => {
-                fetchFolders();
-                fetchDocuments(1, selectedFolderId);
-              }}
-            />
-          </div>
-        </div>
+        <WebsiteImportProvider
+          brandSubdomain={brand?.subdomain}
+          folders={folders}
+          disabled={isTraining}
+          onTrainingChange={setActiveTraining}
+          onComplete={handleWebsiteImportComplete}
+          onDocumentsRefresh={() => {
+            fetchFolders();
+            fetchDocuments(1, selectedFolderId);
+          }}
+        >
+          <TrainSourcesPanel
+            fileInputRef={fileInputRef}
+            folders={folders}
+            isTraining={isTraining}
+            uploading={uploading}
+            uploadFolderId={uploadFolderId}
+            onUploadFolderChange={setUploadFolderId}
+            uploadSourceUrl={uploadSourceUrl}
+            onUploadSourceUrlChange={setUploadSourceUrl}
+            selectedFileName={selectedFileName}
+            onFileChange={handleFileChange}
+            onChooseFile={() => fileInputRef.current?.click()}
+            onOpenTextModal={() => setIsModalOpen(true)}
+          />
+        </WebsiteImportProvider>
         <div className="my-4 flex flex-wrap items-center justify-between gap-2">
           <div className="flex items-center gap-3">
             <p className="font-baloo font-semibold uppercase text-highlight">
