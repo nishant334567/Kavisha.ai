@@ -2,7 +2,10 @@ import { connectDB } from "@/app/lib/db";
 import { Session } from "@shopify/shopify-api";
 import ShopifyMerchant from "@/app/models/ShopifyMerchant";
 import { getShopify } from "@/app/lib/shopify";
-import { updateBrandBySubdomain } from "@/app/lib/brandRepository";
+import {
+  getBrandByShopifyShopUrl,
+  updateBrandBySubdomain,
+} from "@/app/lib/brandRepository";
 
 const ACCESS_TOKEN_SKEW_MS = 2 * 60 * 1000; // refresh a little before expiry
 
@@ -29,23 +32,38 @@ export async function saveShopifySession(session, brandSubdomain = "") {
         ? new Date(session.refreshTokenExpires)
         : null;
 
+  const $set = {
+    shopDomain: shop,
+    sessionId: session.id,
+    accessToken: session.accessToken,
+    refreshToken: session.refreshToken || "",
+    accessTokenExpiresAt: expiresAt,
+    refreshTokenExpiresAt,
+    scope: session.scope || "",
+    isOnline: Boolean(session.isOnline),
+    installedAt: new Date(),
+    uninstalledAt: null,
+  };
+  if (brand) $set.brandSubdomain = brand;
+
   await ShopifyMerchant.findOneAndUpdate(
     { shopDomain: shop },
-    {
-      shopDomain: shop,
-      brandSubdomain: brand,
-      sessionId: session.id,
-      accessToken: session.accessToken,
-      refreshToken: session.refreshToken || "",
-      accessTokenExpiresAt: expiresAt,
-      refreshTokenExpiresAt,
-      scope: session.scope || "",
-      isOnline: Boolean(session.isOnline),
-      installedAt: new Date(),
-      uninstalledAt: null,
-    },
+    { $set },
     { upsert: true, new: true }
   );
+}
+
+/** Kavisha avatar subdomain linked to a Shopify shop (brands collection or merchant row). */
+export async function resolveBrandSubdomainForShop(shopDomain) {
+  const shop = String(shopDomain || "").trim().toLowerCase();
+  if (!shop) return "";
+
+  const brandDoc = await getBrandByShopifyShopUrl(shop);
+  const fromBrand = String(brandDoc?.subdomain || "").trim().toLowerCase();
+  if (fromBrand) return fromBrand;
+
+  const merchant = await loadMerchantByShop(shop);
+  return String(merchant?.brandSubdomain || "").trim().toLowerCase();
 }
 
 async function loadMerchantByShop(shopDomain) {

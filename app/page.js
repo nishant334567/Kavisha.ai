@@ -6,6 +6,13 @@ import { useBrandContext } from "./context/brand/BrandContextProvider";
 import Loader from "./components/Loader";
 import Homepage from "./components/Homepage";
 import AvatarHomepage from "./components/AvatarHomepage";
+import { isAdminBrandWelcomePath } from "./utils/subdomain";
+
+function allowRedirectWithoutAdmin(path) {
+  return (
+    path.startsWith("/shopify/claim") || isAdminBrandWelcomePath(path)
+  );
+}
 
 export default function HomePage() {
   const { user, loading } = useFirebaseSession();
@@ -26,7 +33,11 @@ export default function HomePage() {
     if (user && brandContext) {
       localStorage.removeItem("redirectAfterLogin");
       // Don't send non-admins to admin routes
-      if (path.startsWith("/admin") && !brandContext.isBrandAdmin) {
+      if (
+        path.startsWith("/admin") &&
+        !brandContext.isBrandAdmin &&
+        !allowRedirectWithoutAdmin(path)
+      ) {
         if (typeof window !== "undefined") localStorage.removeItem("redirectAfterLogin");
         router.replace("/", { scroll: false });
         return;
@@ -56,13 +67,19 @@ export default function HomePage() {
           ? redirectPath
           : null;
 
-      if (path && !(path.startsWith("/admin") && !brandContext?.isBrandAdmin)) {
+      if (
+        path &&
+        !(
+          path.startsWith("/admin") &&
+          !brandContext?.isBrandAdmin &&
+          !allowRedirectWithoutAdmin(path)
+        )
+      ) {
         localStorage.removeItem("redirectAfterLogin");
         router.replace(path);
         return;
-      } else {
-        localStorage.removeItem("redirectAfterLogin");
       }
+      localStorage.removeItem("redirectAfterLogin");
     }
   }, [user, loading, brandContext, router]);
 

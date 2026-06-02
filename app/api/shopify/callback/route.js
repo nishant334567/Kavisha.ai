@@ -3,11 +3,10 @@ import {
   getShopify,
   readBrandFromCookie,
   clearBrandCookie,
-  getShopifySuccessRedirectUrl,
+  getShopifyOnboardingWelcomeUrl,
   getShopifyWelcomeRedirectUrl,
   registerShopifyWebhooks,
 } from "@/app/lib/shopify";
-import { getBrandOrigin } from "@/app/lib/kavishaSiteEnv";
 import {
   saveShopifySession,
   linkShopifyToBrand,
@@ -116,11 +115,7 @@ export async function GET(req) {
 
     const effectiveBrand = brand || provisionedBrand;
     const redirectUrl = effectiveBrand
-      ? `${getBrandOrigin("kavisha", { request: req })}/admin/${encodeURIComponent(
-          effectiveBrand
-        )}/welcome?subdomain=${encodeURIComponent(
-          effectiveBrand
-        )}&shop=${encodeURIComponent(shop)}`
+      ? getShopifyOnboardingWelcomeUrl(effectiveBrand, req, shop)
       : getShopifyWelcomeRedirectUrl(req, shop);
     const response = NextResponse.redirect(redirectUrl, 302);
 

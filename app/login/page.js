@@ -27,9 +27,17 @@ export default function LoginPage() {
   }, []);
 
   useEffect(() => {
-    if (user && !loading) {
-      router.push("/");
+    if (!user || loading) return;
+    const stored =
+      typeof window !== "undefined"
+        ? localStorage.getItem("redirectAfterLogin")
+        : null;
+    if (stored && stored.startsWith("/")) {
+      localStorage.removeItem("redirectAfterLogin");
+      router.replace(stored);
+      return;
     }
+    router.replace("/");
   }, [user, loading, router]);
 
   const handleSignIn = async () => {

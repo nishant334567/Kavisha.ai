@@ -1,19 +1,54 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
-import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
+import { useRouter, useSearchParams } from "next/navigation";
+import Loader from "@/app/components/Loader";
 import { normalizeShopifyShopDomain } from "@/app/lib/shopifyShopUrl";
 
 export default function ShopifyWelcomePage() {
+  const router = useRouter();
   const searchParams = useSearchParams();
-  const { user } = useFirebaseSession();
   const shop = normalizeShopifyShopDomain(searchParams.get("shop"));
   const connected = searchParams.get("shopify") === "connected";
+  const [checking, setChecking] = useState(Boolean(shop));
 
-  const loginHref = shop
-    ? `/login?shop=${encodeURIComponent(shop)}`
-    : "/login";
+  useEffect(() => {
+    if (!shop) {
+      setChecking(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/shopify/resolve-brand?shop=${encodeURIComponent(shop)}`
+        );
+        const data = await res.json().catch(() => ({}));
+        if (cancelled || !data?.subdomain) {
+          setChecking(false);
+          return;
+        }
+        const q = new URLSearchParams({
+          subdomain: data.subdomain,
+          shopify: "connected",
+          shop,
+        });
+        router.replace(
+          `/admin/${encodeURIComponent(data.subdomain)}/welcome?${q}`
+        );
+      } catch {
+        if (!cancelled) setChecking(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [shop, router]);
+
+  if (checking) {
+    return <Loader loadingMessage="Loading your avatar…" />;
+  }
 
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-lg flex-col justify-center px-6 py-16 text-center">
@@ -22,22 +57,16 @@ export default function ShopifyWelcomePage() {
       </h1>
       <p className="mt-3 text-sm text-muted">
         {shop
-          ? `Your store ${shop} is authorized. Sign in to link it to your Kavisha avatar.`
-          : "Sign in to finish linking your store to Kavisha."}
+          ? `Your store ${shop} is authorized. We could not find a linked avatar yet.`
+          : "Install the app from Shopify to create your avatar."}
       </p>
       <div className="mt-8 flex flex-col gap-3">
-        {!user ? (
-          <Link
-            href={loginHref}
-            className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90"
-          >
-            Sign in to Kavisha
-          </Link>
-        ) : (
-          <p className="text-sm text-muted">
-            Open My Services on your brand admin and use Connect Shopify.
-          </p>
-        )}
+        <Link
+          href="/login"
+          className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+        >
+          Sign in to Kavisha
+        </Link>
         <Link href="/make-avatar" className="text-sm text-highlight hover:underline">
           Create a new avatar
         </Link>

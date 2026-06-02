@@ -12,6 +12,7 @@ const PUBLIC_PATHS = [
   "/api/shopify/install",
   "/api/shopify/callback",
   "/api/shopify/webhooks",
+  "/api/shopify/resolve-brand",
   "/shopify/welcome",
   "/shopify/claim",
   "/login",
