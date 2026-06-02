@@ -1,15 +1,12 @@
 "use client";
 
 import { useEffect } from "react";
-import Link from "next/link";
 import SocketProvider from "../context/SocketProvider";
 import {
   FirebaseSessionProvider,
   useFirebaseSession,
 } from "../lib/firebase/FirebaseSessionProvider";
-import BrandContextProvider, {
-  useBrandContext,
-} from "../context/brand/BrandContextProvider";
+import BrandContextProvider from "../context/brand/BrandContextProvider";
 import Navbar from "./Navbar";
 import Loader from "./Loader";
 import { usePathname } from "next/navigation";
@@ -61,17 +58,13 @@ export default function ClientLayout({ children }) {
                 !isMaintenancePage
                   ? isAdmin
                     ? "pt-14"
-                    : `pt-0 md:pt-14 ${
-                        pathname === "/"
-                          ? "pb-32 md:pb-0"
-                          : "pb-[4.5rem] md:pb-0"
-                      }`
+                    : "pt-0 md:pt-14 pb-[4.5rem] md:pb-0"
                   : ""
               }
             >
               {children}
             </div>
-            {!isMaintenancePage && !isAdmin && <MobileBottomArea />}
+            {!isMaintenancePage && !isAdmin && <MobileBottomNav />}
             {!isMaintenancePage && !isAdmin && pathname !== "/" && <GlobalMessages />}
           </SocketSessionWrapper>
         </CartContextProvider>
@@ -98,43 +91,4 @@ export default function ClientLayout({ children }) {
     );
   }
 
-  function MobileBottomArea() {
-    const { user } = useFirebaseSession();
-    const brand = useBrandContext();
-    const showHomepageLinks =
-      pathname === "/" && brand?.subdomain && brand.subdomain !== "kavisha" && user;
-    const linksQs = brand?.subdomain
-      ? `?brand=${encodeURIComponent(brand.subdomain)}`
-      : "";
-    const homepageActionLinks = [
-      { label: "TALK TO ME", path: "/chats", primary: true },
-      { label: "COMMUNITY", path: "/community" },
-      ...(brand?.enableLinks !== false
-        ? [{ label: "LINKS", path: `/links${linksQs}` }]
-        : []),
-    ];
-
-    if (!showHomepageLinks) {
-      return <MobileBottomNav />;
-    }
-
-    return (
-      <div className="fixed bottom-0 left-0 right-0 z-30 border-t border-border bg-background/95 backdrop-blur-sm md:hidden">
-        <div className="border-b border-border px-3 py-3">
-          <div className="flex flex-wrap items-center justify-center gap-2">
-            {homepageActionLinks.map((item) => (
-              <Link
-                key={item.path}
-                href={item.path}
-                className="font-baloo rounded-full bg-muted-bg px-3 py-2 text-sm font-medium text-highlight shadow-sm transition-colors hover:bg-card hover:opacity-90"
-              >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-        </div>
-        <MobileBottomNav embedded />
-      </div>
-    );
-  }
 }
