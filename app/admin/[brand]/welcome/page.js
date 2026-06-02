@@ -73,6 +73,7 @@ export default function AvatarWelcomePage() {
 
   const subdomain = brand?.subdomain || searchParams.get("subdomain") || "";
   const displayName = brand?.brandName || subdomain || "Your avatar";
+  const shop = searchParams.get("shop") || "";
   const mappedDomain = useMemo(
     () => mappedDomainName(subdomain, searchParams.get("domain")),
     [subdomain, searchParams]
@@ -130,6 +131,47 @@ export default function AvatarWelcomePage() {
 
   if (!brand && !subdomain) {
     return <Loader loadingMessage="Loading..." />;
+  }
+
+  const isAdmin = Boolean(brand?.isBrandAdmin);
+
+  if (!isAdmin) {
+    const claim = () => {
+      if (typeof window !== "undefined" && subdomain) {
+        const qs = new URLSearchParams({ subdomain });
+        if (shop) qs.set("shop", shop);
+        localStorage.setItem("redirectAfterLogin", `/shopify/claim?${qs}`);
+      }
+      router.push("/login");
+    };
+
+    return (
+      <main className="mx-auto flex min-h-[60vh] max-w-lg flex-col justify-center px-6 py-16 text-center">
+        <h1 className="text-2xl font-semibold text-foreground">
+          {displayName} is ready
+        </h1>
+        <p className="mt-3 text-sm text-muted">
+          Claim this avatar to edit profile, embed the widget, and train it.
+        </p>
+        <div className="mt-8 flex flex-col gap-3">
+          <button
+            type="button"
+            onClick={claim}
+            className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+          >
+            Claim &amp; continue
+          </button>
+          <a
+            href={subdomain ? brandHomeUrl(subdomain) : "/"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-sm text-highlight hover:underline"
+          >
+            Preview homepage
+          </a>
+        </div>
+      </main>
+    );
   }
 
   return (

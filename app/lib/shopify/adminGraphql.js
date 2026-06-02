@@ -1,6 +1,18 @@
 import { getShopify } from "@/app/lib/shopify";
 import { gidToNumericId, productGid } from "@/app/lib/shopify/gids";
 
+const SHOP_INFO = `#graphql
+  query ShopInfo {
+    shop {
+      name
+      primaryDomain {
+        host
+        url
+      }
+    }
+  }
+`;
+
 const PRODUCT_LIST = `#graphql
   query ProductsPage($first: Int!, $after: String) {
     products(first: $first, after: $after) {
@@ -64,6 +76,18 @@ async function request(session, query, variables) {
     variables ? { variables } : undefined
   );
   return data;
+}
+
+export async function fetchShopInfo(session) {
+  const data = await request(session, SHOP_INFO);
+  const shop = data?.shop;
+  return {
+    name: typeof shop?.name === "string" ? shop.name : "",
+    primaryDomainHost:
+      typeof shop?.primaryDomain?.host === "string" ? shop.primaryDomain.host : "",
+    primaryDomainUrl:
+      typeof shop?.primaryDomain?.url === "string" ? shop.primaryDomain.url : "",
+  };
 }
 
 function mapListProduct(node) {

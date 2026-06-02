@@ -124,6 +124,19 @@ export async function getBrandBySubdomain(subdomain) {
   }
 }
 
+/** Find brand by linked Shopify shop domain. */
+export async function getBrandByShopifyShopUrl(shopDomain) {
+  const shop = String(shopDomain || "").trim().toLowerCase();
+  if (!shop) return null;
+  try {
+    await connectDB();
+    return Brand.findOne({ shopifyShopUrl: shop }).lean();
+  } catch (e) {
+    console.warn("[brandRepository] getBrandByShopifyShopUrl:", e?.message || e);
+    return null;
+  }
+}
+
 export async function subdomainExists(subdomain) {
   const sub = normSubdomain(subdomain);
   if (!sub) return false;
@@ -421,6 +434,21 @@ export async function updateBrandBySubdomain(subdomain, { set = {}, unset = [] }
     console.warn("[brandRepository] update:", e?.message || e);
     throw e;
   }
+}
+
+/** Add an admin email to Brand.admins (idempotent). */
+export async function addBrandAdmin(subdomain, email) {
+  const sub = normSubdomain(subdomain);
+  const em = String(email || "").trim().toLowerCase();
+  if (!sub) throw new Error("subdomain is required");
+  if (!em) throw new Error("email is required");
+
+  await connectDB();
+  return Brand.findOneAndUpdate(
+    { subdomain: sub },
+    { $addToSet: { admins: em } },
+    { new: true }
+  ).lean();
 }
 
 /** Create brand in Mongo only. */
