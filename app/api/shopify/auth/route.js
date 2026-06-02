@@ -4,11 +4,13 @@ import {
   readBrandFromCookie,
   getShopifyWelcomeRedirectUrl,
   getShopifySuccessRedirectUrl,
+  getShopifyOnboardingWelcomeUrl,
 } from "@/app/lib/shopify";
 import { normalizeShopifyShopDomain } from "@/app/lib/shopifyShopUrl";
 import {
   loadShopifySessionByShop,
   linkShopifyToBrand,
+  resolveBrandSubdomainForShop,
 } from "@/app/lib/shopifyRepository";
 
 export async function GET(req) {
@@ -32,6 +34,13 @@ export async function GET(req) {
         await linkShopifyToBrand(shop, brand);
         return NextResponse.redirect(
           getShopifySuccessRedirectUrl(brand, req, shop),
+          302
+        );
+      }
+      const linked = await resolveBrandSubdomainForShop(shop);
+      if (linked) {
+        return NextResponse.redirect(
+          getShopifyOnboardingWelcomeUrl(linked, req, shop),
           302
         );
       }

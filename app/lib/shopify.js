@@ -139,6 +139,20 @@ export function getShopifyWelcomeRedirectUrl(request, shop) {
   return `${origin}/shopify/welcome?${params}`;
 }
 
+/** Post-install / app-open onboarding: claim + setup on brand welcome. */
+export function getShopifyOnboardingWelcomeUrl(brandSubdomain, request, shop) {
+  const brand = String(brandSubdomain || "").trim().toLowerCase();
+  if (!brand) return getShopifyWelcomeRedirectUrl(request, shop);
+  const origin = getBrandOrigin("kavisha", { request });
+  const params = new URLSearchParams({
+    subdomain: brand,
+    shopify: "connected",
+  });
+  const shopHost = String(shop || "").trim().toLowerCase();
+  if (shopHost) params.set("shop", shopHost);
+  return `${origin}/admin/${encodeURIComponent(brand)}/welcome?${params}`;
+}
+
 /** Post-install redirect for a Kavisha brand admin. */
 export function getShopifySuccessRedirectUrl(brandSubdomain, request, shop) {
   const brand = String(brandSubdomain || "").trim().toLowerCase();

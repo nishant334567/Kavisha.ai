@@ -39,6 +39,13 @@ export function getBrandHomeUrl(subdomain) {
   return getBrandPublicOrigin(sub) || "/";
 }
 
+/** `/admin/{brand}/welcome` — onboarding + claim (not static admin segments). */
+export function isAdminBrandWelcomePath(pathname) {
+  const match = String(pathname || "").match(/^\/admin\/([^/]+)\/welcome\/?$/);
+  if (!match) return false;
+  return !STATIC_ADMIN_SEGMENTS.has(match[1].toLowerCase());
+}
+
 export function getSubdomain() {
   if (typeof window === "undefined") {
     return null;

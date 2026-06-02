@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
+import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import Loader from "@/app/components/Loader";
 import {
   ArrowRight,
@@ -12,7 +13,6 @@ import {
   LayoutDashboard,
   Loader2,
   Sparkles,
-  User,
 } from "lucide-react";
 
 const POLL_MS = 20_000;
@@ -49,6 +49,13 @@ function embedSnippet(subdomain) {
   return `<script src="${origin}/embed.js" data-brand="${subdomain}"></script>`;
 }
 
+function welcomeReturnUrl(subdomain, shop, shopifyConnected) {
+  const q = new URLSearchParams({ subdomain });
+  if (shop) q.set("shop", shop);
+  if (shopifyConnected) q.set("shopify", "connected");
+  return `/admin/${encodeURIComponent(subdomain)}/welcome?${q}`;
+}
+
 function StepCard({ step, title, description, action, secondaryAction, children }) {
   return (
     <li className="flex h-full flex-col rounded-xl border border-border bg-card p-5 md:p-6">
@@ -68,12 +75,19 @@ export default function AvatarWelcomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const brand = useBrandContext();
+  const { user, loading: authLoading } = useFirebaseSession();
   const [copied, setCopied] = useState(false);
   const [domainStatus, setDomainStatus] = useState("pending");
+  const [claiming, setClaiming] = useState(false);
+  const [claimError, setClaimError] = useState("");
+  const claimStarted = useRef(false);
 
   const subdomain = brand?.subdomain || searchParams.get("subdomain") || "";
   const displayName = brand?.brandName || subdomain || "Your avatar";
   const shop = searchParams.get("shop") || "";
+  const shopifyConnected = searchParams.get("shopify") === "connected";
+  const isAdmin = Boolean(brand?.isBrandAdmin);
+
   const mappedDomain = useMemo(
     () => mappedDomainName(subdomain, searchParams.get("domain")),
     [subdomain, searchParams]
@@ -87,8 +101,47 @@ export default function AvatarWelcomePage() {
     [subdomain]
   );
 
+  const runClaim = useCallback(async () => {
+    if (!subdomain || claiming) return;
+    setClaiming(true);
+    setClaimError("");
+    try {
+      const res = await fetch("/api/shopify/claim", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subdomain, shop }),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(data?.error || "Could not claim avatar.");
+      window.location.assign(
+        welcomeReturnUrl(subdomain, shop, shopifyConnected)
+      );
+    } catch (e) {
+      setClaimError(e?.message || "Could not claim avatar.");
+      setClaiming(false);
+    }
+  }, [subdomain, shop, shopifyConnected, claiming]);
+
+  const handleClaimClick = () => {
+    if (!subdomain) return;
+    if (!user) {
+      const returnTo = `${welcomeReturnUrl(subdomain, shop, shopifyConnected)}&claim=1`;
+      localStorage.setItem("redirectAfterLogin", returnTo);
+      router.push("/login");
+      return;
+    }
+    runClaim();
+  };
+
   useEffect(() => {
-    if (!mappedDomain || !subdomain) return;
+    if (isAdmin || authLoading || !user || !subdomain) return;
+    if (searchParams.get("claim") !== "1" || claimStarted.current) return;
+    claimStarted.current = true;
+    runClaim();
+  }, [isAdmin, authLoading, user, subdomain, searchParams, runClaim]);
+
+  useEffect(() => {
+    if (!isAdmin || !mappedDomain || !subdomain) return;
 
     let cancelled = false;
     let timer = null;
@@ -106,7 +159,7 @@ export default function AvatarWelcomePage() {
           if (timer) clearInterval(timer);
         }
       } catch {
-        // keep showing pending
+        /* pending */
       }
     };
 
@@ -116,7 +169,7 @@ export default function AvatarWelcomePage() {
       cancelled = true;
       if (timer) clearInterval(timer);
     };
-  }, [mappedDomain, subdomain]);
+  }, [isAdmin, mappedDomain, subdomain]);
 
   const copyEmbed = async () => {
     if (!embedCode) return;
@@ -125,7 +178,7 @@ export default function AvatarWelcomePage() {
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     } catch {
-      // ignore
+      /* ignore */
     }
   };
 
@@ -133,33 +186,26 @@ export default function AvatarWelcomePage() {
     return <Loader loadingMessage="Loading..." />;
   }
 
-  const isAdmin = Boolean(brand?.isBrandAdmin);
-
   if (!isAdmin) {
-    const claim = () => {
-      if (typeof window !== "undefined" && subdomain) {
-        const qs = new URLSearchParams({ subdomain });
-        if (shop) qs.set("shop", shop);
-        localStorage.setItem("redirectAfterLogin", `/shopify/claim?${qs}`);
-      }
-      router.push("/login");
-    };
-
     return (
       <main className="mx-auto flex min-h-[60vh] max-w-lg flex-col justify-center px-6 py-16 text-center">
         <h1 className="text-2xl font-semibold text-foreground">
           {displayName} is ready
         </h1>
         <p className="mt-3 text-sm text-muted">
-          Claim this avatar to edit profile, embed the widget, and train it.
+          Sign in with Google to claim this store&apos;s avatar and finish setup.
         </p>
+        {claimError && (
+          <p className="mt-3 text-sm text-red-600">{claimError}</p>
+        )}
         <div className="mt-8 flex flex-col gap-3">
           <button
             type="button"
-            onClick={claim}
-            className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            onClick={handleClaimClick}
+            disabled={claiming || authLoading}
+            className="rounded-lg bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90 disabled:opacity-50"
           >
-            Claim &amp; continue
+            {claiming ? "Claiming…" : "Claim & continue"}
           </button>
           <a
             href={subdomain ? brandHomeUrl(subdomain) : "/"}
