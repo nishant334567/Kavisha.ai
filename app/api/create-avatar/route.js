@@ -1,9 +1,8 @@
-import { NextResponse } from "next/server";
-import { GoogleAuth } from "google-auth-library";
+import { NextResponse, after } from "next/server";
 import {
-  subdomainExists,
   createBrandDocument,
   deleteBrandBySubdomain,
+  resolveAvailableSubdomainFromName,
   uploadBrandImageToGcs,
 } from "@/app/lib/brandRepository";
 import { Resend } from "resend";
@@ -11,62 +10,19 @@ import { withAuth } from "@/app/lib/firebase/auth-middleware";
 import { connectDB } from "@/app/lib/db";
 import User from "@/app/models/Users";
 import { normalizeLoginButtonText } from "@/app/lib/loginButtonText";
+import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import { mapAvatarDomain } from "@/app/lib/mapAvatarDomain";
 import {
   getBrandOrigin,
-  getDefaultKavishaBaseUrl,
   getKavishaCloudRunService,
   getKavishaRootHost,
-  isStagingDeployment,
-  isStagingSite,
 } from "@/app/lib/kavishaSiteEnv";
-
-/** Staging/debug: trace how rootHost, domainName, and email URLs are chosen. */
-function logCreateAvatarSiteDebug(stage, siteOpts, extra = {}) {
-  const host = siteOpts?.request?.headers?.get?.("host") ?? null;
-  const stagingSite = isStagingSite(siteOpts);
-  const payload = {
-    stage,
-    requestHost: host,
-    requestOrigin: siteOpts?.request?.headers?.get?.("origin") ?? null,
-    isStagingHost: host ? String(host).toLowerCase().includes(".staging.") : false,
-    KAVISHA_SITE_ENV: process.env.KAVISHA_SITE_ENV ?? null,
-    NEXT_PUBLIC_KAVISHA_SITE_ENV: process.env.NEXT_PUBLIC_KAVISHA_SITE_ENV ?? null,
-    NODE_ENV: process.env.NODE_ENV ?? null,
-    PUBLIC_BASE_URL: process.env.PUBLIC_BASE_URL ?? null,
-    BASE_URL: process.env.BASE_URL ?? null,
-    NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? null,
-    isStagingDeployment: isStagingDeployment(),
-    isStagingSite: stagingSite,
-    rootHost: getKavishaRootHost(siteOpts),
-    cloudRunService: getKavishaCloudRunService(siteOpts),
-    defaultKavishaBaseUrl: getDefaultKavishaBaseUrl(),
-    ...extra,
-  };
-
-  return payload;
-}
 
 const resend = process.env.RESEND_API_KEY
   ? new Resend(process.env.RESEND_API_KEY)
   : null;
 
-const PROJECT_ID = process.env.NEXT_PUBLIC_FIREBASE_PROJECT_ID;
-const REGION = "us-central1";
 const UNLIMITED_AVATAR_CREATOR_EMAIL = "hello@kavisha.ai";
-
-const auth = new GoogleAuth({
-  ...(process.env.GCP_CLIENT_EMAIL && process.env.GCP_PRIVATE_KEY
-    ? {
-      credentials: {
-        client_email: process.env.GCP_CLIENT_EMAIL,
-        private_key: process.env.GCP_PRIVATE_KEY.replace(/\\n/g, "\n"),
-      },
-    }
-    : {}),
-  scopes: "https://www.googleapis.com/auth/cloud-platform",
-});
-
-
 export async function POST(request) {
   return withAuth(request, {
     onAuthenticated: async ({ decodedToken }) => {
@@ -120,51 +76,33 @@ async function runCreateAvatar(request, creatorEmail) {
   const siteOpts = { request };
   const rootHost = getKavishaRootHost(siteOpts);
   const serviceName = getKavishaCloudRunService(siteOpts);
-  let lastSiteDebug = logCreateAvatarSiteDebug("start", siteOpts, {
-    rootHost,
-    serviceName,
-  });
 
   try {
     const formData = await request.formData();
 
-    const subdomain = formData.get("subdomain");
     const brandName = formData.get("brandName");
     const loginButtonText = formData.get("loginButtonText");
     const title = formData.get("title");
     const subtitle = formData.get("subtitle");
-    const email = formData.get("email");
     const about = formData.get("about");
     const behaviour = formData.get("behaviour");
     const rules = formData.get("rules");
+    const primaryBrandColor = formData.get("primaryBrandColor");
     const imageFile = formData.get("image");
 
-    if (!subdomain || !String(subdomain).trim()) {
+    const trimmedBrandName = String(brandName || "").trim();
+    if (!trimmedBrandName) {
       return NextResponse.json(
-        { error: "Subdomain is required." },
+        { error: "Brand name is required." },
         { status: 400 }
       );
     }
-    const normalizedSubdomain = String(subdomain).trim().toLowerCase().replace(/\.kavisha\.ai$/i, "");
 
+    const normalizedSubdomain =
+      await resolveAvailableSubdomainFromName(trimmedBrandName);
     if (!normalizedSubdomain) {
       return NextResponse.json(
-        { error: "Subdomain is required." },
-        { status: 400 }
-      );
-    }
-
-    // Subdomain: only lowercase letters, numbers, hyphens (DNS-safe)
-    if (!/^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/.test(normalizedSubdomain)) {
-      return NextResponse.json(
-        { error: "Subdomain can only contain letters, numbers and hyphens." },
-        { status: 400 }
-      );
-    }
-
-    if (await subdomainExists(normalizedSubdomain)) {
-      return NextResponse.json(
-        { error: "This subdomain is already taken. Please choose another." },
+        { error: "Could not find an available subdomain. Try a different name." },
         { status: 400 }
       );
     }
@@ -187,7 +125,7 @@ async function runCreateAvatar(request, creatorEmail) {
     }
 
     // Create lead_journey service with about, behaviour and rules (from form or defaults)
-    const avatarName = String(brandName || normalizedSubdomain).trim() || "this person";
+    const avatarName = trimmedBrandName || normalizedSubdomain || "this person";
     const defaultBehaviour = `You are ${avatarName}'s digital avatar.`;
     const defaultRules = "Don't use abusive language. Be calm and polite.";
     const behaviourText = (behaviour && String(behaviour).trim()) ? String(behaviour).trim() : defaultBehaviour;
@@ -203,15 +141,21 @@ async function runCreateAvatar(request, creatorEmail) {
       rules: rulesText,
     }];
 
+    const creatorAdminEmail = String(creatorEmail).trim().toLowerCase();
+    const admins =
+      creatorAdminEmail === UNLIMITED_AVATAR_CREATOR_EMAIL
+        ? [UNLIMITED_AVATAR_CREATOR_EMAIL]
+        : [creatorAdminEmail, UNLIMITED_AVATAR_CREATOR_EMAIL];
+
     // Build brand document
     const brandDoc = {
       _type: "brand",
-      brandName: brandName || normalizedSubdomain,
+      brandName: trimmedBrandName || normalizedSubdomain,
       loginButtonText: normalizeLoginButtonText(loginButtonText),
       title: title || `Welcome to ${normalizedSubdomain}`,
       subtitle: subtitle || "",
       subdomain: normalizedSubdomain,
-      admins: email?.trim() ? [String(email).trim()] : [],
+      admins,
       services,
     };
 
@@ -220,85 +164,47 @@ async function runCreateAvatar(request, creatorEmail) {
       brandDoc.brandImageUrl = imageUrl;
     }
 
+    const brandColor = normalizeBrandHex(String(primaryBrandColor || ""));
+    if (brandColor) {
+      brandDoc.primaryBrandColor = brandColor;
+    }
+
     createdSubdomain = normalizedSubdomain;
     await createBrandDocument(brandDoc);
 
     const domainName = `${normalizedSubdomain}.${rootHost}`;
-    lastSiteDebug = logCreateAvatarSiteDebug("before_domain_mapping", siteOpts, {
-      normalizedSubdomain,
-      domainName,
-      domainMappingRoute: serviceName,
-    });
-    const gcpClient = await auth.getClient();
-    const token = (await gcpClient.getAccessToken()).token;
 
-    const response = await fetch(
-      `https://${REGION}-run.googleapis.com/v1/projects/${PROJECT_ID}/locations/${REGION}/domainmappings`,
-      {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          apiVersion: "domains.cloudrun.com/v1",
-          kind: "DomainMapping",
-          metadata: { name: domainName, namespace: PROJECT_ID },
-          spec: { routeName: serviceName },
-        }),
-      }
-    );
-
-    let data = {};
-    try {
-      const text = await response.text();
-      if (text) data = JSON.parse(text);
-    } catch {
-      // ignore parse error
-    }
-
-    if (!response.ok) {
-      logCreateAvatarSiteDebug("domain_mapping_failed", siteOpts, {
-        domainName,
-        httpStatus: response.status,
-        gcpError: data?.error ?? data?.message ?? null,
-      });
-      await deleteBrandBySubdomain(createdSubdomain);
-      const msg = (data?.error && String(data.error)) || "We couldn't set up your domain right now. Please try again later.";
-      return NextResponse.json(
-        { error: msg },
-        { status: 502 }
+    after(() => {
+      mapAvatarDomain({
+        subdomain: normalizedSubdomain,
+        rootHost,
+        serviceName,
+      }).catch((err) =>
+        console.error("create-avatar: domain mapping failed", err)
       );
-    }
+    });
 
-    logCreateAvatarSiteDebug("domain_mapping_ok", siteOpts, { domainName });
-
-    if (email?.trim() && resend) {
+    if (creatorAdminEmail && resend) {
       try {
         const brandOrigin = getBrandOrigin(normalizedSubdomain, siteOpts);
         const editProfileUrl = `${brandOrigin}/admin/${normalizedSubdomain}/edit-profile`;
         const trainUrl = `${brandOrigin}/admin/${normalizedSubdomain}/train/v2`;
-        logCreateAvatarSiteDebug("welcome_email", siteOpts, {
-          brandOrigin,
-          editProfileUrl,
-          trainUrl,
-        });
 
         await resend.emails.send({
           from: "hello@kavisha.ai",
-          to: email.trim(),
-          subject: `AI Avatar Created for ${brandName || normalizedSubdomain}`,
+          to: creatorAdminEmail,
+          subject: `AI Avatar Created for ${trimmedBrandName || normalizedSubdomain}`,
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
               <h2>Hello!</h2>
-              <p>Your AI avatar for <strong>${brandName || normalizedSubdomain}</strong> has been created successfully!</p>
+              <p>Your AI avatar for <strong>${trimmedBrandName || normalizedSubdomain}</strong> has been created successfully!</p>
               <p>Domain mapping is currently in progress. You can check your domain after 30 minutes at:</p>
               <p><a href="${brandOrigin}" style="color: #2563eb; text-decoration: none;">${brandOrigin}</a></p>
               
               <div style="margin-top: 30px; padding: 20px; background-color: #f3f4f6; border-radius: 8px;">
                 <h3 style="margin-top: 0; color: #111827;">Admin Access</h3>
                 <p>You can login and manage your avatar using your admin email:</p>
-                <p style="font-weight: bold; color: #2563eb;">${email.trim()}</p>
+                <p style="font-weight: bold; color: #2563eb;">${creatorAdminEmail}</p>
                 
                 <p style="margin-top: 20px;">Manage your avatar:</p>
                 <ul style="list-style: none; padding: 0;">
@@ -345,16 +251,8 @@ async function runCreateAvatar(request, creatorEmail) {
       );
     }
 
-    lastSiteDebug = logCreateAvatarSiteDebug("success_response", siteOpts, {
-      domainName,
-      alertWillShow: domainName,
-    });
     return NextResponse.json(
-      {
-        success: true,
-        domainName,
-        ...(isStagingSite(siteOpts) ? { _debug: lastSiteDebug } : {}),
-      },
+      { success: true, domainName, subdomain: normalizedSubdomain },
       { status: 201 }
     );
   } catch (error) {

@@ -18,6 +18,8 @@ export default function BrandHeroImageFrame({
   focusX = 50,
   focusY = 50,
   className = "",
+  /** Fill parent height (split homepage layout) instead of fixed 3:1. */
+  fill = false,
   /** Optional nudge after scale, e.g. -2.5 for ~2.5% up (preview-only). */
   translateYPercent = 0,
 }) {
@@ -35,10 +37,12 @@ export default function BrandHeroImageFrame({
   const panX = ((50 - fx) / 50) * panBoost * panCoeff;
   const panY = ((50 - fy) / 50) * panBoost * panCoeff + extraY;
 
+  const frameClass = fill
+    ? `relative h-full min-h-[220px] w-full overflow-hidden bg-background ${className}`
+    : `relative aspect-[3/1] w-full overflow-hidden bg-background ${className}`;
+
   return (
-    <div
-      className={`relative aspect-[3/1] w-full overflow-hidden bg-background ${className}`.trim()}
-    >
+    <div className={frameClass.trim()}>
       {/* absolute + block: fills aspect box exactly (no inline-img baseline gap under the image). */}
       <img
         src={imageUrl}

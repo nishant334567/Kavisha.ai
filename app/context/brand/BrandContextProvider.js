@@ -1,36 +1,21 @@
 "use client";
 
 import { useState, useEffect, useContext } from "react";
+import { usePathname } from "next/navigation";
 import { useFirebaseSession } from "@/app/lib/firebase/FirebaseSessionProvider";
 import BrandContext from "./BrandContext";
 import Loader from "@/app/components/Loader";
+import { getSubdomain } from "@/app/utils/subdomain";
 
 export default function BrandContextProvider({ children }) {
   const { user } = useFirebaseSession();
+  const pathname = usePathname();
   const [brandContext, setBrandContext] = useState(null);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     setLoading(true);
-    const getSubdomain = () => {
-      const hostname = window.location.hostname
-        .toLowerCase()
-        .replace(/^www\./, "");
-
-      if (hostname === "localhost") {
-        const urlParams = new URLSearchParams(window.location.search);
-        return urlParams.get("subdomain") || "kavisha";
-      }
-
-      const parts = hostname.split(".");
-      const stagingIdx = parts.indexOf("staging");
-      if (stagingIdx >= 0) return stagingIdx > 0 ? parts[0] : "kavisha";
-      if (parts.length >= 3) return parts[0];
-      if (parts.length === 2 && parts[0] === "kavisha") return "kavisha";
-      return "kavisha";
-    };
-
-    const subdomain = getSubdomain();
+    const subdomain = getSubdomain() || "kavisha";
 
     const loadBrandContext = async () => {
       try {
@@ -48,7 +33,7 @@ export default function BrandContextProvider({ children }) {
       }
     };
     loadBrandContext();
-  }, [user?.email]);
+  }, [user?.email, pathname]);
 
   if (loading || !brandContext) {
     return <Loader loadingMessage="Loading..." />;

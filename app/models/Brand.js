@@ -83,8 +83,8 @@ const BrandSchema = new mongoose.Schema(
         acceptPayment: { type: Boolean, default: false },
         paymentQrUrl: { type: String, default: "" },
 
-        title: { type: String, required: true, trim: true },
-        subtitle: { type: String, required: true, default: "" },
+        title: { type: String, default: "", trim: true },
+        subtitle: { type: String, default: "", trim: true },
 
         subdomain: {
             type: String,

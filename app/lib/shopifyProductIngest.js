@@ -8,7 +8,12 @@ import {
   loadShopifySessionByBrand,
   loadShopifySessionByShop,
 } from "@/app/lib/shopifyRepository";
-import { SHOPIFY_ADMIN_API_VERSION } from "@/app/lib/shopify";
+import {
+  fetchAllProducts,
+  fetchProduct,
+  fetchProductCount,
+} from "@/app/lib/shopify/adminGraphql";
+import { gidToNumericId } from "@/app/lib/shopify/gids";
 
 const DENSE_INDEX = "intelligent-kavisha";
 const SPARSE_INDEX = "kavisha-sparse";
@@ -57,10 +62,8 @@ function productVectorId(docid) {
 
 /** @param {Record<string, unknown>} payload */
 export function parseShopifyProductId(payload) {
-  if (payload?.id != null) return String(payload.id);
-  const gid = String(payload?.admin_graphql_api_id || "");
-  const m = gid.match(/\/Product\/(\d+)/i);
-  return m ? m[1] : "";
+  if (payload?.id != null) return gidToNumericId(payload.id);
+  return gidToNumericId(payload?.admin_graphql_api_id);
 }
 
 function stripHtml(html) {
@@ -153,28 +156,6 @@ function productSourceUrl(shopDomain, product) {
   return id ? `https://${shopDomain}/admin/products/${id}` : "";
 }
 
-async function fetchShopifyProduct(shopDomain, productId) {
-  const session = await loadShopifySessionByShop(shopDomain);
-  if (!session?.accessToken) return null;
-
-  const res = await fetch(
-    `https://${shopDomain}/admin/api/${SHOPIFY_ADMIN_API_VERSION}/products/${productId}.json`,
-    {
-      headers: {
-        "X-Shopify-Access-Token": session.accessToken,
-        "Content-Type": "application/json",
-      },
-    }
-  );
-
-  if (!res.ok) {
-    throw new Error(`Shopify product fetch failed (${res.status})`);
-  }
-
-  const data = await res.json();
-  return data?.product || null;
-}
-
 async function resolveBrandSubdomain(shopDomain) {
   await connectDB();
   const doc = await ShopifyMerchant.findOne({
@@ -204,7 +185,9 @@ export async function syncShopifyProductCreateOrUpdate({ shopDomain, payload }) 
 
   let product = payload?.title != null ? payload : null;
   if (!product?.title && !product?.body_html) {
-    product = await fetchShopifyProduct(shop, productId);
+    const session = await loadShopifySessionByShop(shop);
+    if (!session) return;
+    product = await fetchProduct(session, productId);
   }
   if (!product) return;
 
@@ -297,46 +280,6 @@ export async function syncShopifyProductCreateOrUpdate({ shopDomain, payload }) 
   );
 }
 
-function shopifyAdminHeaders(accessToken) {
-  return { "X-Shopify-Access-Token": accessToken };
-}
-
-function shopifyNextPageUrl(linkHeader) {
-  if (!linkHeader) return null;
-  const part = linkHeader.split(",").find((p) => p.includes('rel="next"'));
-  const m = part?.match(/<([^>]+)>/);
-  return m ? m[1] : null;
-}
-
-/** All products in the store (paginated). */
-async function fetchAllShopifyProducts(shop, accessToken) {
-  const headers = shopifyAdminHeaders(accessToken);
-  const fields =
-    "id,title,status,vendor,product_type,handle,image,options,variants";
-  let url = `https://${shop}/admin/api/${SHOPIFY_ADMIN_API_VERSION}/products.json?limit=250&fields=${fields}`;
-  const all = [];
-
-  while (url) {
-    const res = await fetch(url, { headers });
-    if (!res.ok) throw new Error(`Shopify products list failed (${res.status})`);
-    const data = await res.json();
-    all.push(...(data.products || []));
-    url = shopifyNextPageUrl(res.headers.get("link"));
-  }
-
-  return all;
-}
-
-async function fetchShopifyProductCount(shop, accessToken) {
-  const res = await fetch(
-    `https://${shop}/admin/api/${SHOPIFY_ADMIN_API_VERSION}/products/count.json`,
-    { headers: shopifyAdminHeaders(accessToken) }
-  );
-  if (!res.ok) throw new Error(`Shopify product count failed (${res.status})`);
-  const data = await res.json();
-  return Number(data.count) || 0;
-}
-
 /** Product ids that have a TrainingData row (trained for chat). */
 async function loadTrainedShopifyProductIds(brand) {
   await connectDB();
@@ -356,10 +299,9 @@ export async function listShopifyProductsForBrand(brandSubdomain) {
   if (!session?.accessToken) return null;
 
   const shop = session.shop;
-  const token = session.accessToken;
   const [raw, totalCount, trainedIds] = await Promise.all([
-    fetchAllShopifyProducts(shop, token),
-    fetchShopifyProductCount(shop, token),
+    fetchAllProducts(session),
+    fetchProductCount(session),
     loadTrainedShopifyProductIds(brand),
   ]);
 
@@ -414,7 +356,7 @@ export async function syncShopifyProductsForBrand(brandSubdomain, productId) {
   }
 
   const [raw, trainedIds] = await Promise.all([
-    fetchAllShopifyProducts(shop, session.accessToken),
+    fetchAllProducts(session),
     loadTrainedShopifyProductIds(brand),
   ]);
   const untrained = raw.filter((p) => !trainedIds.has(String(p.id)));

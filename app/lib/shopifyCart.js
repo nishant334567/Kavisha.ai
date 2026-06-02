@@ -1,5 +1,5 @@
 import { loadShopifySessionByBrand } from "@/app/lib/shopifyRepository";
-import { SHOPIFY_ADMIN_API_VERSION } from "@/app/lib/shopify";
+import { fetchProduct } from "@/app/lib/shopify/adminGraphql";
 import { productIdFromShopifyDocid } from "@/app/lib/shopifyProductIngest";
 
 export const SHOPIFY_COMMERCE_PROMPT = `
@@ -17,26 +17,6 @@ export function buildShopifyCartPermalink(shop, variantId, quantity = 1) {
   if (!shopHost || !vid) return "";
   const qty = Math.max(1, Math.min(99, Math.floor(Number(quantity) || 1)));
   return `https://${shopHost}/cart/${vid}:${qty}`;
-}
-
-function shopifyHeaders(accessToken) {
-  return {
-    "X-Shopify-Access-Token": accessToken,
-    "Content-Type": "application/json",
-  };
-}
-
-async function fetchShopifyProductJson(shop, accessToken, productId) {
-  const id = String(productId || "").replace(/\D/g, "");
-  if (!shop || !id || !accessToken) return null;
-
-  const res = await fetch(
-    `https://${shop}/admin/api/${SHOPIFY_ADMIN_API_VERSION}/products/${id}.json`,
-    { headers: shopifyHeaders(accessToken) }
-  );
-  if (!res.ok) return null;
-  const data = await res.json();
-  return data?.product || null;
 }
 
 /** @param {Array<Record<string, unknown>>} variants @param {string} [variantId] */
@@ -75,11 +55,7 @@ export async function addToShopifyCartForBrand(brandSubdomain, opts = {}) {
     return { ok: false, status: 400, error: "Product required" };
   }
 
-  const product = await fetchShopifyProductJson(
-    session.shop,
-    session.accessToken,
-    productId
-  );
+  const product = await fetchProduct(session, productId);
   if (!product) {
     return { ok: false, status: 404, error: "Product not found" };
   }

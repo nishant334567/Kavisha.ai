@@ -4,9 +4,23 @@ import {
   readBrandFromCookie,
   clearBrandCookie,
   getShopifySuccessRedirectUrl,
+  getShopifyWelcomeRedirectUrl,
   registerShopifyWebhooks,
 } from "@/app/lib/shopify";
-import { saveShopifySession } from "@/app/lib/shopifyRepository";
+import { getBrandOrigin } from "@/app/lib/kavishaSiteEnv";
+import {
+  saveShopifySession,
+  linkShopifyToBrand,
+} from "@/app/lib/shopifyRepository";
+import { connectDB } from "@/app/lib/db";
+import ShopifyMerchant from "@/app/models/ShopifyMerchant";
+import {
+  createBrandDocument,
+  getBrandByShopifyShopUrl,
+  resolveAvailableSubdomainFromName,
+} from "@/app/lib/brandRepository";
+import { DEFAULT_LOGIN_BUTTON_TEXT } from "@/app/lib/loginButtonText";
+import { fetchShopInfo } from "@/app/lib/shopify/adminGraphql";
 
 export async function GET(req) {
   try {
@@ -20,14 +34,94 @@ export async function GET(req) {
       new URL(req.url).searchParams.get("brand") ||
       "";
 
+    const shop = String(session.shop || "").trim().toLowerCase();
+
     await saveShopifySession(session, brand);
+    if (brand && shop) {
+      await linkShopifyToBrand(shop, brand);
+    }
+    // If install wasn't initiated from an existing brand admin, provision a minimal brand now.
+    let provisionedBrand = "";
+    if (!brand && shop) {
+      try {
+        await connectDB();
+        const existingByShop = await getBrandByShopifyShopUrl(shop);
+        if (existingByShop?.subdomain) {
+          provisionedBrand = String(existingByShop.subdomain).trim().toLowerCase();
+        } else {
+          const merchant = await ShopifyMerchant.findOne({
+            shopDomain: shop,
+            uninstalledAt: null,
+          })
+            .select("brandSubdomain")
+            .lean();
+          const linked = String(merchant?.brandSubdomain || "")
+            .trim()
+            .toLowerCase();
+          if (linked) {
+            provisionedBrand = linked;
+          }
+        }
+
+        if (!provisionedBrand) {
+          const info = await fetchShopInfo(session).catch(() => null);
+          const shopName =
+            (info?.name && String(info.name).trim()) || shop.replace(/\.myshopify\.com$/i, "");
+          const subdomain =
+            await resolveAvailableSubdomainFromName(shopName);
+          if (subdomain) {
+            const now = Date.now();
+            const avatarName = shopName || subdomain || "this store";
+            const services = [
+              {
+                _key: `lead_journey_${now}`,
+                name: "lead_journey",
+                title: "Talk to me",
+                initialMessage: "Hello, How can I assist you today?",
+                about: "",
+                behaviour: `You are ${avatarName}'s digital avatar.`,
+                rules: "Don't use abusive language. Be calm and polite.",
+              },
+            ];
+
+            await createBrandDocument({
+              brandName: shopName || subdomain,
+              loginButtonText: DEFAULT_LOGIN_BUTTON_TEXT,
+              title: `Welcome to ${shopName || subdomain}`,
+              subtitle: "",
+              subdomain,
+              admins: [],
+              services,
+              shopifyShopUrl: shop,
+              enableProducts: true,
+              talkToAvatarPublished: false,
+            });
+
+            provisionedBrand = subdomain;
+          }
+        }
+
+        if (provisionedBrand) {
+          await linkShopifyToBrand(shop, provisionedBrand);
+        }
+      } catch (provisionErr) {
+        console.error("[shopify callback] provision brand", provisionErr);
+      }
+    }
     try {
       await registerShopifyWebhooks(shopify, session);
     } catch (webhookErr) {
       console.error("[shopify callback] webhook register", webhookErr);
     }
 
-    const redirectUrl = getShopifySuccessRedirectUrl(brand, req);
+    const effectiveBrand = brand || provisionedBrand;
+    const redirectUrl = effectiveBrand
+      ? `${getBrandOrigin("kavisha", { request: req })}/admin/${encodeURIComponent(
+          effectiveBrand
+        )}/welcome?subdomain=${encodeURIComponent(
+          effectiveBrand
+        )}&shop=${encodeURIComponent(shop)}`
+      : getShopifyWelcomeRedirectUrl(req, shop);
     const response = NextResponse.redirect(redirectUrl, 302);
 
     if (oauthHeaders) {

@@ -124,6 +124,19 @@ export async function getBrandBySubdomain(subdomain) {
   }
 }
 
+/** Find brand by linked Shopify shop domain. */
+export async function getBrandByShopifyShopUrl(shopDomain) {
+  const shop = String(shopDomain || "").trim().toLowerCase();
+  if (!shop) return null;
+  try {
+    await connectDB();
+    return Brand.findOne({ shopifyShopUrl: shop }).lean();
+  } catch (e) {
+    console.warn("[brandRepository] getBrandByShopifyShopUrl:", e?.message || e);
+    return null;
+  }
+}
+
 export async function subdomainExists(subdomain) {
   const sub = normSubdomain(subdomain);
   if (!sub) return false;
@@ -145,6 +158,29 @@ export async function filterAvailableSubdomains(subdomains) {
     if (!(await subdomainExists(sub))) available.push(sub);
   }
   return available;
+}
+
+const DNS_SUBDOMAIN_RE = /^[a-z0-9](?:[a-z0-9-]*[a-z0-9])?$/;
+
+export function slugSubdomainFromName(name) {
+  return String(name || "")
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 30);
+}
+
+/** First available `{slug}` or `{slug}-1`, … from a display name. */
+export async function resolveAvailableSubdomainFromName(name, { maxAttempts = 20 } = {}) {
+  const base = slugSubdomainFromName(name);
+  if (!base || !DNS_SUBDOMAIN_RE.test(base)) return null;
+  for (let i = 0; i < maxAttempts; i++) {
+    const candidate = i === 0 ? base : `${base}-${i}`;
+    if (!DNS_SUBDOMAIN_RE.test(candidate)) continue;
+    if (!(await subdomainExists(candidate))) return candidate;
+  }
+  return null;
 }
 
 export async function listPublicBrands({
@@ -267,6 +303,8 @@ export async function mapBrandToClientContext(brand, userEmail) {
     admins: filterVisibleAdmins(brand.admins || []),
     isBrandAdmin: isAdmin,
     subdomain,
+    publicDomain: brand.publicDomain || "",
+    domainMappingStatus: brand.domainMappingStatus || "",
     initialmessage: brand.initialmessage,
     enableCommunityOnboarding: true,
     enableProfessionalConnect: brand.enableProfessionalConnect || false,
@@ -396,6 +434,21 @@ export async function updateBrandBySubdomain(subdomain, { set = {}, unset = [] }
     console.warn("[brandRepository] update:", e?.message || e);
     throw e;
   }
+}
+
+/** Add an admin email to Brand.admins (idempotent). */
+export async function addBrandAdmin(subdomain, email) {
+  const sub = normSubdomain(subdomain);
+  const em = String(email || "").trim().toLowerCase();
+  if (!sub) throw new Error("subdomain is required");
+  if (!em) throw new Error("email is required");
+
+  await connectDB();
+  return Brand.findOneAndUpdate(
+    { subdomain: sub },
+    { $addToSet: { admins: em } },
+    { new: true }
+  ).lean();
 }
 
 /** Create brand in Mongo only. */

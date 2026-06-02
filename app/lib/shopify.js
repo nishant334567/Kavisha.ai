@@ -27,14 +27,10 @@ export async function registerShopifyWebhooks(shopify, session) {
   return shopify.webhooks.register({ session });
 }
 
-/** Shopify Admin REST API version for product fetch/list. */
-export const SHOPIFY_ADMIN_API_VERSION = "2026-01";
-
 export const SHOPIFY_SCOPES = [
   "read_products",
   "read_product_listings",
   "read_inventory",
-  "write_checkouts",
 ];
 
 /** Host + scheme for OAuth redirect_uri (must match Partner Dashboard). */
@@ -122,11 +118,38 @@ export function clearBrandCookie(request) {
   return `${SHOPIFY_BRAND_COOKIE}=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0${secure}`;
 }
 
+/** Start OAuth; `shop` must come from Shopify (install) or an existing linked store. */
+export async function beginShopifyOAuth(req, { shop, brand }) {
+  const shopify = getShopify(req);
+  const beginResponse = await shopify.auth.begin({
+    shop,
+    callbackPath: SHOPIFY_CALLBACK_PATH,
+    isOnline: false,
+    rawRequest: req,
+  });
+  return appendBrandCookie(beginResponse, brand, req);
+}
+
+/** Public onboarding after install when no Kavisha brand is linked yet. */
+export function getShopifyWelcomeRedirectUrl(request, shop) {
+  const origin = getBrandOrigin("kavisha", { request });
+  const params = new URLSearchParams({ shopify: "connected" });
+  const shopHost = String(shop || "").trim().toLowerCase();
+  if (shopHost) params.set("shop", shopHost);
+  return `${origin}/shopify/welcome?${params}`;
+}
+
 /** Post-install redirect for a Kavisha brand admin. */
-export function getShopifySuccessRedirectUrl(brandSubdomain, request) {
+export function getShopifySuccessRedirectUrl(brandSubdomain, request, shop) {
   const brand = String(brandSubdomain || "").trim().toLowerCase();
-  if (brand) {
-    return `${getBrandOrigin(brand, { request })}/admin/${encodeURIComponent(brand)}/my-services?shopify=connected`;
-  }
-  return `${getBrandOrigin("kavisha", { request })}/admin/kavisha/my-services?shopify=connected`;
+  const origin = brand
+    ? getBrandOrigin(brand, { request })
+    : getBrandOrigin("kavisha", { request });
+  const path = brand
+    ? `/admin/${encodeURIComponent(brand)}/my-services`
+    : "/admin/kavisha/my-services";
+  const params = new URLSearchParams({ shopify: "connected" });
+  const shopHost = String(shop || "").trim().toLowerCase();
+  if (shopHost) params.set("shop", shopHost);
+  return `${origin}${path}?${params}`;
 }
