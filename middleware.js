@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { authMiddleware } from "next-firebase-auth-edge";
 import { serverConfig } from "./app/lib/firebase/config";
 import { getCookieOptions } from "./app/lib/firebase/cookie-config";
+import { isAdminBrandWelcomePath } from "./app/utils/subdomain";
 
 const PUBLIC_PATHS = [
   "/",
@@ -40,6 +41,10 @@ const PUBLIC_PATHS = [
   "/widget-login",
   "/connect/whatsapp",
 ];
+
+function isPublicPath(pathname) {
+  return PUBLIC_PATHS.includes(pathname) || isAdminBrandWelcomePath(pathname);
+}
 
 export async function middleware(request) {
   const pathname = request.nextUrl.pathname || "";
@@ -80,13 +85,13 @@ export async function middleware(request) {
       return NextResponse.next({ request: { headers } });
     },
     handleInvalidToken: async () => {
-      if (!PUBLIC_PATHS.includes(request.nextUrl.pathname)) {
+      if (!isPublicPath(request.nextUrl.pathname)) {
         return NextResponse.redirect(new URL("/", request.url));
       }
       return NextResponse.next();
     },
     handleError: async () => {
-      if (PUBLIC_PATHS.includes(request.nextUrl.pathname)) {
+      if (isPublicPath(request.nextUrl.pathname)) {
         return NextResponse.next();
       }
       return NextResponse.redirect(new URL("/", request.url));
