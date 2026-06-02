@@ -63,7 +63,11 @@ export default function AvatarHomepage() {
 
   return (
     <div className="flex min-h-0 flex-1 flex-col bg-background">
-      <div className="mx-auto flex w-full min-h-0 flex-1 flex-col px-4 py-6 pb-28 md:max-w-6xl md:px-6 md:py-10 md:pb-20">
+      <div
+        className={`mx-auto flex w-full min-h-0 flex-1 flex-col px-4 pb-28 md:max-w-6xl md:px-6 md:pb-20 ${
+          user ? "pt-0 md:pt-1" : "pt-4 md:pt-8"
+        }`}
+      >
         <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm lg:grid-cols-2 lg:min-h-[min(72vh,640px)]">
           {/* Banner */}
           <div className="relative min-h-[200px] bg-muted-bg sm:min-h-[260px] lg:min-h-0">

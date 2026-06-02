@@ -11,7 +11,10 @@ const PUBLIC_PATHS = [
   "/api/shopify/auth",
   "/api/shopify/install",
   "/api/shopify/callback",
+  "/api/shopify/webhooks",
   "/shopify/welcome",
+  "/shopify/claim",
+  "/login",
   "/api/brands",
   "/api/tasks/enrich-derived-profile",
   "/api/tasks/compute-matches",
@@ -35,7 +38,6 @@ const PUBLIC_PATHS = [
   "/api/public/brand-context",
   "/widget-login",
   "/connect/whatsapp",
-  "/api/shopify/webhooks"
 ];
 
 export async function middleware(request) {
