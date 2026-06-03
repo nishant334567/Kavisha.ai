@@ -94,7 +94,7 @@ export default function Chat() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] h-[calc(100vh-64px)] flex flex-col overflow-hidden">
+    <div className="chat-thread-mobile-dock md:relative md:flex md:h-[calc(100vh-64px)] md:min-h-[calc(100vh-64px)] md:max-h-none md:flex-col md:overflow-hidden">
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div>
           <ChatSidebar
@@ -113,12 +113,15 @@ export default function Chat() {
         <div className="w-full h-full flex flex-col overflow-hidden">
           {currentChatId && (
             <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden px-2 md:px-0">
-              <ChatBox currentChatId={currentChatId} />
+              <ChatBox
+                currentChatId={currentChatId}
+                showPoweredByFooter
+              />
             </div>
           )}
         </div>
       </div>
-      <PoweredByKavisha />
+      <PoweredByKavisha className="hidden shrink-0 md:block md:pt-0.5 md:pb-1" />
     </div>
   );
 }

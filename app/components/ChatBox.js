@@ -1,12 +1,12 @@
 "use client";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 
 import Resume from "./Resume";
 import FormatText from "./FormatText";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { Send, Paperclip } from "lucide-react";
+import { Send, Paperclip, Mic, MicOff } from "lucide-react";
 import SuggestedQuestionsCarousel from "@/app/components/SuggestedQuestionsCarousel";
 import {
   getServiceIntroQuestions,
@@ -21,6 +21,7 @@ import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton"
 import AssistantEngagementRow from "@/app/components/AssistantEngagementRow";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
 import LiveChat from "@/app/components/LiveChat";
+import PoweredByKavisha from "@/app/components/PoweredByKavisha";
 import { useCommunityConnect } from "@/app/hooks/useCommunityConnect";
 
 function toGracefulHeaderLabel(text) {
@@ -33,6 +34,7 @@ function toGracefulHeaderLabel(text) {
 
 export default function ChatBox({
   currentChatId,
+  showPoweredByFooter = false,
   // currentChatType,
   // updateChatId,
   // showInbox,
@@ -63,6 +65,16 @@ export default function ChatBox({
   const [connectionId, setConnectionId] = useState(null);
   const [liveChatOtherDisplayName, setLiveChatOtherDisplayName] =
     useState(null);
+  const [isRecording, setIsRecording] = useState(false);
+  const timerRef = useRef(null);
+  const [seconds, setSeconds] = useState(0);
+  const intervalRef = useRef(null);
+  const [audioUrl, setAudioUrl] = useState(null);
+  const mediaRecorderRef = useRef(null);
+  const audioChunksRef = useRef([]);
+  const [transcriptText, setTranscriptText] = useState("");
+  const [transcribeError, setTranscribeError] = useState("");
+  const [isTranscribing, setIsTranscribing] = useState(false);
   const [chatLoading, setChatLoading] = useState(false);
   const [summaryUptilnow, setSummaryUptilnow] = useState("");
   const [currentChatType, setCurrentChatType] = useState(null);
@@ -92,16 +104,7 @@ export default function ChatBox({
     setSessionDetailsLoading(true);
     const fetchChatType = async () => {
       try {
-        const subdomain = brandContext?.subdomain;
-        const brandQuery =
-          subdomain && subdomain !== "kavisha"
-            ? `?brand=${encodeURIComponent(subdomain)}`
-            : "";
-        const response = await fetch(`/api/session/${currentChatId}${brandQuery}`);
-        if (response.status === 403) {
-          router.replace("/chats");
-          return;
-        }
+        const response = await fetch(`/api/session/${currentChatId}`);
         if (response.ok) {
           const data = await response.json();
           setCurrentChatType(data.role || null);
@@ -121,9 +124,7 @@ export default function ChatBox({
               : 0;
           setOnboardingPercent(data.allDataCollected ? 100 : pct);
           setHasDatacollected(Boolean(data.allDataCollected));
-          setEligibleForMatches(
-            community && (Boolean(data.allDataCollected) || pct >= 40),
-          );
+          setEligibleForMatches(Boolean(data.allDataCollected) || pct >= 40);
         }
       } catch (error) {
         console.error("Error fetching chat type:", error);
@@ -133,7 +134,7 @@ export default function ChatBox({
     };
 
     fetchChatType();
-  }, [currentChatId, brandContext?.subdomain, router]);
+  }, [currentChatId]);
 
   useEffect(() => {
     //fetch resume data initially - only for job_seeker, recruiter, or dating
@@ -320,6 +321,90 @@ export default function ChatBox({
       setMatchesRefreshing(false);
     }
   }, [currentChatId, eligibleForMatches, refetchPaidConnections]);
+
+  const uploadAudio = async (audioBlob) => {
+    setIsTranscribing(true);
+    setTranscribeError("");
+    const formData = new FormData();
+    formData.append("file", audioBlob, "recording.webm");
+    try {
+      const res = await fetch("/api/transcribe", {
+        method: "POST",
+        body: formData,
+      });
+      const data = await res.json();
+      if (!res.ok || data?.success === false) {
+        setTranscribeError(data?.message || "Transcription failed");
+        return;
+      }
+      const text = typeof data?.text === "string" ? data.text : "";
+      if (text.trim()) {
+        setTranscriptText(text.trim());
+      } else {
+        setTranscribeError("No transcription text returned.");
+      }
+    } catch {
+      setTranscribeError("Failed to read transcription response.");
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  const stopRecording = useCallback(() => {
+    if (!isRecording) return;
+    clearInterval(intervalRef.current);
+    intervalRef.current = null;
+    mediaRecorderRef.current?.stop();
+    setIsRecording(false);
+  }, [isRecording]);
+
+  const startRecording = async () => {
+    setAudioUrl(null);
+    setTranscriptText("");
+    setTranscribeError("");
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunksRef.current.push(event.data);
+        }
+      };
+      mediaRecorder.onstop = () => {
+        stream.getTracks().forEach((track) => track.stop());
+        const audioBlob = new Blob(audioChunksRef.current, {
+          type: "audio/webm",
+        });
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        uploadAudio(audioBlob);
+      };
+      mediaRecorder.start();
+      setIsRecording(true);
+    } catch {
+      setTranscribeError("Microphone access was denied or unavailable.");
+    }
+  };
+
+  useEffect(() => {
+    if (!isRecording) return;
+    timerRef.current = 0;
+    setSeconds(0);
+    intervalRef.current = setInterval(() => {
+      timerRef.current += 1;
+      setSeconds((s) => {
+        const next = s + 1;
+        if (next >= 15) {
+          stopRecording();
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(intervalRef.current);
+  }, [isRecording, stopRecording]);
+
   const showIntroSuggestedQuestions = useMemo(
     () =>
       shouldShowIntroSuggestedQuestions({
@@ -467,6 +552,8 @@ export default function ChatBox({
       if (!messageText) return;
 
       setInput("");
+      setTranscriptText("");
+      setAudioUrl(null);
       const newUserMessage = {
         role: "user",
         message: messageText,
@@ -480,71 +567,14 @@ export default function ChatBox({
     setMessages(updatedMessages);
     setMessageLoading(true);
 
-    if (
-      serviceType === "collect-data" ||
-      currentChatType === "collect_data"
-    ) {
-      response = await fetch("/api/collect-data", {
-        method: "POST",
-        body: JSON.stringify({
-          history: historyToUse,
-          userMessage: messageText || "",
-          sessionId,
-        }),
-      });
-    } else if (currentChatType !== "lead_journey") {
-      response = await fetch("/api/ai", {
-        method: "POST",
-        body: JSON.stringify({
-          history: historyToUse,
-          userMessage: messageText || "",
-          sessionId,
-          resume: resumeData?.resumeSummary || "",
-          type: currentChatType,
-          userId: user?.id,
-        }),
-      });
-    } else {
-      response = await fetch("/api/lead-journey", {
-        method: "POST",
-        body: JSON.stringify({
-          history: historyToUse,
-          userMessage: messageText,
-          sessionId,
-          summary: summaryUptilnow,
-        }),
-      });
-    }
-
-    if (!response.ok) {
+    const failResponse = (assistantMessage) => {
       setMessages([
         ...updatedMessages,
         { role: "assistant", message: assistantMessage },
       ]);
       setRetry(true);
       setRetryIndex(updatedMessages.length - 1);
-      setMessageLoading(false);
-
-      return;
-    }
-    const data = await response.json();
-    setSummaryUptilnow(data?.summary);
-
-    // Update the last user message with requery if available
-    const updatedMessagesWithRequery = updatedMessages.map((msg, idx) => {
-      if (idx === updatedMessages.length - 1 && msg.role === "user") {
-        return { ...msg, requery: data?.requery || null };
-      }
-      return msg;
-    });
-
-    const assistantMsg = {
-      role: "assistant",
-      message: data.reply,
-      sourceUrls: data?.sourceUrls || [],
-      sourceCards: data?.sourceCards || [],
-      productCards: data?.productCards || [],
-      intent: data?.intent || "",
+      if (!isRetry) setInput(messageText);
     };
 
     try {
@@ -557,27 +587,40 @@ export default function ChatBox({
       const isLeadJourney =
         String(currentChatType || "").toLowerCase() === "lead_journey";
 
-      const response = isLeadJourney
-        ? await fetch("/api/lead-journey", {
-          ...fetchOpts,
-          body: JSON.stringify({
-            history: historyToUse,
-            userMessage: messageText,
-            sessionId,
-            summary: summaryUptilnow,
-          }),
-        })
-        : await fetch("/api/ai", {
+      const isCollectData =
+        serviceType === "collect-data" ||
+        currentChatType === "collect_data";
+
+      const response = isCollectData
+        ? await fetch("/api/collect-data", {
           ...fetchOpts,
           body: JSON.stringify({
             history: historyToUse,
             userMessage: messageText || "",
             sessionId,
-            resume: resumeData?.resumeSummary || "",
-            type: currentChatType,
-            userId: user?.id,
           }),
-        });
+        })
+        : isLeadJourney
+          ? await fetch("/api/lead-journey", {
+            ...fetchOpts,
+            body: JSON.stringify({
+              history: historyToUse,
+              userMessage: messageText,
+              sessionId,
+              summary: summaryUptilnow,
+            }),
+          })
+          : await fetch("/api/ai", {
+            ...fetchOpts,
+            body: JSON.stringify({
+              history: historyToUse,
+              userMessage: messageText || "",
+              sessionId,
+              resume: resumeData?.resumeSummary || "",
+              type: currentChatType,
+              userId: user?.id,
+            }),
+          });
 
       const data = await response.json().catch(() => ({}));
 
@@ -616,6 +659,7 @@ export default function ChatBox({
         message: replyText,
         sourceUrls: data?.sourceUrls || [],
         sourceCards: data?.sourceCards || [],
+        productCards: data?.productCards || [],
         intent: data?.intent || "",
       };
       if (
@@ -630,40 +674,31 @@ export default function ChatBox({
       setRetry(false);
       setRetryIndex(undefined);
 
-    if (data?.allDataCollected === "true") {
-      setHasDatacollected(true);
-    } else if (data?.allDataCollected === "false") {
-      setHasDatacollected(false);
-    }
-
-    if (isCommunitySession) {
-      if (
-        data?.matchesWithObjectIds?.length > 0 &&
-        data?.allDataCollected === "true"
-      ) {
-        setMatches(data?.matchesWithObjectIds);
-        setMatchesLastSyncedAt(Date.now());
-      } else if (data?.allDataCollected === "true") {
-        setMatches([]);
-        setMatchesLastSyncedAt(Date.now());
+      if (data?.allDataCollected === "true") {
+        setHasDatacollected(true);
+      } else if (data?.allDataCollected === "false") {
+        setHasDatacollected(false);
       }
-    }
 
-    if (
-      currentChatType !== "lead_journey" &&
-      (serviceType === "collect-data" ||
-        currentChatType === "collect_data" ||
-        isCommunitySession ||
-        isJobsRequirementPost)
-    ) {
-      const pct = data?.onboardingProgress?.percent;
-      if (typeof pct === "number" && !Number.isNaN(pct)) {
-        setOnboardingPercent(Math.max(0, Math.min(100, pct)));
+      if (isCommunitySession) {
+        if (
+          data?.matchesWithObjectIds?.length > 0 &&
+          data?.allDataCollected === "true"
+        ) {
+          setMatches(data?.matchesWithObjectIds);
+          setMatchesLastSyncedAt(Date.now());
+        } else if (data?.allDataCollected === "true") {
+          setMatches([]);
+          setMatchesLastSyncedAt(Date.now());
+        }
       }
 
       if (
         !isLeadJourney &&
-        (isCommunitySession || isJobsRequirementPost)
+        (serviceType === "collect-data" ||
+          currentChatType === "collect_data" ||
+          isCommunitySession ||
+          isJobsRequirementPost)
       ) {
         const pct = data?.onboardingProgress?.percent;
         if (typeof pct === "number" && !Number.isNaN(pct)) {
@@ -794,305 +829,254 @@ export default function ChatBox({
     currentChatType?.split("_").join(" ") ||
     "";
   const secondHeaderDisplay = toGracefulHeaderLabel(secondHeaderRaw);
+  const headerPillTitle =
+    secondHeaderDisplay || brandContext?.brandName || "";
 
   return (
     <>
       <div className="font-baloo mx-auto flex h-full min-h-0 w-full max-w-full flex-1 overflow-hidden rounded-xl bg-background p-0 md:w-3/5 md:px-1">
         <div className="relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
           <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-xl font-light">
-            {/* Logo + session context */}
-            <div className="flex shrink-0 flex-row items-center justify-center gap-2.5 px-2 pb-3 pt-4 md:gap-3 md:pb-4 md:pt-5">
-              <img
-                src={brandContext?.logoUrl}
-                alt=""
-                className="h-12 w-12 flex-shrink-0 rounded-full object-cover ring-1 ring-border/40 md:h-14 md:w-14"
-              />
-              {secondHeaderDisplay ? (
-                <p className="min-w-0 max-w-[min(100%,14rem)] text-left font-baloo text-sm font-medium leading-tight text-foreground sm:max-w-xs md:max-w-sm md:text-[0.9375rem]">
-                  {secondHeaderDisplay}
-                </p>
-              ) : null}
-            </div>
-
-            {showOnboardingProgress && (
-              <div className="mb-1 flex w-full shrink-0 justify-start px-2 md:mb-1.5">
-                <div
-                  className="inline-flex items-baseline gap-0.5 rounded-md border border-border/45 bg-muted/35 px-2.5 py-1 text-[13px] italic tabular-nums shadow-sm backdrop-blur-[2px] dark:border-border/35 dark:bg-muted/25"
-                  style={
-                    primaryBrandHex
-                      ? {
-                        borderLeftWidth: 3,
-                        borderLeftColor: primaryBrandHex,
-                      }
-                      : undefined
-                  }
-                >
-                  <span className="font-semibold not-italic tracking-tight text-foreground">
-                    {Math.round(
-                      Math.min(100, Math.max(0, displayOnboardingPct))
-                    )}
-                    %
-                  </span>
-                  <span className="text-muted-foreground">completed</span>
-                </div>
-              </div>
-            )}
-
-            {/* Messages */}
-            <div
-              ref={messagesScrollRef}
-              onScroll={updateStickyFromScroll}
-              onWheel={updateStickyFromScroll}
-              onTouchMove={updateStickyFromScroll}
-              className="min-h-0 flex-1 overflow-y-scroll overflow-x-hidden scrollbar-none pt-2 md:pt-3"
-            >
-              {/* <div className="flex flex-col gap-2 min-h-full justify-end"> */}
-              {currentChatId &&
-                messages.length > 0 &&
-                messages.map((m, i) => (
-                  <div
-                    key={m._id != null ? String(m._id) : `msg-${i}`}
-                    className={`mb-4 w-full min-w-0 ${m.role === "user"
-                      ? "flex flex-col items-end"
-                      : "flex flex-col items-start"
-                      }`}
-                  >
-                    {i === retryIndex && retry && (
-                      <button
-                        onClick={() => handleSubmit(null, true)}
-                        className="text-xs text-red-500 hover:text-red-700 underline mb-1"
-                      >
-                        Retry
-                      </button>
-                    )}
-                    {m.role === "user" ? (
-                      <div className="flex justify-end w-full min-w-0">
-                        <div
-                          className="text-sm text-white font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%]"
-                          style={{
-                            backgroundColor:
-                              primaryBrandHex || "#004A4E",
-                          }}
+            <div className="relative min-h-0 flex-1">
+              {/* Messages — scroll behind floating pill */}
+              <div
+                ref={messagesScrollRef}
+                onScroll={updateStickyFromScroll}
+                onWheel={updateStickyFromScroll}
+                onTouchMove={updateStickyFromScroll}
+                className="absolute inset-0 overflow-y-scroll overflow-x-hidden scrollbar-none px-2 pb-2 pt-12 md:pt-14"
+              >
+                {/* <div className="flex flex-col gap-2 min-h-full justify-end"> */}
+                {currentChatId &&
+                  messages.length > 0 &&
+                  messages.map((m, i) => (
+                    <div
+                      key={m._id != null ? String(m._id) : `msg-${i}`}
+                      className={`mb-4 w-full min-w-0 ${m.role === "user"
+                        ? "flex flex-col items-end"
+                        : "flex flex-col items-start"
+                        }`}
+                    >
+                      {i === retryIndex && retry && (
+                        <button
+                          onClick={() => handleSubmit(null, true)}
+                          className="text-xs text-red-500 hover:text-red-700 underline mb-1"
                         >
-                          {m.message}
+                          Retry
+                        </button>
+                      )}
+                      {m.role === "user" ? (
+                        <div className="flex justify-end w-full min-w-0">
+                          <div
+                            className="text-sm text-white font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%]"
+                            style={{
+                              backgroundColor:
+                                primaryBrandHex || "#004A4E",
+                            }}
+                          >
+                            {m.message}
+                          </div>
                         </div>
-                      </div>
-                    ) : (
-                      <div className="flex gap-1.5 md:gap-2 items-end w-full min-w-0">
-                        <div className="flex flex-col justify-end flex-shrink-0">
-                          <img
-                            src={brandContext?.logoUrl}
-                            className="rounded-full w-[32px] h-[32px] md:w-[40px] md:h-[40px] min-w-[32px] min-h-[32px] md:min-w-[40px] md:min-h-[40px] object-cover shadow-sm flex-shrink-0"
-                          />
-                        </div>
-                        <div className="text-sm font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-muted-bg min-w-0">
+                      ) : (
+                        <div className="w-full min-w-0 max-w-full py-0.5 text-sm font-normal font-baloo leading-relaxed break-words text-foreground">
                           <FormatText text={m.message} />
                         </div>
-                      </div>
-                    )}
+                      )}
 
-                    {/* Show requery for user messages */}
-                    {/* {m.role === "user" && m.requery && (
+                      {/* Show requery for user messages */}
+                      {/* {m.role === "user" && m.requery && (
                     <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0">
                       <p className="text-xs text-muted italic break-words">
                         🔍 {m.requery}
                       </p>
                     </div>
                   )} */}
-                    {/* Show sources for assistant messages */}
-                    {m.role === "assistant" &&
-                      (m.sourceCards?.length > 0 ||
-                        m.productCards?.length > 0 ||
-                        m.sourceUrls?.length > 0) && (
-                        <div className="mt-1.5 w-full min-w-0">
-                          {(() => {
-                            const { sourceCards, productCards } =
-                              partitionCitationCards(
-                                m.sourceCards,
-                                m.productCards
+                      {/* Show sources for assistant messages */}
+                      {m.role === "assistant" &&
+                        (m.sourceCards?.length > 0 ||
+                          m.productCards?.length > 0 ||
+                          m.sourceUrls?.length > 0) && (
+                          <div className="mt-1.5 w-full min-w-0 max-w-full">
+                            {(() => {
+                              const { sourceCards, productCards } =
+                                partitionCitationCards(
+                                  m.sourceCards,
+                                  m.productCards
+                                );
+                              return (
+                                <>
+                                  {productCards.length > 0 ? (
+                                    <ProductCards
+                                      items={productCards}
+                                      brand={brandContext?.subdomain || ""}
+                                      primaryHex={primaryBrandHex}
+                                    />
+                                  ) : null}
+                                  {sourceCards.length > 0 ? (
+                                    <AssistantSourceCards
+                                      items={sourceCards}
+                                      primaryHex={primaryBrandHex}
+                                    />
+                                  ) : null}
+                                </>
                               );
-                            return (
-                              <>
-                                {productCards.length > 0 ? (
-                                  <ProductCards
-                                    items={productCards}
-                                    brand={brandContext?.subdomain || ""}
-                                    primaryHex={primaryBrandHex}
-                                  />
-                                ) : null}
-                                {sourceCards.length > 0 ? (
-                                  <AssistantSourceCards
-                                    items={sourceCards}
-                                    primaryHex={primaryBrandHex}
-                                  />
-                                ) : null}
-                              </>
-                            );
-                          })()}
-                          {!m.sourceCards?.length &&
-                          !m.productCards?.length &&
-                          m.sourceUrls?.length > 0 ? (
-                            <div className="flex flex-wrap gap-1.5">
-                              <span className="text-xs text-muted">
-                                📚 Links:
-                              </span>
-                              {m.sourceUrls.map((url, idx) => (
-                                <a
-                                  key={idx}
-                                  href={url}
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                  className="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-800 hover:underline"
-                                >
-                                  {url.length > 30
-                                    ? `${url.slice(0, 30)}...`
-                                    : url}
-                                </a>
-                              ))}
-                            </div>
-                          ) : null}
-                        </div>
-                      )}
-                    {m.role === "assistant" &&
-                      currentChatType?.toLowerCase() === "lead_journey" && (
-                        <div className="mt-1.5 flex w-full min-w-0 max-w-[90%] flex-nowrap items-center gap-0.5 sm:max-w-[60%]">
-                          <AssistantEngagementRow
-                            logId={
-                              m._id != null ? String(m._id) : ""
-                            }
-                            liked={Boolean(m.liked)}
-                            onUpdated={(c) =>
-                              updateMessageEngagement(
-                                m._id != null ? String(m._id) : "",
-                                c
-                              )
-                            }
-                          />
-                          <AssistantReplyCopyButton
-                            message={m.message}
-                            sourceCards={(() => {
-                              const p = partitionCitationCards(
-                                m.sourceCards,
-                                m.productCards
-                              );
-                              return [...p.productCards, ...p.sourceCards];
                             })()}
-                            sourceUrls={m.sourceUrls}
-                            readMoreUrl={brandContext?.assistantCopyReadMoreUrl}
-                            brandSubdomain={brandContext?.subdomain}
-                            logId={
-                              m._id != null ? String(m._id) : ""
-                            }
-                            copied={Boolean(m.copied)}
-                            onRecorded={(c) =>
-                              updateMessageEngagement(
-                                m._id != null ? String(m._id) : "",
-                                c
-                              )
-                            }
-                          />
-                        </div>
-                      )}
-                    {/* Show payment QR code for personal_call intent */}
-                    {m.role === "assistant" &&
-                      m.intent === "personal_call" &&
-                      brandContext?.acceptPayment &&
-                      brandContext?.paymentQrUrl && (
-                        <div className="mt-3 max-w-[90%] sm:max-w-[60%] min-w-0">
-                          <img
-                            src={brandContext.paymentQrUrl}
-                            alt="Payment QR Code"
-                            className="w-48 h-48 object-contain border border-border rounded-lg shadow-sm bg-card p-2"
-                          />
-                        </div>
-                      )}
+                            {!m.sourceCards?.length &&
+                              !m.productCards?.length &&
+                              m.sourceUrls?.length > 0 ? (
+                              <div className="flex flex-wrap gap-1.5">
+                                <span className="text-xs text-muted">
+                                  📚 Links:
+                                </span>
+                                {m.sourceUrls.map((url, idx) => (
+                                  <a
+                                    key={idx}
+                                    href={url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-800 hover:underline"
+                                  >
+                                    {url.length > 30
+                                      ? `${url.slice(0, 30)}...`
+                                      : url}
+                                  </a>
+                                ))}
+                              </div>
+                            ) : null}
+                          </div>
+                        )}
+                      {m.role === "assistant" &&
+                        currentChatType?.toLowerCase() === "lead_journey" && (
+                          <div className="mt-1.5 flex w-full min-w-0 max-w-full flex-nowrap items-center gap-0.5">
+                            <AssistantEngagementRow
+                              logId={
+                                m._id != null ? String(m._id) : ""
+                              }
+                              liked={Boolean(m.liked)}
+                              onUpdated={(c) =>
+                                updateMessageEngagement(
+                                  m._id != null ? String(m._id) : "",
+                                  c
+                                )
+                              }
+                            />
+                            <AssistantReplyCopyButton
+                              message={m.message}
+                              sourceCards={(() => {
+                                const p = partitionCitationCards(
+                                  m.sourceCards,
+                                  m.productCards
+                                );
+                                return [...p.productCards, ...p.sourceCards];
+                              })()}
+                              sourceUrls={m.sourceUrls}
+                              readMoreUrl={brandContext?.assistantCopyReadMoreUrl}
+                              brandSubdomain={brandContext?.subdomain}
+                              logId={
+                                m._id != null ? String(m._id) : ""
+                              }
+                              copied={Boolean(m.copied)}
+                              onRecorded={(c) =>
+                                updateMessageEngagement(
+                                  m._id != null ? String(m._id) : "",
+                                  c
+                                )
+                              }
+                            />
+                          </div>
+                        )}
+                      {/* Show payment QR code for personal_call intent */}
+                      {m.role === "assistant" &&
+                        m.intent === "personal_call" &&
+                        brandContext?.acceptPayment &&
+                        brandContext?.paymentQrUrl && (
+                          <div className="mt-3 w-full min-w-0 max-w-full">
+                            <img
+                              src={brandContext.paymentQrUrl}
+                              alt="Payment QR Code"
+                              className="w-48 h-48 object-contain border border-border rounded-lg shadow-sm bg-card p-2"
+                            />
+                          </div>
+                        )}
+                    </div>
+                  ))}
+                {messageLoading && (
+                  <ChatThinkingRow
+                    className="mb-4"
+                    displayName={brandContext?.brandName}
+                    primaryColor={brandContext?.primaryBrandColor}
+                  />
+                )}
+
+                {eligibleForMatches && (
+                  <Matches
+                    currentChatId={currentChatId}
+                    matches={matches}
+                    handleConnect={handleConnect}
+                    paidConnectedUserIds={paidConnectedUserIds}
+                    onRefresh={handleRefreshMatches}
+                    lastSyncedAt={matchesLastSyncedAt}
+                    refreshing={matchesRefreshing}
+                  />
+                )}
+                <div ref={endOfMessagesRef}></div>
+              </div>
+
+              {(headerPillTitle || brandContext?.logoUrl) && (
+                <header className="pointer-events-none absolute inset-x-0 top-2 z-20 flex justify-center px-2 md:top-2.5">
+                  <div className="chat-session-pill pointer-events-auto inline-flex max-w-[min(100%,22rem)] items-center gap-2.5 rounded-full py-1 pl-1 pr-3.5 sm:max-w-md sm:pr-4">
+                    {brandContext?.logoUrl ? (
+                      <img
+                        src={brandContext.logoUrl}
+                        alt=""
+                        className="size-[34px] shrink-0 rounded-full object-cover ring-1 ring-border/40"
+                      />
+                    ) : null}
+                    {headerPillTitle ? (
+                      <p className="min-w-0 truncate font-baloo text-sm font-semibold leading-none text-foreground">
+                        {headerPillTitle}
+                      </p>
+                    ) : null}
                   </div>
-                ))}
-              {messageLoading && (
-                <ChatThinkingRow
-                  className="mb-4"
-                  displayName={brandContext?.brandName}
-                  primaryColor={brandContext?.primaryBrandColor}
-                />
+                </header>
               )}
 
-              {eligibleForMatches && isCommunitySession && (
-                <Matches
-                  currentChatId={currentChatId}
-                  matches={matches}
-                  handleConnect={handleConnect}
-                  paidConnectedUserIds={paidConnectedUserIds}
-                  onRefresh={handleRefreshMatches}
-                  lastSyncedAt={matchesLastSyncedAt}
-                  refreshing={matchesRefreshing}
-                />
-              )}
+              {/* {showOnboardingProgress && (
+                <div className="pointer-events-none absolute inset-x-0 top-[2.75rem] z-20 flex justify-start px-2 md:top-[3.25rem]">
+                  <div
+                    className="pointer-events-auto inline-flex items-baseline gap-0.5 rounded-md border border-border/45 bg-muted/35 px-2.5 py-1 text-[13px] italic tabular-nums shadow-sm backdrop-blur-md dark:border-border/35 dark:bg-muted/25"
+                    style={
+                      primaryBrandHex
+                        ? {
+                          borderLeftWidth: 3,
+                          borderLeftColor: primaryBrandHex,
+                        }
+                        : undefined
+                    }
+                  >
+                    <span className="font-semibold not-italic tracking-tight text-foreground">
+                      {Math.round(
+                        Math.min(100, Math.max(0, displayOnboardingPct))
+                      )}
+                      %
+                    </span>
+                    <span className="text-muted-foreground">completed</span>
+                  </div>
+                </div>
+              )} */}
+            </div>
+
+            <div className="relative z-20 mt-auto shrink-0 bg-background px-2 pt-0.5 max-md:pb-0 md:z-10 md:mt-0 md:pb-0 md:pt-0.5">
               {showIntroSuggestedQuestions &&
                 introSuggestedQuestions.length > 0 && (
                   <SuggestedQuestionsCarousel
-                    className="mb-2 mt-1 px-1 md:px-0"
+                    className="pt-4 mb-3 max-md:mb-2.5 md:mb-3 md:pt-5"
                     accentColor={primaryBrandHex}
                     questions={introSuggestedQuestions}
                     disabled={messageLoading}
                     onSelect={(q) => handleSubmit(String(q).trim())}
                   />
                 )}
-              <div ref={endOfMessagesRef}></div>
-            </div>
-            {/* Suggested intro questions — chat services only */}
-            {serviceType === "chat" &&
-              messages.length <= 1 &&
-              (() => {
-                const service = brandContext?.services?.find(
-                  (s) => s._key === serviceKey,
-                );
-                const questions = (service?.introquestions || [])
-                  .slice(0, 5)
-                  .filter(Boolean);
-                if (questions.length === 0) return null;
-                const scrollStep = 240;
-                const scrollLeft = () =>
-                  suggestedQuestionsScrollRef.current?.scrollBy({ left: -scrollStep, behavior: "smooth" });
-                const scrollRight = () =>
-                  suggestedQuestionsScrollRef.current?.scrollBy({ left: scrollStep, behavior: "smooth" });
-                return (
-                  <div className="flex items-center gap-1 py-2">
-                    <button
-                      type="button"
-                      onClick={scrollLeft}
-                      aria-label="Scroll suggested questions left"
-                      className="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full border border-border bg-muted-bg hover:bg-border/30 text-foreground transition-colors"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <div
-                      ref={suggestedQuestionsScrollRef}
-                      className="flex overflow-x-auto gap-2 flex-1 min-w-0 flex-nowrap overflow-y-hidden scrollbar-thin scroll-smooth"
-                    >
-                      {questions.map((q, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => handleSubmit(String(q).trim())}
-                          className="text-left px-3 py-2 rounded-xl border border-border bg-muted-bg hover:bg-border/30 text-foreground text-xs transition-colors flex-shrink-0 min-w-0 max-w-[85vw] md:max-w-[320px] whitespace-normal"
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={scrollRight}
-                      aria-label="Scroll suggested questions right"
-                      className="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full border border-border bg-muted-bg hover:bg-border/30 text-foreground transition-colors"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
-                  </div>
-                );
-              })()}
-            {/* Textarea Section - flex-1 */}
-            <div className="flex-1 min-h-0 flex flex-col border-border pt-2">
               <form
                 className="w-full"
                 onSubmit={(e) => {
@@ -1136,8 +1120,84 @@ export default function ChatBox({
                       }
                     }}
                     placeholder={`Message ${brandContext?.brandName}…`}
-                    disabled={messageLoading}
+                    disabled={messageLoading || isRecording || isTranscribing}
                   />
+
+                  <div className="relative mb-0.5 shrink-0">
+                    {isTranscribing && (
+                      <div className="absolute bottom-full right-0 z-20 mb-2">
+                        <div className="relative rounded-md border border-border bg-card px-3 py-1.5 text-xs text-foreground shadow">
+                          Transcribing…
+                          <div className="absolute right-3 top-full h-3 w-3 rotate-45 border-b border-r border-border bg-card" />
+                        </div>
+                      </div>
+                    )}
+                    {transcribeError && (
+                      <div className="absolute bottom-full right-0 z-20 mb-2 max-w-[min(80vw,20rem)]">
+                        <div className="relative rounded-md border border-red-300 bg-card px-3 py-1.5 text-xs text-red-600 shadow">
+                          {transcribeError}
+                          <div className="absolute right-3 top-full h-3 w-3 rotate-45 border-b border-r border-red-300 bg-card" />
+                        </div>
+                      </div>
+                    )}
+                    {transcriptText && (
+                      <div className="absolute bottom-full right-0 z-20 mb-2 w-[min(80vw,28rem)]">
+                        <div className="relative rounded-lg border border-border bg-card p-3 shadow">
+                          <div className="mb-1 text-xs text-muted">
+                            Voice transcript
+                          </div>
+                          <div className="max-h-40 overflow-auto whitespace-pre-wrap break-words text-sm text-foreground">
+                            {transcriptText}
+                          </div>
+                          <div className="mt-2 flex justify-end gap-2">
+                            <button
+                              type="button"
+                              onClick={() => handleSubmit(transcriptText)}
+                              className={`rounded-md px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-60 ${!primaryBrandHex ? "bg-highlight" : ""}`}
+                              style={
+                                primaryBrandHex
+                                  ? { backgroundColor: primaryBrandHex }
+                                  : undefined
+                              }
+                              disabled={messageLoading}
+                            >
+                              Send
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => setTranscriptText("")}
+                              className="rounded-md border border-border px-3 py-1.5 text-xs text-foreground hover:bg-muted-bg"
+                            >
+                              Discard
+                            </button>
+                          </div>
+                          <div className="absolute right-3 top-full h-3 w-3 rotate-45 border-b border-r border-border bg-card" />
+                        </div>
+                      </div>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() =>
+                        isRecording ? stopRecording() : startRecording()
+                      }
+                      disabled={messageLoading || isTranscribing}
+                      className="flex h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-muted-bg/80 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
+                      title={
+                        isRecording
+                          ? `Stop recording (${seconds}s)`
+                          : "Start voice message"
+                      }
+                      aria-label={
+                        isRecording ? "Stop recording" : "Start recording"
+                      }
+                    >
+                      {isRecording ? (
+                        <Mic className="h-5 w-5 text-red-600" />
+                      ) : (
+                        <MicOff className="h-5 w-5" />
+                      )}
+                    </button>
+                  </div>
 
                   <button
                     type="submit"
@@ -1155,6 +1215,9 @@ export default function ChatBox({
                   </button>
                 </div>
               </form>
+              {showPoweredByFooter && (
+                <PoweredByKavisha className="py-0 pt-2 pb-0 text-[10px] leading-none md:hidden" />
+              )}
             </div>
             {/* Keep Resume component for file display and processing, but hidden file input */}
             <Resume

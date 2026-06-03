@@ -95,7 +95,7 @@ export default function JobsPostedChatPage() {
   }
 
   return (
-    <div className="flex h-[calc(100vh-64px)] min-h-0 w-full flex-col overflow-hidden">
+    <div className="chat-thread-mobile-dock min-h-0 w-full md:relative md:flex md:h-[calc(100vh-64px)] md:max-h-none md:flex-col md:overflow-hidden">
       <div className="flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden px-2 md:px-0">
         <ChatBox currentChatId={sessionId} />
       </div>

@@ -19,6 +19,7 @@ function SuggestedQuestionsMobileCarousel({
   onSelect,
   disabled,
   className,
+  sectionLabel,
 }) {
   const touchStartRef = useRef(null);
   const [pageIndex, setPageIndex] = useState(0);
@@ -72,8 +73,11 @@ function SuggestedQuestionsMobileCarousel({
   if (pageCount === 0) return null;
 
   return (
-    <div className={`shrink-0 px-1 py-1.5 md:hidden ${className}`.trim()}>
-      <div className="flex flex-col gap-3">
+    <div className={`shrink-0 md:hidden ${className}`.trim()}>
+      <div className="flex flex-col gap-2.5">
+        {sectionLabel ? (
+          <p className="text-xs font-medium text-muted">{sectionLabel}</p>
+        ) : null}
         <div className="mx-auto flex w-full max-w-full items-center gap-2 sm:gap-2.5">
           <div
             className="relative z-10 min-h-12 min-w-0 flex-1 touch-pan-y overflow-hidden"
@@ -142,6 +146,7 @@ function SuggestedQuestionsDesktopPanel({
   disabled,
   className,
   accentColor,
+  sectionLabel,
 }) {
   const list = useMemo(() => normalizeSuggestedQuestions(questions), [questions]);
   if (list.length === 0) return null;
@@ -152,9 +157,11 @@ function SuggestedQuestionsDesktopPanel({
     <div
       className={`relative hidden shrink-0 flex-col md:flex ${className}`.trim()}
     >
-      <p className="mb-1.5 shrink-0 text-[13px] font-medium text-muted">
-        Where would you like to start?
-      </p>
+      {sectionLabel ? (
+        <p className="mb-1.5 shrink-0 text-[13px] font-semibold text-foreground">
+          {sectionLabel}
+        </p>
+      ) : null}
 
       <div className="flex max-w-full flex-col items-start gap-1.5 overflow-x-auto scrollbar-thin">
         {list.map((q, i) => (
@@ -163,7 +170,8 @@ function SuggestedQuestionsDesktopPanel({
             type="button"
             onClick={() => onSelect?.(q)}
             disabled={disabled}
-            className="suggested-prompt-enter group relative inline-flex w-max items-center gap-1.5 rounded-lg border border-border/30 bg-background/95 px-3 py-2 text-left transition-[border-color,box-shadow] duration-200 hover:border-border/50 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card/95"
+            className="suggested-prompt-enter group relative inline-flex w-max items-center gap-1.5 rounded-lg border border-border/30 bg-background/95 px-3 py-1.5
+             text-left transition-[border-color,box-shadow] duration-200 hover:border-border/50 hover:shadow-sm disabled:cursor-not-allowed disabled:opacity-50 dark:bg-card/95"
             style={{ animationDelay: `${i * STAGGER_MS}ms` }}
           >
             <span
@@ -197,6 +205,7 @@ export default function SuggestedQuestionsCarousel({
   disabled = false,
   className = "",
   accentColor,
+  sectionLabel = "Suggested questions",
 }) {
   const list = normalizeSuggestedQuestions(questions);
   if (list.length === 0) return null;
@@ -208,6 +217,7 @@ export default function SuggestedQuestionsCarousel({
         onSelect={onSelect}
         disabled={disabled}
         className={className}
+        sectionLabel={sectionLabel}
       />
       <SuggestedQuestionsDesktopPanel
         questions={list}
@@ -215,6 +225,7 @@ export default function SuggestedQuestionsCarousel({
         disabled={disabled}
         className={className}
         accentColor={accentColor}
+        sectionLabel={sectionLabel}
       />
     </>
   );
