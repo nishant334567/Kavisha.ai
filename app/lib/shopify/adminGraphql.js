@@ -70,7 +70,8 @@ const PRODUCTS_COUNT = `#graphql
 `;
 
 async function request(session, query, variables) {
-  const client = new getShopify().clients.Graphql({ session });
+  const shopify = getShopify();
+  const client = new shopify.clients.Graphql({ session });
   const { data } = await client.request(
     query,
     variables ? { variables } : undefined

@@ -1,5 +1,4 @@
 import { connectDB } from "@/app/lib/db";
-import { Session } from "@shopify/shopify-api";
 import ShopifyMerchant from "@/app/models/ShopifyMerchant";
 import { getShopify } from "@/app/lib/shopify";
 import {
@@ -120,22 +119,24 @@ async function migrateOrRefreshMerchant(doc) {
   return doc;
 }
 
+/** Plain session object — avoids `new Session()` breaking in Next.js prod bundles. */
 function sessionFromMerchant(doc) {
   if (!doc?.accessToken) return null;
-  const session = new Session({
-    id: doc.sessionId,
+  const session = {
+    id: doc.sessionId || `offline_${doc.shopDomain}`,
     shop: doc.shopDomain,
     state: "",
-    isOnline: doc.isOnline,
-    scope: doc.scope,
+    isOnline: Boolean(doc.isOnline),
+    scope: doc.scope || "",
     accessToken: doc.accessToken,
-  });
-
-  // @shopify/shopify-api Session supports these when expiring offline tokens are enabled.
+  };
   if (doc.refreshToken) session.refreshToken = doc.refreshToken;
-  if (doc.accessTokenExpiresAt) session.expires = new Date(doc.accessTokenExpiresAt);
-  if (doc.refreshTokenExpiresAt) session.refreshTokenExpires = new Date(doc.refreshTokenExpiresAt);
-
+  if (doc.accessTokenExpiresAt) {
+    session.expires = new Date(doc.accessTokenExpiresAt);
+  }
+  if (doc.refreshTokenExpiresAt) {
+    session.refreshTokenExpires = new Date(doc.refreshTokenExpiresAt);
+  }
   return session;
 }
 
