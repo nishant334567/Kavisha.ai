@@ -24,7 +24,7 @@ function SplitHomepageCard({
 
   return (
     <div className="grid min-h-[420px] grid-cols-1 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm lg:min-h-[560px] lg:grid-cols-2">
-      <div className="relative min-h-[200px] bg-muted-bg sm:min-h-[240px] lg:min-h-0">
+      <div className="relative aspect-square w-full bg-muted-bg lg:aspect-auto lg:min-h-0">
         {brandImageUrl ? (
           <BrandHeroImageFrame
             fill
@@ -33,10 +33,10 @@ function SplitHomepageCard({
             zoom={heroZoom}
             focusX={heroFocusX}
             focusY={heroFocusY}
-            className="absolute inset-0 min-h-full rounded-t-2xl lg:rounded-l-2xl lg:rounded-tr-none"
+            className="absolute inset-0 rounded-t-2xl lg:min-h-full lg:rounded-l-2xl lg:rounded-tr-none"
           />
         ) : (
-          <div className="flex h-full min-h-[200px] items-center justify-center text-sm text-muted sm:min-h-[240px] lg:min-h-full">
+          <div className="flex aspect-square w-full items-center justify-center text-sm text-muted lg:aspect-auto lg:min-h-full">
             Upload a cover photo
           </div>
         )}
@@ -268,7 +268,7 @@ export default function EditProfile() {
       ) : (
         <div className="grid min-h-[420px] grid-cols-1 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm lg:min-h-[560px] lg:grid-cols-2">
           {/* Left — banner */}
-          <div className="group relative min-h-[200px] bg-muted-bg sm:min-h-[240px] lg:min-h-0">
+          <div className="group relative aspect-square w-full bg-muted-bg lg:aspect-auto lg:min-h-0">
             {brand.brandImageUrl ? (
               <BrandHeroImageFrame
                 fill
@@ -277,10 +277,10 @@ export default function EditProfile() {
                 zoom={heroZoom}
                 focusX={heroFocusX}
                 focusY={heroFocusY}
-                className="absolute inset-0 min-h-full rounded-t-2xl lg:rounded-l-2xl lg:rounded-tr-none"
+                className="absolute inset-0 rounded-t-2xl lg:min-h-full lg:rounded-l-2xl lg:rounded-tr-none"
               />
             ) : (
-              <label className="flex h-full min-h-[200px] cursor-pointer flex-col items-center justify-center gap-2 text-sm text-muted sm:min-h-[240px] lg:min-h-full">
+              <label className="flex aspect-square w-full cursor-pointer flex-col items-center justify-center gap-2 text-sm text-muted lg:aspect-auto lg:min-h-full">
                 <Upload className="h-6 w-6" />
                 Upload cover photo
                 <input

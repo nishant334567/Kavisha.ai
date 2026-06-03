@@ -7,7 +7,7 @@ function clamp(n, min, max) {
 }
 
 /**
- * Public avatar hero: fixed 3:1 frame, object-fit cover, optional zoom + focal point from Sanity.
+ * Brand hero: object-contain (full image visible). fill = split card; else 3:1. Optional zoom/focus.
  * When zoom > 1, extra translate from focus unlocks pan even if object-position had no horizontal
  * slack at 1× (cover + scale interaction).
  */
@@ -38,7 +38,7 @@ export default function BrandHeroImageFrame({
   const panY = ((50 - fy) / 50) * panBoost * panCoeff + extraY;
 
   const frameClass = fill
-    ? `relative h-full min-h-[220px] w-full overflow-hidden bg-background ${className}`
+    ? `relative h-full w-full overflow-hidden bg-background max-lg:min-h-0 lg:min-h-[220px] ${className}`
     : `relative aspect-[3/1] w-full overflow-hidden bg-background ${className}`;
 
   return (
@@ -47,7 +47,7 @@ export default function BrandHeroImageFrame({
       <img
         src={imageUrl}
         alt={alt}
-        className="absolute inset-0 block h-full w-full object-cover"
+        className="absolute inset-0 block h-full w-full object-contain"
         style={{
           objectPosition: `${fx}% ${fy}%`,
           transform: `scale(${z}) translateX(${panX}%) translateY(${panY}%)`,
