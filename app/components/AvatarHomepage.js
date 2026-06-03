@@ -62,15 +62,15 @@ export default function AvatarHomepage() {
     DEFAULT_LOGIN_BUTTON_TEXT.toUpperCase();
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col bg-background">
+    <div className="flex w-full flex-col bg-background max-lg:flex-none lg:min-h-0 lg:flex-1">
       <div
-        className={`mx-auto flex w-full min-h-0 flex-1 flex-col px-4 pb-28 md:max-w-6xl md:px-6 md:pb-20 ${
+        className={`mx-auto flex w-full flex-col px-4 pb-28 md:max-w-6xl md:px-6 md:pb-20 lg:min-h-0 lg:flex-1 ${
           user ? "pt-0 md:pt-1" : "pt-4 md:pt-8"
         }`}
       >
-        <div className="grid min-h-0 flex-1 grid-cols-1 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm lg:grid-cols-2 lg:min-h-[min(72vh,640px)]">
+        <div className="grid w-full grid-cols-1 overflow-hidden rounded-2xl border border-border/60 bg-card shadow-sm lg:min-h-[560px] lg:grid-cols-2">
           {/* Banner */}
-          <div className="relative min-h-[200px] bg-muted-bg sm:min-h-[260px] lg:min-h-0">
+          <div className="relative aspect-square w-full bg-muted-bg lg:aspect-auto lg:min-h-0">
             {brand?.brandImageUrl ? (
               <BrandHeroImageFrame
                 fill
@@ -79,10 +79,10 @@ export default function AvatarHomepage() {
                 zoom={brand.brandHeroZoom}
                 focusX={brand.brandHeroFocusX}
                 focusY={brand.brandHeroFocusY}
-                className="absolute inset-0 min-h-full rounded-t-2xl lg:rounded-l-2xl lg:rounded-tr-none"
+                className="absolute inset-0 rounded-t-2xl lg:min-h-full lg:rounded-l-2xl lg:rounded-tr-none"
               />
             ) : (
-              <div className="flex h-full min-h-[200px] items-center justify-center bg-muted-bg text-sm text-muted sm:min-h-[260px] lg:min-h-full">
+              <div className="flex aspect-square w-full items-center justify-center bg-muted-bg text-sm text-muted lg:aspect-auto lg:min-h-full">
                 {brand?.brandName || "Your avatar"}
               </div>
             )}

@@ -112,20 +112,20 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen flex-col">
-      {user && (
-        <div className="mx-auto w-full max-w-6xl shrink-0 px-4 pb-2 pt-3 md:px-6 md:pt-4">
-          <p className="font-baloo text-left text-base text-[#3D5A5E] dark:text-muted">
-            Welcome back,{" "}
-            <span className="bg-gradient-to-r from-[#008282] to-[#17638C] bg-clip-text font-medium text-transparent">
-              {displayName}!
-            </span>
-          </p>
-        </div>
-      )}
       {brandContext.subdomain === "kavisha" ? (
         <Homepage />
       ) : (
-        <div className="flex min-h-0 flex-1 flex-col">
+        <div className="flex min-h-0 flex-1 flex-col max-lg:justify-center lg:justify-start">
+          {user && (
+            <div className="mx-auto w-full max-w-6xl shrink-0 px-4 pb-2 pt-3 md:px-6 md:pt-12">
+              <p className="font-baloo text-left text-base text-[#3D5A5E] dark:text-muted">
+                Welcome back,{" "}
+                <span className="bg-gradient-to-r from-[#008282] to-[#17638C] bg-clip-text font-medium text-transparent">
+                  {displayName}!
+                </span>
+              </p>
+            </div>
+          )}
           <AvatarHomepage />
         </div>
       )}
