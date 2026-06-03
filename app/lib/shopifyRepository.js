@@ -119,7 +119,7 @@ async function migrateOrRefreshMerchant(doc) {
   return doc;
 }
 
-/** Plain session object — avoids `new Session()` breaking in Next.js prod bundles. */
+/** Plain session shape — `new Session()` breaks in Next.js prod bundles. */
 function sessionFromMerchant(doc) {
   if (!doc?.accessToken) return null;
   const session = {
