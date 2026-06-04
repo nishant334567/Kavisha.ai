@@ -10,7 +10,6 @@ export default function ShopifyWelcomePage() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const shop = normalizeShopifyShopDomain(searchParams.get("shop"));
-  const connected = searchParams.get("shopify") === "connected";
   const [checking, setChecking] = useState(Boolean(shop));
 
   useEffect(() => {
@@ -31,7 +30,6 @@ export default function ShopifyWelcomePage() {
         }
         const q = new URLSearchParams({
           subdomain: data.subdomain,
-          shopify: "connected",
           shop,
         });
         router.replace(
@@ -53,7 +51,7 @@ export default function ShopifyWelcomePage() {
   return (
     <main className="mx-auto flex min-h-[60vh] max-w-lg flex-col justify-center px-6 py-16 text-center">
       <h1 className="text-2xl font-semibold text-foreground">
-        {connected ? "Shopify connected" : "Kavisha AI × Shopify"}
+        {shop ? "Shopify connected" : "Kavisha AI × Shopify"}
       </h1>
       <p className="mt-3 text-sm text-muted">
         {shop

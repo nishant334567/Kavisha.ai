@@ -9,7 +9,7 @@ export const SHOPIFY_WEBHOOK_PATH = "/api/shopify/webhooks";
 const httpWebhook = {
   deliveryMethod: DeliveryMethod.Http,
   callbackUrl: SHOPIFY_WEBHOOK_PATH,
-  callback: async () => {},
+  callback: async () => { },
 };
 
 /** Register product + uninstall webhooks for this shop (after OAuth). */
@@ -130,40 +130,28 @@ export async function beginShopifyOAuth(req, { shop, brand }) {
   return appendBrandCookie(beginResponse, brand, req);
 }
 
-/** Public onboarding after install when no Kavisha brand is linked yet. */
+/** Public fallback when OAuth finished but no brand row is linked yet. */
 export function getShopifyWelcomeRedirectUrl(request, shop) {
   const origin = getBrandOrigin("kavisha", { request });
-  const params = new URLSearchParams({ shopify: "connected" });
   const shopHost = String(shop || "").trim().toLowerCase();
-  if (shopHost) params.set("shop", shopHost);
-  return `${origin}/shopify/welcome?${params}`;
+  const qs = shopHost
+    ? `?${new URLSearchParams({ shop: shopHost })}`
+    : "";
+  return `${origin}/shopify/welcome${qs}`;
 }
 
-/** Post-install / app-open onboarding: claim + setup on brand welcome. */
+/** Post-install / app re-open: claim + setup on brand welcome (apex + subdomain param). */
 export function getShopifyOnboardingWelcomeUrl(brandSubdomain, request, shop) {
   const brand = String(brandSubdomain || "").trim().toLowerCase();
   if (!brand) return getShopifyWelcomeRedirectUrl(request, shop);
   const origin = getBrandOrigin("kavisha", { request });
-  const params = new URLSearchParams({
-    subdomain: brand,
-    shopify: "connected",
-  });
+  const params = new URLSearchParams({ subdomain: brand });
   const shopHost = String(shop || "").trim().toLowerCase();
   if (shopHost) params.set("shop", shopHost);
   return `${origin}/admin/${encodeURIComponent(brand)}/welcome?${params}`;
 }
 
-/** Post-install redirect for a Kavisha brand admin. */
+/** @deprecated Use getShopifyOnboardingWelcomeUrl — same destination. */
 export function getShopifySuccessRedirectUrl(brandSubdomain, request, shop) {
-  const brand = String(brandSubdomain || "").trim().toLowerCase();
-  const origin = brand
-    ? getBrandOrigin(brand, { request })
-    : getBrandOrigin("kavisha", { request });
-  const path = brand
-    ? `/admin/${encodeURIComponent(brand)}/my-services`
-    : "/admin/kavisha/my-services";
-  const params = new URLSearchParams({ shopify: "connected" });
-  const shopHost = String(shop || "").trim().toLowerCase();
-  if (shopHost) params.set("shop", shopHost);
-  return `${origin}${path}?${params}`;
+  return getShopifyOnboardingWelcomeUrl(brandSubdomain, request, shop);
 }

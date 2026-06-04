@@ -15,7 +15,6 @@ const PUBLIC_PATHS = [
   "/api/shopify/webhooks",
   "/api/shopify/resolve-brand",
   "/shopify/welcome",
-  "/shopify/claim",
   "/login",
   "/api/brands",
   "/api/tasks/enrich-derived-profile",
