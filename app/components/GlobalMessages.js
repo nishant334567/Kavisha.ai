@@ -1,14 +1,5 @@
 "use client";
-
-import {
-  createContext,
-  useCallback,
-  useContext,
-  useEffect,
-  useMemo,
-  useRef,
-  useState,
-} from "react";
+import { useState, useEffect, useRef } from "react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { normalizeBrandHex } from "../lib/brandTheme";
@@ -19,13 +10,7 @@ import LiveChat from "./LiveChat";
 const MESSAGES_INFO_COPY =
   "This is where all your chats with people will be. :)";
 
-const MessagesInboxContext = createContext(null);
-
-export function useMessagesInbox() {
-  return useContext(MessagesInboxContext);
-}
-
-export function MessagesInboxProvider({ children }) {
+export default function GlobalMessages() {
   const { user } = useFirebaseSession();
   const brand = useBrandContext();
   const primaryHex = normalizeBrandHex(brand?.primaryBrandColor);
@@ -35,86 +20,6 @@ export function MessagesInboxProvider({ children }) {
   const [userA, setUserA] = useState(null);
   const [userB, setUserB] = useState(null);
   const [connectionId, setConnectionId] = useState(null);
-
-  const enabled =
-    Boolean(user?.id) &&
-    String(brand?.subdomain || "").toLowerCase() !== "kavisha";
-
-  const openInbox = useCallback(() => setShowInbox(true), []);
-  const closeInbox = useCallback(() => setShowInbox(false), []);
-
-  const openChatSession = useCallback(
-    (chatUserA, chatUserB) => {
-      setUserA(chatUserA);
-      setUserB(chatUserB);
-      setConnectionId([chatUserA, chatUserB].sort().join("_"));
-      setOpenChat(true);
-      if (typeof window !== "undefined" && window.innerWidth < 768) {
-        setShowInbox(false);
-      }
-    },
-    []
-  );
-
-  const value = useMemo(
-    () => ({
-      enabled,
-      showInbox,
-      openInbox,
-      closeInbox,
-      primaryHex,
-    }),
-    [enabled, showInbox, openInbox, closeInbox, primaryHex]
-  );
-
-  return (
-    <MessagesInboxContext.Provider value={value}>
-      {children}
-      {enabled && (
-        <>
-          {showInbox && (
-            <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-30 md:items-end md:justify-end md:bg-transparent">
-              {openChat && userA && userB && (
-                <div className="hidden md:flex md:mr-4 md:mb-6">
-                  <div className="flex h-[80vh] w-[500px] flex-col overflow-hidden rounded-xl border border-border bg-background shadow-2xl">
-                    <LiveChat
-                      userA={userA}
-                      userB={userB}
-                      currentUserId={user?.id}
-                      onClose={() => setOpenChat(false)}
-                      connectionId={connectionId}
-                      isEmbedded={true}
-                    />
-                  </div>
-                </div>
-              )}
-              <div className="flex h-full w-full flex-col overflow-hidden border border-border bg-background shadow-2xl md:mx-0 md:mb-6 md:mr-6 md:h-auto md:max-h-[60vh] md:w-80 md:rounded-xl">
-                <Inbox
-                  onOpenChat={openChatSession}
-                  onClose={closeInbox}
-                />
-              </div>
-            </div>
-          )}
-
-          {openChat && userA && userB && !showInbox && (
-            <LiveChat
-              userA={userA}
-              userB={userB}
-              currentUserId={user?.id}
-              onClose={() => setOpenChat(false)}
-              connectionId={connectionId}
-            />
-          )}
-        </>
-      )}
-    </MessagesInboxContext.Provider>
-  );
-}
-
-/** Desktop-only floating messages button (mobile uses bottom nav). */
-export default function GlobalMessagesDesktopFab() {
-  const inbox = useMessagesInbox();
   const [hoverTip, setHoverTip] = useState(false);
   const hoverLeaveTimerRef = useRef(null);
 
@@ -125,61 +30,120 @@ export default function GlobalMessagesDesktopFab() {
     }
   };
 
-  useEffect(() => () => clearHoverLeaveTimer(), []);
+  useEffect(() => {
+    return () => clearHoverLeaveTimer();
+  }, []);
 
-  if (!inbox?.enabled) {
+  // Don't show if user is not logged in
+  if (!user?.id) {
     return null;
   }
 
-  const { openInbox, primaryHex } = inbox;
+  // Main Kavisha brand (marketing hub): no messages FAB / inbox entry point
+  if (String(brand?.subdomain || "").toLowerCase() === "kavisha") {
+    return null;
+  }
+
+  const openChatSession = (chatUserA, chatUserB) => {
+    setUserA(chatUserA);
+    setUserB(chatUserB);
+    setConnectionId([chatUserA, chatUserB].sort().join("_"));
+    setOpenChat(true);
+    // On mobile, close inbox when opening chat. On desktop, keep both open.
+    if (typeof window !== "undefined" && window.innerWidth < 768) {
+      setShowInbox(false);
+    }
+  };
 
   return (
-    <div
-      className="fixed bottom-4 right-4 z-40 hidden md:block"
-      onMouseEnter={() => {
-        clearHoverLeaveTimer();
-        setHoverTip(true);
-      }}
-      onMouseLeave={() => {
-        clearHoverLeaveTimer();
-        hoverLeaveTimerRef.current = setTimeout(() => setHoverTip(false), 180);
-      }}
-    >
-      {hoverTip ? (
-        <div
-          className="pointer-events-auto absolute bottom-[calc(100%-6px)] right-0 z-20 w-[min(calc(100vw-2rem),16rem)] rounded-lg border border-border bg-card px-3 py-2 text-left text-xs leading-snug text-foreground shadow-xl ring-1 ring-black/5"
-          role="tooltip"
-          style={{
-            borderLeftWidth: 4,
-            borderLeftColor: primaryHex || "#00888E",
-          }}
-        >
-          {MESSAGES_INFO_COPY}
-        </div>
-      ) : null}
-      <button
-        type="button"
-        className={`relative flex h-14 w-14 items-center justify-center rounded-full border-0 p-4 text-white shadow-lg ${!primaryHex ? "bg-[#00888E]" : ""}`}
-        style={primaryHex ? { backgroundColor: primaryHex } : undefined}
-        onClick={openInbox}
-        aria-label="Open Messages"
+    <>
+      {/* Messages FAB — hover shows hint only; no hover background change */}
+      <div
+        className="fixed bottom-[calc(4.5rem+env(safe-area-inset-bottom,0px))] right-4 z-40 md:bottom-4"
+        onMouseEnter={() => {
+          clearHoverLeaveTimer();
+          setHoverTip(true);
+        }}
+        onMouseLeave={() => {
+          clearHoverLeaveTimer();
+          hoverLeaveTimerRef.current = setTimeout(() => setHoverTip(false), 180);
+        }}
       >
-        <MessageCircleMore className="h-6 w-6" />
-        <span
-          className={`pointer-events-none absolute -right-0.5 -top-0.5 z-10 flex h-7 w-7 items-center justify-center rounded-full border-2 bg-white shadow-md ${!primaryHex ? "border-[#00888E] text-[#00888E]" : ""}`}
-          aria-hidden
-          style={
-            primaryHex
-              ? {
-                  borderColor: primaryHex,
-                  color: primaryHex,
-                }
-              : undefined
-          }
+        {hoverTip ? (
+          <div
+            className="pointer-events-auto absolute bottom-[calc(100%-6px)] right-0 z-20 w-[min(calc(100vw-2rem),16rem)] rounded-lg border border-border bg-card px-3 py-2 text-left text-xs leading-snug text-foreground shadow-xl ring-1 ring-black/5"
+            role="tooltip"
+            style={{
+              borderLeftWidth: 4,
+              borderLeftColor: primaryHex || "#00888E",
+            }}
+          >
+            {MESSAGES_INFO_COPY}
+          </div>
+        ) : null}
+        <button
+          type="button"
+          className={`relative flex h-10 w-10 items-center justify-center rounded-full border-0 text-white shadow-lg md:h-14 md:w-14 md:p-4 ${!primaryHex ? "bg-[#00888E]" : ""}`}
+          style={primaryHex ? { backgroundColor: primaryHex } : undefined}
+          onClick={() => setShowInbox(true)}
+          aria-label="Open Messages"
         >
-          <Info className="h-4 w-4" strokeWidth={2.5} />
-        </span>
-      </button>
-    </div>
+          <MessageCircleMore className="h-5 w-5 md:h-6 md:w-6" />
+          <span
+            className={`pointer-events-none absolute -right-0.5 -top-0.5 z-10 flex h-6 w-6 items-center justify-center rounded-full border-2 bg-white shadow-md md:h-7 md:w-7 ${!primaryHex ? "border-[#00888E] text-[#00888E]" : ""}`}
+            aria-hidden
+            style={
+              primaryHex || secondaryHex
+                ? {
+                    borderColor: primaryHex || "#00888E",
+                    color: secondaryHex || primaryHex || "#00888E",
+                  }
+                : undefined
+            }
+          >
+            <Info className="h-3.5 w-3.5 md:h-4 md:w-4" strokeWidth={2.5} />
+          </span>
+        </button>
+      </div>
+
+      {/* Inbox Modal */}
+      {showInbox && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center md:items-end md:justify-end bg-black bg-opacity-30 md:bg-transparent">
+          {/* Desktop: Show chat to the left of inbox if open */}
+          {openChat && userA && userB && (
+            <div className="hidden md:flex md:mr-4 md:mb-6">
+              <div className="bg-background w-[500px] h-[80vh] border border-border shadow-2xl flex flex-col overflow-hidden rounded-xl">
+                <LiveChat
+                  userA={userA}
+                  userB={userB}
+                  currentUserId={user?.id}
+                  onClose={() => setOpenChat(false)}
+                  connectionId={connectionId}
+                  isEmbedded={true}
+                />
+              </div>
+            </div>
+          )}
+          {/* Inbox - always at bottom right on desktop */}
+          <div className="w-full h-full md:w-80 md:h-auto md:max-h-[60vh] md:mx-0 md:mr-6 md:mb-6 overflow-hidden shadow-2xl bg-background border border-border flex flex-col rounded-xl">
+            <Inbox
+              onOpenChat={openChatSession}
+              onClose={() => setShowInbox(false)}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Mobile: Show chat full screen when open and inbox is closed */}
+      {openChat && userA && userB && !showInbox && (
+        <LiveChat
+          userA={userA}
+          userB={userB}
+          currentUserId={user?.id}
+          onClose={() => setOpenChat(false)}
+          connectionId={connectionId}
+        />
+      )}
+    </>
   );
 }

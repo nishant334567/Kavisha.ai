@@ -1,18 +1,19 @@
 "use client";
-import { useState, useRef, useEffect, useCallback, useMemo } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 
 import Resume from "./Resume";
 import FormatText from "./FormatText";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
-import { Send, Paperclip, Mic, MicOff } from "lucide-react";
-import SuggestedQuestionsCarousel from "@/app/components/SuggestedQuestionsCarousel";
 import {
-  getServiceIntroQuestions,
-  isIntroChatWithSuggestions,
-  shouldShowIntroSuggestedQuestions,
-} from "@/app/lib/suggestedQuestions";
+  Mic,
+  MicOff,
+  Send,
+  Paperclip,
+  ChevronLeft,
+  ChevronRight,
+} from "lucide-react";
 import Matches from "@/app/components/Matches";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
@@ -21,20 +22,10 @@ import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton"
 import AssistantEngagementRow from "@/app/components/AssistantEngagementRow";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
 import LiveChat from "@/app/components/LiveChat";
-import PoweredByKavisha from "@/app/components/PoweredByKavisha";
 import { useCommunityConnect } from "@/app/hooks/useCommunityConnect";
-
-function toGracefulHeaderLabel(text) {
-  if (!text || typeof text !== "string") return "";
-  return text
-    .trim()
-    .toLowerCase()
-    .replace(/\b\w/g, (c) => c.toUpperCase());
-}
 
 export default function ChatBox({
   currentChatId,
-  showPoweredByFooter = false,
   // currentChatType,
   // updateChatId,
   // showInbox,
@@ -43,7 +34,7 @@ export default function ChatBox({
   const endOfMessagesRef = useRef(null);
   const messagesScrollRef = useRef(null);
   const shouldStickToBottomRef = useRef(true);
-  const introScrollHandledRef = useRef(false);
+  const suggestedQuestionsScrollRef = useRef(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [messageLoading, setMessageLoading] = useState(false);
@@ -75,6 +66,7 @@ export default function ChatBox({
   const [transcriptText, setTranscriptText] = useState("");
   const [transcribeError, setTranscribeError] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
+
   const [chatLoading, setChatLoading] = useState(false);
   const [summaryUptilnow, setSummaryUptilnow] = useState("");
   const [currentChatType, setCurrentChatType] = useState(null);
@@ -104,7 +96,16 @@ export default function ChatBox({
     setSessionDetailsLoading(true);
     const fetchChatType = async () => {
       try {
-        const response = await fetch(`/api/session/${currentChatId}`);
+        const subdomain = brandContext?.subdomain;
+        const brandQuery =
+          subdomain && subdomain !== "kavisha"
+            ? `?brand=${encodeURIComponent(subdomain)}`
+            : "";
+        const response = await fetch(`/api/session/${currentChatId}${brandQuery}`);
+        if (response.status === 403) {
+          router.replace("/chats");
+          return;
+        }
         if (response.ok) {
           const data = await response.json();
           setCurrentChatType(data.role || null);
@@ -124,7 +125,9 @@ export default function ChatBox({
               : 0;
           setOnboardingPercent(data.allDataCollected ? 100 : pct);
           setHasDatacollected(Boolean(data.allDataCollected));
-          setEligibleForMatches(Boolean(data.allDataCollected) || pct >= 40);
+          setEligibleForMatches(
+            community && (Boolean(data.allDataCollected) || pct >= 40),
+          );
         }
       } catch (error) {
         console.error("Error fetching chat type:", error);
@@ -134,7 +137,24 @@ export default function ChatBox({
     };
 
     fetchChatType();
-  }, [currentChatId]);
+  }, [currentChatId, brandContext?.subdomain, router]);
+
+  useEffect(() => {
+    if (!isRecording) return;
+    timerRef.current = 0;
+    setSeconds(0);
+    intervalRef.current = setInterval(() => {
+      timerRef.current += 1;
+      setSeconds((s) => {
+        const next = s + 1;
+        if (next >= 15) {
+          stopRecording();
+        }
+        return next;
+      });
+    }, 1000);
+    return () => clearInterval(intervalRef.current);
+  }, [isRecording]);
 
   useEffect(() => {
     //fetch resume data initially - only for job_seeker, recruiter, or dating
@@ -192,7 +212,6 @@ export default function ChatBox({
 
   useEffect(() => {
     shouldStickToBottomRef.current = true;
-    introScrollHandledRef.current = false;
   }, [currentChatId]);
 
   useEffect(() => {
@@ -321,17 +340,28 @@ export default function ChatBox({
       setMatchesRefreshing(false);
     }
   }, [currentChatId, eligibleForMatches, refetchPaidConnections]);
+  useEffect(() => {
+    if (!shouldStickToBottomRef.current) return;
+    const el = messagesScrollRef.current;
+    if (!el) {
+      endOfMessagesRef.current?.scrollIntoView({ behavior: "auto" });
+      return;
+    }
+    requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+    });
+  }, [messages, messageLoading]);
 
   const uploadAudio = async (audioBlob) => {
     setIsTranscribing(true);
     setTranscribeError("");
     const formData = new FormData();
     formData.append("file", audioBlob, "recording.webm");
+    const res = await fetch("/api/transcribe", {
+      method: "POST",
+      body: formData,
+    });
     try {
-      const res = await fetch("/api/transcribe", {
-        method: "POST",
-        body: formData,
-      });
       const data = await res.json();
       if (!res.ok || data?.success === false) {
         setTranscribeError(data?.message || "Transcription failed");
@@ -343,115 +373,45 @@ export default function ChatBox({
       } else {
         setTranscribeError("No transcription text returned.");
       }
-    } catch {
+    } catch (e) {
       setTranscribeError("Failed to read transcription response.");
     } finally {
       setIsTranscribing(false);
     }
   };
+  const startRecording = async () => {
+    // reset previous artifacts for a fresh capture
+    setAudioUrl(null);
+    setTranscriptText("");
+    setTranscribeError("");
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+    const mediaRecorder = new MediaRecorder(stream);
+    mediaRecorderRef.current = mediaRecorder;
+    audioChunksRef.current = [];
+    mediaRecorder.ondataavailable = (event) => {
+      if (event.data.size > 0) {
+        audioChunksRef.current.push(event.data);
+      }
+    };
+    mediaRecorder.onstop = () => {
+      const audioBlob = new Blob(audioChunksRef.current, {
+        type: "audio/webm",
+      });
+      const url = URL.createObjectURL(audioBlob);
+      setAudioUrl(url);
+      uploadAudio(audioBlob);
+    };
+    mediaRecorder.start();
+    setIsRecording(true);
+  };
 
-  const stopRecording = useCallback(() => {
+  const stopRecording = () => {
     if (!isRecording) return;
     clearInterval(intervalRef.current);
     intervalRef.current = null;
     mediaRecorderRef.current?.stop();
     setIsRecording(false);
-  }, [isRecording]);
-
-  const startRecording = async () => {
-    setAudioUrl(null);
-    setTranscriptText("");
-    setTranscribeError("");
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
-      const mediaRecorder = new MediaRecorder(stream);
-      mediaRecorderRef.current = mediaRecorder;
-      audioChunksRef.current = [];
-      mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0) {
-          audioChunksRef.current.push(event.data);
-        }
-      };
-      mediaRecorder.onstop = () => {
-        stream.getTracks().forEach((track) => track.stop());
-        const audioBlob = new Blob(audioChunksRef.current, {
-          type: "audio/webm",
-        });
-        const url = URL.createObjectURL(audioBlob);
-        setAudioUrl(url);
-        uploadAudio(audioBlob);
-      };
-      mediaRecorder.start();
-      setIsRecording(true);
-    } catch {
-      setTranscribeError("Microphone access was denied or unavailable.");
-    }
   };
-
-  useEffect(() => {
-    if (!isRecording) return;
-    timerRef.current = 0;
-    setSeconds(0);
-    intervalRef.current = setInterval(() => {
-      timerRef.current += 1;
-      setSeconds((s) => {
-        const next = s + 1;
-        if (next >= 15) {
-          stopRecording();
-        }
-        return next;
-      });
-    }, 1000);
-    return () => clearInterval(intervalRef.current);
-  }, [isRecording, stopRecording]);
-
-  const showIntroSuggestedQuestions = useMemo(
-    () =>
-      shouldShowIntroSuggestedQuestions({
-        chatType: currentChatType,
-        messages,
-        messageLoading,
-      }),
-    [currentChatType, messages, messageLoading],
-  );
-
-  const introSuggestedQuestions = useMemo(
-    () =>
-      showIntroSuggestedQuestions
-        ? getServiceIntroQuestions(brandContext, serviceKey)
-        : [],
-    [showIntroSuggestedQuestions, brandContext, serviceKey],
-  );
-
-  useEffect(() => {
-    const el = messagesScrollRef.current;
-    const isIntroWithSuggestions = isIntroChatWithSuggestions({
-      chatType: currentChatType,
-      messages,
-      messageLoading,
-    });
-
-    if (isIntroWithSuggestions) {
-      if (!introScrollHandledRef.current) {
-        introScrollHandledRef.current = true;
-        shouldStickToBottomRef.current = false;
-        requestAnimationFrame(() => {
-          if (el) el.scrollTop = 0;
-        });
-      }
-      return;
-    }
-    introScrollHandledRef.current = false;
-
-    if (!shouldStickToBottomRef.current) return;
-    if (!el) {
-      endOfMessagesRef.current?.scrollIntoView({ behavior: "auto" });
-      return;
-    }
-    requestAnimationFrame(() => {
-      el.scrollTop = el.scrollHeight;
-    });
-  }, [messages, messageLoading, currentChatType]);
 
   const formatMessage = (message) => {
     return message.split("*").join(" ");
@@ -534,12 +494,11 @@ export default function ChatBox({
   };
 
   const handleSubmit = async (voiceText = null, isRetry = false) => {
-    const sessionId = currentChatId;
-    let messageText;
-    let updatedMessages;
-    let historyToUse;
+    let sessionId = currentChatId;
+    let messageText, updatedMessages, historyToUse;
 
     if (isRetry) {
+      // Retry logic: remove last error message and get the message to retry
       const lastErrorRemoved = messages.filter((item, index) => {
         return index !== messages.length - 1;
       });
@@ -548,6 +507,7 @@ export default function ChatBox({
       updatedMessages = lastErrorRemoved;
       historyToUse = lastErrorRemoved.slice(0, retryIndex);
     } else {
+      // Normal submit logic
       messageText = (voiceText ?? input).trim();
       if (!messageText) return;
 
@@ -558,160 +518,134 @@ export default function ChatBox({
         role: "user",
         message: messageText,
         requery: null,
-      };
+      }; // Will be updated after API response
       updatedMessages = [...messages, newUserMessage];
       historyToUse = updatedMessages;
     }
 
+    // User sent / retried — follow the thread to the bottom even if they had scrolled up.
     shouldStickToBottomRef.current = true;
+
     setMessages(updatedMessages);
     setMessageLoading(true);
+    let response;
 
-    const failResponse = (assistantMessage) => {
+    if (
+      serviceType === "collect-data" ||
+      currentChatType === "collect_data"
+    ) {
+      response = await fetch("/api/collect-data", {
+        method: "POST",
+        body: JSON.stringify({
+          history: historyToUse,
+          userMessage: messageText || "",
+          sessionId,
+        }),
+      });
+    } else if (currentChatType !== "lead_journey") {
+      response = await fetch("/api/ai", {
+        method: "POST",
+        body: JSON.stringify({
+          history: historyToUse,
+          userMessage: messageText || "",
+          sessionId,
+          resume: resumeData?.resumeSummary || "",
+          type: currentChatType,
+          userId: user?.id,
+        }),
+      });
+    } else {
+      response = await fetch("/api/lead-journey", {
+        method: "POST",
+        body: JSON.stringify({
+          history: historyToUse,
+          userMessage: messageText,
+          sessionId,
+          summary: summaryUptilnow,
+        }),
+      });
+    }
+
+    if (!response.ok) {
       setMessages([
         ...updatedMessages,
-        { role: "assistant", message: assistantMessage },
+        {
+          role: "assistant",
+          message:
+            "Kavisha failed to respond to that. Can you please try again?",
+        },
       ]);
       setRetry(true);
       setRetryIndex(updatedMessages.length - 1);
-      if (!isRetry) setInput(messageText);
+      setMessageLoading(false);
+
+      return;
+    }
+    const data = await response.json();
+    setSummaryUptilnow(data?.summary);
+
+    // Update the last user message with requery if available
+    const updatedMessagesWithRequery = updatedMessages.map((msg, idx) => {
+      if (idx === updatedMessages.length - 1 && msg.role === "user") {
+        return { ...msg, requery: data?.requery || null };
+      }
+      return msg;
+    });
+
+    const assistantMsg = {
+      role: "assistant",
+      message: data.reply,
+      sourceUrls: data?.sourceUrls || [],
+      sourceCards: data?.sourceCards || [],
+      productCards: data?.productCards || [],
+      intent: data?.intent || "",
     };
-
-    try {
-      const fetchOpts = {
-        method: "POST",
-        credentials: "same-origin",
-        headers: { "Content-Type": "application/json" },
-      };
-
-      const isLeadJourney =
-        String(currentChatType || "").toLowerCase() === "lead_journey";
-
-      const isCollectData =
-        serviceType === "collect-data" ||
-        currentChatType === "collect_data";
-
-      const response = isCollectData
-        ? await fetch("/api/collect-data", {
-          ...fetchOpts,
-          body: JSON.stringify({
-            history: historyToUse,
-            userMessage: messageText || "",
-            sessionId,
-          }),
-        })
-        : isLeadJourney
-          ? await fetch("/api/lead-journey", {
-            ...fetchOpts,
-            body: JSON.stringify({
-              history: historyToUse,
-              userMessage: messageText,
-              sessionId,
-              summary: summaryUptilnow,
-            }),
-          })
-          : await fetch("/api/ai", {
-            ...fetchOpts,
-            body: JSON.stringify({
-              history: historyToUse,
-              userMessage: messageText || "",
-              sessionId,
-              resume: resumeData?.resumeSummary || "",
-              type: currentChatType,
-              userId: user?.id,
-            }),
-          });
-
-      const data = await response.json().catch(() => ({}));
-
-      if (!response.ok) {
-        const apiMsg =
-          typeof data?.error === "string" && data.error.trim()
-            ? data.error.trim()
-            : null;
-        failResponse(
-          apiMsg ||
-          `${brandContext?.brandName || "Kavisha"} failed to respond to that. Can you please try again?`
-        );
-        return;
-      }
-
-      if (data?.summary != null) setSummaryUptilnow(data.summary);
-
-      const updatedMessagesWithRequery = updatedMessages.map((msg, idx) => {
-        if (idx === updatedMessages.length - 1 && msg.role === "user") {
-          return { ...msg, requery: data?.requery || null };
-        }
-        return msg;
-      });
-
-      const replyText =
-        typeof data?.reply === "string" ? data.reply.trim() : "";
-      if (!replyText) {
-        failResponse(
-          `${brandContext?.brandName || "Kavisha"} returned an empty reply. Please try again.`
-        );
-        return;
-      }
-
-      const assistantMsg = {
-        role: "assistant",
-        message: replyText,
-        sourceUrls: data?.sourceUrls || [],
-        sourceCards: data?.sourceCards || [],
-        productCards: data?.productCards || [],
-        intent: data?.intent || "",
-      };
-      if (
-        currentChatType?.toLowerCase() === "lead_journey" &&
-        data?.assistantLogId
-      ) {
-        assistantMsg._id = data.assistantLogId;
-        assistantMsg.liked = false;
-        assistantMsg.copied = false;
-      }
-      setMessages([...updatedMessagesWithRequery, assistantMsg]);
+    if (
+      currentChatType?.toLowerCase() === "lead_journey" &&
+      data?.assistantLogId
+    ) {
+      assistantMsg._id = data.assistantLogId;
+      assistantMsg.liked = false;
+      assistantMsg.copied = false;
+    }
+    setMessages([...updatedMessagesWithRequery, assistantMsg]);
+    setMessageLoading(false);
+    // Reset retry state on success
+    if (isRetry) {
       setRetry(false);
       setRetryIndex(undefined);
+    }
 
-      if (data?.allDataCollected === "true") {
-        setHasDatacollected(true);
-      } else if (data?.allDataCollected === "false") {
-        setHasDatacollected(false);
-      }
+    if (data?.allDataCollected === "true") {
+      setHasDatacollected(true);
+    } else if (data?.allDataCollected === "false") {
+      setHasDatacollected(false);
+    }
 
-      if (isCommunitySession) {
-        if (
-          data?.matchesWithObjectIds?.length > 0 &&
-          data?.allDataCollected === "true"
-        ) {
-          setMatches(data?.matchesWithObjectIds);
-          setMatchesLastSyncedAt(Date.now());
-        } else if (data?.allDataCollected === "true") {
-          setMatches([]);
-          setMatchesLastSyncedAt(Date.now());
-        }
-      }
-
+    if (isCommunitySession) {
       if (
-        !isLeadJourney &&
-        (serviceType === "collect-data" ||
-          currentChatType === "collect_data" ||
-          isCommunitySession ||
-          isJobsRequirementPost)
+        data?.matchesWithObjectIds?.length > 0 &&
+        data?.allDataCollected === "true"
       ) {
-        const pct = data?.onboardingProgress?.percent;
-        if (typeof pct === "number" && !Number.isNaN(pct)) {
-          setOnboardingPercent(Math.max(0, Math.min(100, pct)));
-        }
+        setMatches(data?.matchesWithObjectIds);
+        setMatchesLastSyncedAt(Date.now());
+      } else if (data?.allDataCollected === "true") {
+        setMatches([]);
+        setMatchesLastSyncedAt(Date.now());
       }
-    } catch (err) {
-      console.error("[ChatBox] handleSubmit:", err);
-      failResponse(
-        `${brandContext?.brandName || "Kavisha"} failed to respond to that. Can you please try again?`
-      );
-    } finally {
-      setMessageLoading(false);
+    }
+
+    if (
+      currentChatType !== "lead_journey" &&
+      (serviceType === "collect-data" ||
+        currentChatType === "collect_data" ||
+        isCommunitySession ||
+        isJobsRequirementPost)
+    ) {
+      const pct = data?.onboardingProgress?.percent;
+      if (typeof pct === "number" && !Number.isNaN(pct)) {
+        setOnboardingPercent(Math.max(0, Math.min(100, pct)));
+      }
     }
   };
   useEffect(() => {
@@ -823,355 +757,408 @@ export default function ChatBox({
     );
   })();
 
-  const secondHeaderRaw = isCommunityRoleType
+  const firstHeaderBadge =
+    isCommunitySession && isCommunityRoleType ? "COMMUNITY" : "SERVICE";
+  const secondHeaderBadge = isCommunityRoleType
     ? communitySecondBadgeLabel
-    : sessionName ||
-    currentChatType?.split("_").join(" ") ||
-    "";
-  const secondHeaderDisplay = toGracefulHeaderLabel(secondHeaderRaw);
-  const headerPillTitle =
-    secondHeaderDisplay || brandContext?.brandName || "";
+    : sessionName
+      ? sessionName.toUpperCase()
+      : currentChatType?.split("_").join(" ").toUpperCase() || "";
 
   return (
     <>
-      <div className="font-baloo mx-auto flex h-full min-h-0 w-full max-w-full flex-1 overflow-hidden rounded-xl bg-background p-0 md:w-3/5 md:px-1">
-        <div className="relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
-          <div className="flex h-full min-h-0 w-full flex-col overflow-hidden rounded-xl font-light">
-            <div className="relative min-h-0 flex-1">
-              {/* Messages — scroll behind floating pill */}
-              <div
-                ref={messagesScrollRef}
-                onScroll={updateStickyFromScroll}
-                onWheel={updateStickyFromScroll}
-                onTouchMove={updateStickyFromScroll}
-                className="absolute inset-0 overflow-y-scroll overflow-x-hidden scrollbar-none px-2 pb-2 pt-12 md:pt-14"
-              >
-                {/* <div className="flex flex-col gap-2 min-h-full justify-end"> */}
-                {currentChatId &&
-                  messages.length > 0 &&
-                  messages.map((m, i) => (
-                    <div
-                      key={m._id != null ? String(m._id) : `msg-${i}`}
-                      className={`mb-4 w-full min-w-0 ${m.role === "user"
-                        ? "flex flex-col items-end"
-                        : "flex flex-col items-start"
-                        }`}
-                    >
-                      {i === retryIndex && retry && (
-                        <button
-                          onClick={() => handleSubmit(null, true)}
-                          className="text-xs text-red-500 hover:text-red-700 underline mb-1"
+      <div className="font-baloo mx-auto flex h-full min-h-0 w-full max-w-full overflow-hidden rounded-xl bg-background p-2 md:w-3/5 md:p-4">
+        <div className="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
+          <div className="rounded-xl w-full p-1 md:p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
+            {/* Logo + role badges only (brand name is in the navbar on /chats and /community). */}
+            <div className="flex-2 my-4 flex min-h-0 flex-col items-center justify-center md:mb-8 md:mt-4 md:flex-row md:items-center md:gap-4 md:px-2">
+              <img
+                src={brandContext?.logoUrl}
+                alt=""
+                className="h-[65px] w-[65px] flex-shrink-0 rounded-full object-cover"
+              />
+              <div className="flex flex-col items-center md:items-start">
+                <div className="my-2 inline-flex items-stretch overflow-hidden border border-border font-baloo text-xs">
+                  <button
+                    type="button"
+                    className="flex cursor-default items-center bg-foreground px-2.5 py-1.5 font-medium text-background"
+                    disabled
+                  >
+                    {firstHeaderBadge}
+                  </button>
+                  <button
+                    type="button"
+                    className="flex cursor-default items-center border-l border-border bg-background px-2.5 py-1.5 font-medium text-foreground"
+                    disabled
+                  >
+                    {secondHeaderBadge}
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {showOnboardingProgress && (
+              <div className="mb-2 flex w-full shrink-0 justify-start px-1 md:mb-3 md:px-2">
+                <div
+                  className="inline-flex items-baseline gap-0.5 rounded-md border border-border/45 bg-muted/35 px-2.5 py-1 text-[13px] italic tabular-nums shadow-sm backdrop-blur-[2px] dark:border-border/35 dark:bg-muted/25"
+                  style={
+                    primaryBrandHex
+                      ? {
+                        borderLeftWidth: 3,
+                        borderLeftColor: primaryBrandHex,
+                      }
+                      : undefined
+                  }
+                >
+                  <span className="font-semibold not-italic tracking-tight text-foreground">
+                    {Math.round(
+                      Math.min(100, Math.max(0, displayOnboardingPct))
+                    )}
+                    %
+                  </span>
+                  <span className="text-muted-foreground">completed</span>
+                </div>
+              </div>
+            )}
+
+            {/* Messages Section - flex-2, scrollable */}
+            <div
+              ref={messagesScrollRef}
+              onScroll={updateStickyFromScroll}
+              onWheel={updateStickyFromScroll}
+              onTouchMove={updateStickyFromScroll}
+              className="flex-[4] min-h-0 overflow-y-scroll overflow-x-hidden scrollbar-none"
+            >
+              {/* <div className="flex flex-col gap-2 min-h-full justify-end"> */}
+              {currentChatId &&
+                messages.length > 0 &&
+                messages.map((m, i) => (
+                  <div
+                    key={m._id != null ? String(m._id) : `msg-${i}`}
+                    className={`mb-4 w-full min-w-0 ${m.role === "user"
+                      ? "flex flex-col items-end"
+                      : "flex flex-col items-start"
+                      }`}
+                  >
+                    {i === retryIndex && retry && (
+                      <button
+                        onClick={() => handleSubmit(null, true)}
+                        className="text-xs text-red-500 hover:text-red-700 underline mb-1"
+                      >
+                        Retry
+                      </button>
+                    )}
+                    {m.role === "user" ? (
+                      <div className="flex justify-end w-full min-w-0">
+                        <div
+                          className="text-sm text-white font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%]"
+                          style={{
+                            backgroundColor:
+                              primaryBrandHex || "#004A4E",
+                          }}
                         >
-                          Retry
-                        </button>
-                      )}
-                      {m.role === "user" ? (
-                        <div className="flex justify-end w-full min-w-0">
-                          <div
-                            className="text-sm text-white font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%]"
-                            style={{
-                              backgroundColor:
-                                primaryBrandHex || "#004A4E",
-                            }}
-                          >
-                            {m.message}
-                          </div>
+                          {m.message}
                         </div>
-                      ) : (
-                        <div className="w-full min-w-0 max-w-full py-0.5 text-sm font-normal font-baloo leading-relaxed break-words text-foreground">
+                      </div>
+                    ) : (
+                      <div className="flex gap-1.5 md:gap-2 items-end w-full min-w-0">
+                        <div className="flex flex-col justify-end flex-shrink-0">
+                          <img
+                            src={brandContext?.logoUrl}
+                            className="rounded-full w-[32px] h-[32px] md:w-[40px] md:h-[40px] min-w-[32px] min-h-[32px] md:min-w-[40px] md:min-h-[40px] object-cover shadow-sm flex-shrink-0"
+                          />
+                        </div>
+                        <div className="text-sm font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-muted-bg min-w-0">
                           <FormatText text={m.message} />
                         </div>
-                      )}
+                      </div>
+                    )}
 
-                      {/* Show requery for user messages */}
-                      {/* {m.role === "user" && m.requery && (
+                    {/* Show requery for user messages */}
+                    {/* {m.role === "user" && m.requery && (
                     <div className="mt-1.5 max-w-[90%] sm:max-w-[60%] min-w-0">
                       <p className="text-xs text-muted italic break-words">
                         🔍 {m.requery}
                       </p>
                     </div>
                   )} */}
-                      {/* Show sources for assistant messages */}
-                      {m.role === "assistant" &&
-                        (m.sourceCards?.length > 0 ||
-                          m.productCards?.length > 0 ||
-                          m.sourceUrls?.length > 0) && (
-                          <div className="mt-1.5 w-full min-w-0 max-w-full">
-                            {(() => {
-                              const { sourceCards, productCards } =
-                                partitionCitationCards(
-                                  m.sourceCards,
-                                  m.productCards
-                                );
-                              return (
-                                <>
-                                  {productCards.length > 0 ? (
-                                    <ProductCards
-                                      items={productCards}
-                                      brand={brandContext?.subdomain || ""}
-                                      primaryHex={primaryBrandHex}
-                                    />
-                                  ) : null}
-                                  {sourceCards.length > 0 ? (
-                                    <AssistantSourceCards
-                                      items={sourceCards}
-                                      primaryHex={primaryBrandHex}
-                                    />
-                                  ) : null}
-                                </>
+                    {/* Show sources for assistant messages */}
+                    {m.role === "assistant" &&
+                      (m.sourceCards?.length > 0 ||
+                        m.productCards?.length > 0 ||
+                        m.sourceUrls?.length > 0) && (
+                        <div className="mt-1.5 w-full min-w-0">
+                          {(() => {
+                            const { sourceCards, productCards } =
+                              partitionCitationCards(
+                                m.sourceCards,
+                                m.productCards
                               );
+                            return (
+                              <>
+                                {productCards.length > 0 ? (
+                                  <ProductCards
+                                    items={productCards}
+                                    brand={brandContext?.subdomain || ""}
+                                    primaryHex={primaryBrandHex}
+                                  />
+                                ) : null}
+                                {sourceCards.length > 0 ? (
+                                  <AssistantSourceCards
+                                    items={sourceCards}
+                                    primaryHex={primaryBrandHex}
+                                  />
+                                ) : null}
+                              </>
+                            );
+                          })()}
+                          {!m.sourceCards?.length &&
+                          !m.productCards?.length &&
+                          m.sourceUrls?.length > 0 ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              <span className="text-xs text-muted">
+                                📚 Links:
+                              </span>
+                              {m.sourceUrls.map((url, idx) => (
+                                <a
+                                  key={idx}
+                                  href={url}
+                                  target="_blank"
+                                  rel="noopener noreferrer"
+                                  className="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-800 hover:underline"
+                                >
+                                  {url.length > 30
+                                    ? `${url.slice(0, 30)}...`
+                                    : url}
+                                </a>
+                              ))}
+                            </div>
+                          ) : null}
+                        </div>
+                      )}
+                    {m.role === "assistant" &&
+                      currentChatType?.toLowerCase() === "lead_journey" && (
+                        <div className="mt-1.5 flex w-full min-w-0 max-w-[90%] flex-nowrap items-center gap-0.5 sm:max-w-[60%]">
+                          <AssistantEngagementRow
+                            logId={
+                              m._id != null ? String(m._id) : ""
+                            }
+                            liked={Boolean(m.liked)}
+                            onUpdated={(c) =>
+                              updateMessageEngagement(
+                                m._id != null ? String(m._id) : "",
+                                c
+                              )
+                            }
+                          />
+                          <AssistantReplyCopyButton
+                            message={m.message}
+                            sourceCards={(() => {
+                              const p = partitionCitationCards(
+                                m.sourceCards,
+                                m.productCards
+                              );
+                              return [...p.productCards, ...p.sourceCards];
                             })()}
-                            {!m.sourceCards?.length &&
-                              !m.productCards?.length &&
-                              m.sourceUrls?.length > 0 ? (
-                              <div className="flex flex-wrap gap-1.5">
-                                <span className="text-xs text-muted">
-                                  📚 Links:
-                                </span>
-                                {m.sourceUrls.map((url, idx) => (
-                                  <a
-                                    key={idx}
-                                    href={url}
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-800 hover:underline"
-                                  >
-                                    {url.length > 30
-                                      ? `${url.slice(0, 30)}...`
-                                      : url}
-                                  </a>
-                                ))}
-                              </div>
-                            ) : null}
-                          </div>
-                        )}
-                      {m.role === "assistant" &&
-                        currentChatType?.toLowerCase() === "lead_journey" && (
-                          <div className="mt-1.5 flex w-full min-w-0 max-w-full flex-nowrap items-center gap-0.5">
-                            <AssistantEngagementRow
-                              logId={
-                                m._id != null ? String(m._id) : ""
-                              }
-                              liked={Boolean(m.liked)}
-                              onUpdated={(c) =>
-                                updateMessageEngagement(
-                                  m._id != null ? String(m._id) : "",
-                                  c
-                                )
-                              }
-                            />
-                            <AssistantReplyCopyButton
-                              message={m.message}
-                              sourceCards={(() => {
-                                const p = partitionCitationCards(
-                                  m.sourceCards,
-                                  m.productCards
-                                );
-                                return [...p.productCards, ...p.sourceCards];
-                              })()}
-                              sourceUrls={m.sourceUrls}
-                              readMoreUrl={brandContext?.assistantCopyReadMoreUrl}
-                              brandSubdomain={brandContext?.subdomain}
-                              logId={
-                                m._id != null ? String(m._id) : ""
-                              }
-                              copied={Boolean(m.copied)}
-                              onRecorded={(c) =>
-                                updateMessageEngagement(
-                                  m._id != null ? String(m._id) : "",
-                                  c
-                                )
-                              }
-                            />
-                          </div>
-                        )}
-                      {/* Show payment QR code for personal_call intent */}
-                      {m.role === "assistant" &&
-                        m.intent === "personal_call" &&
-                        brandContext?.acceptPayment &&
-                        brandContext?.paymentQrUrl && (
-                          <div className="mt-3 w-full min-w-0 max-w-full">
-                            <img
-                              src={brandContext.paymentQrUrl}
-                              alt="Payment QR Code"
-                              className="w-48 h-48 object-contain border border-border rounded-lg shadow-sm bg-card p-2"
-                            />
-                          </div>
-                        )}
-                    </div>
-                  ))}
-                {messageLoading && (
-                  <ChatThinkingRow
-                    className="mb-4"
-                    displayName={brandContext?.brandName}
-                    primaryColor={brandContext?.primaryBrandColor}
-                  />
-                )}
-
-                {eligibleForMatches && (
-                  <Matches
-                    currentChatId={currentChatId}
-                    matches={matches}
-                    handleConnect={handleConnect}
-                    paidConnectedUserIds={paidConnectedUserIds}
-                    onRefresh={handleRefreshMatches}
-                    lastSyncedAt={matchesLastSyncedAt}
-                    refreshing={matchesRefreshing}
-                  />
-                )}
-                <div ref={endOfMessagesRef}></div>
-              </div>
-
-              {(headerPillTitle || brandContext?.logoUrl) && (
-                <header className="pointer-events-none absolute inset-x-0 top-2 z-20 flex justify-center px-2 md:top-2.5">
-                  <div className="chat-session-pill pointer-events-auto inline-flex max-w-[min(100%,22rem)] items-center gap-2.5 rounded-full py-1 pl-1 pr-3.5 sm:max-w-md sm:pr-4">
-                    {brandContext?.logoUrl ? (
-                      <img
-                        src={brandContext.logoUrl}
-                        alt=""
-                        className="size-[34px] shrink-0 rounded-full object-cover ring-1 ring-border/40"
-                      />
-                    ) : null}
-                    {headerPillTitle ? (
-                      <p className="min-w-0 truncate font-baloo text-sm font-semibold leading-none text-foreground">
-                        {headerPillTitle}
-                      </p>
-                    ) : null}
+                            sourceUrls={m.sourceUrls}
+                            readMoreUrl={brandContext?.assistantCopyReadMoreUrl}
+                            brandSubdomain={brandContext?.subdomain}
+                            logId={
+                              m._id != null ? String(m._id) : ""
+                            }
+                            copied={Boolean(m.copied)}
+                            onRecorded={(c) =>
+                              updateMessageEngagement(
+                                m._id != null ? String(m._id) : "",
+                                c
+                              )
+                            }
+                          />
+                        </div>
+                      )}
+                    {/* Show payment QR code for personal_call intent */}
+                    {m.role === "assistant" &&
+                      m.intent === "personal_call" &&
+                      brandContext?.acceptPayment &&
+                      brandContext?.paymentQrUrl && (
+                        <div className="mt-3 max-w-[90%] sm:max-w-[60%] min-w-0">
+                          <img
+                            src={brandContext.paymentQrUrl}
+                            alt="Payment QR Code"
+                            className="w-48 h-48 object-contain border border-border rounded-lg shadow-sm bg-card p-2"
+                          />
+                        </div>
+                      )}
                   </div>
-                </header>
+                ))}
+              {messageLoading && (
+                <ChatThinkingRow
+                  className="mb-4"
+                  displayName={brandContext?.brandName}
+                  primaryColor={brandContext?.primaryBrandColor}
+                />
               )}
 
-              {/* {showOnboardingProgress && (
-                <div className="pointer-events-none absolute inset-x-0 top-[2.75rem] z-20 flex justify-start px-2 md:top-[3.25rem]">
-                  <div
-                    className="pointer-events-auto inline-flex items-baseline gap-0.5 rounded-md border border-border/45 bg-muted/35 px-2.5 py-1 text-[13px] italic tabular-nums shadow-sm backdrop-blur-md dark:border-border/35 dark:bg-muted/25"
-                    style={
-                      primaryBrandHex
-                        ? {
-                          borderLeftWidth: 3,
-                          borderLeftColor: primaryBrandHex,
-                        }
-                        : undefined
-                    }
-                  >
-                    <span className="font-semibold not-italic tracking-tight text-foreground">
-                      {Math.round(
-                        Math.min(100, Math.max(0, displayOnboardingPct))
-                      )}
-                      %
-                    </span>
-                    <span className="text-muted-foreground">completed</span>
-                  </div>
-                </div>
-              )} */}
+              {eligibleForMatches && isCommunitySession && (
+                <Matches
+                  currentChatId={currentChatId}
+                  matches={matches}
+                  handleConnect={handleConnect}
+                  paidConnectedUserIds={paidConnectedUserIds}
+                  onRefresh={handleRefreshMatches}
+                  lastSyncedAt={matchesLastSyncedAt}
+                  refreshing={matchesRefreshing}
+                />
+              )}
+              <div ref={endOfMessagesRef}></div>
+              {/* </div> */}
             </div>
-
-            <div className="relative z-20 mt-auto shrink-0 bg-background px-2 pt-0.5 max-md:pb-0 md:z-10 md:mt-0 md:pb-0 md:pt-0.5">
-              {showIntroSuggestedQuestions &&
-                introSuggestedQuestions.length > 0 && (
-                  <SuggestedQuestionsCarousel
-                    className="pt-4 mb-3 max-md:mb-2.5 md:mb-3 md:pt-5"
-                    accentColor={primaryBrandHex}
-                    questions={introSuggestedQuestions}
-                    disabled={messageLoading}
-                    onSelect={(q) => handleSubmit(String(q).trim())}
-                  />
-                )}
+            {/* Suggested intro questions — chat services only */}
+            {serviceType === "chat" &&
+              messages.length <= 1 &&
+              (() => {
+                const service = brandContext?.services?.find(
+                  (s) => s._key === serviceKey,
+                );
+                const questions = (service?.introquestions || [])
+                  .slice(0, 5)
+                  .filter(Boolean);
+                if (questions.length === 0) return null;
+                const scrollStep = 240;
+                const scrollLeft = () =>
+                  suggestedQuestionsScrollRef.current?.scrollBy({ left: -scrollStep, behavior: "smooth" });
+                const scrollRight = () =>
+                  suggestedQuestionsScrollRef.current?.scrollBy({ left: scrollStep, behavior: "smooth" });
+                return (
+                  <div className="flex items-center gap-1 py-2">
+                    <button
+                      type="button"
+                      onClick={scrollLeft}
+                      aria-label="Scroll suggested questions left"
+                      className="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full border border-border bg-muted-bg hover:bg-border/30 text-foreground transition-colors"
+                    >
+                      <ChevronLeft className="w-5 h-5" />
+                    </button>
+                    <div
+                      ref={suggestedQuestionsScrollRef}
+                      className="flex overflow-x-auto gap-2 flex-1 min-w-0 flex-nowrap overflow-y-hidden scrollbar-thin scroll-smooth"
+                    >
+                      {questions.map((q, i) => (
+                        <button
+                          key={i}
+                          type="button"
+                          onClick={() => handleSubmit(String(q).trim())}
+                          className="text-left px-3 py-2 rounded-xl border border-border bg-muted-bg hover:bg-border/30 text-foreground text-xs transition-colors flex-shrink-0 min-w-0 max-w-[85vw] md:max-w-[320px] whitespace-normal"
+                        >
+                          {q}
+                        </button>
+                      ))}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={scrollRight}
+                      aria-label="Scroll suggested questions right"
+                      className="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full border border-border bg-muted-bg hover:bg-border/30 text-foreground transition-colors"
+                    >
+                      <ChevronRight className="w-5 h-5" />
+                    </button>
+                  </div>
+                );
+              })()}
+            {/* Textarea Section - flex-1 */}
+            <div className="flex-1 min-h-0 flex flex-col border-border pt-2">
               <form
-                className="w-full"
+                className="relative w-full flex-1 flex flex-col min-h-0"
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSubmit();
                 }}
               >
-                <div
-                  className="relative flex w-full items-end gap-0.5 rounded-full border border-border/50 bg-background py-1.5 pl-1.5 pr-2 shadow-md shadow-black/[0.06] ring-1 ring-black/[0.04] transition-[box-shadow,ring-color] focus-within:border-border focus-within:shadow-lg focus-within:ring-2 focus-within:ring-ring/40 dark:border-border/55 dark:bg-card dark:shadow-black/25 dark:ring-white/[0.06]"
-                >
-                  <label className="flex shrink-0 cursor-pointer items-center justify-center rounded-full p-2.5 text-muted transition-colors hover:bg-muted-bg/80 hover:text-foreground">
-                    <input
-                      type="file"
-                      accept=".pdf,.docx"
-                      onChange={(e) => setSelectedFile(e.target.files[0])}
-                      className="hidden"
-                    />
-                    <span
-                      className="transition-transform hover:scale-105"
-                      title={
-                        resumeData?.filename
-                          ? "Reselect"
-                          : brandContext?.isBrandAdmin
-                            ? "Share JD"
-                            : "Upload Resume"
-                      }
-                    >
-                      <Paperclip className="h-5 w-5" />
-                    </span>
-                  </label>
+                <textarea
+                  className="px-12 py-3 w-full flex-1 border border-border rounded-xl focus:outline-none focus:ring-0 focus:border-ring transition bg-input text-foreground leading-6 resize-none placeholder-transparent min-h-0"
+                  value={input}
+                  onChange={(e) => setInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      handleSubmit();
+                    }
+                  }}
+                  placeholder={`Message ${brandContext?.brandName}…`}
+                  disabled={messageLoading}
+                />
 
-                  <textarea
-                    rows={1}
-                    className="max-h-32 min-h-[2.75rem] min-w-0 flex-1 resize-none border-0 bg-transparent py-2.5 text-sm leading-6 text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-0 disabled:opacity-60"
-                    value={input}
-                    onChange={(e) => setInput(e.target.value)}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" && !e.shiftKey) {
-                        e.preventDefault();
-                        handleSubmit();
-                      }
-                    }}
-                    placeholder={`Message ${brandContext?.brandName}…`}
-                    disabled={messageLoading || isRecording || isTranscribing}
+                {(!input || input.trim().length === 0) && (
+                  <div className="pointer-events-none absolute inset-y-0 left-12 right-20 flex items-center text-muted text-sm">
+                    Message {brandContext?.brandName}…
+                  </div>
+                )}
+
+                <label className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted hover:text-foreground transition-colors">
+                  <input
+                    type="file"
+                    accept=".pdf,.docx"
+                    onChange={(e) => setSelectedFile(e.target.files[0])}
+                    className="hidden"
                   />
+                  <span
+                    className="hover:scale-110 transition-transform"
+                    title={
+                      resumeData?.filename
+                        ? "Reselect"
+                        : brandContext?.isBrandAdmin
+                          ? "Share JD"
+                          : "Upload Resume"
+                    }
+                  >
+                    <Paperclip className="w-5 h-5" />
+                  </span>
+                </label>
 
-                  <div className="relative mb-0.5 shrink-0">
+                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+                  <div className="relative">
                     {isTranscribing && (
-                      <div className="absolute bottom-full right-0 z-20 mb-2">
-                        <div className="relative rounded-md border border-border bg-card px-3 py-1.5 text-xs text-foreground shadow">
+                      <div className="absolute bottom-full mb-2 right-0 z-10">
+                        <div className="relative bg-card border border-border rounded-md shadow px-3 py-1.5 text-xs text-foreground">
                           Transcribing…
-                          <div className="absolute right-3 top-full h-3 w-3 rotate-45 border-b border-r border-border bg-card" />
+                          <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-border rotate-45"></div>
                         </div>
                       </div>
                     )}
                     {transcribeError && (
-                      <div className="absolute bottom-full right-0 z-20 mb-2 max-w-[min(80vw,20rem)]">
-                        <div className="relative rounded-md border border-red-300 bg-card px-3 py-1.5 text-xs text-red-600 shadow">
+                      <div className="absolute bottom-full mb-2 right-0 z-10">
+                        <div className="relative bg-card border border-red-300 rounded-md shadow px-3 py-1.5 text-xs text-red-600">
                           {transcribeError}
-                          <div className="absolute right-3 top-full h-3 w-3 rotate-45 border-b border-r border-red-300 bg-card" />
+                          <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-red-300 rotate-45"></div>
                         </div>
                       </div>
                     )}
                     {transcriptText && (
-                      <div className="absolute bottom-full right-0 z-20 mb-2 w-[min(80vw,28rem)]">
-                        <div className="relative rounded-lg border border-border bg-card p-3 shadow">
-                          <div className="mb-1 text-xs text-muted">
+                      <div className="absolute bottom-full mb-2 right-0 z-10 w-[min(80vw,28rem)]">
+                        <div className="relative bg-card border border-border rounded-lg p-3 shadow">
+                          <div className="text-xs text-muted mb-1">
                             Voice transcript
                           </div>
-                          <div className="max-h-40 overflow-auto whitespace-pre-wrap break-words text-sm text-foreground">
+                          <div className="text-foreground text-sm whitespace-pre-wrap break-words max-h-40 overflow-auto">
                             {transcriptText}
                           </div>
-                          <div className="mt-2 flex justify-end gap-2">
+                          <div className="mt-2 flex gap-2 justify-end">
                             <button
-                              type="button"
                               onClick={() => handleSubmit(transcriptText)}
-                              className={`rounded-md px-3 py-1.5 text-xs font-medium text-white hover:opacity-90 disabled:opacity-60 ${!primaryBrandHex ? "bg-highlight" : ""}`}
-                              style={
-                                primaryBrandHex
-                                  ? { backgroundColor: primaryBrandHex }
-                                  : undefined
-                              }
-                              disabled={messageLoading}
+                              className="px-3 py-1.5 rounded-md bg-orange-600 text-white hover:bg-orange-700 text-xs"
+                              type="button"
                             >
                               Send
                             </button>
                             <button
-                              type="button"
                               onClick={() => setTranscriptText("")}
-                              className="rounded-md border border-border px-3 py-1.5 text-xs text-foreground hover:bg-muted-bg"
+                              className="px-3 py-1.5 rounded-md border border-border text-foreground hover:bg-muted-bg text-xs"
+                              type="button"
                             >
                               Discard
                             </button>
                           </div>
-                          <div className="absolute right-3 top-full h-3 w-3 rotate-45 border-b border-r border-border bg-card" />
+                          <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-border rotate-45"></div>
                         </div>
                       </div>
                     )}
@@ -1180,44 +1167,29 @@ export default function ChatBox({
                       onClick={() =>
                         isRecording ? stopRecording() : startRecording()
                       }
-                      disabled={messageLoading || isTranscribing}
-                      className="flex h-9 w-9 items-center justify-center rounded-full text-muted transition-colors hover:bg-muted-bg/80 hover:text-foreground disabled:cursor-not-allowed disabled:opacity-50"
-                      title={
-                        isRecording
-                          ? `Stop recording (${seconds}s)`
-                          : "Start voice message"
-                      }
-                      aria-label={
-                        isRecording ? "Stop recording" : "Start recording"
-                      }
+                      className="p-2 rounded-lg hover:bg-muted-bg transition-colors"
+                      title={isRecording ? "Stop recording" : "Start recording"}
                     >
                       {isRecording ? (
-                        <Mic className="h-5 w-5 text-red-600" />
+                        <Mic className="w-5 h-5 text-red-600" />
                       ) : (
-                        <MicOff className="h-5 w-5" />
+                        <MicOff className="w-5 h-5 text-muted" />
                       )}
                     </button>
                   </div>
-
                   <button
                     type="submit"
                     disabled={!input.trim() || messageLoading}
-                    className="mb-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-foreground transition-all hover:opacity-75 active:scale-95 disabled:cursor-not-allowed disabled:opacity-35"
-                    style={
-                      input.trim() && !messageLoading && primaryBrandHex
-                        ? { color: primaryBrandHex }
-                        : undefined
-                    }
+                    className={`inline-flex items-center justify-center p-2 rounded-lg ${!input.trim() || messageLoading
+                      ? "bg-muted-bg text-muted cursor-not-allowed"
+                      : "bg-[#59646F] text-[#FFEED8] hover:bg-[#4a5568] active:scale-95"
+                      } transition-all`}
                     title="Send message"
-                    aria-label="Send message"
                   >
-                    <Send className="h-5 w-5" />
+                    <Send className="w-5 h-5" />
                   </button>
                 </div>
               </form>
-              {showPoweredByFooter && (
-                <PoweredByKavisha className="py-0 pt-2 pb-0 text-[10px] leading-none md:hidden" />
-              )}
             </div>
             {/* Keep Resume component for file display and processing, but hidden file input */}
             <Resume

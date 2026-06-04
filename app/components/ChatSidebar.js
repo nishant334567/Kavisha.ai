@@ -40,7 +40,7 @@ export default function ChatSidebar({
   const [showNewChatDropdown, setShowNewChatDropdown] = useState(false);
   const [showCommunityNewDropdown, setShowCommunityNewDropdown] = useState(false);
   const brandContext = useBrandContext();
-  const primaryBrandHex = normalizeBrandHex(brandContext?.primaryBrandColor);
+  const communityPrimaryHex = normalizeBrandHex(brandContext?.primaryBrandColor);
 
   const [deletingChatId, setDeletingChatId] = useState(null);
   const router = useRouter();
@@ -181,10 +181,10 @@ export default function ChatSidebar({
                     <>
                       <div className="relative">
                         <button
-                          className={`flex w-full justify-center gap-2 rounded-md p-2 text-xs font-medium text-white transition-colors hover:opacity-90 ${!primaryBrandHex ? "bg-highlight" : ""}`}
+                          className={`flex w-full justify-center gap-2 rounded-md p-2 text-xs font-medium text-white transition-colors hover:opacity-90 ${!communityPrimaryHex ? "bg-highlight" : ""}`}
                           style={
-                            primaryBrandHex
-                              ? { backgroundColor: primaryBrandHex }
+                            communityPrimaryHex
+                              ? { backgroundColor: communityPrimaryHex }
                               : undefined
                           }
                           onClick={() => setShowCommunityNewDropdown((v) => !v)}
@@ -259,12 +259,7 @@ export default function ChatSidebar({
                     <>
                       <div className="relative">
                         <button
-                          className={`flex w-full justify-center gap-2 rounded-md p-2 text-xs font-medium text-white transition-colors hover:opacity-90 ${!primaryBrandHex ? "bg-highlight" : ""}`}
-                          style={
-                            primaryBrandHex
-                              ? { backgroundColor: primaryBrandHex }
-                              : undefined
-                          }
+                          className="flex w-full justify-center gap-2 rounded-md bg-highlight p-2 text-xs font-medium text-white transition-colors hover:opacity-90"
                           onClick={() =>
                             chatServices.length > 0 && onSelectService
                               ? setShowNewChatDropdown((v) => !v)
@@ -323,11 +318,11 @@ export default function ChatSidebar({
                           <div className="h-6 w-6 rounded-full border-2 border-border" />
                           <div
                             className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${
-                              !primaryBrandHex ? "border-t-highlight" : ""
+                              !communityPrimaryHex ? "border-t-highlight" : ""
                             }`}
                             style={
-                              primaryBrandHex
-                                ? { borderTopColor: primaryBrandHex }
+                              communityPrimaryHex
+                                ? { borderTopColor: communityPrimaryHex }
                                 : undefined
                             }
                           />

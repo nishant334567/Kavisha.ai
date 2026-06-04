@@ -57,50 +57,6 @@ body {
   scrollbar-width: none; /* Firefox */
 }
 
-/* Floating session pill (chat header) — theme-aware frosted glass */
-.chat-session-pill {
-  border: 1px solid color-mix(in srgb, var(--foreground) 8%, transparent);
-  background: color-mix(in srgb, var(--background) 88%, transparent);
-  box-shadow:
-    0 1px 3px rgba(15, 23, 42, 0.07),
-    0 4px 14px rgba(15, 23, 42, 0.05);
-  -webkit-backdrop-filter: blur(12px);
-  backdrop-filter: blur(12px);
-}
-
-@media (prefers-color-scheme: dark) {
-  .chat-session-pill {
-    border-color: rgba(255, 255, 255, 0.14);
-    background: color-mix(in srgb, var(--card) 90%, transparent);
-    box-shadow: 0 2px 16px rgba(0, 0, 0, 0.45);
-  }
-}
-
-/* Chat thread: full height; reserve nav with padding so footer sits flush above tab bar */
-@media (max-width: 767px) {
-  :root {
-    /* Match MobileBottomNav: pt-2 + icon/label row + max(0.5rem, safe-area) */
-    --mobile-bottom-nav-height: calc(
-      3.25rem + max(0.5rem, env(safe-area-inset-bottom, 0px))
-    );
-  }
-
-  .chat-thread-mobile-dock {
-    position: fixed;
-    left: 0;
-    right: 0;
-    top: 3.75rem; /* in-flow mobile navbar (~py-2.5 + h-10 logo) */
-    bottom: 0;
-    /* Slightly less than nav height so "Powered by" sits almost on the tab bar */
-    padding-bottom: calc(var(--mobile-bottom-nav-height) - 6px);
-    z-index: 0;
-    display: flex;
-    flex-direction: column;
-    overflow: hidden;
-    box-sizing: border-box;
-  }
-}
-
 /* Custom scrollbar styles */
 .scrollbar-thin::-webkit-scrollbar {
   width: 6px;

@@ -187,7 +187,7 @@ export default function HomePage() {
     }
 
     return (
-        <div className="chat-thread-mobile-dock md:relative md:flex md:h-[calc(100vh-64px)] md:min-h-[calc(100vh-64px)] md:max-h-none md:flex-col md:overflow-hidden">
+        <div className="min-h-[calc(100vh-64px)] h-[calc(100vh-64px)] flex flex-col overflow-hidden">
             <div className="flex flex-1 min-h-0 overflow-hidden">
                 <div>
                     <ChatSidebar
@@ -238,7 +238,7 @@ export default function HomePage() {
                     {/* Chat UI only at /chats/[id]; this page always shows cards only */}
                 </div>
             </div>
-            <PoweredByKavisha className="shrink-0 py-0 pb-0.5 pt-0 text-[10px] leading-tight md:py-1 md:text-xs" />
+            <PoweredByKavisha />
         </div>
     );
 }

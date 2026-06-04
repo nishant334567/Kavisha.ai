@@ -8,11 +8,10 @@ import {
   Users,
   Home,
   MessagesSquare,
-  MessageCircleMore,
+  Link2,
   Sparkles,
 } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
-import { useMessagesInbox } from "@/app/components/GlobalMessages";
 
 const ACTIVE = "text-[#00888E]";
 const INACTIVE = "text-muted";
@@ -32,6 +31,13 @@ function useBottomNavItems(brand) {
       (brand?.subdomain
         ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
         : "");
+    const linksHref =
+      "/links" +
+      (brand?.subdomain
+        ? `?brand=${encodeURIComponent(brand.subdomain)}`
+        : "");
+    const showLinks = brand?.enableLinks !== false;
+
     const list = [
       {
         key: "featured",
@@ -79,12 +85,23 @@ function useBottomNavItems(brand) {
       }
     );
 
+    if (showLinks) {
+      list.push({
+        key: "links",
+        href: linksHref,
+        label: "Links",
+        icon: Link2,
+        match: (p) => p.startsWith("/links"),
+      });
+    }
+
     return list;
   }, [
     brand?.subdomain,
     brand?.enableFriendConnect,
     brand?.enableProfessionalConnect,
     brand?.communityName,
+    brand?.enableLinks,
   ]);
 }
 
@@ -92,8 +109,6 @@ export default function MobileBottomNav({ embedded = false }) {
   const pathname = usePathname() || "";
   const brand = useBrandContext();
   const visibleItems = useBottomNavItems(brand);
-  const messagesInbox = useMessagesInbox();
-  const showMessagesNav = Boolean(messagesInbox?.enabled);
 
   return (
     <nav
@@ -127,23 +142,6 @@ export default function MobileBottomNav({ embedded = false }) {
             </Link>
           );
         })}
-        {showMessagesNav && (
-          <button
-            type="button"
-            onClick={messagesInbox.openInbox}
-            className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-1 px-0.5 text-[11px] font-medium leading-tight ${
-              messagesInbox.showInbox ? ACTIVE : INACTIVE
-            }`}
-            aria-label="Open messages inbox"
-            aria-pressed={messagesInbox.showInbox}
-          >
-            <MessageCircleMore
-              className={`h-5 w-5 shrink-0 ${messagesInbox.showInbox ? "stroke-[2.5px]" : "stroke-2"}`}
-              aria-hidden
-            />
-            <span className="max-w-full truncate text-center">Messages</span>
-          </button>
-        )}
       </div>
     </nav>
   );
