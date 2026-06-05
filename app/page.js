@@ -9,9 +9,7 @@ import AvatarHomepage from "./components/AvatarHomepage";
 import { isAdminBrandWelcomePath } from "./utils/subdomain";
 
 function allowRedirectWithoutAdmin(path) {
-  return (
-    path.startsWith("/shopify/claim") || isAdminBrandWelcomePath(path)
-  );
+  return isAdminBrandWelcomePath(path);
 }
 
 export default function HomePage() {

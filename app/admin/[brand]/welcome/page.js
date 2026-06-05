@@ -12,6 +12,7 @@ import {
   Globe,
   LayoutDashboard,
   Loader2,
+  Package,
   Sparkles,
 } from "lucide-react";
 
@@ -32,15 +33,20 @@ function mappedDomainName(subdomain, domainFromQuery) {
     : `${subdomain}.kavisha.ai`;
 }
 
-function brandHomeUrl(subdomain) {
+function brandHomeUrl(subdomain, domainReady) {
   if (typeof window === "undefined") return "/";
   const { hostname, origin } = window.location;
   if (hostname === "localhost" || hostname === "127.0.0.1") {
     return `${origin}/?subdomain=${encodeURIComponent(subdomain)}`;
   }
   const onStaging = hostname.includes(".staging.");
-  if (onStaging) return `https://${subdomain}.staging.kavisha.ai`;
-  return `https://${subdomain}.kavisha.ai`;
+  if (domainReady) {
+    return onStaging
+      ? `https://${subdomain}.staging.kavisha.ai`
+      : `https://${subdomain}.kavisha.ai`;
+  }
+  const apex = onStaging ? "https://kavisha.staging.kavisha.ai" : "https://kavisha.ai";
+  return `${apex}/?subdomain=${encodeURIComponent(subdomain)}`;
 }
 
 function embedSnippet(subdomain) {
@@ -49,11 +55,146 @@ function embedSnippet(subdomain) {
   return `<script src="${origin}/embed.js" data-brand="${subdomain}"></script>`;
 }
 
-function welcomeReturnUrl(subdomain, shop, shopifyConnected) {
+function welcomeReturnUrl(subdomain, shop) {
   const q = new URLSearchParams({ subdomain });
   if (shop) q.set("shop", shop);
-  if (shopifyConnected) q.set("shopify", "connected");
   return `/admin/${encodeURIComponent(subdomain)}/welcome?${q}`;
+}
+
+function personalDomainUrl(domain) {
+  return domain ? `https://${domain}` : "";
+}
+
+const DOMAIN_READY_ETA = "15–30 minutes";
+
+function DomainMappingBanner({
+  mappedDomain,
+  domainStatus,
+  domainUrlCopied,
+  onCopyDomainUrl,
+  onEditProfile,
+  showProfileNudge,
+}) {
+  if (!mappedDomain) return null;
+
+  const url = personalDomainUrl(mappedDomain);
+  const ready = domainStatus === "ready";
+  const failed = domainStatus === "failed";
+  const pending = !ready && !failed;
+
+  return (
+    <section
+      className={`mb-8 rounded-2xl border px-5 py-5 md:px-6 ${ready
+          ? "border-emerald-500/25 bg-emerald-500/5"
+          : failed
+            ? "border-red-500/25 bg-red-500/5"
+            : "border-border bg-card"
+        }`}
+    >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start gap-3">
+            <span
+              className={`mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full ${ready
+                  ? "bg-emerald-500/15 text-emerald-600"
+                  : failed
+                    ? "bg-red-500/10 text-red-600"
+                    : "bg-highlight/10 text-highlight"
+                }`}
+            >
+              {ready ? (
+                <Check className="h-4 w-4" />
+              ) : pending ? (
+                <Loader2 className="h-4 w-4 animate-spin" />
+              ) : (
+                <Globe className="h-4 w-4" />
+              )}
+            </span>
+            <div className="min-w-0">
+              <h2 className="text-sm font-medium text-foreground">
+                {ready
+                  ? "Your personal domain is live"
+                  : failed
+                    ? "We couldn’t finish your domain setup"
+                    : "Your personal domain is being mapped"}
+              </h2>
+              <p className="mt-1.5 text-sm leading-relaxed text-muted">
+                {ready ? (
+                  <>
+                    Visitors can reach you at{" "}
+                    <span className="font-medium text-foreground">{mappedDomain}</span>.
+                  </>
+                ) : failed ? (
+                  <>
+                    <span className="font-medium text-foreground">{mappedDomain}</span>{" "}
+                    didn’t connect. Email support if this persists.
+                  </>
+                ) : (
+                  <>
+                    <span className="font-medium text-foreground">{mappedDomain}</span>{" "}
+                    is being pointed to your avatar. It’s usually ready within{" "}
+                    <span className="text-foreground">{DOMAIN_READY_ETA}</span> — you can
+                    finish the steps below while you wait.
+                  </>
+                )}
+              </p>
+              {showProfileNudge && pending ? (
+                <p className="mt-3 text-sm text-muted">
+                  <span className="text-foreground">Tip:</span> complete your profile now
+                  so your homepage looks polished when the domain goes live.
+                </p>
+              ) : null}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex shrink-0 flex-wrap items-center gap-2 sm:flex-col sm:items-stretch">
+          <button
+            type="button"
+            onClick={onCopyDomainUrl}
+            className="inline-flex items-center justify-center gap-1.5 rounded-full border border-border bg-background px-4 py-2 text-sm font-medium text-foreground transition-colors hover:bg-muted-bg"
+          >
+            {domainUrlCopied ? (
+              <>
+                <Check className="h-4 w-4 text-emerald-600" />
+                Copied
+              </>
+            ) : (
+              <>
+                <Copy className="h-4 w-4" />
+                Copy URL
+              </>
+            )}
+          </button>
+          {ready ? (
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-1.5 rounded-full bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              Open site
+              <ArrowRight className="h-4 w-4" />
+            </a>
+          ) : showProfileNudge ? (
+            <button
+              type="button"
+              onClick={onEditProfile}
+              className="inline-flex items-center justify-center gap-1.5 rounded-full bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+            >
+              Complete profile
+              <ArrowRight className="h-4 w-4" />
+            </button>
+          ) : null}
+        </div>
+      </div>
+      {pending ? (
+        <p className="mt-4 truncate rounded-lg bg-muted-bg/60 px-3 py-2 text-center font-mono text-xs text-muted sm:text-left">
+          {url}
+        </p>
+      ) : null}
+    </section>
+  );
 }
 
 function StepCard({ step, title, description, action, secondaryAction, children }) {
@@ -76,26 +217,54 @@ export default function AvatarWelcomePage() {
   const searchParams = useSearchParams();
   const brand = useBrandContext();
   const { user, loading: authLoading } = useFirebaseSession();
-  const [copied, setCopied] = useState(false);
+  const [embedCopied, setEmbedCopied] = useState(false);
+  const [domainUrlCopied, setDomainUrlCopied] = useState(false);
   const [domainStatus, setDomainStatus] = useState("pending");
   const [claiming, setClaiming] = useState(false);
   const [claimError, setClaimError] = useState("");
+  const [shopifyApiConnected, setShopifyApiConnected] = useState(false);
   const claimStarted = useRef(false);
 
   const subdomain = brand?.subdomain || searchParams.get("subdomain") || "";
   const displayName = brand?.brandName || subdomain || "Your avatar";
-  const shop = searchParams.get("shop") || "";
-  const shopifyConnected = searchParams.get("shopify") === "connected";
+  const shop = searchParams.get("shop") || brand?.shopifyShopUrl || "";
   const isAdmin = Boolean(brand?.isBrandAdmin);
 
   const mappedDomain = useMemo(
     () => mappedDomainName(subdomain, searchParams.get("domain")),
     [subdomain, searchParams]
   );
+  const domainLive = domainStatus === "ready";
   const homeUrl = useMemo(
-    () => (subdomain ? brandHomeUrl(subdomain) : "/"),
-    [subdomain]
+    () => (subdomain ? brandHomeUrl(subdomain, domainLive) : "/"),
+    [subdomain, domainLive]
   );
+  const hasShopify = Boolean(String(brand?.shopifyShopUrl || "").trim());
+  const showShopifyProducts = hasShopify && shopifyApiConnected;
+
+  useEffect(() => {
+    if (!isAdmin || !subdomain || !hasShopify) {
+      setShopifyApiConnected(false);
+      return;
+    }
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await fetch(
+          `/api/admin/shopify-shop?brand=${encodeURIComponent(subdomain)}`,
+          { credentials: "same-origin" }
+        );
+        const data = res.ok ? await res.json() : {};
+        if (!cancelled) setShopifyApiConnected(Boolean(data.connected));
+      } catch {
+        if (!cancelled) setShopifyApiConnected(false);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, [isAdmin, subdomain, hasShopify]);
+
   const embedCode = useMemo(
     () => (subdomain ? embedSnippet(subdomain) : ""),
     [subdomain]
@@ -113,19 +282,17 @@ export default function AvatarWelcomePage() {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) throw new Error(data?.error || "Could not claim avatar.");
-      window.location.assign(
-        welcomeReturnUrl(subdomain, shop, shopifyConnected)
-      );
+      window.location.assign(welcomeReturnUrl(subdomain, shop));
     } catch (e) {
       setClaimError(e?.message || "Could not claim avatar.");
       setClaiming(false);
     }
-  }, [subdomain, shop, shopifyConnected, claiming]);
+  }, [subdomain, shop, claiming]);
 
   const handleClaimClick = () => {
     if (!subdomain) return;
     if (!user) {
-      const returnTo = `${welcomeReturnUrl(subdomain, shop, shopifyConnected)}&claim=1`;
+      const returnTo = `${welcomeReturnUrl(subdomain, shop)}&claim=1`;
       localStorage.setItem("redirectAfterLogin", returnTo);
       router.push("/login");
       return;
@@ -171,12 +338,28 @@ export default function AvatarWelcomePage() {
     };
   }, [isAdmin, mappedDomain, subdomain]);
 
+  const goEditProfile = useCallback(() => {
+    if (subdomain) router.push(adminHref(subdomain, "edit-profile"));
+  }, [subdomain, router]);
+
+  const copyDomainUrl = async () => {
+    const url = personalDomainUrl(mappedDomain);
+    if (!url) return;
+    try {
+      await navigator.clipboard.writeText(url);
+      setDomainUrlCopied(true);
+      setTimeout(() => setDomainUrlCopied(false), 2000);
+    } catch {
+      /* ignore */
+    }
+  };
+
   const copyEmbed = async () => {
     if (!embedCode) return;
     try {
       await navigator.clipboard.writeText(embedCode);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
+      setEmbedCopied(true);
+      setTimeout(() => setEmbedCopied(false), 2000);
     } catch {
       /* ignore */
     }
@@ -195,6 +378,18 @@ export default function AvatarWelcomePage() {
         <p className="mt-3 text-sm text-muted">
           Sign in with Google to claim this store&apos;s avatar and finish setup.
         </p>
+        {mappedDomain ? (
+          <div className="mt-8 text-left">
+            <DomainMappingBanner
+              mappedDomain={mappedDomain}
+              domainStatus="pending"
+              domainUrlCopied={domainUrlCopied}
+              onCopyDomainUrl={copyDomainUrl}
+              onEditProfile={goEditProfile}
+              showProfileNudge={false}
+            />
+          </div>
+        ) : null}
         {claimError && (
           <p className="mt-3 text-sm text-red-600">{claimError}</p>
         )}
@@ -208,7 +403,7 @@ export default function AvatarWelcomePage() {
             {claiming ? "Claiming…" : "Claim & continue"}
           </button>
           <a
-            href={subdomain ? brandHomeUrl(subdomain) : "/"}
+            href={subdomain ? brandHomeUrl(subdomain, false) : "/"}
             target="_blank"
             rel="noopener noreferrer"
             className="text-sm text-highlight hover:underline"
@@ -226,45 +421,31 @@ export default function AvatarWelcomePage() {
         <h1 className="text-2xl font-semibold text-foreground md:text-3xl">
           {displayName} is ready
         </h1>
-        <p className="mx-auto mt-2 max-w-md text-sm text-muted">
-          Finish setup below — profile, homepage, widget, and training.
+        <p className="mx-auto mt-2 max-w-lg text-sm text-muted">
+          {domainStatus === "ready"
+            ? "Your domain is live — finish profile, widget, and training below."
+            : "Set up your profile and tools below while your personal domain finishes mapping."}
         </p>
       </div>
 
-      {mappedDomain && (
-        <p className="mb-8 flex items-center justify-center gap-2 text-center text-sm text-muted">
-          {domainStatus === "ready" ? (
-            <>
-              <Check className="h-4 w-4 shrink-0 text-emerald-600" />
-              <a
-                href={`https://${mappedDomain}`}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="text-foreground hover:underline"
-              >
-                {mappedDomain}
-              </a>
-              <span>is live</span>
-            </>
-          ) : domainStatus === "failed" ? (
-            <span>Couldn&apos;t connect {mappedDomain}. Contact support.</span>
-          ) : (
-            <>
-              <Loader2 className="h-4 w-4 shrink-0 animate-spin" />
-              <span>
-                Connecting <span className="text-foreground">{mappedDomain}</span>
-                …
-              </span>
-            </>
-          )}
-        </p>
-      )}
+      <DomainMappingBanner
+        mappedDomain={mappedDomain}
+        domainStatus={domainStatus}
+        domainUrlCopied={domainUrlCopied}
+        onCopyDomainUrl={copyDomainUrl}
+        onEditProfile={goEditProfile}
+        showProfileNudge
+      />
 
       <ul className="grid grid-cols-1 gap-4 md:grid-cols-2">
         <StepCard
           step="1"
           title="Complete your profile"
-          description="Cover photo, title, and welcome message."
+          description={
+            domainStatus === "ready"
+              ? "Cover photo, title, and welcome message."
+              : "Add your photo and welcome message while your domain connects."
+          }
           action={
             <button
               type="button"
@@ -277,8 +458,43 @@ export default function AvatarWelcomePage() {
           }
         />
 
+        {hasShopify ? (
+          <StepCard
+            step="2"
+            title="Shopify products"
+            description={
+              showShopifyProducts
+                ? "Browse your catalog and train products so chat can recommend them."
+                : "Your store is linked. Open Kavisha AI from Shopify Admin to enable product sync."
+            }
+            action={
+              showShopifyProducts ? (
+                <button
+                  type="button"
+                  onClick={() =>
+                    router.push(adminHref(subdomain, "shopify-products"))
+                  }
+                  className="inline-flex items-center gap-1.5 rounded-full bg-highlight px-4 py-2 text-sm font-medium text-white hover:opacity-90"
+                >
+                  View &amp; train products
+                  <Package className="h-4 w-4" />
+                </button>
+              ) : null
+            }
+            secondaryAction={
+              <button
+                type="button"
+                onClick={() => router.push(adminHref(subdomain, "my-services"))}
+                className="text-sm text-highlight hover:underline"
+              >
+                My services
+              </button>
+            }
+          />
+        ) : null}
+
         <StepCard
-          step="2"
+          step={hasShopify ? "3" : "2"}
           title="Visit your homepage"
           description="See your avatar site as visitors will."
           action={
@@ -295,7 +511,7 @@ export default function AvatarWelcomePage() {
         />
 
         <StepCard
-          step="3"
+          step={hasShopify ? "4" : "3"}
           title="Embed the widget"
           description="Paste on your site for a floating chat."
           action={
@@ -304,7 +520,7 @@ export default function AvatarWelcomePage() {
               onClick={copyEmbed}
               className="inline-flex items-center gap-1.5 rounded-full border border-border px-4 py-2 text-sm font-medium hover:bg-muted-bg"
             >
-              {copied ? (
+              {embedCopied ? (
                 <>
                   <Check className="h-4 w-4" />
                   Copied
@@ -336,7 +552,7 @@ export default function AvatarWelcomePage() {
         </StepCard>
 
         <StepCard
-          step="4"
+          step={hasShopify ? "5" : "4"}
           title="Train & personalize"
           description="Upload knowledge and tune personality."
           action={

@@ -18,9 +18,13 @@ export async function GET(req) {
         return NextResponse.json({ error: "Forbidden" }, { status: 403 });
       }
       const doc = await getBrandBySubdomain(brand);
-      const session = await loadShopifySessionByBrand(brand);
-      const shop =
-        doc?.shopifyShopUrl || session?.shop || "";
+      let session = null;
+      try {
+        session = await loadShopifySessionByBrand(brand);
+      } catch (err) {
+        console.error("[shopify-shop] session load", err?.message || err);
+      }
+      const shop = doc?.shopifyShopUrl || session?.shop || "";
       return NextResponse.json({
         shopifyShopUrl: shop,
         connected: Boolean(session?.accessToken),

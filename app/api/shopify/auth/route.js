@@ -3,7 +3,6 @@ import {
   beginShopifyOAuth,
   readBrandFromCookie,
   getShopifyWelcomeRedirectUrl,
-  getShopifySuccessRedirectUrl,
   getShopifyOnboardingWelcomeUrl,
 } from "@/app/lib/shopify";
 import { normalizeShopifyShopDomain } from "@/app/lib/shopifyShopUrl";
@@ -28,12 +27,17 @@ export async function GET(req) {
       String(searchParams.get("brand") || "").trim().toLowerCase() ||
       readBrandFromCookie(req);
 
-    const session = await loadShopifySessionByShop(shop);
+    let session = null;
+    try {
+      session = await loadShopifySessionByShop(shop);
+    } catch (err) {
+      console.error("[shopify auth] session load", err?.message || err);
+    }
     if (session?.accessToken) {
       if (brand) {
         await linkShopifyToBrand(shop, brand);
         return NextResponse.redirect(
-          getShopifySuccessRedirectUrl(brand, req, shop),
+          getShopifyOnboardingWelcomeUrl(brand, req, shop),
           302
         );
       }

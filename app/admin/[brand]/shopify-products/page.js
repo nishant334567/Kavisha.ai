@@ -15,11 +15,50 @@ function productMeta(p) {
     .join(" · ");
 }
 
-function bulkTrainMessage({ synced, failed }) {
-  const parts = [];
-  if (synced > 0) parts.push(`Trained ${synced} product${synced === 1 ? "" : "s"}`);
-  if (failed > 0) parts.push(`${failed} failed`);
-  return parts.join(" · ") || "Nothing to sync";
+function productLabel(products, productId, title) {
+  if (title) return title;
+  const p = products.find((x) => String(x.id) === String(productId));
+  return p?.title || `Product ${productId}`;
+}
+
+function trainResultMessage(data, products, productId) {
+  if (data.async) {
+    const n = Number(data.queued || 0) + Number(data.skipped || 0);
+    return n
+      ? `Training ${n} product${n === 1 ? "" : "s"} in background…`
+      : "Nothing to train.";
+  }
+
+  const errors = Array.isArray(data.errors) ? data.errors : [];
+  const { synced = 0, failed = 0 } = data;
+
+  if (!failed) {
+    if (synced > 0) return `Trained ${synced} product${synced === 1 ? "" : "s"}.`;
+    return "Nothing to train.";
+  }
+
+  if (productId && errors.length === 1) return errors[0].message;
+
+  const head =
+    synced > 0
+      ? `Trained ${synced} · ${failed} failed`
+      : `${failed} product${failed === 1 ? "" : "s"} failed`;
+
+  const uniqueMessages = [...new Set(errors.map((e) => e.message))];
+  if (uniqueMessages.length === 1) {
+    return `${head}\n${uniqueMessages[0]}`;
+  }
+
+  const lines = errors.slice(0, 5).map((e) => {
+    const label = productLabel(products, e.productId, e.title);
+    return `${label} — ${e.message}`;
+  });
+  if (errors.length > 5) lines.push(`+${errors.length - 5} more`);
+  return [head, ...lines].join("\n");
+}
+
+function trainResultIsError(data) {
+  return !data.async && Number(data.failed) > 0;
 }
 
 async function apiGet(brand) {
@@ -116,10 +155,12 @@ export default function ShopifyProductsPage() {
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState("");
   const [message, setMessage] = useState("");
+  const [messageIsError, setMessageIsError] = useState(false);
+  const [polling, setPolling] = useState(false);
 
-  const load = useCallback(async () => {
-    if (!sub) return;
-    setLoading(true);
+  const load = useCallback(async ({ silent = false } = {}) => {
+    if (!sub) return null;
+    if (!silent) setLoading(true);
     setError("");
     try {
       const data = await apiGet(sub);
@@ -127,20 +168,39 @@ export default function ShopifyProductsPage() {
       setProducts(data.products ?? []);
       setTrainedCount(data.trainedCount ?? 0);
       setTotalCount(data.totalCount ?? 0);
+      return data;
     } catch (e) {
-      setError(e.message);
-      setProducts([]);
-      setShop("");
-      setTrainedCount(0);
-      setTotalCount(0);
+      if (!silent) {
+        setError(e.message);
+        setProducts([]);
+        setShop("");
+        setTrainedCount(0);
+        setTotalCount(0);
+      }
+      return null;
     } finally {
-      setLoading(false);
+      if (!silent) setLoading(false);
     }
   }, [sub]);
 
   useEffect(() => {
     load();
   }, [load]);
+
+  useEffect(() => {
+    if (!polling || !sub) return undefined;
+    const id = setInterval(async () => {
+      const data = await load({ silent: true });
+      if (!data) return;
+      const left = Math.max(0, (data.totalCount ?? 0) - (data.trainedCount ?? 0));
+      if (left === 0) {
+        setPolling(false);
+        setMessage("All products trained.");
+        setMessageIsError(false);
+      }
+    }, 4000);
+    return () => clearInterval(id);
+  }, [polling, sub, load]);
 
   const total = totalCount || products.length;
   const untrained = Math.max(0, total - trainedCount);
@@ -149,12 +209,24 @@ export default function ShopifyProductsPage() {
     if (!sub || busy) return;
     setBusy(productId ?? "all");
     setMessage("");
+    setMessageIsError(false);
+    setPolling(false);
     try {
       const data = await apiTrain(sub, productId);
-      if (!productId) setMessage(bulkTrainMessage(data));
-      await load();
+      const text = trainResultMessage(data, products, productId);
+      if (text) {
+        setMessage(text);
+        setMessageIsError(trainResultIsError(data));
+      }
+      if (data.async && !productId) {
+        setPolling(true);
+        await load({ silent: true });
+      } else {
+        await load();
+      }
     } catch (e) {
       setMessage(e.message);
+      setMessageIsError(true);
     } finally {
       setBusy(null);
     }
@@ -176,14 +248,18 @@ export default function ShopifyProductsPage() {
             <h1 className="text-3xl font-black text-highlight md:text-4xl">Shopify products</h1>
             {shop && <p className="mt-1 text-sm text-muted">{shop}</p>}
           </div>
-          {!loading && !error && untrained > 0 && (
+          {!loading && !error && (untrained > 0 || polling) && (
             <button
               type="button"
               onClick={() => train()}
-              disabled={Boolean(busy)}
+              disabled={Boolean(busy) || polling}
               className={BTN_PRIMARY}
             >
-              {busy === "all" ? "Training all…" : `Train all (${untrained})`}
+              {busy === "all"
+                ? "Queueing…"
+                : polling
+                  ? "Training in background…"
+                  : `Train all (${untrained})`}
             </button>
           )}
         </header>
@@ -195,9 +271,14 @@ export default function ShopifyProductsPage() {
         </div>
 
         {message && (
-          <p className="mb-4 rounded-lg border border-border bg-muted-bg px-3 py-2 text-sm">
+          <div
+            className={`mb-4 rounded-lg border px-3 py-2 text-sm whitespace-pre-wrap ${messageIsError
+                ? "border-red-500/30 bg-red-500/5 text-red-700 dark:text-red-400"
+                : "border-emerald-500/30 bg-emerald-500/5 text-foreground"
+              }`}
+          >
             {message}
-          </p>
+          </div>
         )}
 
         {loading ? (

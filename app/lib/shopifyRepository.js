@@ -92,28 +92,36 @@ function tokenNeedsRefresh(expiresAt) {
 async function migrateOrRefreshMerchant(doc) {
   if (!doc?.shopDomain || !doc?.accessToken) return doc;
 
-  const shopify = getShopify();
+  try {
+    const shopify = getShopify();
 
-  // Shopify is now rejecting legacy non-expiring offline tokens (shpat_...) for Admin API.
-  const looksLegacyNonExpiring = String(doc.accessToken).startsWith("shpat_");
-  const hasRefresh = Boolean(doc.refreshToken);
+    const looksLegacyNonExpiring = String(doc.accessToken).startsWith("shpat_");
+    const hasRefresh = Boolean(doc.refreshToken);
 
-  if (looksLegacyNonExpiring && !hasRefresh) {
-    const { session } = await shopify.auth.migrateToExpiringToken({
-      shop: doc.shopDomain,
-      nonExpiringOfflineAccessToken: doc.accessToken,
-    });
-    await saveShopifySession(session, doc.brandSubdomain);
-    return await loadMerchantByShop(doc.shopDomain);
-  }
+    if (looksLegacyNonExpiring && !hasRefresh) {
+      const { session } = await shopify.auth.migrateToExpiringToken({
+        shop: doc.shopDomain,
+        nonExpiringOfflineAccessToken: doc.accessToken,
+      });
+      await saveShopifySession(session, doc.brandSubdomain);
+      return await loadMerchantByShop(doc.shopDomain);
+    }
 
-  if (hasRefresh && tokenNeedsRefresh(doc.accessTokenExpiresAt)) {
-    const { session } = await shopify.auth.refreshToken({
-      shop: doc.shopDomain,
-      refreshToken: doc.refreshToken,
-    });
-    await saveShopifySession(session, doc.brandSubdomain);
-    return await loadMerchantByShop(doc.shopDomain);
+    if (hasRefresh && tokenNeedsRefresh(doc.accessTokenExpiresAt)) {
+      const { session } = await shopify.auth.refreshToken({
+        shop: doc.shopDomain,
+        refreshToken: doc.refreshToken,
+      });
+      await saveShopifySession(session, doc.brandSubdomain);
+      return await loadMerchantByShop(doc.shopDomain);
+    }
+  } catch (err) {
+    console.error(
+      "[shopify] token migrate/refresh failed",
+      doc.shopDomain,
+      err?.message || err
+    );
+    return null;
   }
 
   return doc;
@@ -145,6 +153,7 @@ export async function loadShopifySessionByShop(shopDomain) {
   const doc = await loadMerchantByShop(shopDomain);
   if (!doc?.accessToken) return null;
   const updated = await migrateOrRefreshMerchant(doc);
+  if (!updated) return null;
   return sessionFromMerchant(updated);
 }
 
@@ -153,6 +162,7 @@ export async function loadShopifySessionByBrand(brandSubdomain) {
   const doc = await loadMerchantByBrand(brandSubdomain);
   if (!doc?.accessToken) return null;
   const updated = await migrateOrRefreshMerchant(doc);
+  if (!updated) return null;
   return sessionFromMerchant(updated);
 }
 

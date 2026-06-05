@@ -1,4 +1,4 @@
-import { NextResponse } from "next/server";
+import { NextResponse, after } from "next/server";
 import {
   getShopify,
   readBrandFromCookie,
@@ -20,6 +20,11 @@ import {
 } from "@/app/lib/brandRepository";
 import { DEFAULT_LOGIN_BUTTON_TEXT } from "@/app/lib/loginButtonText";
 import { fetchShopInfo } from "@/app/lib/shopify/adminGraphql";
+import { mapAvatarDomain } from "@/app/lib/mapAvatarDomain";
+import {
+  getKavishaCloudRunService,
+  getKavishaRootHost,
+} from "@/app/lib/kavishaSiteEnv";
 
 export async function GET(req) {
   try {
@@ -114,6 +119,19 @@ export async function GET(req) {
     }
 
     const effectiveBrand = brand || provisionedBrand;
+    if (effectiveBrand) {
+      const rootHost = getKavishaRootHost({ request: req });
+      const serviceName = getKavishaCloudRunService({ request: req });
+      after(() => {
+        mapAvatarDomain({
+          subdomain: effectiveBrand,
+          rootHost,
+          serviceName,
+        }).catch((err) =>
+          console.error("[shopify callback] domain mapping failed", err)
+        );
+      });
+    }
     const redirectUrl = effectiveBrand
       ? getShopifyOnboardingWelcomeUrl(effectiveBrand, req, shop)
       : getShopifyWelcomeRedirectUrl(req, shop);
