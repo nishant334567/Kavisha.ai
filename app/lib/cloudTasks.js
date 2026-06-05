@@ -1,5 +1,26 @@
 import { GoogleAuth } from "google-auth-library";
 
+export function hasCloudTasksConfig() {
+  const projectId = process.env.GOOGLE_CLOUD_PROJECT || process.env.GCP_PROJECT_ID;
+  const location = process.env.CLOUD_TASKS_LOCATION || process.env.GOOGLE_CLOUD_LOCATION;
+  const queue = process.env.CLOUD_TASKS_QUEUE;
+  return Boolean(projectId && location && queue);
+}
+
+export function getTasksBaseUrl(request) {
+  return (
+    process.env.PUBLIC_BASE_URL ||
+    process.env.BASE_URL ||
+    new URL(request.url).origin
+  );
+}
+
+export function tasksAuthHeaders() {
+  return process.env.TASKS_SECRET
+    ? { "x-tasks-secret": process.env.TASKS_SECRET }
+    : {};
+}
+
 export async function enqueueCloudTask({
   url,
   payload,
@@ -53,9 +74,15 @@ export async function enqueueCloudTask({
 
   if (!res.ok) {
     const text = await res.text().catch(() => "");
-    throw new Error(`Cloud Tasks enqueue failed: ${res.status} ${text}`);
+    const err = new Error(`Cloud Tasks enqueue failed: ${res.status} ${text}`);
+    err.status = res.status;
+    throw err;
   }
 
   return res.json();
+}
+
+export function isCloudTaskAlreadyQueued(err) {
+  return err?.status === 409 || String(err?.message || "").includes("ALREADY_EXISTS");
 }
 

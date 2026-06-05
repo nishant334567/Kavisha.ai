@@ -14,9 +14,71 @@ import {
   fetchProductCount,
 } from "@/app/lib/shopify/adminGraphql";
 import { gidToNumericId } from "@/app/lib/shopify/gids";
+import {
+  enqueueCloudTask,
+  isCloudTaskAlreadyQueued,
+  tasksAuthHeaders,
+} from "@/app/lib/cloudTasks";
 
 const DENSE_INDEX = "intelligent-kavisha";
 const SPARSE_INDEX = "kavisha-sparse";
+
+function isPineconeNotFound(err) {
+  const name = String(err?.name || "");
+  const msg = String(err?.message || err);
+  return name === "PineconeNotFoundError" || msg.includes("PineconeNotFoundError");
+}
+
+async function pineconeDeleteMany(indexName, namespace, filter) {
+  if (!pc) return;
+  try {
+    await pc.index(indexName).namespace(namespace).deleteMany(filter);
+  } catch (err) {
+    if (isPineconeNotFound(err)) return;
+    throw err;
+  }
+}
+
+function trainUserMessage(err) {
+  if (!err) return "Training failed";
+  const msg = String(typeof err === "string" ? err : err?.message || err);
+  const name = String(err?.name || "");
+  const code = err?.code;
+
+  if (code === 11000 || msg.includes("E11000")) {
+    return "Duplicate training record";
+  }
+  if (name === "PineconeNotFoundError" || msg.includes("PineconeNotFoundError")) {
+    return "Search index not ready — retry shortly";
+  }
+  if (msg.includes("Embedding generation failed")) {
+    return "Could not generate embeddings";
+  }
+  return msg.length > 120 ? `${msg.slice(0, 117)}…` : msg;
+}
+
+function logTrainFailure({ shop, brand, productId, err }) {
+  console.error(
+    JSON.stringify({
+      event: "shopify_train_failed",
+      brand,
+      shop,
+      productId,
+      message: trainUserMessage(err),
+      detail: String(err?.message || err).slice(0, 400),
+      name: err?.name,
+      code: err?.code,
+    })
+  );
+}
+
+function trainFailureEntry(productId, productTitle, err) {
+  return {
+    productId: String(productId),
+    title: productTitle || undefined,
+    message: trainUserMessage(err),
+  };
+}
 
 /** Stable TrainingData / Pinecone doc id per Shopify product. */
 export function shopifyProductDocid(productId) {
@@ -217,8 +279,8 @@ export async function syncShopifyProductCreateOrUpdate({ shopDomain, payload }) 
 
   await connectDB();
   await Promise.all([
-    pc.index(DENSE_INDEX).namespace(brand).deleteMany({ docid }),
-    pc.index(SPARSE_INDEX).namespace(brand).deleteMany({ docid }),
+    pineconeDeleteMany(DENSE_INDEX, brand, { docid }),
+    pineconeDeleteMany(SPARSE_INDEX, brand, { docid }),
   ]);
   await TrainingData.deleteOne({ docid, brand });
 
@@ -292,6 +354,22 @@ async function loadTrainedShopifyProductIds(brand) {
   return new Set(rows.map((r) => r.docid.replace(/^shopify-p-/, "")));
 }
 
+async function getUntrainedShopifyProducts(brandSubdomain) {
+  const brand = String(brandSubdomain || "").trim().toLowerCase();
+  const session = await loadShopifySessionByBrand(brand);
+  if (!session?.accessToken) return null;
+
+  const [raw, trainedIds] = await Promise.all([
+    fetchAllProducts(session),
+    loadTrainedShopifyProductIds(brand),
+  ]);
+  return {
+    brand,
+    shop: session.shop,
+    untrained: raw.filter((p) => !trainedIds.has(String(p.id))),
+  };
+}
+
 /** Live catalog for admin UI. */
 export async function listShopifyProductsForBrand(brandSubdomain) {
   const brand = String(brandSubdomain || "").trim().toLowerCase();
@@ -333,35 +411,35 @@ export async function listShopifyProductsForBrand(brandSubdomain) {
   };
 }
 
-/** Train one product, or all products not yet in TrainingData. */
+/** Train one product, or all products not yet in TrainingData (sync). */
 export async function syncShopifyProductsForBrand(brandSubdomain, productId) {
   const brand = String(brandSubdomain || "").trim().toLowerCase();
-  const session = await loadShopifySessionByBrand(brand);
-  if (!session?.accessToken) return null;
-
-  const shop = session.shop;
   const id = String(productId || "").replace(/\D/g, "");
 
   if (id) {
+    const session = await loadShopifySessionByBrand(brand);
+    if (!session?.accessToken) return null;
+    const shop = session.shop;
     try {
       await syncShopifyProductCreateOrUpdate({
         shopDomain: shop,
         payload: { id },
       });
-      return { synced: 1, failed: 0, attempted: 1 };
+      return { synced: 1, failed: 0, attempted: 1, errors: [] };
     } catch (err) {
-      console.error("[shopify product sync]", { shop, productId: id, err });
-      return { synced: 0, failed: 1, attempted: 1 };
+      const entry = trainFailureEntry(id, undefined, err);
+      logTrainFailure({ shop, brand, productId: id, err });
+      return { synced: 0, failed: 1, attempted: 1, errors: [entry] };
     }
   }
 
-  const [raw, trainedIds] = await Promise.all([
-    fetchAllProducts(session),
-    loadTrainedShopifyProductIds(brand),
-  ]);
-  const untrained = raw.filter((p) => !trainedIds.has(String(p.id)));
+  const ctx = await getUntrainedShopifyProducts(brand);
+  if (!ctx) return null;
+
+  const { shop, untrained } = ctx;
   let synced = 0;
   let failed = 0;
+  const errors = [];
 
   for (const p of untrained) {
     try {
@@ -372,11 +450,48 @@ export async function syncShopifyProductsForBrand(brandSubdomain, productId) {
       synced++;
     } catch (err) {
       failed++;
-      console.error("[shopify product sync]", { shop, productId: p.id, err });
+      const entry = trainFailureEntry(p.id, p.title, err);
+      errors.push(entry);
+      logTrainFailure({ shop, brand, productId: p.id, err });
     }
   }
 
-  return { synced, failed, attempted: untrained.length };
+  return { synced, failed, attempted: untrained.length, errors };
+}
+
+/** Enqueue Cloud Tasks — one task per untrained product. */
+export async function queueShopifyTrainAll(brandSubdomain, baseUrl) {
+  const ctx = await getUntrainedShopifyProducts(brandSubdomain);
+  if (!ctx) return null;
+
+  const { brand, untrained } = ctx;
+  if (!untrained.length) return { async: true, queued: 0, skipped: 0 };
+
+  const url = `${String(baseUrl).replace(/\/$/, "")}/api/tasks/train-shopify-product`;
+  const headers = tasksAuthHeaders();
+  let queued = 0;
+  let skipped = 0;
+
+  for (const p of untrained) {
+    const productId = String(p.id);
+    try {
+      await enqueueCloudTask({
+        url,
+        payload: { brand, productId },
+        taskNameSuffix: `shopify-train-${brand}-${productId}`,
+        headers,
+      });
+      queued++;
+    } catch (err) {
+      if (isCloudTaskAlreadyQueued(err)) {
+        skipped++;
+        continue;
+      }
+      throw err;
+    }
+  }
+
+  return { async: true, queued, skipped };
 }
 
 /**
@@ -395,8 +510,8 @@ export async function removeShopifyProductFromTraining({ shopDomain, productId }
 
   await connectDB();
   await Promise.all([
-    pc.index(DENSE_INDEX).namespace(brand).deleteMany({ docid }),
-    pc.index(SPARSE_INDEX).namespace(brand).deleteMany({ docid }),
+    pineconeDeleteMany(DENSE_INDEX, brand, { docid }),
+    pineconeDeleteMany(SPARSE_INDEX, brand, { docid }),
   ]);
   await TrainingData.deleteOne({ docid, brand });
 }

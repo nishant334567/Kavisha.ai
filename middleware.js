@@ -20,6 +20,7 @@ const PUBLIC_PATHS = [
   "/api/tasks/enrich-derived-profile",
   "/api/tasks/compute-matches",
   "/api/tasks/summarize-session",
+  "/api/tasks/train-shopify-product",
   "/tnc",
   "/privacy-policy",
   "/help",

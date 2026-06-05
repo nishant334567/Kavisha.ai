@@ -4,7 +4,9 @@ import { isBrandAdmin } from "@/app/lib/firebase/check-admin";
 import {
   listShopifyProductsForBrand,
   syncShopifyProductsForBrand,
+  queueShopifyTrainAll,
 } from "@/app/lib/shopifyProductIngest";
+import { hasCloudTasksConfig, getTasksBaseUrl } from "@/app/lib/cloudTasks";
 
 export const maxDuration = 300;
 
@@ -48,6 +50,13 @@ export async function POST(req) {
 
       const productId =
         body.productId != null ? String(body.productId).replace(/\D/g, "") : "";
+
+      if (!productId && hasCloudTasksConfig()) {
+        const baseUrl = getTasksBaseUrl(req);
+        const result = await queueShopifyTrainAll(brand, baseUrl);
+        return result ? NextResponse.json(result) : notConnected();
+      }
+
       const result = await syncShopifyProductsForBrand(brand, productId || undefined);
       return result ? NextResponse.json(result) : notConnected();
     },
