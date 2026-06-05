@@ -193,8 +193,13 @@ export default function WidgetIntroPage() {
                     </span>{" "}
                     for your website
                 </h2>
+                {/* Pricing disabled for Shopify App Review — app is free
                 <p className="mb-12 text-xl font-light opacity-90 md:text-2xl">
                     Subscriptions start at ₹999 (~$10) per month
+                </p>
+                */}
+                <p className="mb-12 text-xl font-light opacity-90 md:text-2xl">
+                    Free to get started
                 </p>
                 <a
                     href={CONTACT_SALES_MAILTO}

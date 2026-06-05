@@ -20,15 +20,15 @@ api_version = "2026-04"
 # Mandatory App Store compliance webhooks — all handled by app/api/shopify/webhooks/route.js
 [[webhooks.subscriptions]]
 compliance_topics = ["customers/data_request"]
-uri = "/api/shopify/webhooks"
+uri = "https://kavisha.ai/api/shopify/webhooks"
 
 [[webhooks.subscriptions]]
 compliance_topics = ["customers/redact"]
-uri = "/api/shopify/webhooks"
+uri = "https://kavisha.ai/api/shopify/webhooks"
 
 [[webhooks.subscriptions]]
 compliance_topics = ["shop/redact"]
-uri = "/api/shopify/webhooks"
+uri = "https://kavisha.ai/api/shopify/webhooks"
 
 [build]
 automatically_update_urls_on_dev = false

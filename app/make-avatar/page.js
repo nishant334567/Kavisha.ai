@@ -130,14 +130,14 @@ export default function MakeAvatarLandingPage() {
           <p className="text-center text-amber-600 text-sm mb-4">Tap again to enable pop-up! Cheers! :)</p>
         )}
 
-        {/* Cards */}
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Pricing disabled for Shopify App Review — app is free */}
+        <div className="max-w-lg mx-auto grid grid-cols-1 gap-6">
           {/* Free card - dark teal */}
           <div className="rounded-2xl bg-[#35515b] text-white p-6 md:p-8 flex flex-col">
-            <h2 className="text-2xl font-bold mb-1">Free</h2>
-            <p className="text-white/95 text-sm mb-4">A Digital Avataar that you build from scratch</p>
-            <p className="text-2xl md:text-3xl font-bold mb-1">₹0 /month</p>
-            <p className="text-sm text-white/90 mb-6">(up to 500 chats*)</p>
+            <h2 className="text-2xl font-bold mb-1">Get started</h2>
+            <p className="text-white/95 text-sm mb-6">A Digital Avataar that you build from scratch</p>
+            {/* <p className="text-2xl md:text-3xl font-bold mb-1">₹0 /month</p> */}
+            {/* <p className="text-sm text-white/90 mb-6">(up to 500 chats*)</p> */}
             <ul className="space-y-2 text-sm text-white/95 mb-6 flex-1">
               <li className="flex items-start gap-2">
                 <span className="w-1.5 h-1.5 rounded-full bg-white/80 mt-1.5 shrink-0" />
@@ -173,10 +173,10 @@ export default function MakeAvatarLandingPage() {
                 Sorry — one avatar per email. You’ve already created yours with this account.
               </p>
             )}
-            {!hasCreatedAvatar && <p className="text-xs text-white/80 mt-3 text-center">*Rs. 3/chat beyond 500 chats</p>}
+            {/* {!hasCreatedAvatar && <p className="text-xs text-white/80 mt-3 text-center">*Rs. 3/chat beyond 500 chats</p>} */}
           </div>
 
-          {/* White glove card - cream */}
+          {/* White glove card — pricing disabled for Shopify App Review
           <div className="flex flex-col rounded-2xl border border-border bg-card p-6 text-foreground md:p-8">
             <h2 className="text-2xl font-bold mb-1">White glove service</h2>
             <p className="text-sm mb-4">Your Digital Avataar that we help you build</p>
@@ -209,6 +209,7 @@ export default function MakeAvatarLandingPage() {
             </button>
             <p className="mt-3 text-center text-xs text-muted">*Rs. 3/chat beyond 10,000 chats</p>
           </div>
+          */}
         </div>
       </main>
     </div>
