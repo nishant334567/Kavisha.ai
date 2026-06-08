@@ -1,43 +1,65 @@
 "use client";
-import { useState, useEffect } from "react";
+
+import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { signIn } from "../lib/firebase/sign-in";
-import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import {
-  detectInAppBrowser,
-  isMobileDevice,
-  openInChrome,
-} from "../lib/in-app-browser";
-import InfoCard from "./InfoCard";
+  ArrowRight,
+  ArrowUpRight,
+  ChevronLeft,
+  ChevronRight,
+  MessageCircle,
+  Layers,
+  Zap,
+} from "lucide-react";
 import AvatarCard from "./AvatarCard";
-import { ArrowUpRight } from "lucide-react";
 import Footer from "./Footer";
 
-const cards = [
+const LAUNCH_CARDS = [
   {
-    title: "Unresponded DMs are lost goodwill",
-    body: "Influencers get so many messages, that it's impossible to address them all. But each unresponded message is some goodwill lost.",
-    variant: "teal",
-    variantMobile: "beige",
+    id: "avatar",
+    num: "01",
+    tag: "Avataar",
+    title: "A living profile at yourname.kavisha.ai",
+    highlight: "yourname.kavisha.ai",
+    description:
+      "Chat, community, links, and personality — hosted for free on your own subdomain.",
+    cta: "Start building",
+    href: "/make-avatar",
+    image: "/kavisha-avataar.png",
+    imageAlt: "Digital Avataar on a custom Kavisha domain",
+    dark: false,
   },
   {
-    title: "Every inbound is an opportunity",
-    body: "Whether it's a harmless pleasantry, or a curious business enquiry, it's all lost in the sea of DMs. That's wasted opportunity.",
-    variant: "beige",
-    variantMobile: "teal",
+    id: "widget",
+    num: "02",
+    tag: "Widget",
+    title: "Agentic AI, one line of code",
+    description:
+      "Embed on any site. Talk to visitors. Convert attention into action.",
+    cta: "See how it works",
+    href: "/widget-intro",
+    image: "/entrackr-widget.png",
+    imageAlt: "Kavisha AI widget on a website",
+    dark: true,
+  },
+];
+
+const PILLARS = [
+  {
+    icon: MessageCircle,
+    title: "Always on",
+    body: "Reply to every fan, visitor, and DM — without burning out.",
   },
   {
-    title: "Your Digital Avataar can unlock value",
-    body: "With Kavisha, it's now possible to engage with fans in a much deeper way. Every DM now leads to a force multiplier, a sale, or a happier fan.",
-    variant: "beige",
-    variantMobile: "beige",
+    icon: Layers,
+    title: "Truly you",
+    body: "Trained on your voice, knowledge, and style — not generic chatbot fluff.",
   },
   {
-    title: "Give your fans an unparalleled experience",
-    body: "Your fans now get the gift of your conversations, knowing you're behind them. This is something they'd really appreciate, and never forget.",
-    variant: "teal",
-    variantMobile: "teal",
+    icon: Zap,
+    title: "Built to convert",
+    body: "Turn casual interest into community, customers, and lasting goodwill.",
   },
 ];
 
@@ -48,51 +70,340 @@ async function fetchFeaturedAvatars() {
   return data.brands || [];
 }
 
+function Hero({ onNavigate }) {
+  return (
+    <section className="homepage-hero relative overflow-hidden">
+      <div className="homepage-glow homepage-glow-a" aria-hidden />
+      <div className="homepage-glow homepage-glow-b" aria-hidden />
+
+      <div className="relative mx-auto grid max-w-7xl items-center gap-10 px-5 pb-16 pt-12 sm:gap-12 sm:pb-24 sm:pt-16 md:px-8 md:pb-32 md:pt-20 lg:min-h-[calc(100dvh-3.5rem)] lg:grid-cols-[1.05fr_0.95fr] lg:gap-16 lg:pb-20">
+        <div className="homepage-fade-up mx-auto max-w-xl text-center sm:mx-0 sm:text-left lg:max-w-none" style={{ animationDelay: "0ms" }}>
+          <p className="mb-5 landing-label">
+            AI presence platform
+          </p>
+
+          <h1
+            className="homepage-fade-up text-[2.25rem] font-normal leading-[0.95] tracking-[-0.02em] text-foreground sm:text-5xl md:text-6xl lg:text-[4.25rem] xl:text-[4.75rem]"
+            style={{ animationDelay: "60ms" }}
+          >
+            Be everywhere
+            <br />
+            your audience
+            <br />
+            <span className="text-accent">already is.</span>
+          </h1>
+
+          <p
+            className="homepage-fade-up mx-auto mt-6 max-w-md font-figtree text-sm leading-relaxed text-muted sm:mx-0 sm:mt-7 sm:text-base md:text-lg"
+            style={{ animationDelay: "120ms" }}
+          >
+            Create a Digital Avataar on your own domain, or embed an AI agent on
+            your website. Kavisha makes you reachable at scale — without losing
+            what makes you, you.
+          </p>
+
+          <div
+            className="homepage-fade-up mt-8 flex flex-col gap-3 sm:mt-9 sm:flex-row sm:flex-wrap"
+            style={{ animationDelay: "180ms" }}
+          >
+            <button
+              type="button"
+              onClick={() => onNavigate("/make-avatar")}
+              className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-foreground px-6 py-3 font-figtree text-sm font-medium text-background transition-transform hover:scale-[1.02] active:scale-[0.98] sm:w-auto md:text-base"
+            >
+              Create Avataar
+              <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+            </button>
+            <button
+              type="button"
+              onClick={() => onNavigate("/widget-intro")}
+              className="inline-flex w-full items-center justify-center gap-2 rounded-xl border border-border bg-card/80 px-6 py-3 font-figtree text-sm font-medium text-foreground backdrop-blur-sm transition-colors hover:border-accent/40 hover:bg-card sm:w-auto md:text-base"
+            >
+              Website widget
+            </button>
+          </div>
+        </div>
+
+        <div
+          className="homepage-fade-up relative mx-auto w-full max-w-md lg:mx-0 lg:max-w-none"
+          style={{ animationDelay: "220ms" }}
+        >
+          <div className="homepage-float relative mx-auto aspect-[4/5] w-full max-w-[260px] sm:max-w-[320px] md:max-w-[380px] lg:ml-auto lg:max-w-[420px]">
+            <div className="absolute inset-[8%] rounded-[2rem] border border-border/50 bg-card/60 shadow-2xl shadow-black/[0.06] backdrop-blur-md dark:shadow-black/30" />
+            <Link
+              href="/make-avatar"
+              className="absolute left-0 top-[6%] z-20 w-[72%] overflow-hidden rounded-2xl border border-white/20 shadow-xl transition-transform duration-500 hover:-translate-y-1"
+            >
+              <img
+                src="/kavisha-avataar.png"
+                alt="Digital Avataar on a custom Kavisha domain"
+                className="block w-full object-cover"
+              />
+            </Link>
+            <Link
+              href="/widget-intro"
+              className="absolute bottom-[4%] right-0 z-30 w-[68%] overflow-hidden rounded-2xl border border-white/20 shadow-2xl transition-transform duration-500 hover:-translate-y-1"
+            >
+              <img
+                src="/entrackr-widget.png"
+                alt="Kavisha AI widget embedded on a website"
+                className="block w-full object-cover"
+              />
+            </Link>
+            <div className="absolute left-[18%] top-[42%] z-10 h-24 w-24 rounded-full bg-accent/20 blur-2xl" aria-hidden />
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function LaunchCarousel() {
+  const trackRef = useRef(null);
+  const [active, setActive] = useState(0);
+
+  const syncActive = useCallback(() => {
+    const track = trackRef.current;
+    if (!track || track.offsetWidth === 0) return;
+    const index = Math.round(track.scrollLeft / track.offsetWidth);
+    setActive(Math.min(Math.max(index, 0), LAUNCH_CARDS.length - 1));
+  }, []);
+
+  useEffect(() => {
+    const track = trackRef.current;
+    if (!track) return;
+    track.addEventListener("scroll", syncActive, { passive: true });
+    return () => track.removeEventListener("scroll", syncActive);
+  }, [syncActive]);
+
+  const goTo = (index) => {
+    const track = trackRef.current;
+    if (!track) return;
+    const next = Math.min(Math.max(index, 0), LAUNCH_CARDS.length - 1);
+    track.scrollTo({ left: next * track.offsetWidth, behavior: "smooth" });
+    setActive(next);
+  };
+
+  return (
+    <section className="w-full py-14 sm:py-20 md:py-28">
+      <div className="mb-8 px-5 text-center sm:mb-12 md:mb-16 md:px-8">
+        <p className="landing-label">
+          Two ways to launch
+        </p>
+        <h2 className="mt-3 text-2xl font-normal tracking-tight text-foreground sm:text-3xl md:text-5xl">
+          One platform. Your choice of surface.
+        </h2>
+      </div>
+
+      <div className="relative w-full">
+        <div
+          ref={trackRef}
+          className="flex w-full overflow-x-auto scroll-smooth scrollbar-none snap-x snap-mandatory [-webkit-overflow-scrolling:touch]"
+          role="region"
+          aria-label="Launch options carousel"
+        >
+          {LAUNCH_CARDS.map((card) => (
+            <article key={card.id} className="w-full min-w-full shrink-0 snap-start">
+              <Link
+                href={card.href}
+                className={`group mx-5 flex w-[calc(100%-2.5rem)] flex-col overflow-hidden rounded-2xl border transition-shadow hover:shadow-xl sm:mx-8 sm:rounded-[1.75rem] md:mx-8 md:w-[calc(100%-4rem)] md:min-h-[420px] md:flex-row lg:mx-12 lg:w-[calc(100%-6rem)] lg:min-h-[480px] ${
+                  card.dark
+                    ? "border-white/10 bg-[#0f1f1f] text-white dark:bg-[#0a1414]"
+                    : "border-border bg-card"
+                }`}
+              >
+                <div className="flex flex-1 flex-col justify-center p-6 sm:p-8 md:p-12 lg:p-16">
+                  <span
+                    className={`font-figtree text-xs font-medium uppercase tracking-widest ${
+                      card.dark ? "text-white/50" : "text-muted"
+                    }`}
+                  >
+                    {card.num} — {card.tag}
+                  </span>
+                  <h3
+                    className={`mt-3 max-w-lg text-xl leading-snug break-words sm:mt-4 sm:text-2xl md:text-4xl lg:text-[2.75rem] ${
+                      card.dark ? "text-white" : "text-foreground"
+                    }`}
+                  >
+                    {card.highlight ? (
+                      <>
+                        {card.title.split(card.highlight)[0]}
+                        <span className="text-accent">{card.highlight}</span>
+                      </>
+                    ) : (
+                      card.title
+                    )}
+                  </h3>
+                  <p
+                    className={`mt-4 max-w-md font-figtree text-sm leading-relaxed md:text-base ${
+                      card.dark ? "text-white/65" : "text-muted"
+                    }`}
+                  >
+                    {card.description}
+                  </p>
+                  <span
+                    className={`mt-8 inline-flex items-center gap-2 font-figtree text-sm font-medium transition-colors ${
+                      card.dark
+                        ? "text-accent"
+                        : "text-foreground group-hover:text-accent"
+                    }`}
+                  >
+                    {card.cta}
+                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                  </span>
+                </div>
+
+                <div
+                  className={`flex flex-1 items-center justify-center p-5 sm:p-8 md:p-10 lg:p-14 ${
+                    card.dark ? "bg-[#0a1414]/60" : "bg-muted-bg/40"
+                  }`}
+                >
+                  <img
+                    src={card.image}
+                    alt={card.imageAlt}
+                    className="max-h-[160px] w-full max-w-[220px] object-contain transition-transform duration-500 group-hover:scale-[1.03] sm:max-h-[220px] sm:max-w-sm md:max-h-[360px] md:max-w-md lg:max-w-lg"
+                    loading="lazy"
+                  />
+                </div>
+              </Link>
+            </article>
+          ))}
+        </div>
+
+        <div className="mt-8 flex items-center justify-center gap-5 px-5">
+          <button
+            type="button"
+            onClick={() => goTo(active - 1)}
+            disabled={active === 0}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition-colors hover:border-accent/40 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+            aria-label="Previous slide"
+          >
+            <ChevronLeft className="h-5 w-5" />
+          </button>
+
+          <div className="flex items-center gap-2" role="tablist" aria-label="Carousel slides">
+            {LAUNCH_CARDS.map((card, i) => (
+              <button
+                key={card.id}
+                type="button"
+                role="tab"
+                aria-selected={i === active}
+                aria-label={`Go to ${card.tag}`}
+                onClick={() => goTo(i)}
+                className={`h-2 rounded-full transition-all ${
+                  i === active ? "w-8 bg-accent" : "w-2 bg-border hover:bg-muted"
+                }`}
+              />
+            ))}
+          </div>
+
+          <button
+            type="button"
+            onClick={() => goTo(active + 1)}
+            disabled={active === LAUNCH_CARDS.length - 1}
+            className="inline-flex h-10 w-10 items-center justify-center rounded-full border border-border text-muted transition-colors hover:border-accent/40 hover:text-foreground disabled:pointer-events-none disabled:opacity-30"
+            aria-label="Next slide"
+          >
+            <ChevronRight className="h-5 w-5" />
+          </button>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function Pillars() {
+  return (
+    <section className="border-y border-border/60 bg-muted-bg/50 px-5 py-14 sm:py-20 md:px-8 md:py-24">
+      <div className="mx-auto grid max-w-7xl gap-8 sm:grid-cols-2 sm:gap-10 md:grid-cols-3 md:gap-8">
+        {PILLARS.map((pillar) => {
+          const Icon = pillar.icon;
+          return (
+            <div key={pillar.title} className="group">
+              <div className="mb-5 inline-flex h-11 w-11 items-center justify-center rounded-xl border border-border bg-card text-accent transition-colors group-hover:border-accent/30">
+                <Icon className="h-5 w-5" strokeWidth={1.75} />
+              </div>
+              <h3 className="text-xl text-foreground md:text-2xl">{pillar.title}</h3>
+              <p className="mt-2 font-figtree text-sm leading-relaxed text-muted md:text-base">
+                {pillar.body}
+              </p>
+            </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
+
+function Manifesto() {
+  return (
+    <section className="px-5 py-16 sm:py-24 md:px-8 md:py-32">
+      <div className="mx-auto max-w-4xl text-center">
+        <p className="landing-label">
+          The idea
+        </p>
+        <blockquote className="mt-6 text-xl font-normal leading-[1.35] tracking-tight text-foreground sm:text-2xl md:text-4xl lg:text-[2.75rem]">
+          Unresponded messages are lost goodwill.
+          <span className="block mt-3 text-muted">
+            Kavisha turns every inbound into a conversation worth having.
+          </span>
+        </blockquote>
+        <div className="mx-auto mt-12 h-px w-16 bg-border" aria-hidden />
+        <p className="mx-auto mt-10 max-w-2xl font-figtree text-base leading-relaxed text-muted md:text-lg">
+          Your Avataar carries your knowledge, history, personality, and style —
+          so fans get the real you, around the clock.
+        </p>
+      </div>
+    </section>
+  );
+}
+
+function FeaturedAvatars({ avatars, loading, error }) {
+  if (loading) {
+    return <p className="font-figtree text-center text-sm text-muted">Loading…</p>;
+  }
+  if (error) {
+    return <p className="text-center text-sm text-red-600">{error}</p>;
+  }
+  if (avatars.length === 0) {
+    return <p className="font-figtree text-center text-sm text-muted">Coming soon.</p>;
+  }
+
+  return (
+    <div
+      className="overflow-x-auto pb-2 scrollbar-none snap-x snap-mandatory scroll-smooth [-webkit-overflow-scrolling:touch]"
+      role="region"
+      aria-label="Featured avatars"
+    >
+      <div className="flex w-max gap-5 px-5 sm:px-8 md:mx-auto md:min-w-full md:justify-center md:gap-6">
+        {avatars.map((avatar) => (
+          <div
+            key={avatar.id}
+            className="snap-start shrink-0"
+            style={{ width: "min(16rem, max(14rem, calc(100vw - 4.5rem)))" }}
+          >
+            <AvatarCard
+              name={avatar.name}
+              title={avatar.title}
+              subtitle={avatar.subtitle}
+              image={avatar.image}
+              avatarLink={avatar.link}
+              widgetLink={
+                avatar.clientWidgetUrl ? String(avatar.clientWidgetUrl).trim() : ""
+              }
+            />
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function Homepage() {
   const router = useRouter();
-  const { user, refresh } = useFirebaseSession();
-  const [signingIn, setSigningIn] = useState(false);
-  const [error, setError] = useState("");
-  const [popupBlocked, setPopupBlocked] = useState(false);
   const [avatars, setAvatars] = useState([]);
   const [avatarsLoading, setAvatarsLoading] = useState(true);
   const [avatarsError, setAvatarsError] = useState(null);
-  const [isInAppBrowser, setIsInAppBrowser] = useState(false);
-  const [isMobile, setIsMobile] = useState(false);
-  const [loadingPath, setLoadingPath] = useState(null);
-
-  useEffect(() => {
-    setIsInAppBrowser(detectInAppBrowser());
-    setIsMobile(isMobileDevice());
-  }, []);
-
-  const isBlocked = isInAppBrowser && isMobile;
-
-  const handleSignIn = async (redirectPath = null) => {
-    setSigningIn(true);
-    setError("");
-    setPopupBlocked(false);
-    try {
-      if (redirectPath && typeof window !== "undefined") {
-        // Ensure redirectPath is a string and starts with /
-        const path = typeof redirectPath === "string" && redirectPath.startsWith("/")
-          ? redirectPath
-          : "/";
-        localStorage.setItem("redirectAfterLogin", path);
-      }
-      await signIn();
-      await refresh();
-      // State will update and root page will show logged-in UI
-    } catch (e) {
-      if (e?.code === "auth/popup-blocked") {
-        setPopupBlocked(true);
-      } else {
-        setError(e.message || "Sign in failed");
-      }
-    } finally {
-      setSigningIn(false);
-    }
-  };
 
   useEffect(() => {
     let cancelled = false;
@@ -108,317 +419,79 @@ export default function Homepage() {
         if (!cancelled) setAvatarsLoading(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
-  const avatarGapPx = 24;
+  const navigate = (path) => router.push(path);
 
   return (
-    <div className="mt-8 text-foreground sm:mt-16">
-      <div className="flex flex-col items-center justify-center pt-2 pb-8">
+    <main className="overflow-x-hidden font-baloo">
+      <Hero onNavigate={navigate} />
+      <LaunchCarousel />
+      <Pillars />
 
-        <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
-      </div>
-      <div className="flex flex-col justify-center items-center max-w-[90%] md:max-w-[60%] mx-auto text-center px-4">
-        <p className="text-3xl font-normal leading-tight text-[#004A4E] dark:text-[#c7f9fb] sm:text-5xl md:text-7xl lg:text-[90px]">
-          Future of <span className="text-[#00B5BD]">Digital</span> Profiles
-        </p>
-
-        <p className="my-6 text-lg font-extralight text-[#264653] dark:text-muted md:my-8">
-          With Kavisha, Influencers and Brands create their Digital Avataars to
-          engage their fans. Fans talk to them, and also find each other.
-        </p>
-      </div>
-      {error && (
-        <div className="mx-auto mb-6 max-w-md rounded-lg border border-red-200 bg-red-50 p-4 text-center text-sm text-red-700 dark:border-red-800 dark:bg-red-950/40 dark:text-red-300">
-          {error}
-        </div>
-      )}
-
-      {popupBlocked && (
-        <div className="mb-4 p-3 bg-amber-50 dark:bg-amber-950/30 text-amber-800 dark:text-amber-200 border border-amber-200 dark:border-amber-800 rounded-lg max-w-md mx-auto text-sm text-center">
-          Tap again to enable pop-up! Cheers! :)
-        </div>
-      )}
-
-      {isBlocked && (
-        <div className="mx-auto mb-6 max-w-md rounded-lg border border-border bg-card p-4 shadow-sm">
-          <p className="mb-4 text-center text-sm text-muted">
-            Please open in Chrome to continue
-          </p>
-          <button
-            onClick={openInChrome}
-            className="w-full rounded-lg bg-[#2D545E] px-4 py-3 text-sm font-medium text-white transition-colors hover:bg-[#264850]"
-          >
-            Open in Chrome
-          </button>
-        </div>
-      )}
-
-      <div className="gap-2 md:gap-4 flex flex-col md:flex-row flex-wrap justify-center items-center mb-8 px-4">
-        <button
-          onClick={() => {
-            setLoadingPath("/make-avatar");
-            router.push("/make-avatar");
-          }}
-          disabled={loadingPath !== null}
-          className="w-[80%] md:w-auto min-w-0 px-3 md:px-4 py-2 text-lg md:text-xl rounded-lg bg-gradient-to-b from-[#17484B] to-[#156568] hover:brightness-110 text-white shadow-md transition-colors disabled:opacity-50"
-        >
-          {loadingPath === "/make-avatar" ? "Opening..." : "Make my Avataar"}
-        </button>
-        <button
-          type="button"
-          onClick={() => {
-            setLoadingPath("/widget-intro");
-            router.push("/widget-intro");
-          }}
-          disabled={loadingPath !== null}
-          className="min-w-0 w-[80%] rounded-lg bg-gradient-to-b from-[#B9ECEC] to-[#CEFDFD] hover:brightness-105 px-4 py-2 text-lg md:text-xl text-highlight shadow-md transition-colors hover:bg-card disabled:opacity-50 md:w-auto"
-        >
-          {loadingPath === "/widget-intro" ? "Opening..." : "Explore AI Widgets"}
-        </button>
-      </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-[85%] mx-auto my-16">
-        {cards.map((card) => (
-          <InfoCard key={card.title} {...card} />
-        ))}
-      </div>
-      <div className="relative">
-        {/* '=' badge: pinned to boundary between cream and teal so it stays vertically consistent on mobile */}
-        <div className="absolute left-1/2 -translate-x-1/2 top-[120px] md:top-[160px] -translate-y-1/2 z-10 bg-[#00646A] w-10 h-10 md:w-14 md:h-14 rounded-lg shadow-lg flex flex-col items-center justify-center gap-1">
-          <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
-          <div className="w-4 md:w-6 h-[2px] md:h-[3px] bg-[#E8B84A] rounded-full"></div>
-        </div>
-        {/* Top cream section — same bg as light mode; explicit ink so dark theme foreground never lands on cream */}
-        <div className="flex h-[120px] items-center justify-center bg-gradient-to-b from-[#FFF7E0] to-[#F8F3E5] px-4 text-[#17484B] dark:text-[#17484B] md:h-[160px]">
-          <p className="font-baloo text-xl sm:text-2xl md:text-4xl lg:text-5xl text-center">
-            Your Digital Avataar on Kavisha
-          </p>
-        </div>
-        {/* Bottom teal section */}
-        <div className="bg-gradient-to-b from-[#17484B] to-[#156568] text-white h-auto min-h-[150px] md:h-[180px] flex flex-col justify-center items-center px-4 py-6 md:py-0">
-          <p className="font-baloo text-lg sm:text-xl md:text-3xl lg:text-4xl mb-2 md:mb-3 text-center">
-            Your (Knowledge <span className="text-[#E8B84A]">+</span> History{" "}
-            <span className="text-[#E8B84A]">+</span> Personality{" "}
-            <span className="text-[#E8B84A]">+</span> Style)
-          </p>
-          <p className="text-[#B8C5C9] text-sm md:text-lg text-center">
-            With Kavisha, you&apos;ll be able to give your fans delightful
-            interactions 24x7x365
-          </p>
-        </div>
-      </div>
-
-      <div className="flex flex-col-reverse md:flex-row items-center gap-10 md:gap-16 max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-24">
-        <div className="flex-1 flex flex-col text-center md:text-left items-center md:items-start">
-          <h2 className="text-2xl md:text-4xl font-normal text-foreground leading-snug mb-4">
-            Your Digital Avataar on a <br className="hidden md:block" />
-            custom domain
-          </h2>
-          <p className="text-base md:text-lg text-muted leading-relaxed mb-6 max-w-lg">
-            You could host your Digital Avataar on yourname.kavisha.ai for free!
-            It&apos;ll be the place for conversations with your AI, your community,
-            your social links, and everything else.
-          </p>
-          <a
-            href="/make-avatar"
-            className="text-[#17638C] font-medium text-base md:text-lg hover:underline"
-          >
-            Read more &gt;&gt;
-          </a>
-        </div>
-
-        <div className="flex-1 flex justify-center md:justify-end">
-          <div className="w-full max-w-[260px] md:max-w-[310px]">
-            <img
-              src="/kavisha-avataar.png"
-              alt="Digital Avataar on a custom Kavisha domain"
-              className="block w-full h-auto object-cover"
-              loading="lazy"
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="flex flex-col md:flex-row items-center gap-10 md:gap-16 max-w-6xl mx-auto px-6 md:px-10 py-16 md:py-24">
-        <div className="flex-1 flex justify-center md:justify-start">
-          <Link
-            href="/widget-intro"
-            className="block w-full max-w-[260px] md:max-w-[300px] rounded-2xl transition-opacity hover:opacity-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-          >
-            <img
-              src="/entrackr-widget.png"
-              alt="Kavisha AI widget on a website — Entrackr example"
-              className="block w-full h-auto object-cover"
-              loading="lazy"
-            />
-          </Link>
-        </div>
-
-        <div className="flex-1 flex flex-col text-center md:text-left items-center md:items-start">
-          <h2 className="text-2xl md:text-4xl font-normal text-foreground leading-snug mb-4">
-            An AI widget on your website itself, giving it Agentic abilities
-          </h2>
-          <p className="text-base md:text-lg text-muted leading-relaxed mb-6 max-w-lg">
-            If you have an existing website, you could give it a super AI Agent
-            in the form of a widget. That Agent will talk to your visitors and
-            turn casual observers into customers and fans.
-          </p>
-          <Link
-            href="/widget-intro"
-            className="text-[#17638C] font-medium text-base md:text-lg hover:underline self-center md:self-end"
-          >
-            Read more &gt;&gt;
-          </Link>
-        </div>
-      </div>
-
-      {/* Avatar cards */}
-      <div className="my-6 flex items-center gap-4 px-4 md:px-8">
-        <p className="whitespace-nowrap text-lg text-[#264653] dark:text-foreground md:text-2xl">
-          Existing Avataars
-        </p>
-        <div className="h-[1px] flex-1 bg-border" />
-      </div>
-      <div className="relative mt-8 w-[90%] mx-auto px-4 md:mt-12 md:px-8">
-        {avatarsLoading ? (
-          <p className="text-center text-muted">Loading avatars…</p>
-        ) : avatarsError ? (
-          <p className="text-center text-red-600">{avatarsError}</p>
-        ) : avatars.length === 0 ? (
-          <p className="text-center text-muted">No featured avatars yet.</p>
-        ) : (
-          <div>
-            <div className="lg:flex lg:items-center lg:justify-center lg:gap-6">
-              <div
-                className="relative min-w-0 flex-1 overflow-y-visible pb-4 overflow-x-auto snap-x snap-mandatory scroll-smooth scrollbar-none [-webkit-overflow-scrolling:touch] lg:flex-none lg:w-[min(100%,66.5rem)]"
-                role="region"
-                aria-label="Featured avatars. Scroll horizontally to see more."
-              >
-                <div
-                  className="flex w-max flex-nowrap justify-start"
-                  style={{ gap: `${avatarGapPx}px` }}
-                >
-                  {avatars.map((avatar) => (
-                    <div
-                      key={avatar.id}
-                      className="snap-start flex-shrink-0"
-                      style={{
-                        width: "min(15.5rem, max(14rem, calc(100vw - 4.5rem)))",
-                      }}
-                    >
-                      <AvatarCard
-                        name={avatar.name}
-                        title={avatar.title}
-                        subtitle={avatar.subtitle}
-                        image={avatar.image}
-                        avatarLink={avatar.link}
-                        widgetLink={
-                          avatar.clientWidgetUrl
-                            ? String(avatar.clientWidgetUrl).trim()
-                            : ""
-                        }
-                      />
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Desktop button lives in the free space (no overlap). */}
-              <div className="hidden shrink-0 justify-center lg:flex lg:ml-[24px]">
-                <div className="group relative inline-flex">
-                  <Link
-                    href="/talk-to-avatar"
-                    className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-muted shadow-sm transition-colors hover:bg-[#008389] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                    aria-label="Explore more Avataars"
-                  >
-                    <ArrowUpRight className="h-5 w-5" strokeWidth={2.5} />
-                  </Link>
-                  <div className="pointer-events-none absolute left-1/2 top-full mt-3 hidden -translate-x-1/2 group-hover:block">
-                    <div className="rounded-xl bg-black px-3 py-2 text-sm font-medium text-white whitespace-nowrap">
-                      Explore more Avataars
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-            <div className="flex justify-center lg:hidden">
-              <div className="group relative inline-flex">
-                <Link
-                  href="/talk-to-avatar"
-                  className="inline-flex h-11 w-11 items-center justify-center rounded-full border border-border bg-background text-muted shadow-sm transition-colors hover:bg-[#008389] hover:text-white focus:outline-none focus-visible:ring-2 focus-visible:ring-ring/40"
-                  aria-label="Explore more Avataars"
-                >
-                  <ArrowUpRight className="h-5 w-5" strokeWidth={2.5} />
-                </Link>
-                <div className="pointer-events-none absolute left-1/2 top-full mt-3 hidden -translate-x-1/2 group-hover:block">
-                  <div className="rounded-xl bg-black px-3 py-2 text-sm font-medium text-white whitespace-nowrap">
-                    Explore more Avataars
-                  </div>
-                </div>
-              </div>
-            </div>
-
-          </div>
-        )}
-      </div>
-
-      {/* An Agent that creates your community*/}
-      <div className="mt-8 md:mt-12">
-        {/* Header with line */}
-        <div className="flex items-center gap-4 mb-6 px-4 md:px-8">
-          <div className="h-[1px] flex-1 bg-border"></div>
-          <p className="whitespace-nowrap text-lg text-[#264653] dark:text-foreground md:text-2xl">
-            An Agent that creates your community
-          </p>
-        </div>
-
-        {/* Two column layout */}
-        <div className="flex flex-col md:flex-row">
-          {/* Left - Teal section: on mobile full-width paragraph + centered button */}
-          <div className="md:flex-[4] bg-gradient-to-b from-[#17484B] to-[#156568] text-white px-6 md:px-10 py-8 md:py-12 flex flex-col justify-center text-center md:text-left items-center md:items-start">
-            <p className="w-full max-w-full text-xl md:text-2xl lg:text-4xl leading-snug mb-4 md:mb-6 font-medium tracking-wide">
-              <span className="md:block">
-                Your fans can <span className="text-[#E8B84A]">connect</span> with
-              </span>
-              <span className="md:block">each other (and generate</span>
-              <span className="md:block">revenue for you)</span>
+      {/* Featured */}
+      <section className="px-5 py-14 sm:py-16 md:px-8 md:py-24">
+        <div className="mx-auto max-w-7xl">
+          <div className="mb-10 text-center md:mb-14">
+            <p className="landing-label">
+              Live now
             </p>
+            <h2 className="mt-2 text-2xl text-foreground md:text-4xl">
+              Avataars built on Kavisha
+            </h2>
+            <Link
+              href="/talk-to-avatar"
+              className="mt-5 inline-flex items-center gap-1.5 font-figtree text-sm font-medium text-muted transition-colors hover:text-accent"
+            >
+              View all Avataars
+              <ArrowUpRight className="h-4 w-4" />
+            </Link>
+          </div>
+          <FeaturedAvatars
+            avatars={avatars}
+            loading={avatarsLoading}
+            error={avatarsError}
+          />
+        </div>
+      </section>
+
+      <Manifesto />
+
+      {/* Closing */}
+      <section className="border-t border-border px-5 py-16 sm:py-24 md:px-8 md:py-32">
+        <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+          <h2 className="text-2xl font-normal tracking-tight text-foreground sm:text-3xl md:text-5xl lg:text-6xl">
+            Start for free.
+            <br />
+            <span className="text-accent">Go live today.</span>
+          </h2>
+          <p className="mt-5 max-w-lg font-figtree text-base text-muted md:text-lg">
+            Whether you need a Digital Avataar or a website widget — Kavisha gets
+            you there in minutes, not months.
+          </p>
+          <div className="mt-8 flex w-full max-w-sm flex-col gap-3 sm:mt-10 sm:max-w-none sm:flex-row sm:flex-wrap sm:justify-center">
             <button
               type="button"
-              onClick={() => router.push("/widget-intro")}
-              className="w-fit mx-auto md:mx-0 px-4 md:px-5 py-2 rounded-full border border-white text-white text-lg md:text-2xl hover:bg-white hover:text-[#35515b] transition-colors"
+              onClick={() => navigate("/make-avatar")}
+              className="w-full rounded-xl bg-accent px-8 py-3.5 font-figtree text-sm font-medium text-white transition-all hover:brightness-95 sm:w-auto md:text-base"
             >
-              Get started
+              Make my Avataar
+            </button>
+            <button
+              type="button"
+              onClick={() => navigate("/widget-intro")}
+              className="w-full rounded-xl border border-border px-8 py-3.5 font-figtree text-sm font-medium text-foreground transition-colors hover:border-accent/40 sm:w-auto md:text-base"
+            >
+              Explore widgets
             </button>
           </div>
-
-          {/* Right — cream strip matches light mode; body copy uses ink, not theme foreground */}
-          <div className="flex items-center bg-gradient-to-b from-[#FFF7E0] to-[#F8F3E5] px-6 py-8 text-[#264653] dark:text-[#264653] md:flex-[6] md:px-10 md:py-12">
-            <p className="text-lg leading-relaxed text-center md:text-left">
-              Your Digital Avataar doesn't just enable conversations between you
-              and your fans, it also gives your fans a chance to connect with
-              each other. This makes <span className="font-semibold">you</span>{" "}
-              a platform for lifelong, beautiful relationships, where people
-              find new connections, and deeper love for you.
-            </p>
-          </div>
         </div>
-        {/* Logo and tagline section */}
-        <div className="flex flex-col items-center justify-center border-b border-border bg-[linear-gradient(180deg,#FFFFFF_34%,#EDF4F7_100%)] px-4 py-8 dark:bg-[linear-gradient(180deg,#0F172A_34%,#16222E_100%)] md:px-8 md:py-12">
-          <div className="flex flex-col items-center justify-center pb-4 pt-2">
-
-            <img src="/kavisha-logo.png" width={150} height={150} alt="Kavisha" />
-          </div>
-          <p className="max-w-3xl text-center text-base font-light tracking-wide text-muted md:text-xl">
-            With Kavisha, influencers and brands can interact with their fans,
-            create opportunities for them, and make them happy. Like never
-            before.
-          </p>
-        </div>
-      </div>
+      </section>
 
       <Footer />
-    </div>
+    </main>
   );
 }

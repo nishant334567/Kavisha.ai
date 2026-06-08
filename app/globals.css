@@ -12,6 +12,7 @@
   --input: #ffffff;
   --ring: #0d9488;
   --highlight: #2d545e;
+  --accent: #00b5bd;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -101,4 +102,67 @@ body {
   -webkit-background-clip: text;
   background-clip: text;
   animation: widget-intro-shine 3s linear infinite;
+}
+
+/* Homepage */
+@keyframes homepage-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes homepage-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.homepage-fade-up {
+  animation: homepage-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.homepage-hero {
+  background: var(--background);
+}
+
+.homepage-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+.homepage-glow-a {
+  top: -20%;
+  right: -10%;
+  width: min(70vw, 600px);
+  height: min(70vw, 600px);
+  background: color-mix(in srgb, #00b5bd 14%, transparent);
+}
+
+.homepage-glow-b {
+  bottom: 0;
+  left: -15%;
+  width: min(50vw, 400px);
+  height: min(50vw, 400px);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+.homepage-float {
+  animation: homepage-float 7s ease-in-out infinite;
+}
+
+@layer utilities {
+  .landing-label {
+    @apply font-figtree text-[11px] font-semibold uppercase tracking-[0.28em] text-accent;
+  }
 }

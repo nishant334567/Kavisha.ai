@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowLeft } from "lucide-react";
+import { ArrowLeft, ArrowRight, Check } from "lucide-react";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { signIn } from "../lib/firebase/sign-in";
 import {
@@ -10,8 +10,17 @@ import {
   isMobileDevice,
   openInChrome,
 } from "../lib/in-app-browser";
+import Footer from "../components/Footer";
 
 const UNLIMITED_AVATAR_CREATOR_EMAIL = "hello@kavisha.ai";
+
+const FEATURES = [
+  "Customize your personality",
+  "Create your knowledge base",
+  "Advanced personalized dashboard",
+  "'Connect with other fans' for your community",
+  "List your products/services for sale",
+];
 
 export default function MakeAvatarLandingPage() {
   const router = useRouter();
@@ -55,7 +64,9 @@ export default function MakeAvatarLandingPage() {
         if (!cancelled) setCheckingAvatar(false);
       }
     })();
-    return () => { cancelled = true; };
+    return () => {
+      cancelled = true;
+    };
   }, [user?.email, canCreateUnlimitedAvatars]);
 
   const handleGetStarted = async () => {
@@ -86,132 +97,129 @@ export default function MakeAvatarLandingPage() {
     }
   };
 
+  const ctaLabel = signingIn
+    ? "Signing in…"
+    : isBlocked
+      ? "Open in Chrome to continue"
+      : checkingAvatar
+        ? "Checking…"
+        : "Get started";
+
   return (
-    <div className="min-h-screen bg-background pt-16 text-foreground">
-      <main className="pb-12 px-4">
-        {/* Back arrow */}
-        <button
-          type="button"
-          onClick={() => router.push("/")}
-          className="mb-2 mt-4 flex items-center gap-2 text-foreground hover:opacity-80"
-        >
-          <ArrowLeft className="w-5 h-5" />
-          <span className="text-sm">Back</span>
-        </button>
+    <main className="min-h-screen overflow-x-hidden bg-background font-baloo text-foreground">
+      <div className="relative overflow-hidden pb-16 pt-12 sm:pb-20 sm:pt-16">
+        <div className="homepage-glow homepage-glow-a opacity-40" aria-hidden />
 
-        {/* Logo */}
-        <div className="flex justify-center my-6">
-          <img src="/kavisha-logo.png" width={120} height={120} alt="Kavisha" />
-        </div>
+        <div className="relative mx-auto max-w-7xl px-5 md:px-8">
+          <button
+            type="button"
+            onClick={() => router.push("/")}
+            className="mb-8 inline-flex items-center gap-2 font-figtree text-sm text-muted transition-colors hover:text-foreground sm:mb-10"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            Back
+          </button>
 
-        {/* Title */}
-        <h1 className="text-center text-3xl md:text-4xl font-bold mb-2">
-          <span className="text-foreground">Make my </span>
-          <span className="text-[#00B5BD]">Avataar</span>
-        </h1>
-        <p className="mx-auto mb-10 max-w-xl text-center text-base text-muted md:text-lg">
-          Create your Avataar and give your fans/customers the pleasure of personal conversations with you. 24x7x365.
-        </p>
-
-        {isBlocked && (
-          <div className="mx-auto mb-6 max-w-md rounded-lg border border-amber-300/60 bg-amber-500/10 p-4 text-center">
-            <p className="text-sm text-amber-800 mb-2">Please open this page in Chrome to sign in and continue.</p>
-            <button
-              type="button"
-              onClick={openInChrome}
-              className="py-2 px-4 bg-amber-600 text-white rounded-lg hover:bg-amber-700 text-sm font-medium"
-            >
-              Open in Chrome
-            </button>
-          </div>
-        )}
-
-        {popupBlockedHint && !isBlocked && (
-          <p className="text-center text-amber-600 text-sm mb-4">Tap again to enable pop-up! Cheers! :)</p>
-        )}
-
-        {/* Pricing disabled for Shopify App Review — app is free */}
-        <div className="max-w-lg mx-auto grid grid-cols-1 gap-6">
-          {/* Free card - dark teal */}
-          <div className="rounded-2xl bg-[#35515b] text-white p-6 md:p-8 flex flex-col">
-            <h2 className="text-2xl font-bold mb-1">Get started</h2>
-            <p className="text-white/95 text-sm mb-6">A Digital Avataar that you build from scratch</p>
-            {/* <p className="text-2xl md:text-3xl font-bold mb-1">₹0 /month</p> */}
-            {/* <p className="text-sm text-white/90 mb-6">(up to 500 chats*)</p> */}
-            <ul className="space-y-2 text-sm text-white/95 mb-6 flex-1">
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/80 mt-1.5 shrink-0" />
-                Customize your personality
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/80 mt-1.5 shrink-0" />
-                Create your knowledge base
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/80 mt-1.5 shrink-0" />
-                Advanced personalized dashboard
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/80 mt-1.5 shrink-0" />
-                &apos;Connect with other fans&apos; for your community
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="w-1.5 h-1.5 rounded-full bg-white/80 mt-1.5 shrink-0" />
-                List your products/services for sale
-              </li>
-            </ul>
-            <button
-              type="button"
-              onClick={handleGetStarted}
-              disabled={signingIn || hasCreatedAvatar || checkingAvatar}
-              className="w-full py-3 rounded-lg border-2 border-white/50 text-white font-medium hover:bg-white/10 transition-colors disabled:opacity-60 disabled:cursor-not-allowed"
-            >
-              {signingIn ? "Signing in…" : isBlocked ? "Open in Chrome to continue" : checkingAvatar ? "Checking…" : "Get started"}
-            </button>
-            {hasCreatedAvatar && (
-              <p className="text-xs text-amber-200 mt-3 text-center">
-                Sorry — one avatar per email. You’ve already created yours with this account.
+          <div className="grid items-center gap-8 sm:gap-10 lg:grid-cols-[1.2fr_0.55fr] lg:gap-12">
+            <div className="text-center sm:text-left">
+              <p className="landing-label">Digital Avataar</p>
+              <h1 className="mt-4 text-3xl font-normal leading-[0.95] tracking-tight sm:text-4xl md:text-5xl lg:text-6xl">
+                Make my <span className="text-accent">Avataar</span>
+              </h1>
+              <p className="mx-auto mt-5 max-w-lg font-figtree text-sm leading-relaxed text-muted sm:mx-0 sm:mt-6 sm:text-base md:text-lg">
+                Create your Avataar and give your fans/customers the pleasure of
+                personal conversations with you. 24x7x365.
               </p>
-            )}
-            {/* {!hasCreatedAvatar && <p className="text-xs text-white/80 mt-3 text-center">*Rs. 3/chat beyond 500 chats</p>} */}
+
+              {isBlocked && (
+                <div className="mx-auto mt-8 max-w-md rounded-xl border border-amber-300/40 bg-amber-500/10 p-5 sm:mx-0">
+                  <p className="font-figtree text-sm text-amber-800 dark:text-amber-200">
+                    Please open this page in Chrome to sign in and continue.
+                  </p>
+                  <button
+                    type="button"
+                    onClick={openInChrome}
+                    className="mt-3 rounded-lg bg-amber-600 px-4 py-2 font-figtree text-sm font-medium text-white transition-colors hover:bg-amber-700"
+                  >
+                    Open in Chrome
+                  </button>
+                </div>
+              )}
+
+              {popupBlockedHint && !isBlocked && (
+                <p className="mt-6 font-figtree text-sm text-amber-500">
+                  Tap again to enable pop-up! Cheers! :)
+                </p>
+              )}
+            </div>
+
+            <div className="flex justify-center lg:justify-end">
+              <div className="w-full max-w-[200px] sm:max-w-[220px] md:max-w-[240px]">
+                <div className="overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-md">
+                  <img
+                    src="/kavisha-avataar.png"
+                    alt="Digital Avataar preview"
+                    className="block w-full object-contain"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            </div>
           </div>
 
-          {/* White glove card — pricing disabled for Shopify App Review
-          <div className="flex flex-col rounded-2xl border border-border bg-card p-6 text-foreground md:p-8">
-            <h2 className="text-2xl font-bold mb-1">White glove service</h2>
-            <p className="text-sm mb-4">Your Digital Avataar that we help you build</p>
-            <p className="text-lg font-bold mb-4">Up to 10,000 chats in free credits*</p>
-            <p className="text-sm mb-3">Includes everything in Free, plus:</p>
-            <ul className="space-y-2 text-sm mb-6 flex-1">
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-highlight" />
-                We help you customize your Avataar&apos;s personality
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-highlight" />
-                We help you create you knowledge base
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-highlight" />
-                We calibrate your Avataar&apos;s response with perfect training and testing
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-highlight" />
-                Custom built features as per brand requests
-              </li>
-            </ul>
-            <button
-              type="button"
-              onClick={() => router.push("/help")}
-              className="w-full rounded-lg bg-highlight py-3 font-medium text-white transition-colors hover:opacity-90"
-            >
-              Contact us
-            </button>
-            <p className="mt-3 text-center text-xs text-muted">*Rs. 3/chat beyond 10,000 chats</p>
-          </div>
-          */}
+          <section className="mt-12 sm:mt-16 md:mt-24">
+            <div className="overflow-hidden rounded-2xl border border-border bg-card sm:rounded-[1.75rem]">
+              <div className="grid md:grid-cols-[1.1fr_0.9fr]">
+                <div className="border-b border-border p-6 sm:p-8 md:border-b-0 md:border-r md:p-12 lg:p-14">
+                  <p className="landing-label">Free plan</p>
+                  <h2 className="mt-3 text-2xl font-normal text-foreground sm:text-3xl md:text-4xl">
+                    Get started
+                  </h2>
+                  <p className="mt-3 font-figtree text-sm text-muted sm:text-base">
+                    A Digital Avataar that you build from scratch
+                  </p>
+
+                  <ul className="mt-6 space-y-3 sm:mt-8 sm:space-y-4">
+                    {FEATURES.map((feature) => (
+                      <li
+                        key={feature}
+                        className="flex items-start gap-3 font-figtree text-sm text-foreground sm:text-base"
+                      >
+                        <span className="mt-0.5 flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent/10 text-accent">
+                          <Check className="h-3 w-3" strokeWidth={2.5} />
+                        </span>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+
+                <div className="flex flex-col justify-center bg-muted-bg/50 p-6 sm:p-8 md:p-12 lg:p-14">
+                  <button
+                    type="button"
+                    onClick={handleGetStarted}
+                    disabled={signingIn || hasCreatedAvatar || checkingAvatar}
+                    className="group inline-flex w-full items-center justify-center gap-2 rounded-xl bg-foreground px-6 py-3.5 font-figtree text-sm font-medium text-background transition-all hover:scale-[1.01] disabled:cursor-not-allowed disabled:opacity-60 md:text-base"
+                  >
+                    {ctaLabel}
+                    {!signingIn && !checkingAvatar && !hasCreatedAvatar && (
+                      <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+                    )}
+                  </button>
+
+                  {hasCreatedAvatar && (
+                    <p className="mt-4 text-center font-figtree text-xs text-amber-600 dark:text-amber-400">
+                      Sorry — one avatar per email. You&apos;ve already created yours
+                      with this account.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
-      </main>
-    </div>
+      </div>
+      <Footer />
+    </main>
   );
 }
