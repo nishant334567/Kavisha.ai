@@ -8,7 +8,6 @@ import ChatBox from "@/app/components/ChatBox";
 import ChatSidebar from "@/app/components/ChatSidebar";
 import CommunityBrandStrip from "@/app/components/CommunityBrandStrip";
 import Loader from "@/app/components/Loader";
-import PoweredByKavisha from "@/app/components/PoweredByKavisha";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 
 export default function CommunityChatPage() {
@@ -81,7 +80,7 @@ export default function CommunityChatPage() {
   const primaryHex = normalizeBrandHex(brandContext?.primaryBrandColor);
 
   return (
-    <div className="min-h-[calc(100vh-64px)] h-[calc(100vh-64px)] flex flex-col overflow-hidden">
+    <div className="chat-page-canvas flex min-h-0 flex-col overflow-hidden">
       <CommunityBrandStrip
         communityName={brandContext?.communityName || "Community"}
         primaryHex={primaryHex}
@@ -101,15 +100,14 @@ export default function CommunityChatPage() {
             defaultCollapsed={true}
           />
         </div>
-        <div className="w-full h-full flex flex-col overflow-hidden">
+        <div className="flex h-full w-full flex-col overflow-hidden">
           {currentChatId && (
-            <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center px-4 md:px-0">
+            <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden px-1 pt-1 sm:px-2">
               <ChatBox currentChatId={currentChatId} />
             </div>
           )}
         </div>
       </div>
-      <PoweredByKavisha />
     </div>
   );
 }

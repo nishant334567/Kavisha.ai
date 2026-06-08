@@ -76,6 +76,13 @@ export default function Resume({
     } catch (err) { }
     setIsdeleting(false);
   };
+  const showBar =
+    resume ||
+    (!resume && resumeSummary !== "" && filename !== "") ||
+    !hideFileInput;
+
+  if (!showBar) return null;
+
   return (
     <>
       <div className="flex items-center gap-2 py-2">

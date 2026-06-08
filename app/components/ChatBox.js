@@ -1,5 +1,5 @@
 "use client";
-import { useState, useRef, useEffect, useCallback } from "react";
+import { useState, useRef, useEffect, useCallback, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 
@@ -11,18 +11,29 @@ import {
   MicOff,
   Send,
   Paperclip,
-  ChevronLeft,
-  ChevronRight,
+  ChevronDown,
 } from "lucide-react";
 import Matches from "@/app/components/Matches";
-import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import {
+  brandUserBubbleCssVars,
+  normalizeBrandHex,
+} from "@/app/lib/brandTheme";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
 import ProductCards, { partitionCitationCards } from "@/app/components/ProductCards";
 import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton";
 import AssistantEngagementRow from "@/app/components/AssistantEngagementRow";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
 import LiveChat from "@/app/components/LiveChat";
+import PoweredByKavisha from "@/app/components/PoweredByKavisha";
 import { useCommunityConnect } from "@/app/hooks/useCommunityConnect";
+
+function toGracefulHeaderLabel(text) {
+  if (!text || typeof text !== "string") return "";
+  return text
+    .trim()
+    .toLowerCase()
+    .replace(/\b\w/g, (c) => c.toUpperCase());
+}
 
 export default function ChatBox({
   currentChatId,
@@ -33,8 +44,10 @@ export default function ChatBox({
 }) {
   const endOfMessagesRef = useRef(null);
   const messagesScrollRef = useRef(null);
+  const suggestionsRef = useRef(null);
   const shouldStickToBottomRef = useRef(true);
-  const suggestedQuestionsScrollRef = useRef(null);
+  const inputRef = useRef(null);
+  const [suggestionsBelowFold, setSuggestionsBelowFold] = useState(false);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [messageLoading, setMessageLoading] = useState(false);
@@ -66,6 +79,18 @@ export default function ChatBox({
   const [transcriptText, setTranscriptText] = useState("");
   const [transcribeError, setTranscribeError] = useState("");
   const [isTranscribing, setIsTranscribing] = useState(false);
+
+  const resizeComposerInput = useCallback(() => {
+    const el = inputRef.current;
+    if (!el) return;
+    const minHeight = 36; /* matches h-9 button row */
+    el.style.height = "auto";
+    el.style.height = `${Math.max(minHeight, el.scrollHeight)}px`;
+  }, []);
+
+  useEffect(() => {
+    resizeComposerInput();
+  }, [input, resizeComposerInput]);
 
   const [chatLoading, setChatLoading] = useState(false);
   const [summaryUptilnow, setSummaryUptilnow] = useState("");
@@ -262,13 +287,36 @@ export default function ChatBox({
     fetchMatches();
   }, [currentChatId, eligibleForMatches, sessionDetailsLoading]);
 
+  const suggestedQuestions = useMemo(() => {
+    if (serviceType !== "chat" || messages.length > 1) return [];
+    const service = brandContext?.services?.find((s) => s._key === serviceKey);
+    return (service?.introquestions || []).slice(0, 5).filter(Boolean);
+  }, [serviceType, messages.length, brandContext?.services, serviceKey]);
+
+  const checkSuggestionsVisibility = useCallback(() => {
+    const scrollEl = messagesScrollRef.current;
+    const suggestionsEl = suggestionsRef.current;
+    if (!scrollEl || !suggestionsEl || suggestedQuestions.length === 0) {
+      setSuggestionsBelowFold(false);
+      return;
+    }
+    const scrollRect = scrollEl.getBoundingClientRect();
+    const suggestionsRect = suggestionsEl.getBoundingClientRect();
+    setSuggestionsBelowFold(suggestionsRect.top > scrollRect.bottom - 12);
+  }, [suggestedQuestions.length]);
+
+  const scrollToSuggestions = useCallback(() => {
+    suggestionsRef.current?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }, []);
+
   const updateStickyFromScroll = useCallback(() => {
     const el = messagesScrollRef.current;
     if (!el) return;
     const distanceFromBottom =
       el.scrollHeight - (el.scrollTop + el.clientHeight);
     shouldStickToBottomRef.current = distanceFromBottom < 120;
-  }, []);
+    checkSuggestionsVisibility();
+  }, [checkSuggestionsVisibility]);
 
   const openChatSession = useCallback((userA, userB, otherDisplayName = null) => {
     setUserA(userA);
@@ -341,16 +389,51 @@ export default function ChatBox({
     }
   }, [currentChatId, eligibleForMatches, refetchPaidConnections]);
   useEffect(() => {
-    if (!shouldStickToBottomRef.current) return;
     const el = messagesScrollRef.current;
     if (!el) {
       endOfMessagesRef.current?.scrollIntoView({ behavior: "auto" });
       return;
     }
+    const isWelcomeOnly =
+      messages.length === 1 && messages[0]?.role === "assistant";
+    if (isWelcomeOnly) {
+      shouldStickToBottomRef.current = false;
+      requestAnimationFrame(() => {
+        el.scrollTop = 0;
+        checkSuggestionsVisibility();
+      });
+      return;
+    }
+    if (!shouldStickToBottomRef.current) return;
     requestAnimationFrame(() => {
       el.scrollTop = el.scrollHeight;
     });
-  }, [messages, messageLoading]);
+  }, [messages, messageLoading, checkSuggestionsVisibility]);
+
+  useEffect(() => {
+    const scrollEl = messagesScrollRef.current;
+    if (!scrollEl || suggestedQuestions.length === 0) {
+      setSuggestionsBelowFold(false);
+      return undefined;
+    }
+    const runCheck = () => checkSuggestionsVisibility();
+    const ro = new ResizeObserver(runCheck);
+    ro.observe(scrollEl);
+    const attachSuggestionsObserver = () => {
+      if (suggestionsRef.current) ro.observe(suggestionsRef.current);
+      runCheck();
+    };
+    attachSuggestionsObserver();
+    const rafId = requestAnimationFrame(attachSuggestionsObserver);
+    scrollEl.addEventListener("scroll", runCheck, { passive: true });
+    window.addEventListener("resize", runCheck);
+    return () => {
+      cancelAnimationFrame(rafId);
+      scrollEl.removeEventListener("scroll", runCheck);
+      ro.disconnect();
+      window.removeEventListener("resize", runCheck);
+    };
+  }, [messages, suggestedQuestions, checkSuggestionsVisibility]);
 
   const uploadAudio = async (audioBlob) => {
     setIsTranscribing(true);
@@ -678,6 +761,10 @@ export default function ChatBox({
   const secondaryBrandHex = normalizeBrandHex(
     brandContext?.secondaryBrandColor,
   );
+  const brandBubbleVars = useMemo(
+    () => brandUserBubbleCssVars(primaryBrandHex),
+    [primaryBrandHex],
+  );
 
   if (chatLoading) {
     return (
@@ -703,23 +790,15 @@ export default function ChatBox({
 
   if (sessionDetailsLoading) {
     return (
-      <div className="h-full mx-auto flex w-full items-center justify-center rounded-xl bg-background p-4 lg:w-3/5">
+      <div className="kavisha-chat font-baloo flex h-full w-full items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
-            <div className="h-6 w-6 rounded-full border-2 border-border"></div>
-            <div
-              className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${!primaryBrandHex ? "border-t-[#59646F]" : ""
-                }`}
-              style={
-                primaryBrandHex
-                  ? { borderTopColor: primaryBrandHex }
-                  : undefined
-              }
-            ></div>
+            <div className="h-6 w-6 rounded-full border-2 border-[var(--kc-line)]" />
+            <div className="absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent border-t-[var(--kc-ink)]" />
           </div>
-          <div className="text-xs font-medium text-muted">
-            Fetching session details…
-          </div>
+          <p className="text-xs font-medium text-[var(--kc-ink-muted)]">
+            Preparing your conversation…
+          </p>
         </div>
       </div>
     );
@@ -748,86 +827,32 @@ export default function ChatBox({
       friends: "Looking for a friend",
     };
     return (
-      communityTitles[String(currentChatType || "").toLowerCase()]?.toUpperCase() ||
-      String(currentChatType || "")
-        .split("_")
-        .join(" ")
-        .toUpperCase() ||
-      ""
+      communityTitles[String(currentChatType || "").toLowerCase()] ||
+      toGracefulHeaderLabel(currentChatType || "")
     );
   })();
 
-  const firstHeaderBadge =
-    isCommunitySession && isCommunityRoleType ? "COMMUNITY" : "SERVICE";
-  const secondHeaderBadge = isCommunityRoleType
-    ? communitySecondBadgeLabel
-    : sessionName
-      ? sessionName.toUpperCase()
-      : currentChatType?.split("_").join(" ").toUpperCase() || "";
+  const sessionTitle =
+    toGracefulHeaderLabel(
+      isCommunityRoleType
+        ? communitySecondBadgeLabel
+        : sessionName || currentChatType?.split("_").join(" ") || "",
+    ) || toGracefulHeaderLabel(brandContext?.brandName || "");
 
   return (
     <>
-      <div className="font-baloo mx-auto flex h-full min-h-0 w-full max-w-full overflow-hidden rounded-xl bg-background p-2 md:w-3/5 md:p-4">
-        <div className="relative w-full flex-1 min-h-0 flex flex-col overflow-hidden">
-          <div className="rounded-xl w-full p-1 md:p-2 font-light h-full flex flex-col min-h-0 overflow-hidden">
-            {/* Logo + role badges only (brand name is in the navbar on /chats and /community). */}
-            <div className="flex-2 my-4 flex min-h-0 flex-col items-center justify-center md:mb-8 md:mt-4 md:flex-row md:items-center md:gap-4 md:px-2">
-              <img
-                src={brandContext?.logoUrl}
-                alt=""
-                className="h-[65px] w-[65px] flex-shrink-0 rounded-full object-cover"
-              />
-              <div className="flex flex-col items-center md:items-start">
-                <div className="my-2 inline-flex items-stretch overflow-hidden border border-border font-baloo text-xs">
-                  <button
-                    type="button"
-                    className="flex cursor-default items-center bg-foreground px-2.5 py-1.5 font-medium text-background"
-                    disabled
-                  >
-                    {firstHeaderBadge}
-                  </button>
-                  <button
-                    type="button"
-                    className="flex cursor-default items-center border-l border-border bg-background px-2.5 py-1.5 font-medium text-foreground"
-                    disabled
-                  >
-                    {secondHeaderBadge}
-                  </button>
-                </div>
-              </div>
-            </div>
-
-            {showOnboardingProgress && (
-              <div className="mb-2 flex w-full shrink-0 justify-start px-1 md:mb-3 md:px-2">
-                <div
-                  className="inline-flex items-baseline gap-0.5 rounded-md border border-border/45 bg-muted/35 px-2.5 py-1 text-[13px] italic tabular-nums shadow-sm backdrop-blur-[2px] dark:border-border/35 dark:bg-muted/25"
-                  style={
-                    primaryBrandHex
-                      ? {
-                        borderLeftWidth: 3,
-                        borderLeftColor: primaryBrandHex,
-                      }
-                      : undefined
-                  }
-                >
-                  <span className="font-semibold not-italic tracking-tight text-foreground">
-                    {Math.round(
-                      Math.min(100, Math.max(0, displayOnboardingPct))
-                    )}
-                    %
-                  </span>
-                  <span className="text-muted-foreground">completed</span>
-                </div>
-              </div>
-            )}
-
-            {/* Messages Section - flex-2, scrollable */}
+      <div
+        className="kavisha-chat font-baloo mx-auto flex h-full min-h-0 w-full max-w-full flex-1 overflow-hidden md:max-w-2xl lg:max-w-3xl"
+        style={brandBubbleVars || undefined}
+      >
+        <div className="relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
+          <div className="relative min-h-0 flex-1">
             <div
               ref={messagesScrollRef}
               onScroll={updateStickyFromScroll}
               onWheel={updateStickyFromScroll}
               onTouchMove={updateStickyFromScroll}
-              className="flex-[4] min-h-0 overflow-y-scroll overflow-x-hidden scrollbar-none"
+              className="chat-stage-scroll absolute inset-0 overflow-y-auto overflow-x-hidden scrollbar-none px-3 pb-4 pt-14 sm:px-4 sm:pt-20"
             >
               {/* <div className="flex flex-col gap-2 min-h-full justify-end"> */}
               {currentChatId &&
@@ -835,41 +860,32 @@ export default function ChatBox({
                 messages.map((m, i) => (
                   <div
                     key={m._id != null ? String(m._id) : `msg-${i}`}
-                    className={`mb-4 w-full min-w-0 ${m.role === "user"
+                    className={`chat-message-enter mb-5 w-full min-w-0 ${m.role === "user"
                       ? "flex flex-col items-end"
                       : "flex flex-col items-start"
                       }`}
+                    style={{ animationDelay: `${Math.min(i, 6) * 40}ms` }}
                   >
                     {i === retryIndex && retry && (
                       <button
                         onClick={() => handleSubmit(null, true)}
-                        className="text-xs text-red-500 hover:text-red-700 underline mb-1"
+                        className="mb-1.5 text-xs text-red-600 underline decoration-red-600/40 underline-offset-2 dark:text-red-400 dark:decoration-red-400/40"
                       >
                         Retry
                       </button>
                     )}
                     {m.role === "user" ? (
-                      <div className="flex justify-end w-full min-w-0">
-                        <div
-                          className="text-sm text-white font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%]"
-                          style={{
-                            backgroundColor:
-                              primaryBrandHex || "#004A4E",
-                          }}
-                        >
+                      <div className="flex w-full min-w-0 justify-end">
+                        <div className="chat-bubble-user max-w-[min(100%,22rem)] px-4 py-3 text-[0.9375rem] font-normal leading-[1.65] tracking-[0.01em] sm:max-w-[75%]">
                           {m.message}
                         </div>
                       </div>
                     ) : (
-                      <div className="flex gap-1.5 md:gap-2 items-end w-full min-w-0">
-                        <div className="flex flex-col justify-end flex-shrink-0">
-                          <img
-                            src={brandContext?.logoUrl}
-                            className="rounded-full w-[32px] h-[32px] md:w-[40px] md:h-[40px] min-w-[32px] min-h-[32px] md:min-w-[40px] md:min-h-[40px] object-cover shadow-sm flex-shrink-0"
-                          />
-                        </div>
-                        <div className="text-sm font-normal font-baloo leading-relaxed break-words rounded-2xl px-3 py-2 md:px-4 max-w-[90%] sm:max-w-[60%] bg-muted-bg min-w-0">
-                          <FormatText text={m.message} />
+                      <div className="w-full min-w-0">
+                        <div className="chat-bubble-assistant w-full px-4 py-3.5 text-[0.9375rem] font-normal leading-[1.7] tracking-[0.01em]">
+                          <div className="chat-prose">
+                            <FormatText text={m.message} />
+                          </div>
                         </div>
                       </div>
                     )}
@@ -913,8 +929,8 @@ export default function ChatBox({
                             );
                           })()}
                           {!m.sourceCards?.length &&
-                          !m.productCards?.length &&
-                          m.sourceUrls?.length > 0 ? (
+                            !m.productCards?.length &&
+                            m.sourceUrls?.length > 0 ? (
                             <div className="flex flex-wrap gap-1.5">
                               <span className="text-xs text-muted">
                                 📚 Links:
@@ -925,7 +941,7 @@ export default function ChatBox({
                                   href={url}
                                   target="_blank"
                                   rel="noopener noreferrer"
-                                  className="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-800 hover:underline"
+                                  className="rounded bg-blue-50 px-2 py-0.5 text-xs text-blue-600 transition-colors hover:bg-blue-100 hover:text-blue-800 hover:underline dark:bg-blue-950/40 dark:text-blue-300 dark:hover:bg-blue-950/60 dark:hover:text-blue-200"
                                 >
                                   {url.length > 30
                                     ? `${url.slice(0, 30)}...`
@@ -938,7 +954,7 @@ export default function ChatBox({
                       )}
                     {m.role === "assistant" &&
                       currentChatType?.toLowerCase() === "lead_journey" && (
-                        <div className="mt-1.5 flex w-full min-w-0 max-w-[90%] flex-nowrap items-center gap-0.5 sm:max-w-[60%]">
+                        <div className="mt-2 flex w-full min-w-0 flex-nowrap items-center gap-0.5">
                           <AssistantEngagementRow
                             logId={
                               m._id != null ? String(m._id) : ""
@@ -992,11 +1008,9 @@ export default function ChatBox({
                   </div>
                 ))}
               {messageLoading && (
-                <ChatThinkingRow
-                  className="mb-4"
-                  displayName={brandContext?.brandName}
-                  primaryColor={brandContext?.primaryBrandColor}
-                />
+                <div className="chat-message-enter mb-5 flex w-full flex-col items-start">
+                  <ChatThinkingRow primaryColor={primaryBrandHex} />
+                </div>
               )}
 
               {eligibleForMatches && isCommunitySession && (
@@ -1010,155 +1024,164 @@ export default function ChatBox({
                   refreshing={matchesRefreshing}
                 />
               )}
-              <div ref={endOfMessagesRef}></div>
-              {/* </div> */}
+
+              {suggestedQuestions.length > 0 && (
+                <div ref={suggestionsRef} className="chat-suggestions-stack mb-2">
+                  <p className="chat-suggestions-label">Suggested</p>
+                  {suggestedQuestions.map((q, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => handleSubmit(String(q).trim())}
+                      disabled={messageLoading}
+                      className="chat-suggestion-chip group"
+                    >
+                        <span className="text-left">{q}</span>
+                    </button>
+                  ))}
+                </div>
+              )}
+
+              <div ref={endOfMessagesRef} />
             </div>
-            {/* Suggested intro questions — chat services only */}
-            {serviceType === "chat" &&
-              messages.length <= 1 &&
-              (() => {
-                const service = brandContext?.services?.find(
-                  (s) => s._key === serviceKey,
-                );
-                const questions = (service?.introquestions || [])
-                  .slice(0, 5)
-                  .filter(Boolean);
-                if (questions.length === 0) return null;
-                const scrollStep = 240;
-                const scrollLeft = () =>
-                  suggestedQuestionsScrollRef.current?.scrollBy({ left: -scrollStep, behavior: "smooth" });
-                const scrollRight = () =>
-                  suggestedQuestionsScrollRef.current?.scrollBy({ left: scrollStep, behavior: "smooth" });
-                return (
-                  <div className="flex items-center gap-1 py-2">
-                    <button
-                      type="button"
-                      onClick={scrollLeft}
-                      aria-label="Scroll suggested questions left"
-                      className="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full border border-border bg-muted-bg hover:bg-border/30 text-foreground transition-colors"
-                    >
-                      <ChevronLeft className="w-5 h-5" />
-                    </button>
-                    <div
-                      ref={suggestedQuestionsScrollRef}
-                      className="flex overflow-x-auto gap-2 flex-1 min-w-0 flex-nowrap overflow-y-hidden scrollbar-thin scroll-smooth"
-                    >
-                      {questions.map((q, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => handleSubmit(String(q).trim())}
-                          className="text-left px-3 py-2 rounded-xl border border-border bg-muted-bg hover:bg-border/30 text-foreground text-xs transition-colors flex-shrink-0 min-w-0 max-w-[85vw] md:max-w-[320px] whitespace-normal"
-                        >
-                          {q}
-                        </button>
-                      ))}
-                    </div>
-                    <button
-                      type="button"
-                      onClick={scrollRight}
-                      aria-label="Scroll suggested questions right"
-                      className="hidden md:flex flex-shrink-0 items-center justify-center w-8 h-8 rounded-full border border-border bg-muted-bg hover:bg-border/30 text-foreground transition-colors"
-                    >
-                      <ChevronRight className="w-5 h-5" />
-                    </button>
+
+            {suggestionsBelowFold && (
+              <div className="chat-suggestions-nudge-wrap pointer-events-none absolute inset-x-0 bottom-0 z-[15] flex justify-center px-3 pb-2 sm:px-4">
+                <button
+                  type="button"
+                  onClick={scrollToSuggestions}
+                  className="chat-suggestions-nudge pointer-events-auto"
+                  aria-label="Scroll to suggested questions"
+                >
+                  <ChevronDown className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
+                  <span>Suggested questions</span>
+                </button>
+              </div>
+            )}
+
+            {(sessionTitle || brandContext?.logoUrl) && (
+              <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-center px-4 pt-2.5 sm:pt-3">
+                <div className="chat-crown pointer-events-auto inline-flex max-w-[min(100%,24rem)] items-center gap-2 rounded-full py-0.5 pl-0.5 pr-3">
+                  {brandContext?.logoUrl ? (
+                    <img
+                      src={brandContext.logoUrl}
+                      alt=""
+                      className="chat-crown-avatar size-8 shrink-0 rounded-full object-cover sm:size-9"
+                    />
+                  ) : null}
+                  {sessionTitle ? (
+                    <p className="min-w-0 truncate pr-0.5 text-sm font-semibold leading-none tracking-[0.01em] text-[var(--kc-ink)] sm:text-[0.9375rem]">
+                      {sessionTitle}
+                    </p>
+                  ) : null}
+                </div>
+
+                {showOnboardingProgress && (
+                  <div
+                    className="chat-progress-pill pointer-events-auto mt-2.5 inline-flex items-baseline gap-1 rounded-full px-3 py-1 text-xs tabular-nums"
+                  >
+                    <span className="font-semibold text-[var(--kc-ink)]">
+                      {Math.round(
+                        Math.min(100, Math.max(0, displayOnboardingPct)),
+                      )}
+                      %
+                    </span>
+                    <span className="text-[var(--kc-ink-muted)]">completed</span>
                   </div>
-                );
-              })()}
-            {/* Textarea Section - flex-1 */}
-            <div className="flex-1 min-h-0 flex flex-col border-border pt-2">
+                )}
+              </header>
+            )}
+          </div>
+
+          <div className="chat-composer-dock relative mx-auto w-full max-w-3xl shrink-0 px-3 pt-0.5 sm:px-4">
+            <div className="chat-composer-stack">
               <form
-                className="relative w-full flex-1 flex flex-col min-h-0"
+                className="w-full"
                 onSubmit={(e) => {
                   e.preventDefault();
                   handleSubmit();
                 }}
               >
-                <textarea
-                  className="px-12 py-3 w-full flex-1 border border-border rounded-xl focus:outline-none focus:ring-0 focus:border-ring transition bg-input text-foreground leading-6 resize-none placeholder-transparent min-h-0"
-                  value={input}
-                  onChange={(e) => setInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
-                      e.preventDefault();
-                      handleSubmit();
-                    }
-                  }}
-                  placeholder={`Message ${brandContext?.brandName}…`}
-                  disabled={messageLoading}
-                />
+                <div className="chat-composer-shell flex items-center gap-1 rounded-3xl py-1.5 pl-1 pr-1 transition-[border-color]">
+                  <label className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center self-end rounded-full text-[var(--kc-ink-muted)] transition-colors hover:bg-[var(--kc-parchment)] hover:text-[var(--kc-ink)]">
+                    <input
+                      type="file"
+                      accept=".pdf,.docx"
+                      onChange={(e) => setSelectedFile(e.target.files[0])}
+                      className="hidden"
+                    />
+                    <span
+                      title={
+                        resumeData?.filename
+                          ? "Reselect"
+                          : brandContext?.isBrandAdmin
+                            ? "Share JD"
+                            : "Upload Resume"
+                      }
+                    >
+                      <Paperclip className="h-[18px] w-[18px]" strokeWidth={1.75} />
+                    </span>
+                  </label>
 
-                {(!input || input.trim().length === 0) && (
-                  <div className="pointer-events-none absolute inset-y-0 left-12 right-20 flex items-center text-muted text-sm">
-                    Message {brandContext?.brandName}…
-                  </div>
-                )}
-
-                <label className="absolute left-4 top-1/2 -translate-y-1/2 cursor-pointer text-muted hover:text-foreground transition-colors">
-                  <input
-                    type="file"
-                    accept=".pdf,.docx"
-                    onChange={(e) => setSelectedFile(e.target.files[0])}
-                    className="hidden"
+                  <textarea
+                    ref={inputRef}
+                    rows={1}
+                    className="chat-composer-input min-h-9 min-w-0 flex-1 resize-none border-0 bg-transparent py-1.5 text-[15px] leading-6 text-[var(--kc-ink)] placeholder:text-[var(--kc-ink-muted)] focus:outline-none focus:ring-0 disabled:opacity-50"
+                    value={input}
+                    onChange={(e) => {
+                      setInput(e.target.value);
+                      requestAnimationFrame(resizeComposerInput);
+                    }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && !e.shiftKey) {
+                        e.preventDefault();
+                        handleSubmit();
+                      }
+                    }}
+                    placeholder={`Message ${brandContext?.brandName || "…"}`}
+                    disabled={messageLoading || isRecording || isTranscribing}
                   />
-                  <span
-                    className="hover:scale-110 transition-transform"
-                    title={
-                      resumeData?.filename
-                        ? "Reselect"
-                        : brandContext?.isBrandAdmin
-                          ? "Share JD"
-                          : "Upload Resume"
-                    }
-                  >
-                    <Paperclip className="w-5 h-5" />
-                  </span>
-                </label>
 
-                <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-                  <div className="relative">
+                  <div className="relative flex shrink-0 items-center gap-0.5 self-end">
                     {isTranscribing && (
-                      <div className="absolute bottom-full mb-2 right-0 z-10">
-                        <div className="relative bg-card border border-border rounded-md shadow px-3 py-1.5 text-xs text-foreground">
+                      <div className="absolute bottom-full right-0 z-20 mb-2">
+                        <div className="chat-popover rounded-xl px-3 py-1.5 text-xs shadow-lg">
                           Transcribing…
-                          <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-border rotate-45"></div>
                         </div>
                       </div>
                     )}
                     {transcribeError && (
-                      <div className="absolute bottom-full mb-2 right-0 z-10">
-                        <div className="relative bg-card border border-red-300 rounded-md shadow px-3 py-1.5 text-xs text-red-600">
+                      <div className="absolute bottom-full right-0 z-20 mb-2 max-w-[min(80vw,20rem)]">
+                        <div className="chat-popover rounded-xl border-red-500/30 px-3 py-1.5 text-xs text-red-700 shadow-lg dark:text-red-400">
                           {transcribeError}
-                          <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-red-300 rotate-45"></div>
                         </div>
                       </div>
                     )}
                     {transcriptText && (
-                      <div className="absolute bottom-full mb-2 right-0 z-10 w-[min(80vw,28rem)]">
-                        <div className="relative bg-card border border-border rounded-lg p-3 shadow">
-                          <div className="text-xs text-muted mb-1">
+                      <div className="absolute bottom-full right-0 z-20 mb-2 w-[min(80vw,28rem)]">
+                        <div className="chat-popover rounded-xl p-3 shadow-lg">
+                          <div className="mb-1 text-xs text-[var(--kc-ink-muted)]">
                             Voice transcript
                           </div>
-                          <div className="text-foreground text-sm whitespace-pre-wrap break-words max-h-40 overflow-auto">
+                          <div className="max-h-40 overflow-auto whitespace-pre-wrap break-words text-sm text-[var(--kc-ink)]">
                             {transcriptText}
                           </div>
-                          <div className="mt-2 flex gap-2 justify-end">
+                          <div className="mt-2 flex justify-end gap-2">
                             <button
                               onClick={() => handleSubmit(transcriptText)}
-                              className="px-3 py-1.5 rounded-md bg-orange-600 text-white hover:bg-orange-700 text-xs"
+                              className="chat-send-btn rounded-full px-3 py-1.5 text-xs font-medium"
                               type="button"
                             >
                               Send
                             </button>
                             <button
                               onClick={() => setTranscriptText("")}
-                              className="px-3 py-1.5 rounded-md border border-border text-foreground hover:bg-muted-bg text-xs"
+                              className="rounded-full border border-[var(--kc-line)] px-3 py-1.5 text-xs text-[var(--kc-ink-muted)] hover:bg-[var(--kc-parchment)]"
                               type="button"
                             >
                               Discard
                             </button>
                           </div>
-                          <div className="absolute right-3 top-full w-3 h-3 bg-card border-r border-b border-border rotate-45"></div>
                         </div>
                       </div>
                     )}
@@ -1167,31 +1190,33 @@ export default function ChatBox({
                       onClick={() =>
                         isRecording ? stopRecording() : startRecording()
                       }
-                      className="p-2 rounded-lg hover:bg-muted-bg transition-colors"
+                      className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${isRecording
+                        ? "bg-red-50 text-red-600"
+                        : "text-[var(--kc-ink-muted)] hover:bg-[var(--kc-parchment)] hover:text-[var(--kc-ink)]"
+                        }`}
                       title={isRecording ? "Stop recording" : "Start recording"}
                     >
                       {isRecording ? (
-                        <Mic className="w-5 h-5 text-red-600" />
+                        <Mic className="h-[18px] w-[18px]" strokeWidth={1.75} />
                       ) : (
-                        <MicOff className="w-5 h-5 text-muted" />
+                        <MicOff className="h-[18px] w-[18px]" strokeWidth={1.75} />
                       )}
                     </button>
+                    <button
+                      type="submit"
+                      disabled={!input.trim() || messageLoading}
+                      className="chat-send-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                      title="Send message"
+                    >
+                      <Send className="h-4 w-4" strokeWidth={2.25} />
+                    </button>
                   </div>
-                  <button
-                    type="submit"
-                    disabled={!input.trim() || messageLoading}
-                    className={`inline-flex items-center justify-center p-2 rounded-lg ${!input.trim() || messageLoading
-                      ? "bg-muted-bg text-muted cursor-not-allowed"
-                      : "bg-[#59646F] text-[#FFEED8] hover:bg-[#4a5568] active:scale-95"
-                      } transition-all`}
-                    title="Send message"
-                  >
-                    <Send className="w-5 h-5" />
-                  </button>
                 </div>
               </form>
+
+              <PoweredByKavisha compact />
             </div>
-            {/* Keep Resume component for file display and processing, but hidden file input */}
+
             <Resume
               resumeData={resumeData}
               updateResume={updateResume}

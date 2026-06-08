@@ -41,8 +41,8 @@ export default function ProductCards({
   if (list.length === 0) return null;
 
   return (
-    <div className="mt-2 w-full min-w-0 border-t border-border/25 pt-2 dark:border-border/30">
-      <p className="mb-1.5 text-xs text-muted">Products</p>
+    <div className="mt-2 w-full min-w-0 border-t border-[var(--kc-line,rgba(26,31,46,0.09))] pt-2">
+      <p className="mb-1.5 text-xs text-[var(--kc-ink-muted,var(--muted))]">Products</p>
       <div className="-mx-1 flex w-full min-w-0 gap-2 overflow-x-auto px-1 pb-0.5 [scrollbar-width:thin]">
         {list.map((product, idx) => (
           <ProductCard

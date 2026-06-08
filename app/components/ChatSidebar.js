@@ -2,11 +2,14 @@
 
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { signOut } from "../lib/firebase/logout";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { PanelLeftClose, MoreVertical, Trash2 } from "lucide-react";
-import { normalizeBrandHex } from "@/app/lib/brandTheme";
+import {
+  brandUserBubbleCssVars,
+  normalizeBrandHex,
+} from "@/app/lib/brandTheme";
 import {
   JOB_SEEKER_CHAT_TITLE,
   JOB_SEEKER_OPENING_MESSAGE,
@@ -41,6 +44,14 @@ export default function ChatSidebar({
   const [showCommunityNewDropdown, setShowCommunityNewDropdown] = useState(false);
   const brandContext = useBrandContext();
   const communityPrimaryHex = normalizeBrandHex(brandContext?.primaryBrandColor);
+  const brandBubbleVars = useMemo(
+    () => brandUserBubbleCssVars(communityPrimaryHex),
+    [communityPrimaryHex]
+  );
+  const newChatBtnClass = brandBubbleVars
+    ? "chat-brand-btn-gradient"
+    : "bg-highlight text-white";
+  const newChatBtnStyle = brandBubbleVars || undefined;
 
   const [deletingChatId, setDeletingChatId] = useState(null);
   const router = useRouter();
@@ -162,11 +173,11 @@ export default function ChatSidebar({
         {!isCollapsed && (
           <>
             <div
-              className="fixed inset-0 z-30 bg-black/50 sm:hidden"
+              className="fixed inset-0 z-40 bg-black/50 sm:hidden"
               onClick={() => toggleLeftSideBar()}
             ></div>
 
-            <div className="font-baloo h-full max-h-[100vh] md:mt-12 md:h-[calc(100vh-3rem)] fixed top-0 left-0 z-40 flex flex-col w-[280px] border-r border-border bg-background shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
+            <div className="font-baloo h-full max-h-[100vh] md:mt-12 md:h-[calc(100vh-3rem)] fixed top-0 left-0 z-50 flex flex-col w-[280px] border-r border-border bg-background shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
               <div className="flex-1 flex flex-col min-h-0 p-4">
               <div className="flex justify-between">
                 <p className="font-semibold text-muted">Chat history</p>
@@ -181,12 +192,8 @@ export default function ChatSidebar({
                     <>
                       <div className="relative">
                         <button
-                          className={`flex w-full justify-center gap-2 rounded-md p-2 text-xs font-medium text-white transition-colors hover:opacity-90 ${!communityPrimaryHex ? "bg-highlight" : ""}`}
-                          style={
-                            communityPrimaryHex
-                              ? { backgroundColor: communityPrimaryHex }
-                              : undefined
-                          }
+                          className={`flex w-full justify-center gap-2 rounded-md p-2 text-xs font-medium transition-colors hover:opacity-90 ${newChatBtnClass}`}
+                          style={newChatBtnStyle}
                           onClick={() => setShowCommunityNewDropdown((v) => !v)}
                         >
                           New
@@ -259,7 +266,8 @@ export default function ChatSidebar({
                     <>
                       <div className="relative">
                         <button
-                          className="flex w-full justify-center gap-2 rounded-md bg-highlight p-2 text-xs font-medium text-white transition-colors hover:opacity-90"
+                          className={`flex w-full justify-center gap-2 rounded-md p-2 text-xs font-medium transition-colors hover:opacity-90 ${newChatBtnClass}`}
+                          style={newChatBtnStyle}
                           onClick={() =>
                             chatServices.length > 0 && onSelectService
                               ? setShowNewChatDropdown((v) => !v)

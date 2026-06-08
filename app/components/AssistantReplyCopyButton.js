@@ -211,10 +211,10 @@ export default function AssistantReplyCopyButton({
         type="button"
         aria-label="Copy response"
         onClick={() => void handleCopy()}
-        className={`inline-flex size-9 items-center justify-center text-foreground ${className}`.trim()}
+        className={`inline-flex size-9 items-center justify-center bg-transparent text-[var(--kc-ink-muted,var(--muted))] hover:bg-transparent active:bg-transparent ${className}`.trim()}
       >
         <Copy
-          className="h-4 w-4 shrink-0 fill-none text-foreground"
+          className="h-4 w-4 shrink-0 fill-none text-[var(--kc-ink-muted,var(--muted))]"
           strokeWidth={2}
           aria-hidden
         />
@@ -223,7 +223,7 @@ export default function AssistantReplyCopyButton({
         <span
           role="status"
           aria-live="polite"
-          className="pointer-events-none absolute left-full top-1/2 z-10 ml-0.5 -translate-y-1/2 whitespace-nowrap rounded border border-black px-1.5 py-0.5 text-xs text-foreground dark:border-neutral-200"
+          className="pointer-events-none absolute left-full top-1/2 z-10 ml-0.5 -translate-y-1/2 whitespace-nowrap rounded border border-border bg-card px-1.5 py-0.5 text-xs text-foreground shadow-sm"
         >
           Copied
         </span>

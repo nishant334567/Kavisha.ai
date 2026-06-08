@@ -44,7 +44,7 @@ export default function AssistantEngagementRow({
                 aria-pressed={liked}
                 aria-label={liked ? "Unlike this answer" : "Like this answer"}
                 onClick={() => void toggleLike()}
-                className={`dark:invert inline-flex size-9 items-center justify-center rounded-md bg-transparent transition-colors hover:bg-black/[0.06] dark:hover:bg-white/[0.08] ${pending ? "opacity-50" : ""}`}
+                className={`dark:invert inline-flex size-9 items-center justify-center rounded-md bg-transparent hover:bg-transparent active:bg-transparent ${pending ? "opacity-50" : ""}`}
             >
                 <img
                     src={liked ? "/like-filled-2.png" : "/like.png"}

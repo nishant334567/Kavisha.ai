@@ -8,37 +8,38 @@ import {
   Users,
   Home,
   MessagesSquare,
-  Link2,
+  MessageCircleMore,
   Sparkles,
 } from "lucide-react";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
+import { useGlobalMessages } from "@/app/components/GlobalMessages";
 
 const ACTIVE = "text-[#00888E]";
 const INACTIVE = "text-muted";
 
-function useBottomNavItems(brand) {
+const navItemClass = (active) =>
+  `flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-1 px-0.5 text-[11px] font-medium leading-tight ${
+    active ? ACTIVE : INACTIVE
+  }`;
+
+const iconClass = (active) =>
+  `h-5 w-5 shrink-0 ${active ? "stroke-[2.5px]" : "stroke-2"}`;
+
+function useBottomNavItems(brand, globalMessages) {
   return useMemo(() => {
     const communityEnabled =
       !!brand?.enableFriendConnect || !!brand?.enableProfessionalConnect;
     const isKavishaMainBrand = brand?.subdomain === "kavisha";
     const showCommunityOnBrand =
-      communityEnabled &&
-      brand?.subdomain &&
-      !isKavishaMainBrand;
+      communityEnabled && brand?.subdomain && !isKavishaMainBrand;
 
     const communityPath =
       "/community" +
       (brand?.subdomain
         ? `?subdomain=${encodeURIComponent(brand.subdomain)}`
         : "");
-    const linksHref =
-      "/links" +
-      (brand?.subdomain
-        ? `?brand=${encodeURIComponent(brand.subdomain)}`
-        : "");
-    const showLinks = brand?.enableLinks !== false;
 
-    const list = [
+    const items = [
       {
         key: "featured",
         href: "/featured",
@@ -49,7 +50,7 @@ function useBottomNavItems(brand) {
     ];
 
     if (showCommunityOnBrand) {
-      list.push({
+      items.push({
         key: "community",
         href: communityPath,
         label: brand?.communityName || "Community",
@@ -59,7 +60,7 @@ function useBottomNavItems(brand) {
     }
 
     if (isKavishaMainBrand) {
-      list.push({
+      items.push({
         key: "widget-intro",
         href: "/widget-intro",
         label: "My agent",
@@ -68,7 +69,7 @@ function useBottomNavItems(brand) {
       });
     }
 
-    list.push(
+    items.push(
       {
         key: "home",
         href: "/",
@@ -82,33 +83,36 @@ function useBottomNavItems(brand) {
         label: "Chats",
         icon: MessagesSquare,
         match: (p) => p.startsWith("/chats"),
-      }
+      },
     );
 
-    if (showLinks) {
-      list.push({
-        key: "links",
-        href: linksHref,
-        label: "Links",
-        icon: Link2,
-        match: (p) => p.startsWith("/links"),
+    if (globalMessages?.available) {
+      items.push({
+        key: "messages",
+        label: "Messages",
+        icon: MessageCircleMore,
+        onClick: globalMessages.openInbox,
+        active: globalMessages.isActive,
       });
     }
 
-    return list;
+    return items;
   }, [
     brand?.subdomain,
     brand?.enableFriendConnect,
     brand?.enableProfessionalConnect,
     brand?.communityName,
-    brand?.enableLinks,
+    globalMessages?.available,
+    globalMessages?.openInbox,
+    globalMessages?.isActive,
   ]);
 }
 
 export default function MobileBottomNav({ embedded = false }) {
   const pathname = usePathname() || "";
   const brand = useBrandContext();
-  const visibleItems = useBottomNavItems(brand);
+  const globalMessages = useGlobalMessages();
+  const items = useBottomNavItems(brand, globalMessages);
 
   return (
     <nav
@@ -124,20 +128,29 @@ export default function MobileBottomNav({ embedded = false }) {
       aria-label="Main navigation"
     >
       <div className="flex items-stretch justify-around gap-0 px-1 pt-2">
-        {visibleItems.map(({ key, href, label, icon: Icon, match }) => {
-          const active = match(pathname);
+        {items.map((item) => {
+          const { key, label, icon: Icon } = item;
+          const active = item.onClick ? item.active : item.match(pathname);
+
+          if (item.onClick) {
+            return (
+              <button
+                key={key}
+                type="button"
+                onClick={item.onClick}
+                className={navItemClass(active)}
+                aria-label="Open messages"
+                aria-pressed={active}
+              >
+                <Icon className={iconClass(active)} aria-hidden />
+                <span className="truncate max-w-full text-center">{label}</span>
+              </button>
+            );
+          }
+
           return (
-            <Link
-              key={key}
-              href={href}
-              className={`flex min-w-0 flex-1 flex-col items-center justify-center gap-0.5 py-1 px-0.5 text-[11px] font-medium leading-tight ${
-                active ? ACTIVE : INACTIVE
-              }`}
-            >
-              <Icon
-                className={`h-5 w-5 shrink-0 ${active ? "stroke-[2.5px]" : "stroke-2"}`}
-                aria-hidden
-              />
+            <Link key={key} href={item.href} className={navItemClass(active)}>
+              <Icon className={iconClass(active)} aria-hidden />
               <span className="truncate max-w-full text-center">{label}</span>
             </Link>
           );
