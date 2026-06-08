@@ -6,6 +6,10 @@ import { useSearchParams } from "next/navigation";
 import ChatBoxWidget from "./components/ChatBoxWidget";
 import WidgetPostMessageAuth from "./components/WidgetPostMessageAuth";
 import { hexToRgba, normalizeBrandHex } from "@/app/lib/brandTheme";
+import {
+  trackWidgetImpressionOnce,
+  trackWidgetOpen,
+} from "@/app/lib/widgetAnalytics";
 
 /** First launcher spin waits this long after theme loads (attention animation only). */
 const LAUNCHER_NUDGE_DELAY_MS = 3000;
@@ -79,6 +83,11 @@ function WidgetShell() {
     (typeof widgetChatbotHeader === "string" && widgetChatbotHeader.trim()
       ? widgetChatbotHeader.trim()
       : null) || widgetHeadingFromBrand(brand);
+
+  useEffect(() => {
+    if (!brandTrimmed || !themeReady) return;
+    trackWidgetImpressionOnce(brandTrimmed);
+  }, [brandTrimmed, themeReady]);
 
   useEffect(() => {
     const b = brandTrimmed.toLowerCase();
@@ -341,7 +350,10 @@ function WidgetShell() {
       ) : (
         <button
           type="button"
-          onClick={() => setIsOpen(true)}
+          onClick={() => {
+            trackWidgetOpen(brandTrimmed);
+            setIsOpen(true);
+          }}
           aria-label="Open chat"
           className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full text-white shadow-lg ring-2 transition hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-transparent ${launcherAnimation && launcherNudgeReady ? "animate-widget-launcher-nudge will-change-transform" : ""} ${!primaryHex ? "bg-highlight ring-highlight/30" : ""} ${launcherImageUrl ? "p-1" : ""}`}
           style={

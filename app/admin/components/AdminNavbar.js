@@ -52,6 +52,7 @@ export default function AdminNavbar() {
     { name: "My Services", path: `/admin/${brand?.subdomain}/my-services` },
     { name: "Train My Avataar", path: `/admin/${brand?.subdomain}/train/v2` },
     { name: "Revenue", path: `/admin/${brand?.subdomain}/revenue` },
+    { name: "Widget Analytics", path: `/admin/${brand?.subdomain}/widget-analytics` },
     { name: "My Profile", path: `/admin/${brand?.subdomain}/edit-profile` },
   ];
 
@@ -124,6 +125,13 @@ export default function AdminNavbar() {
               onClick={() => handleNavigate(`/admin/${brand?.subdomain}/revenue`)}
             >
               {getNavLabel(`/admin/${brand?.subdomain}/revenue`, "REVENUE")}
+            </li>
+            <li
+              className={`cursor-pointer uppercase tracking-wide text-muted hover:text-foreground transition-colors ${pathname?.includes("/widget-analytics") ? "font-semibold text-foreground" : ""
+                }`}
+              onClick={() => handleNavigate(`/admin/${brand?.subdomain}/widget-analytics`)}
+            >
+              {getNavLabel(`/admin/${brand?.subdomain}/widget-analytics`, "WIDGET ANALYTICS")}
             </li>
             <li
               className={`cursor-pointer uppercase tracking-wide flex items-center gap-2 text-muted hover:text-foreground transition-colors ${pathname?.includes("/edit-profile") ? "font-semibold text-foreground" : ""

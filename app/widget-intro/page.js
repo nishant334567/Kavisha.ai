@@ -1,233 +1,221 @@
+import {
+  ArrowRight,
+  BarChart3,
+  Code2,
+  MessagesSquare,
+  MousePointerClick,
+  Plug,
+  Sparkles,
+  TrendingUp,
+} from "lucide-react";
 import Footer from "../components/Footer";
 
-/** Static assets for this route only (`public/widget-intro/`). */
-const WI = "/widget-intro";
-
-/** Invert line-art in dark mode (matches `darkMode: "media"`). */
-const stepFigureClass = "dark:[filter:invert(1)_hue-rotate(180deg)]";
-
 const FEATURES = [
-    {
-        id: "engagement",
-        img: `${WI}/engagement.png`,
-        text: "INCREASED ENGAGEMENT",
-        alt: "Increased engagement",
-    },
-    {
-        id: "conversations",
-        img: `${WI}/conversations.png`,
-        text: "MEANINGFUL CONVERSATIONS",
-        alt: "Meaningful conversations",
-    },
-    {
-        id: "actions",
-        img: `${WI}/actions.png`,
-        text: "FAVORABLE ACTIONS",
-        alt: "Favorable actions",
-    },
-    {
-        id: "integration",
-        img: `${WI}/integration.png`,
-        text: "SEAMLESS INTEGRATION",
-        alt: "Seamless integration",
-    },
+  { id: "engagement", icon: TrendingUp, text: "INCREASED ENGAGEMENT" },
+  { id: "conversations", icon: MessagesSquare, text: "MEANINGFUL CONVERSATIONS" },
+  { id: "actions", icon: MousePointerClick, text: "FAVORABLE ACTIONS" },
+  { id: "integration", icon: Plug, text: "SEAMLESS INTEGRATION" },
 ];
 
-/** Use encodeURIComponent (not URLSearchParams) so spaces are %20, not + — mail clients often show + literally. */
+const STEPS = [
+  {
+    num: "01",
+    icon: Sparkles,
+    body: "Train your Avataar with all the information on your website (No limits!). Tweak the personality of your Avataar so it sounds just like you.",
+  },
+  {
+    num: "02",
+    icon: Code2,
+    body: "Integrate the code snippet of the widget to your website.",
+  },
+  {
+    num: "03",
+    icon: BarChart3,
+    body: "See the magic happen and enjoy advanced analytics.",
+  },
+];
+
+const STATS = [
+  { value: "12", suffix: "x", label: "User Engagement" },
+  { value: "4", suffix: "x", label: "Call-to-action" },
+  { value: "24", suffix: "hr", label: "Integration" },
+];
+
 const CONTACT_SALES_MAILTO = (() => {
-    const subject = encodeURIComponent("Kavisha AI Widget — sales inquiry");
-    const body = encodeURIComponent(
-        "Hey I'm interested in getting the Kavisha AI Widget on my website. Tell me how I can go ahead!",
-    );
-    return `mailto:hello@kavisha.ai?subject=${subject}&body=${body}`;
+  const subject = encodeURIComponent("Kavisha AI Widget — sales inquiry");
+  const body = encodeURIComponent(
+    "Hey I'm interested in getting the Kavisha AI Widget on my website. Tell me how I can go ahead!",
+  );
+  return `mailto:hello@kavisha.ai?subject=${subject}&body=${body}`;
 })();
 
-export default function WidgetIntroPage() {
-    return (
-        <main className="min-h-screen bg-background text-foreground">
-            <div className="flex min-h-[85vh] flex-col items-center justify-center px-4 pb-16 pt-[60px] lg:min-h-[calc(100vh-80px)]">
-                <div className="mb-4 md:mb-6">
-                    <img
-                        src="/kavisha-logo.png"
-                        width={130}
-                        height={130}
-                        alt="Kavisha"
-                        className="h-auto w-[100px] md:w-[130px]"
-                    />
-                </div>
+function FeatureStrip() {
+  return (
+    <section className="w-full px-5 pb-12 sm:pb-16 md:px-8 md:pb-20">
+      <div className="mx-auto grid max-w-7xl gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-4 lg:gap-5">
+        {FEATURES.map((feature, i) => {
+          const Icon = feature.icon;
+          const [headline, ...rest] = feature.text.split(" ");
+          const subline = rest.join(" ");
 
-                <div className="mb-4 text-center md:mb-6">
-                    <h1 className="mb-4 text-4xl font-normal leading-[1.1] md:text-6xl lg:text-[75px]">
-                        An <span className="text-[#00B5BD]">AI Agent</span> for your
-                        <br className="hidden md:block" /> website
-                    </h1>
-                    <p className="mx-auto max-w-3xl px-4 text-lg font-light leading-relaxed text-muted md:text-xl">
-                        Using Kavisha, you can create a custom AI Widget that talks to your
-                        website&apos;s casual visitors, and converts them into customers and
-                        deep admirers.
-                    </p>
+          return (
+            <div
+              key={feature.id}
+              className="group rounded-2xl border border-border bg-card p-5 transition-all duration-300 hover:-translate-y-0.5 hover:border-accent/30 hover:shadow-lg hover:shadow-accent/5 sm:p-6 md:p-8"
+            >
+              <div className="mb-6 flex items-start justify-between gap-3">
+                <div className="inline-flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-accent/10 text-accent ring-1 ring-accent/20 transition-all group-hover:bg-accent/15 group-hover:ring-accent/35">
+                  <Icon className="h-5 w-5" strokeWidth={1.75} />
                 </div>
-
-                <div className="mx-auto mt-8 grid max-w-5xl grid-cols-2 gap-6 md:grid-cols-4 md:gap-12">
-                    {FEATURES.map((feature) => (
-                        <div
-                            key={feature.id}
-                            className="flex flex-col items-center text-center"
-                        >
-                            <div className="mb-4 flex items-center justify-center">
-                                <img
-                                    src={feature.img}
-                                    alt={feature.alt}
-                                    className="h-20 w-20 object-contain md:h-24 md:w-24"
-                                />
-                            </div>
-                            <p className="max-w-[150px] whitespace-pre-line text-xs font-semibold leading-relaxed tracking-wider text-foreground/90 md:text-sm">
-                                {feature.text.replace(" ", "\n")}
-                            </p>
-                        </div>
-                    ))}
-                </div>
-            </div>
-
-            <div className="mx-auto max-w-6xl space-y-32 px-6 py-24">
-                <div className="flex flex-col items-center gap-12 md:flex-row">
-                    <div className="order-2 flex-1 text-center md:order-1 md:text-left">
-                        <h2 className="mb-4 text-2xl font-semibold text-[#00B5BD]">Step 1</h2>
-                        <p className="text-xl font-light leading-relaxed md:text-2xl">
-                            Train your Avataar with all the information on your website (No
-                            limits!). Tweak the personality of your Avataar so it sounds just
-                            like you.
-                        </p>
-                    </div>
-                    <div className="order-1 flex flex-1 justify-center md:order-2">
-                        <img
-                            src="/Step-1-photo-thick-lines.png"
-                            alt="Training AI"
-                            className="h-auto w-full max-w-md dark:hidden"
-                        />
-                        <img
-                            src="/Step-1-photo-thick-lines-dark-mode.png"
-                            alt="Training AI"
-                            className="hidden h-auto w-full max-w-md dark:block"
-                        />
-                    </div>
-                </div>
-
-                <div className="flex flex-col items-center gap-12 md:flex-row">
-                    <div className="flex flex-1 justify-center">
-                        <img
-                            src={`${WI}/step-2.png`}
-                            alt="Widget code snippet"
-                            className={`h-auto w-full max-w-[280px] md:max-w-[320px] ${stepFigureClass}`}
-                        />
-                    </div>
-                    <div className="flex-1 text-center md:text-left">
-                        <h2 className="mb-4 text-2xl font-semibold text-[#00B5BD]">Step 2</h2>
-                        <p className="text-xl font-light leading-relaxed md:text-2xl">
-                            Integrate the code snippet of the widget to your website.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="flex flex-col items-center gap-12 md:flex-row">
-                    <div className="order-2 flex-1 text-center md:order-1 md:text-left">
-                        <h2 className="mb-4 text-2xl font-semibold text-[#00B5BD]">Step 3</h2>
-                        <p className="text-xl font-light leading-relaxed md:text-2xl">
-                            See the magic happen and enjoy advanced analytics.
-                        </p>
-                    </div>
-                    <div className="order-1 flex flex-1 justify-center md:order-2">
-                        <img
-                            src="/Step-3-photo-thick-lines.png"
-                            alt="Analytics"
-                            className="h-auto w-full max-w-md dark:hidden"
-                        />
-                        <img
-                            src="/Step-3-photo-thick-lines-dark-mode.png"
-                            alt="Analytics"
-                            className="hidden h-auto w-full max-w-md dark:block"
-                        />
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-background px-4 py-20">
-                <div className="mx-auto flex max-w-5xl flex-col items-center justify-between rounded-[35px] border border-border bg-card px-4 py-14 shadow-sm md:flex-row">
-                    <div className="flex flex-1 flex-col items-center text-center">
-                        <p className="mb-3 text-6xl font-normal md:text-7xl lg:text-8xl">
-                            <span className="text-[#00B5BD]">12</span>
-                            <span className="text-foreground">x</span>
-                        </p>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground md:text-sm">
-                            User Engagement
-                        </p>
-                    </div>
-                    <div className="hidden h-24 w-px bg-border md:block" />
-                    <div className="flex flex-1 flex-col items-center py-8 text-center md:py-0">
-                        <p className="mb-3 text-6xl font-normal md:text-7xl lg:text-8xl">
-                            <span className="text-[#00B5BD]">4</span>
-                            <span className="text-foreground">x</span>
-                        </p>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground md:text-sm">
-                            Call-to-action
-                        </p>
-                    </div>
-                    <div className="hidden h-24 w-px bg-border md:block" />
-                    <div className="flex flex-1 flex-col items-center text-center">
-                        <p className="mb-3 text-6xl font-normal md:text-7xl lg:text-8xl">
-                            <span className="text-[#00B5BD]">24</span>
-                            <span className="ml-2 text-foreground">hr</span>
-                        </p>
-                        <p className="text-xs font-semibold uppercase tracking-[0.2em] text-foreground md:text-sm">
-                            Integration
-                        </p>
-                    </div>
-                </div>
-            </div>
-
-            <div className="bg-[#2d545e] px-4 py-20 text-center text-white">
-                <h2 className="mb-6 text-3xl font-normal leading-tight tracking-wide md:text-5xl lg:text-6xl">
-                    Get a custom{" "}
-                    <span className="widget-intro-moving-gradient font-medium">
-                        AI Agent
-                    </span>{" "}
-                    for your website
-                </h2>
-                {/* Pricing disabled for Shopify App Review — app is free
-                <p className="mb-12 text-xl font-light opacity-90 md:text-2xl">
-                    Subscriptions start at ₹999 (~$10) per month
-                </p>
-                */}
-                <p className="mb-12 text-xl font-light opacity-90 md:text-2xl">
-                    Free to get started
-                </p>
-                <a
-                    href={CONTACT_SALES_MAILTO}
-                    className="inline-block rounded-full border border-white/60 px-12 py-3 text-lg font-medium transition-all duration-300 hover:bg-background hover:text-highlight md:text-xl"
+                <span
+                  className="font-figtree text-3xl font-light leading-none tabular-nums text-border transition-colors group-hover:text-accent/25 md:text-4xl"
+                  aria-hidden
                 >
-                    Contact sales
-                </a>
+                  {String(i + 1).padStart(2, "0")}
+                </span>
+              </div>
+              <p className="font-figtree text-xs font-semibold uppercase leading-[1.45] tracking-[0.16em]">
+                <span className="block text-foreground">{headline}</span>
+                <span className="block text-muted">{subline}</span>
+              </p>
             </div>
+          );
+        })}
+      </div>
+    </section>
+  );
+}
 
-            <div className="flex flex-col items-center justify-center border-t border-border/40 bg-gradient-to-b from-background to-muted-bg px-4 py-8 md:py-14">
-                <div className="flex flex-col items-center justify-center pb-4 pt-2">
-                    <img
-                        src="/kavisha-logo.png"
-                        width={120}
-                        height={120}
-                        alt="Kavisha"
-                        className="h-auto w-[120px] md:w-[150px]"
-                    />
+function HowItWorks() {
+  return (
+    <section className="px-5 py-14 sm:py-20 md:px-8 md:py-28">
+      <div className="mx-auto max-w-3xl text-center">
+        <p className="landing-label">How it works</p>
+        <h2 className="mt-3 text-2xl font-normal tracking-tight text-foreground sm:text-3xl md:text-4xl">
+          Three steps to go live
+        </h2>
+      </div>
+
+      <div className="relative mx-auto mt-10 max-w-2xl sm:mt-14 md:mt-16">
+        <div
+          className="absolute left-[1.375rem] top-7 bottom-7 w-px bg-gradient-to-b from-accent/40 via-border to-accent/40 sm:left-[1.6875rem] sm:top-8 sm:bottom-8"
+          aria-hidden
+        />
+        <ol className="relative space-y-0">
+          {STEPS.map((step, i) => {
+            const Icon = step.icon;
+            return (
+              <li
+                key={step.num}
+                className={`relative flex gap-4 sm:gap-5 md:gap-7 ${i < STEPS.length - 1 ? "pb-8 sm:pb-10 md:pb-12" : ""}`}
+              >
+                <div className="relative z-10 flex shrink-0">
+                  <div className="flex h-11 w-11 items-center justify-center rounded-xl border border-accent/25 bg-accent/10 text-accent shadow-sm shadow-accent/5 sm:h-[3.375rem] sm:w-[3.375rem] sm:rounded-2xl">
+                    <Icon className="h-4 w-4 sm:h-5 sm:w-5" strokeWidth={1.75} />
+                  </div>
                 </div>
-                <p className="max-w-3xl text-center text-sm font-light tracking-wide text-muted md:text-xl">
-                    With Kavisha, influencers and brands can interact with their fans,
-                    create opportunities for them, and make them happy. Like never before.
-                </p>
-            </div>
+                <article className="min-w-0 flex-1 rounded-2xl border border-border bg-card px-4 py-4 transition-colors hover:border-accent/25 sm:px-5 sm:py-5 md:px-7 md:py-6">
+                  <div className="flex items-baseline justify-between gap-4">
+                    <p className="landing-label">Step {i + 1}</p>
+                    <span
+                      className="font-figtree text-2xl font-light tabular-nums text-border md:text-3xl"
+                      aria-hidden
+                    >
+                      {step.num}
+                    </span>
+                  </div>
+                  <p className="mt-2 font-figtree text-sm leading-relaxed text-foreground sm:mt-3 sm:text-base md:text-lg">
+                    {step.body}
+                  </p>
+                </article>
+              </li>
+            );
+          })}
+        </ol>
+      </div>
+    </section>
+  );
+}
 
-            <div className="w-full bg-background">
-                <Footer />
+export default function WidgetIntroPage() {
+  return (
+    <main className="min-h-screen overflow-x-hidden bg-background font-baloo text-foreground">
+      <section className="homepage-hero relative isolate overflow-hidden pt-16">
+        <div className="homepage-glow homepage-glow-a opacity-40" aria-hidden />
+
+        <div className="relative mx-auto grid max-w-7xl items-center gap-8 px-5 pb-16 pt-6 sm:gap-10 sm:pb-20 sm:pt-8 md:px-8 md:pb-28 lg:grid-cols-[1.2fr_0.55fr] lg:gap-12">
+          <div className="text-center sm:text-left">
+            <p className="landing-label">Website widget</p>
+            <h1 className="mt-4 text-3xl font-normal leading-[0.95] tracking-tight sm:text-4xl md:text-5xl lg:text-[4rem] xl:text-[4.5rem]">
+              An <span className="text-accent">AI Agent</span> for your website
+            </h1>
+            <p className="mx-auto mt-5 max-w-xl font-figtree text-sm leading-relaxed text-muted sm:mx-0 sm:mt-6 sm:text-base md:text-lg">
+              Using Kavisha, you can create a custom AI Widget that talks to your
+              website&apos;s casual visitors, and converts them into customers and
+              deep admirers.
+            </p>
+          </div>
+
+          <div className="flex justify-center lg:justify-end">
+            <div className="w-full max-w-[200px] sm:max-w-[220px] md:max-w-[240px]">
+              <div className="overflow-hidden rounded-2xl border border-border bg-card p-2 shadow-md">
+                <img
+                  src="/entrackr-widget.png"
+                  alt="Kavisha AI widget on a website"
+                  className="block w-full object-contain"
+                  loading="lazy"
+                />
+              </div>
             </div>
-        </main>
-    );
+          </div>
+        </div>
+      </section>
+
+      <FeatureStrip />
+      <HowItWorks />
+
+      <section className="border-y border-border/60 bg-muted-bg/30 px-5 py-12 sm:py-16 md:px-8 md:py-20">
+        <div className="mx-auto grid max-w-5xl grid-cols-3 gap-4 sm:gap-6 md:gap-8">
+          {STATS.map((stat) => (
+            <div key={stat.label} className="flex flex-col items-center text-center">
+              <p className="text-3xl font-normal sm:text-5xl md:text-7xl">
+                <span className="text-accent">{stat.value}</span>
+                <span className="text-foreground">{stat.suffix}</span>
+              </p>
+              <p className="mt-1 font-figtree text-[10px] font-semibold uppercase leading-tight tracking-[0.12em] text-muted sm:mt-2 sm:text-xs md:text-sm">
+                {stat.label}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+
+      <section className="px-5 py-16 sm:py-24 md:px-8 md:py-32">
+        <div className="mx-auto flex max-w-3xl flex-col items-center text-center">
+          <h2 className="text-2xl font-normal tracking-tight sm:text-3xl md:text-5xl lg:text-6xl">
+            Get a custom <span className="text-accent">AI Agent</span> for your website
+          </h2>
+          <p className="mt-4 font-figtree text-base text-muted sm:mt-6 sm:text-lg md:text-xl">
+            Free to get started
+          </p>
+          <a
+            href={CONTACT_SALES_MAILTO}
+            className="group mt-8 inline-flex w-full max-w-xs items-center justify-center gap-2 rounded-xl bg-accent px-8 py-3.5 font-figtree text-sm font-medium text-white transition-all hover:brightness-95 sm:mt-10 sm:w-auto sm:max-w-none md:text-base"
+          >
+            Contact sales
+            <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
+          </a>
+        </div>
+      </section>
+
+      <section className="border-t border-border px-5 py-12 sm:py-14 md:px-8 md:py-20">
+        <p className="mx-auto max-w-3xl text-center font-figtree text-sm leading-relaxed text-muted sm:text-base md:text-xl">
+          With Kavisha, influencers and brands can interact with their fans, create
+          opportunities for them, and make them happy. Like never before.
+        </p>
+      </section>
+
+      <Footer />
+    </main>
+  );
 }

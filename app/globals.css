@@ -82,7 +82,7 @@ body {
   scrollbar-color: var(--border) var(--muted-bg);
 }
 
-/* Widget intro â€” animated gradient text on CTA (replaces inline <style>) */
+/* Widget intro GÇö animated gradient text on CTA (replaces inline <style>) */
 @keyframes widget-intro-shine {
   to {
     background-position: 200% center;
@@ -137,7 +137,7 @@ body {
   background: #12141a;
 }
 
-/* â”€â”€ Kavisha chat â€” editorial lounge (scoped palette, independent of theme) â”€â”€ */
+/* GöÇGöÇ Kavisha chat GÇö editorial lounge (scoped palette, independent of theme) GöÇGöÇ */
 .kavisha-chat {
   --kc-ink: #1a1f2e;
   --kc-ink-muted: #5c6370;
@@ -349,7 +349,7 @@ body {
 }
 
 .kavisha-chat .chat-composer-input {
-  max-height: 12rem; /* 8 lines Ã— 1.5rem (leading-6) */
+  max-height: 12rem; /* 8 lines +ù 1.5rem (leading-6) */
   overflow-y: auto;
 }
 
@@ -687,3 +687,67 @@ body {
     0 3px 10px -2px rgba(0, 0, 0, 0.38);
   --kc-shadow-composer: 0 1px 2px rgba(0, 0, 0, 0.2);
 }
+
+/* Homepage */
+@keyframes homepage-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes homepage-float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.homepage-fade-up {
+  animation: homepage-fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.homepage-hero {
+  background: var(--background);
+}
+
+.homepage-glow {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(100px);
+  pointer-events: none;
+}
+
+.homepage-glow-a {
+  top: -20%;
+  right: -10%;
+  width: min(70vw, 600px);
+  height: min(70vw, 600px);
+  background: color-mix(in srgb, #00b5bd 14%, transparent);
+}
+
+.homepage-glow-b {
+  bottom: 0;
+  left: -15%;
+  width: min(50vw, 400px);
+  height: min(50vw, 400px);
+  background: color-mix(in srgb, var(--foreground) 4%, transparent);
+}
+
+.homepage-float {
+  animation: homepage-float 7s ease-in-out infinite;
+}
+
+@layer utilities {
+  .landing-label {
+    @apply font-figtree text-[11px] font-semibold uppercase tracking-[0.28em] text-accent;
+  }
+}
+
