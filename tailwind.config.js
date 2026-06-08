@@ -48,6 +48,7 @@ module.exports = {
         input: "var(--input)",
         ring: "var(--ring)",
         highlight: "var(--highlight)",
+        accent: "var(--accent)",
       },
       fontFamily: {
         zen: ["var(--font-zen-dots)"],
