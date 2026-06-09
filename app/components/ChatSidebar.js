@@ -2,14 +2,11 @@
 
 import { useFirebaseSession } from "../lib/firebase/FirebaseSessionProvider";
 import { signOut } from "../lib/firebase/logout";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter, usePathname } from "next/navigation";
 import { useBrandContext } from "../context/brand/BrandContextProvider";
 import { PanelLeftClose, MoreVertical, Trash2 } from "lucide-react";
-import {
-  brandUserBubbleCssVars,
-  normalizeBrandHex,
-} from "@/app/lib/brandTheme";
+import { normalizeBrandHex } from "@/app/lib/brandTheme";
 import {
   JOB_SEEKER_CHAT_TITLE,
   JOB_SEEKER_OPENING_MESSAGE,
@@ -43,15 +40,7 @@ export default function ChatSidebar({
   const [showNewChatDropdown, setShowNewChatDropdown] = useState(false);
   const [showCommunityNewDropdown, setShowCommunityNewDropdown] = useState(false);
   const brandContext = useBrandContext();
-  const communityPrimaryHex = normalizeBrandHex(brandContext?.primaryBrandColor);
-  const brandBubbleVars = useMemo(
-    () => brandUserBubbleCssVars(communityPrimaryHex),
-    [communityPrimaryHex]
-  );
-  const newChatBtnClass = brandBubbleVars
-    ? "chat-brand-btn-gradient"
-    : "bg-highlight text-white";
-  const newChatBtnStyle = brandBubbleVars || undefined;
+  const brandFill = normalizeBrandHex(brandContext?.primaryBrandColor) || "#252b3a";
 
   const [deletingChatId, setDeletingChatId] = useState(null);
   const router = useRouter();
@@ -179,276 +168,274 @@ export default function ChatSidebar({
 
             <div className="font-baloo h-full max-h-[100vh] md:mt-12 md:h-[calc(100vh-3rem)] fixed top-0 left-0 z-50 flex flex-col w-[280px] border-r border-border bg-background shadow-sm sm:translate-x-0 transition-transform duration-300 ease-in-out">
               <div className="flex-1 flex flex-col min-h-0 p-4">
-              <div className="flex justify-between">
-                <p className="font-semibold text-muted">Chat history</p>
-                <button className="rounded-md p-1 text-muted transition-colors hover:bg-muted-bg hover:text-foreground" onClick={() => toggleLeftSideBar()} title="Close sidebar" aria-label="Close sidebar">
-                  <PanelLeftClose className="w-5 h-5" />
-                </button>
-              </div>
+                <div className="flex justify-between">
+                  <p className="font-semibold text-muted">Chat history</p>
+                  <button className="rounded-md p-1 text-muted transition-colors hover:bg-muted-bg hover:text-foreground" onClick={() => toggleLeftSideBar()} title="Close sidebar" aria-label="Close sidebar">
+                    <PanelLeftClose className="w-5 h-5" />
+                  </button>
+                </div>
 
-              <div className="flex-1 flex flex-col min-h-0">
-                <div className="py-4 gap-2">
-                  {isCommunity ? (
-                    <>
-                      <div className="relative">
-                        <button
-                          className={`flex w-full justify-center gap-2 rounded-md p-2 text-xs font-medium transition-colors hover:opacity-90 ${newChatBtnClass}`}
-                          style={newChatBtnStyle}
-                          onClick={() => setShowCommunityNewDropdown((v) => !v)}
-                        >
-                          New
-                        </button>
-                        {showCommunityNewDropdown && (
-                          <>
-                            <div
-                              className="fixed inset-0 z-[45]"
-                              aria-hidden="true"
-                              onClick={() => setShowCommunityNewDropdown(false)}
-                            />
-                            <div
-                              className="absolute left-0 top-full mt-1 w-full min-w-[160px] rounded-md border border-border bg-card py-1 shadow-lg z-[50]"
-                              role="listbox"
-                            >
-                              <button
-                                type="button"
-                                className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
-                                onClick={() => {
-                                  onNewCommunityChat(
-                                    "job_seeker",
-                                    JOB_SEEKER_CHAT_TITLE,
-                                    JOB_SEEKER_OPENING_MESSAGE
-                                  );
-                                  setShowCommunityNewDropdown(false);
-                                }}
-                              >
-                                Find Jobs
-                              </button>
-                              <button
-                                type="button"
-                                className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
-                                onClick={() => {
-                                  onNewCommunityChat("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)");
-                                  setShowCommunityNewDropdown(false);
-                                }}
-                              >
-                                Hire People
-                              </button>
-                              <button
-                                type="button"
-                                className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
-                                onClick={() => {
-                                  onNewCommunityChat("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)");
-                                  setShowCommunityNewDropdown(false);
-                                }}
-                              >
-                                Find Friends
-                              </button>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                      <button
-                        type="button"
-                        className="mt-2 flex w-full justify-center gap-2 rounded-md bg-muted-bg p-2 text-xs font-medium text-foreground transition-colors hover:bg-card"
-                        onClick={() => {
-                          if (pathname === "/community") {
-                            setIscollapsed(true);
-                            onCollapsedChange?.(true);
-                          } else {
-                            router.push("/community");
-                          }
-                        }}
-                      >
-                        Community
-                      </button>
-                    </>
-                  ) : (
-                    <>
-                      <div className="relative">
-                        <button
-                          className={`flex w-full justify-center gap-2 rounded-md p-2 text-xs font-medium transition-colors hover:opacity-90 ${newChatBtnClass}`}
-                          style={newChatBtnStyle}
-                          onClick={() =>
-                            chatServices.length > 0 && onSelectService
-                              ? setShowNewChatDropdown((v) => !v)
-                              : newChat()
-                          }
-                          disabled={isCreatingSession}
-                        >
-                          {!newChatLoading && !isCreatingSession
-                            ? "New Chat"
-                            : "Creating..."}
-                        </button>
-                        {showNewChatDropdown &&
-                          chatServices.length > 0 &&
-                          onSelectService && (
+                <div className="flex-1 flex flex-col min-h-0">
+                  <div className="py-4 gap-2">
+                    {isCommunity ? (
+                      <>
+                        <div className="relative">
+                          <button
+                            className="flex w-full justify-center gap-2 rounded-md p-2 text-xs font-medium text-white transition-opacity hover:opacity-90"
+                            style={{ backgroundColor: brandFill }}
+                            onClick={() => setShowCommunityNewDropdown((v) => !v)}
+                          >
+                            New
+                          </button>
+                          {showCommunityNewDropdown && (
                             <>
                               <div
                                 className="fixed inset-0 z-[45]"
                                 aria-hidden="true"
-                                onClick={() => setShowNewChatDropdown(false)}
+                                onClick={() => setShowCommunityNewDropdown(false)}
                               />
                               <div
-                                className="absolute left-0 top-full mt-1 w-full min-w-[180px] rounded-md border border-border bg-card py-1 shadow-lg z-[50] max-h-48 overflow-y-auto"
+                                className="absolute left-0 top-full mt-1 w-full min-w-[160px] rounded-md border border-border bg-card py-1 shadow-lg z-[50]"
                                 role="listbox"
                               >
-                                {chatServices.map((item, idx) => (
-                                  <button
-                                    key={item._key || idx}
-                                    type="button"
-                                    className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
-                                    onClick={() => {
-                                      onSelectService(
-                                        item.name,
-                                        item.initialMessage,
-                                        false,
-                                        item.title || item.name,
-                                        item._key
-                                      );
-                                      setShowNewChatDropdown(false);
-                                    }}
-                                  >
-                                    {item.title || item.name}
-                                  </button>
-                                ))}
+                                <button
+                                  type="button"
+                                  className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
+                                  onClick={() => {
+                                    onNewCommunityChat(
+                                      "job_seeker",
+                                      JOB_SEEKER_CHAT_TITLE,
+                                      JOB_SEEKER_OPENING_MESSAGE
+                                    );
+                                    setShowCommunityNewDropdown(false);
+                                  }}
+                                >
+                                  Find Jobs
+                                </button>
+                                <button
+                                  type="button"
+                                  className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
+                                  onClick={() => {
+                                    onNewCommunityChat("recruiter", "Looking at hiring", "Hello! Looking at hiring somebody? Beautiful! Tell me all about it and we'll see what can be done. :)");
+                                    setShowCommunityNewDropdown(false);
+                                  }}
+                                >
+                                  Hire People
+                                </button>
+                                <button
+                                  type="button"
+                                  className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
+                                  onClick={() => {
+                                    onNewCommunityChat("friends", "Looking for a friend", "Hello! Looking to connect with a friend? Beautiful! Tell me all about it and we'll see what can be done. :)");
+                                    setShowCommunityNewDropdown(false);
+                                  }}
+                                >
+                                  Find Friends
+                                </button>
                               </div>
                             </>
                           )}
-                      </div>
-                    </>
-                  )}
-                </div>
-                <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none">
-                  {!allChats ? (
-                    <div className="flex h-full items-center justify-center">
-                      <div className="flex flex-col items-center gap-3">
-                        <div className="relative">
-                          <div className="h-6 w-6 rounded-full border-2 border-border" />
-                          <div
-                            className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${
-                              !communityPrimaryHex ? "border-t-highlight" : ""
-                            }`}
-                            style={
-                              communityPrimaryHex
-                                ? { borderTopColor: communityPrimaryHex }
-                                : undefined
-                            }
-                          />
                         </div>
-                        <div className="text-xs font-medium text-muted">
-                          Loading chats...
-                        </div>
-                      </div>
-                    </div>
-                  ) : allChats?.sessionIds?.length > 0 ? (
-                    allChats.sessionIds.map((id, idx) => (
-                      <div
-                        className={`flex items-center w-full gap-2 rounded-md transition-colors ${currentChatId === id ? "bg-muted-bg" : ""} hover:bg-muted-bg`}
-                        key={id}
-                      >
                         <button
-                          className={`text-muted px-2 py-3 flex-1 text-left min-w-0 truncate text-sm rounded-md
-                    ${currentChatId === id ? "font-semibold text-foreground" : "text-foreground"}
-                  `}
                           type="button"
+                          className="mt-2 flex w-full justify-center gap-2 rounded-md bg-muted-bg p-2 text-xs font-medium text-foreground transition-colors hover:bg-card"
                           onClick={() => {
-                            const sessionBrand = allChats?.sessions[id]?.brand;
-                            const isKavisha = brandContext?.subdomain === "kavisha";
-                            const otherBrand =
-                              isKavisha && sessionBrand && sessionBrand !== "kavisha";
-
-                            if (otherBrand) {
-                              const hostname =
-                                typeof window !== "undefined"
-                                  ? window.location.hostname
-                                  : "";
-                              const path = isCommunity
-                                ? `/community/${id}`
-                                : `/chats/${id}`;
-                              const onStaging = hostname.includes(".staging.");
-                              const baseUrl =
-                                hostname === "localhost" || hostname === "127.0.0.1"
-                                  ? null
-                                  : onStaging
-                                    ? `https://${sessionBrand}.staging.kavisha.ai`
-                                    : `https://${sessionBrand}.kavisha.ai`;
-                              const url = baseUrl ? `${baseUrl}${path}` : `${path}?subdomain=${sessionBrand}`;
-                              window.open(url, "_blank");
+                            if (pathname === "/community") {
                               setIscollapsed(true);
                               onCollapsedChange?.(true);
-                              return;
+                            } else {
+                              router.push("/community");
                             }
-                            router.push(`${chatBasePath}/${id}`);
-                            setIscollapsed(true);
-                            onCollapsedChange?.(true);
                           }}
                         >
-                          <span className="block truncate">
-                            {sessionListLabel(allChats?.sessions[id], idx)}
-                          </span>
+                          Community
                         </button>
-                        <button
-                          className="flex-shrink-0 rounded p-2 transition-colors hover:bg-muted-bg"
-                          onClick={(e) => deleteSession(id, e)}
-                          disabled={deletingChatId === id}
-                          title="Delete chat"
-                        >
-                          {deletingChatId === id ? (
-                            <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-300/60 border-t-red-600"></div>
-                          ) : (
-                            <Trash2 className="w-4 h-4 text-muted hover:text-red-600" />
-                          )}
-                        </button>
-                      </div>
-                    ))
-                  ) : (
-                    <div className="flex items-center justify-center h-full">
-                      <span className="text-xs text-muted">
-                        No chats yet
-                      </span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Profile card - fixed at bottom */}
-              <div className="font-baloo flex-shrink-0 border-t border-border pt-3 pb-2 mt-auto">
-                <div className="flex items-center gap-3 w-full">
-                  <div className="flex flex-col overflow-hidden min-w-0 flex-1">
-                    <span className="font-bold text-foreground text-sm uppercase tracking-[0.08em] truncate">
-                      {user?.name || "User"}
-                    </span>
-                    <span className="text-xs text-muted truncate mt-0.5">
-                      {user?.email}
-                    </span>
-                  </div>
-                  <div className="w-10 h-10 rounded-full bg-muted-bg flex-shrink-0 overflow-hidden flex items-center justify-center">
-                    {user?.image ? (
-                      <img
-                        src={user.image}
-                        alt={user?.name || "User"}
-                        className="w-full h-full object-cover"
-                      />
+                      </>
                     ) : (
-                      <span className="text-sm font-semibold text-muted">
-                        {(user?.name || "U").charAt(0).toUpperCase()}
-                      </span>
+                      <>
+                        <div className="relative">
+                          <button
+                            className="flex w-full justify-center gap-2 rounded-md p-2 text-xs font-medium text-white transition-opacity hover:opacity-90"
+                            style={{ backgroundColor: brandFill }}
+                            onClick={() =>
+                              chatServices.length > 0 && onSelectService
+                                ? setShowNewChatDropdown((v) => !v)
+                                : newChat()
+                            }
+                            disabled={isCreatingSession}
+                          >
+                            {!newChatLoading && !isCreatingSession
+                              ? "New Chat"
+                              : "Creating..."}
+                          </button>
+                          {showNewChatDropdown &&
+                            chatServices.length > 0 &&
+                            onSelectService && (
+                              <>
+                                <div
+                                  className="fixed inset-0 z-[45]"
+                                  aria-hidden="true"
+                                  onClick={() => setShowNewChatDropdown(false)}
+                                />
+                                <div
+                                  className="absolute left-0 top-full mt-1 w-full min-w-[180px] rounded-md border border-border bg-card py-1 shadow-lg z-[50] max-h-48 overflow-y-auto"
+                                  role="listbox"
+                                >
+                                  {chatServices.map((item, idx) => (
+                                    <button
+                                      key={item._key || idx}
+                                      type="button"
+                                      className="w-full px-3 py-2 text-left text-xs uppercase text-foreground hover:bg-muted-bg transition-colors"
+                                      onClick={() => {
+                                        onSelectService(
+                                          item.name,
+                                          item.initialMessage,
+                                          false,
+                                          item.title || item.name,
+                                          item._key
+                                        );
+                                        setShowNewChatDropdown(false);
+                                      }}
+                                    >
+                                      {item.title || item.name}
+                                    </button>
+                                  ))}
+                                </div>
+                              </>
+                            )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                  <div className="flex-1 min-h-0 overflow-y-auto scrollbar-none">
+                    {!allChats ? (
+                      <div className="flex h-full items-center justify-center">
+                        <div className="flex flex-col items-center gap-3">
+                          <div className="relative">
+                            <div className="h-6 w-6 rounded-full border-2 border-border" />
+                            <div
+                              className={`absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent ${!communityPrimaryHex ? "border-t-highlight" : ""
+                                }`}
+                              style={
+                                communityPrimaryHex
+                                  ? { borderTopColor: communityPrimaryHex }
+                                  : undefined
+                              }
+                            />
+                          </div>
+                          <div className="text-xs font-medium text-muted">
+                            Loading chats...
+                          </div>
+                        </div>
+                      </div>
+                    ) : allChats?.sessionIds?.length > 0 ? (
+                      allChats.sessionIds.map((id, idx) => (
+                        <div
+                          className={`flex items-center w-full gap-2 rounded-md transition-colors ${currentChatId === id ? "bg-muted-bg" : ""} hover:bg-muted-bg`}
+                          key={id}
+                        >
+                          <button
+                            className={`text-muted px-2 py-3 flex-1 text-left min-w-0 truncate text-sm rounded-md
+                    ${currentChatId === id ? "font-semibold text-foreground" : "text-foreground"}
+                  `}
+                            type="button"
+                            onClick={() => {
+                              const sessionBrand = allChats?.sessions[id]?.brand;
+                              const isKavisha = brandContext?.subdomain === "kavisha";
+                              const otherBrand =
+                                isKavisha && sessionBrand && sessionBrand !== "kavisha";
+
+                              if (otherBrand) {
+                                const hostname =
+                                  typeof window !== "undefined"
+                                    ? window.location.hostname
+                                    : "";
+                                const path = isCommunity
+                                  ? `/community/${id}`
+                                  : `/chats/${id}`;
+                                const onStaging = hostname.includes(".staging.");
+                                const baseUrl =
+                                  hostname === "localhost" || hostname === "127.0.0.1"
+                                    ? null
+                                    : onStaging
+                                      ? `https://${sessionBrand}.staging.kavisha.ai`
+                                      : `https://${sessionBrand}.kavisha.ai`;
+                                const url = baseUrl ? `${baseUrl}${path}` : `${path}?subdomain=${sessionBrand}`;
+                                window.open(url, "_blank");
+                                setIscollapsed(true);
+                                onCollapsedChange?.(true);
+                                return;
+                              }
+                              router.push(`${chatBasePath}/${id}`);
+                              setIscollapsed(true);
+                              onCollapsedChange?.(true);
+                            }}
+                          >
+                            <span className="block truncate">
+                              {sessionListLabel(allChats?.sessions[id], idx)}
+                            </span>
+                          </button>
+                          <button
+                            className="flex-shrink-0 rounded p-2 transition-colors hover:bg-muted-bg"
+                            onClick={(e) => deleteSession(id, e)}
+                            disabled={deletingChatId === id}
+                            title="Delete chat"
+                          >
+                            {deletingChatId === id ? (
+                              <div className="h-4 w-4 animate-spin rounded-full border-2 border-red-300/60 border-t-red-600"></div>
+                            ) : (
+                              <Trash2 className="w-4 h-4 text-muted hover:text-red-600" />
+                            )}
+                          </button>
+                        </div>
+                      ))
+                    ) : (
+                      <div className="flex items-center justify-center h-full">
+                        <span className="text-xs text-muted">
+                          No chats yet
+                        </span>
+                      </div>
                     )}
                   </div>
                 </div>
+
+                {/* Profile card - fixed at bottom */}
+                <div className="font-baloo flex-shrink-0 border-t border-border pt-3 pb-2 mt-auto">
+                  <div className="flex items-center gap-3 w-full">
+                    <div className="flex flex-col overflow-hidden min-w-0 flex-1">
+                      <span className="font-bold text-foreground text-sm uppercase tracking-[0.08em] truncate">
+                        {user?.name || "User"}
+                      </span>
+                      <span className="text-xs text-muted truncate mt-0.5">
+                        {user?.email}
+                      </span>
+                    </div>
+                    <div className="w-10 h-10 rounded-full bg-muted-bg flex-shrink-0 overflow-hidden flex items-center justify-center">
+                      {user?.image ? (
+                        <img
+                          src={user.image}
+                          alt={user?.name || "User"}
+                          className="w-full h-full object-cover"
+                        />
+                      ) : (
+                        <span className="text-sm font-semibold text-muted">
+                          {(user?.name || "U").charAt(0).toUpperCase()}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
               </div>
-            </div>
             </div>
           </>
         )}
         {isCollapsed && (
           <button
             onClick={() => toggleLeftSideBar()}
-            className={`fixed left-0 z-[60] flex h-10 w-6 items-center justify-center rounded-r-md border border-l-0 border-border bg-background/95 text-muted shadow-sm transition-all hover:w-7 hover:bg-muted-bg hover:text-foreground ${
-              isCommunity
+            className={`fixed left-0 z-[60] flex h-10 w-6 items-center justify-center rounded-r-md border border-l-0 border-border bg-background/95 text-muted shadow-sm transition-all hover:w-7 hover:bg-muted-bg hover:text-foreground ${isCommunity
                 ? "top-28 md:top-28"
                 : "top-16 md:top-14"
-            }`}
+              }`}
             style={{ touchAction: "manipulation" }}
             title="Open sidebar"
             aria-label="Open sidebar"

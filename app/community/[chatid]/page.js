@@ -80,7 +80,7 @@ export default function CommunityChatPage() {
   const primaryHex = normalizeBrandHex(brandContext?.primaryBrandColor);
 
   return (
-    <div className="chat-page-canvas flex min-h-0 flex-col overflow-hidden">
+    <div className="flex min-h-0 flex-col overflow-hidden bg-background max-md:h-[calc(100dvh-8.25rem-env(safe-area-inset-bottom,0px))] md:h-[calc(100dvh-3.5rem)]">
       <CommunityBrandStrip
         communityName={brandContext?.communityName || "Community"}
         primaryHex={primaryHex}
