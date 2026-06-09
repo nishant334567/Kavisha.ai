@@ -72,6 +72,10 @@ export default function AdminHome() {
       label: "Revenue",
       path: `/admin/${brand?.subdomain}/revenue`,
     },
+    {
+      label: "Billing",
+      path: `/admin/${brand?.subdomain}/billings`,
+    },
   ];
   const featureButtons = [
     ...(brand?.enableBooking
