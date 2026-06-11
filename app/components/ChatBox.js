@@ -14,15 +14,13 @@ import {
   ChevronDown,
 } from "lucide-react";
 import Matches from "@/app/components/Matches";
-import {
-  brandUserBubbleCssVars,
-  normalizeBrandHex,
-} from "@/app/lib/brandTheme";
+import { normalizeBrandHex } from "@/app/lib/brandTheme";
 import AssistantSourceCards from "@/app/components/AssistantSourceCards";
 import ProductCards, { partitionCitationCards } from "@/app/components/ProductCards";
 import AssistantReplyCopyButton from "@/app/components/AssistantReplyCopyButton";
 import AssistantEngagementRow from "@/app/components/AssistantEngagementRow";
 import ChatThinkingRow from "@/app/components/ChatThinkingRow";
+import ChatSessionHeader from "@/app/components/ChatSessionHeader";
 import LiveChat from "@/app/components/LiveChat";
 import PoweredByKavisha from "@/app/components/PoweredByKavisha";
 import { useCommunityConnect } from "@/app/hooks/useCommunityConnect";
@@ -84,8 +82,11 @@ export default function ChatBox({
     const el = inputRef.current;
     if (!el) return;
     const minHeight = 36; /* matches h-9 button row */
+    const maxHeight = 176; /* matches max-h-44 */
     el.style.height = "auto";
-    el.style.height = `${Math.max(minHeight, el.scrollHeight)}px`;
+    const next = Math.min(maxHeight, Math.max(minHeight, el.scrollHeight));
+    el.style.height = `${next}px`;
+    el.style.overflowY = el.scrollHeight > maxHeight ? "auto" : "hidden";
   }, []);
 
   useEffect(() => {
@@ -496,9 +497,6 @@ export default function ChatBox({
     setIsRecording(false);
   };
 
-  const formatMessage = (message) => {
-    return message.split("*").join(" ");
-  };
   const updateResume = (filename, summary) => {
     setResumedata({ filename: filename, resumeSummary: summary });
   };
@@ -761,11 +759,6 @@ export default function ChatBox({
   const secondaryBrandHex = normalizeBrandHex(
     brandContext?.secondaryBrandColor,
   );
-  const brandBubbleVars = useMemo(
-    () => brandUserBubbleCssVars(primaryBrandHex),
-    [primaryBrandHex],
-  );
-
   if (chatLoading) {
     return (
       <div className="h-full mx-auto flex w-full items-center justify-center rounded-xl bg-background p-4 lg:w-3/5">
@@ -790,13 +783,13 @@ export default function ChatBox({
 
   if (sessionDetailsLoading) {
     return (
-      <div className="kavisha-chat font-baloo flex h-full w-full items-center justify-center">
+      <div className="font-baloo flex h-full w-full items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <div className="relative">
-            <div className="h-6 w-6 rounded-full border-2 border-[var(--kc-line)]" />
-            <div className="absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent border-t-[var(--kc-ink)]" />
+            <div className="h-6 w-6 rounded-full border-2 border-border" />
+            <div className="absolute inset-0 h-6 w-6 animate-spin rounded-full border-2 border-transparent border-t-foreground" />
           </div>
-          <p className="text-xs font-medium text-[var(--kc-ink-muted)]">
+          <p className="text-xs font-medium text-muted">
             Preparing your conversation…
           </p>
         </div>
@@ -841,18 +834,15 @@ export default function ChatBox({
 
   return (
     <>
-      <div
-        className="kavisha-chat font-baloo mx-auto flex h-full min-h-0 w-full max-w-full flex-1 overflow-hidden md:max-w-2xl lg:max-w-3xl"
-        style={brandBubbleVars || undefined}
-      >
-        <div className="relative flex h-full min-h-0 w-full flex-1 flex-col overflow-hidden">
+      <div className="font-baloo mx-auto flex h-full min-h-0 w-full max-w-full flex-1 overflow-hidden md:max-w-2xl lg:max-w-3xl">
+        <div className="relative flex h-full min-h-0 w-full flex-1 flex-col gap-3 overflow-hidden sm:gap-4">
           <div className="relative min-h-0 flex-1">
             <div
               ref={messagesScrollRef}
               onScroll={updateStickyFromScroll}
               onWheel={updateStickyFromScroll}
               onTouchMove={updateStickyFromScroll}
-              className="chat-stage-scroll absolute inset-0 overflow-y-auto overflow-x-hidden scrollbar-none px-3 pb-4 pt-14 sm:px-4 sm:pt-20"
+              className="absolute inset-0 overflow-y-auto overflow-x-hidden scrollbar-none px-3 pb-6 pt-14 sm:px-4 sm:pb-8 sm:pt-20"
             >
               {/* <div className="flex flex-col gap-2 min-h-full justify-end"> */}
               {currentChatId &&
@@ -860,7 +850,7 @@ export default function ChatBox({
                 messages.map((m, i) => (
                   <div
                     key={m._id != null ? String(m._id) : `msg-${i}`}
-                    className={`chat-message-enter mb-5 w-full min-w-0 ${m.role === "user"
+                    className={`mb-5 w-full min-w-0 ${m.role === "user"
                       ? "flex flex-col items-end"
                       : "flex flex-col items-start"
                       }`}
@@ -876,16 +866,19 @@ export default function ChatBox({
                     )}
                     {m.role === "user" ? (
                       <div className="flex w-full min-w-0 justify-end">
-                        <div className="chat-bubble-user max-w-[min(100%,22rem)] px-4 py-3 text-[0.9375rem] font-normal leading-[1.65] tracking-[0.01em] sm:max-w-[75%]">
+                        <div
+                          className="max-w-[min(100%,22rem)] rounded-[1.25rem_1.25rem_0.35rem_1.25rem] px-4 py-3 text-sm font-normal leading-[1.65] tracking-[0.01em] text-white sm:max-w-[75%]"
+                          style={{
+                            backgroundColor: primaryBrandHex || "#252b3a",
+                          }}
+                        >
                           {m.message}
                         </div>
                       </div>
                     ) : (
                       <div className="w-full min-w-0">
-                        <div className="chat-bubble-assistant w-full px-4 py-3.5 text-[0.9375rem] font-normal leading-[1.7] tracking-[0.01em]">
-                          <div className="chat-prose">
-                            <FormatText text={m.message} />
-                          </div>
+                        <div className="w-full rounded-[1.25rem_1.25rem_1.25rem_0.35rem] border border-border bg-muted-bg px-4 py-2 text-sm font-normal leading-[1.7] tracking-[0.01em] text-foreground">
+                          <FormatText text={m.message} />
                         </div>
                       </div>
                     )}
@@ -1008,7 +1001,7 @@ export default function ChatBox({
                   </div>
                 ))}
               {messageLoading && (
-                <div className="chat-message-enter mb-5 flex w-full flex-col items-start">
+                <div className="mb-5 flex w-full flex-col items-start">
                   <ChatThinkingRow primaryColor={primaryBrandHex} />
                 </div>
               )}
@@ -1026,17 +1019,23 @@ export default function ChatBox({
               )}
 
               {suggestedQuestions.length > 0 && (
-                <div ref={suggestionsRef} className="chat-suggestions-stack mb-2">
-                  <p className="chat-suggestions-label">Suggested</p>
+                <div ref={suggestionsRef} className="mb-2 flex flex-col items-start gap-2">
+                  <p
+                    className="text-sm font-medium"
+                    style={{ color: primaryBrandHex || "#252b3a" }}
+                  >
+                    Suggested
+                  </p>
                   {suggestedQuestions.map((q, i) => (
                     <button
                       key={i}
                       type="button"
                       onClick={() => handleSubmit(String(q).trim())}
                       disabled={messageLoading}
-                      className="chat-suggestion-chip group"
+                      className="max-w-full rounded-lg border border-border border-l-[3px] px-3 py-2 text-left text-sm text-foreground transition-colors hover:bg-muted-bg disabled:cursor-not-allowed disabled:opacity-50"
+                      style={{ borderLeftColor: primaryBrandHex || "#252b3a" }}
                     >
-                        <span className="text-left">{q}</span>
+                      {q}
                     </button>
                   ))}
                 </div>
@@ -1046,11 +1045,11 @@ export default function ChatBox({
             </div>
 
             {suggestionsBelowFold && (
-              <div className="chat-suggestions-nudge-wrap pointer-events-none absolute inset-x-0 bottom-0 z-[15] flex justify-center px-3 pb-2 sm:px-4">
+              <div className="pointer-events-none absolute inset-x-0 bottom-0 z-[15] flex justify-center px-3 pb-2 sm:px-4">
                 <button
                   type="button"
                   onClick={scrollToSuggestions}
-                  className="chat-suggestions-nudge pointer-events-auto"
+                  className="pointer-events-auto inline-flex items-center gap-1.5 rounded-full border border-border bg-card/95 px-3 py-1.5 text-xs font-medium text-foreground shadow-sm backdrop-blur-sm"
                   aria-label="Scroll to suggested questions"
                 >
                   <ChevronDown className="h-3.5 w-3.5 shrink-0" strokeWidth={2.25} />
@@ -1059,42 +1058,16 @@ export default function ChatBox({
               </div>
             )}
 
-            {(sessionTitle || brandContext?.logoUrl) && (
-              <header className="pointer-events-none absolute inset-x-0 top-0 z-20 flex flex-col items-center px-4 pt-2.5 sm:pt-3">
-                <div className="chat-crown pointer-events-auto inline-flex max-w-[min(100%,24rem)] items-center gap-2 rounded-full py-0.5 pl-0.5 pr-3">
-                  {brandContext?.logoUrl ? (
-                    <img
-                      src={brandContext.logoUrl}
-                      alt=""
-                      className="chat-crown-avatar size-8 shrink-0 rounded-full object-cover sm:size-9"
-                    />
-                  ) : null}
-                  {sessionTitle ? (
-                    <p className="min-w-0 truncate pr-0.5 text-sm font-semibold leading-none tracking-[0.01em] text-[var(--kc-ink)] sm:text-[0.9375rem]">
-                      {sessionTitle}
-                    </p>
-                  ) : null}
-                </div>
-
-                {showOnboardingProgress && (
-                  <div
-                    className="chat-progress-pill pointer-events-auto mt-2.5 inline-flex items-baseline gap-1 rounded-full px-3 py-1 text-xs tabular-nums"
-                  >
-                    <span className="font-semibold text-[var(--kc-ink)]">
-                      {Math.round(
-                        Math.min(100, Math.max(0, displayOnboardingPct)),
-                      )}
-                      %
-                    </span>
-                    <span className="text-[var(--kc-ink-muted)]">completed</span>
-                  </div>
-                )}
-              </header>
-            )}
+            <ChatSessionHeader
+              logoUrl={brandContext?.logoUrl}
+              sessionTitle={sessionTitle}
+              showOnboardingProgress={showOnboardingProgress}
+              onboardingPercent={displayOnboardingPct}
+            />
           </div>
 
-          <div className="chat-composer-dock relative mx-auto w-full max-w-3xl shrink-0 px-3 pt-0.5 sm:px-4">
-            <div className="chat-composer-stack">
+          <div className="relative mx-auto w-full max-w-3xl shrink-0 px-3 pb-2 sm:px-4 sm:pb-3">
+            <div className="flex flex-col gap-2">
               <form
                 className="w-full"
                 onSubmit={(e) => {
@@ -1102,8 +1075,9 @@ export default function ChatBox({
                   handleSubmit();
                 }}
               >
-                <div className="chat-composer-shell flex items-center gap-1 rounded-3xl py-1.5 pl-1 pr-1 transition-[border-color]">
-                  <label className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center self-end rounded-full text-[var(--kc-ink-muted)] transition-colors hover:bg-[var(--kc-parchment)] hover:text-[var(--kc-ink)]">
+                <div className="flex items-end gap-2 rounded-3xl border border-border bg-muted-bg px-2 py-2">
+                  <label className="flex h-9 w-9 shrink-0 cursor-pointer items-center justify-center self-end rounded-full
+                  transition-colors ">
                     <input
                       type="file"
                       accept=".pdf,.docx"
@@ -1126,7 +1100,7 @@ export default function ChatBox({
                   <textarea
                     ref={inputRef}
                     rows={1}
-                    className="chat-composer-input min-h-9 min-w-0 flex-1 resize-none border-0 bg-transparent py-1.5 text-[15px] leading-6 text-[var(--kc-ink)] placeholder:text-[var(--kc-ink-muted)] focus:outline-none focus:ring-0 disabled:opacity-50"
+                    className="scrollbar-none min-h-9 max-h-44 min-w-0 flex-1 resize-none overflow-y-auto border-0 bg-transparent py-1.5 text-sm font-normal leading-6 focus:outline-none focus:ring-0 disabled:opacity-50"
                     value={input}
                     onChange={(e) => {
                       setInput(e.target.value);
@@ -1145,38 +1119,38 @@ export default function ChatBox({
                   <div className="relative flex shrink-0 items-center gap-0.5 self-end">
                     {isTranscribing && (
                       <div className="absolute bottom-full right-0 z-20 mb-2">
-                        <div className="chat-popover rounded-xl px-3 py-1.5 text-xs shadow-lg">
+                        <div className="rounded-xl border border-border bg-card px-3 py-1.5 text-xs text-foreground shadow-lg">
                           Transcribing…
                         </div>
                       </div>
                     )}
                     {transcribeError && (
                       <div className="absolute bottom-full right-0 z-20 mb-2 max-w-[min(80vw,20rem)]">
-                        <div className="chat-popover rounded-xl border-red-500/30 px-3 py-1.5 text-xs text-red-700 shadow-lg dark:text-red-400">
+                        <div className="rounded-xl border border-red-500/30 bg-card px-3 py-1.5 text-xs text-red-700 shadow-lg dark:text-red-400">
                           {transcribeError}
                         </div>
                       </div>
                     )}
                     {transcriptText && (
                       <div className="absolute bottom-full right-0 z-20 mb-2 w-[min(80vw,28rem)]">
-                        <div className="chat-popover rounded-xl p-3 shadow-lg">
-                          <div className="mb-1 text-xs text-[var(--kc-ink-muted)]">
+                        <div className="rounded-xl border border-border bg-card p-3 shadow-lg">
+                          <div className="mb-1 text-xs text-muted">
                             Voice transcript
                           </div>
-                          <div className="max-h-40 overflow-auto whitespace-pre-wrap break-words text-sm text-[var(--kc-ink)]">
+                          <div className="max-h-40 overflow-auto whitespace-pre-wrap break-words text-sm text-foreground">
                             {transcriptText}
                           </div>
                           <div className="mt-2 flex justify-end gap-2">
                             <button
                               onClick={() => handleSubmit(transcriptText)}
-                              className="chat-send-btn rounded-full px-3 py-1.5 text-xs font-medium"
+                              className="rounded-full px-3 py-1.5 text-xs font-medium text-foreground"
                               type="button"
                             >
                               Send
                             </button>
                             <button
                               onClick={() => setTranscriptText("")}
-                              className="rounded-full border border-[var(--kc-line)] px-3 py-1.5 text-xs text-[var(--kc-ink-muted)] hover:bg-[var(--kc-parchment)]"
+                              className="rounded-full border border-border px-3 py-1.5 text-xs text-muted hover:bg-muted-bg hover:text-foreground"
                               type="button"
                             >
                               Discard
@@ -1191,8 +1165,8 @@ export default function ChatBox({
                         isRecording ? stopRecording() : startRecording()
                       }
                       className={`flex h-9 w-9 shrink-0 items-center justify-center rounded-full transition-colors ${isRecording
-                        ? "bg-red-50 text-red-600"
-                        : "text-[var(--kc-ink-muted)] hover:bg-[var(--kc-parchment)] hover:text-[var(--kc-ink)]"
+                        ? "bg-red-50 text-red-600 dark:bg-red-950/40 dark:text-red-400"
+                        : "text-muted hover:bg-muted-bg hover:text-foreground"
                         }`}
                       title={isRecording ? "Stop recording" : "Start recording"}
                     >
@@ -1205,7 +1179,11 @@ export default function ChatBox({
                     <button
                       type="submit"
                       disabled={!input.trim() || messageLoading}
-                      className="chat-send-btn inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                      className={`inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-white transition-opacity ${!input.trim() || messageLoading
+                        ? "cursor-not-allowed opacity-40"
+                        : "hover:opacity-90 active:scale-95"
+                        }`}
+                      style={{ backgroundColor: primaryBrandHex || "#252b3a" }}
                       title="Send message"
                     >
                       <Send className="h-4 w-4" strokeWidth={2.25} />
@@ -1214,7 +1192,7 @@ export default function ChatBox({
                 </div>
               </form>
 
-              <PoweredByKavisha compact />
+              <PoweredByKavisha />
             </div>
 
             <Resume
