@@ -4,6 +4,7 @@ import { useState, useEffect, useRef, Suspense } from "react";
 import { ArrowLeft, Edit2, Check, X, ArrowUpRight } from "lucide-react";
 import ServiceModal from "@/app/admin/components/ServiceModal";
 import ShopifyConnect from "@/app/admin/components/ShopifyConnect";
+import WhatsAppConnect from "@/app/admin/components/WhatsAppConnect";
 import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import { normalizeBrandHex } from "@/app/lib/brandTheme";
 
@@ -811,6 +812,8 @@ export default function MyServices() {
                 <Suspense fallback={null}>
                   <ShopifyConnect inline />
                 </Suspense>
+
+                <WhatsAppConnect />
 
                 <div className="rounded-xl border border-border bg-card p-4">
                   <div className="flex items-center justify-between gap-4">
