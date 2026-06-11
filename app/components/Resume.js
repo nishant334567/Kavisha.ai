@@ -76,6 +76,7 @@ export default function Resume({
     } catch (err) { }
     setIsdeleting(false);
   };
+
   return (
     <>
       <div className="flex items-center gap-2 py-2">

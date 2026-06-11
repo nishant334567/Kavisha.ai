@@ -45,27 +45,34 @@ export default function ClientLayout({ children }) {
 
   const isMaintenancePage = pathname === "/maintenance";
   const isAdmin = pathname?.startsWith("/admin");
+  const isChatThread =
+    /^\/chats\/[^/]+/.test(pathname || "") ||
+    /^\/community\/[^/]+/.test(pathname || "");
+
+  const mainPadding = !isMaintenancePage
+    ? isAdmin
+      ? "pt-14"
+      : isChatThread
+        ? "pt-0 md:pt-14"
+        : "pt-0 md:pt-14 pb-[4.5rem] md:pb-0"
+    : "";
+
+  const showGlobalMessages =
+    !isMaintenancePage && !isAdmin && pathname !== "/";
 
   return (
     <FirebaseSessionProvider>
       <BrandContextProvider>
         <CartContextProvider>
           <SocketSessionWrapper isAdmin={isAdmin}>
-            {!isMaintenancePage && !isAdmin && <Navbar />}
-            {!isMaintenancePage && isAdmin && <AdminNavbar />}
-            <div
-              className={
-                !isMaintenancePage
-                  ? isAdmin
-                    ? "pt-14"
-                    : "pt-0 md:pt-14 pb-[4.5rem] md:pb-0"
-                  : ""
-              }
-            >
-              {children}
-            </div>
-            {!isMaintenancePage && !isAdmin && <MobileBottomNav />}
-            {!isMaintenancePage && !isAdmin && pathname !== "/" && <GlobalMessages />}
+            <GlobalMessages enabled={showGlobalMessages}>
+              {!isMaintenancePage && !isAdmin && <Navbar />}
+              {!isMaintenancePage && isAdmin && <AdminNavbar />}
+              <div className={mainPadding}>
+                {children}
+              </div>
+              {!isMaintenancePage && !isAdmin && <MobileBottomNav />}
+            </GlobalMessages>
           </SocketSessionWrapper>
         </CartContextProvider>
       </BrandContextProvider>

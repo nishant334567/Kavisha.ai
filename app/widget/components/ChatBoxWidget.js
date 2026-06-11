@@ -1247,7 +1247,6 @@ export default function ChatBoxWidget({
                   className="mr-auto"
                   brandSlug={brand}
                   primaryColor={primaryColor}
-                  variant="outline"
                 />
               )}
               <div ref={endRef} />

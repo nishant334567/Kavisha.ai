@@ -7,13 +7,16 @@ export default function PoweredByKavisha({ className = "" }) {
   const label = isStaging ? "kavisha.staging.kavisha.ai" : "kavisha.ai";
 
   return (
-    <a
-      href={href}
-      target="_blank"
-      rel="noopener noreferrer"
-      className={`block w-full text-center py-2.5 bg-card text-muted text-sm font-medium cursor-pointer flex-shrink-0 hover:underline border-t border-border ${className}`}
-    >
-      Powered by {label}
-    </a>
+    <p className={`text-center text-[11px] leading-none text-muted ${className}`.trim()}>
+      Powered by{" "}
+      <a
+        href={href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className="hover:underline"
+      >
+        {label}
+      </a>
+    </p>
   );
 }

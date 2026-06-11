@@ -6,8 +6,6 @@ import { useBrandContext } from "@/app/context/brand/BrandContextProvider";
 import ChatBox from "@/app/components/ChatBox";
 import ChatSidebar from "@/app/components/ChatSidebar";
 import Loader from "@/app/components/Loader";
-import PoweredByKavisha from "@/app/components/PoweredByKavisha";
-
 export default function Chat() {
   const params = useParams();
   const router = useRouter();
@@ -94,7 +92,7 @@ export default function Chat() {
   }
 
   return (
-    <div className="min-h-[calc(100vh-64px)] h-[calc(100vh-64px)] flex flex-col overflow-hidden">
+    <div className="flex min-h-0 flex-col overflow-hidden bg-background max-md:h-[calc(100dvh-8.25rem-env(safe-area-inset-bottom,0px))] md:h-[calc(100dvh-3.5rem)]">
       <div className="flex flex-1 min-h-0 overflow-hidden">
         <div>
           <ChatSidebar
@@ -110,15 +108,14 @@ export default function Chat() {
           />
         </div>
 
-        <div className="w-full h-full flex flex-col overflow-hidden">
+        <div className="flex h-full w-full flex-col overflow-hidden">
           {currentChatId && (
-            <div className="flex-1 min-h-0 overflow-hidden flex items-center justify-center px-4 md:px-0">
+            <div className="flex h-full min-h-0 flex-1 flex-col overflow-hidden px-1 pt-1 sm:px-2">
               <ChatBox currentChatId={currentChatId} />
             </div>
           )}
         </div>
       </div>
-      <PoweredByKavisha />
     </div>
   );
 }

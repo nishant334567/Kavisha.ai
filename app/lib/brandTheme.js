@@ -1,8 +1,3 @@
-/**
- * Optional per-brand colors for Community + embed widget only.
- * When normalized hex is null, callers should use default Tailwind / CSS tokens.
- */
-
 export function normalizeBrandHex(input) {
   if (input == null || typeof input !== "string") return null;
   const s = input.trim();
@@ -26,3 +21,4 @@ export function hexToRgba(hex, alpha) {
   const b = n & 255;
   return `rgba(${r},${g},${b},${alpha})`;
 }
+
