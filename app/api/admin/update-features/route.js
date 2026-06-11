@@ -25,6 +25,8 @@ export async function PATCH(req) {
         enableFriendConnect,
         primaryBrandColor,
         secondaryBrandColor,
+        whatsappPhoneNumber,
+        whatsappCloudPhoneNumberId,
       } = await req.json();
 
       const isAdmin = await isBrandAdmin(decodedToken.email, subdomain);
@@ -93,6 +95,17 @@ export async function PATCH(req) {
           }
           set.secondaryBrandColor = hex;
         }
+      }
+
+      if (whatsappPhoneNumber !== undefined) {
+        set["widgetLauncher.whatsappPhoneNumberId"] =
+          typeof whatsappPhoneNumber === "string" ? whatsappPhoneNumber.trim() : "";
+      }
+      if (whatsappCloudPhoneNumberId !== undefined) {
+        set["widgetLauncher.whatsappCloudPhoneNumberId"] =
+          typeof whatsappCloudPhoneNumberId === "string"
+            ? whatsappCloudPhoneNumberId.trim()
+            : "";
       }
 
       if (Object.keys(set).length === 0 && unset.length === 0) {

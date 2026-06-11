@@ -23,8 +23,15 @@ export default function AdminHome() {
   const goWhatsAppConnect = useCallback(() => {
     const sub = String(brand?.subdomain || "").trim();
     if (!sub) return;
+    // Meta JS SDK host allowlist is on the root app domain, not brand subdomains.
+    const onStaging =
+      (typeof window !== "undefined" && window.location.hostname.includes(".staging.")) ||
+      process.env.NEXT_PUBLIC_KAVISHA_SITE_ENV === "staging";
+    const origin = onStaging
+      ? "https://kavisha.staging.kavisha.ai"
+      : (process.env.NEXT_PUBLIC_APP_URL || "https://kavisha.ai").replace(/\/$/, "");
     window.location.assign(
-      `/connect/whatsapp?brand=${encodeURIComponent(sub)}`
+      `${origin}/connect/whatsapp?brand=${encodeURIComponent(sub)}`
     );
   }, [brand?.subdomain]);
 

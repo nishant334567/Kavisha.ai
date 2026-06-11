@@ -326,6 +326,14 @@ export async function mapBrandToClientContext(brand, userEmail) {
       typeof brand.widgetLauncher?.copyReadMoreUrl === "string"
         ? brand.widgetLauncher.copyReadMoreUrl.trim()
         : "",
+    whatsappPhoneNumber:
+      typeof brand.widgetLauncher?.whatsappPhoneNumberId === "string"
+        ? brand.widgetLauncher.whatsappPhoneNumberId.trim()
+        : "",
+    whatsappCloudPhoneNumberId:
+      typeof brand.widgetLauncher?.whatsappCloudPhoneNumberId === "string"
+        ? brand.widgetLauncher.whatsappCloudPhoneNumberId.trim()
+        : "",
     clientWidgetUrl: brand.clientWidgetUrl || "",
     talkToAvatarPublished: isTalkToAvatarPublished(brand),
   };
